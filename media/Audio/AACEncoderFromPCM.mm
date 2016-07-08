@@ -7,6 +7,7 @@
 //
 #import "GJQueue.h"
 #import "AACEncoderFromPCM.h"
+#import "GJDebug.h"
 
 
 @interface AACEncoderFromPCM ()
@@ -54,7 +55,7 @@
     _resumeQueue.autoResize = NO;
     
     _retainQueue.shouldNonatomic = YES;
-    _retainQueue.shouldWait = YES;
+    _retainQueue.shouldWait = NO;
     _retainQueue.autoResize = NO;
 
     _encoderQueue = dispatch_queue_create("audioEncodeQueue", DISPATCH_QUEUE_CONCURRENT);
@@ -107,6 +108,8 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     assert(inBufferList.mBuffers[0].mDataByteSize <= 3000);
 
+    NSLog(@"inBufferList lenth:%d",inBufferList.mBuffers[0].mDataByteSize);
+
 //    if (_resumeQueue == nil) {
 //         _resumeQueue = new GJAudioBufferQueue(inBufferList.mBuffers[0].mDataByteSize+10);
 //    }
@@ -118,6 +121,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     [self _createEncodeConverterWithBuffer:sampleBuffer];
 
 }
+
 
 -(BOOL)_createEncodeConverterWithBuffer:(CMSampleBufferRef)sampleBuffer{
     if (_encodeConvert != NULL) {
@@ -167,7 +171,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         
         // get it back and print it out
         AudioConverterGetProperty(_encodeConvert, kAudioConverterEncodeBitRate, &propSize, &outputBitRate);
-        printf ("AAC Encode Bitrate: %u\n", (unsigned int)outputBitRate);
+        AACEncoderFromPCM_DEBUG("AAC Encode Bitrate: %u\n", (unsigned int)outputBitRate);
     }
     
     _outCacheBufferList.mNumberBuffers = 1;
@@ -179,7 +183,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     dispatch_async(_encoderQueue, ^{
         [self _converterStart];
     });
-    NSLog(@"AudioConverterNewSpecific success");
+    AACEncoderFromPCM_DEBUG("AudioConverterNewSpecific success");
     return YES;
 }
 -(OSStatus)_getAudioClass:(AudioClassDescription*)audioClass WithType:(UInt32)type fromManufacturer:(UInt32)manufacturer{
@@ -211,25 +215,24 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     while (_isRunning) {
         memset(&packetDesc, 0, sizeof(packetDesc));
         _outCacheBufferList.mBuffers[0].mDataByteSize = _destMaxOutSize;
-        NSLog(@"AudioConverterFillComplexBuffer in");
         OSStatus status = AudioConverterFillComplexBuffer(_encodeConvert, encodeInputDataProc, (__bridge void*)self, &outputDataPacketSize, &_outCacheBufferList, &packetDesc);
-        NSLog(@"AudioConverterFillComplexBuffer out");
 
        // assert(!status);
         if (status != noErr ) {
-            NSLog(@"AudioConverterFillComplexBuffer error:%d",status);
+            AACEncoderFromPCM_DEBUG("AudioConverterFillComplexBuffer error:%d",status);
             return;
         }
         
         
         NSData* data = [NSData dataWithBytes:_outCacheBufferList.mBuffers[0].mData length:_outCacheBufferList.mBuffers[0].mDataByteSize];
-        NSLog(@"datalenth:%ld",[data length]);
+        AACEncoderFromPCM_DEBUG("datalenth:%ld",[data length]);
         //    CMTime pts = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
         //    float VALUE = pts.value / pts.timescale;
         //    NSLog(@"pts:%lf  value:%lld CMTimeScale:%d  CMTimeFlags:%d CMTimeEpoch:%lld",VALUE, pts.value,pts.timescale,pts.flags,pts.epoch);
         UInt32 outDateLenth = _outCacheBufferList.mBuffers[0].mDataByteSize;
         NSData * adts = [self adtsDataForPacketLength:outDateLenth];
-        NSMutableData * aacStreamData = [[NSMutableData alloc]init];
+        NSMutableData * aacStreamData = [[NSMutableData alloc]initWithCapacity:adts.length + _outCacheBufferList.mBuffers[0].mDataByteSize];
+        [aacStreamData appendData:adts];
         [aacStreamData appendBytes:_outCacheBufferList.mBuffers[0].mData length:outDateLenth];
         
         packetDesc.mDataByteSize = (UInt32)aacStreamData.length;

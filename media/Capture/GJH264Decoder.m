@@ -291,7 +291,7 @@ void decodeOutputCallback(
     VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
     VTDecodeInfoFlags flagOut;
     VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
-    NSLog(@"VTDecodeInfoFlags:%ul",flagOut);
+    NSLog(@"VTDecodeInfoFlags:%ul",(unsigned int)flagOut);
 }
 NSString * const naluTypesStrings[] =
 {

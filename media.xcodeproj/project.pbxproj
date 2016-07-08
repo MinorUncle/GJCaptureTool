@@ -24,6 +24,7 @@
 		C565793E1D22100400950A5F /* GJH264Decoder.m in Sources */ = {isa = PBXBuildFile; fileRef = C565793B1D22100400950A5F /* GJH264Decoder.m */; };
 		C565793F1D22100400950A5F /* GJH264Encoder.m in Sources */ = {isa = PBXBuildFile; fileRef = C565793D1D22100400950A5F /* GJH264Encoder.m */; };
 		C56579421D22184D00950A5F /* GJAudioQueuePlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = C56579411D22184D00950A5F /* GJAudioQueuePlayer.mm */; };
+		C59C82791D2F8A1F00B70654 /* AudioPraseStream.m in Sources */ = {isa = PBXBuildFile; fileRef = C59C82781D2F8A1F00B70654 /* AudioPraseStream.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +60,9 @@
 		C565793D1D22100400950A5F /* GJH264Encoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJH264Encoder.m; sourceTree = "<group>"; };
 		C56579401D22184D00950A5F /* GJAudioQueuePlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioQueuePlayer.h; sourceTree = "<group>"; };
 		C56579411D22184D00950A5F /* GJAudioQueuePlayer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GJAudioQueuePlayer.mm; sourceTree = "<group>"; };
+		C59C82751D2F54FD00B70654 /* GJDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJDebug.h; sourceTree = "<group>"; };
+		C59C82771D2F8A1F00B70654 /* AudioPraseStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioPraseStream.h; sourceTree = "<group>"; };
+		C59C82781D2F8A1F00B70654 /* AudioPraseStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioPraseStream.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +102,7 @@
 				C54FA8AF1D21006100A0D3C3 /* AppDelegate.m */,
 				C54FA8B11D21006100A0D3C3 /* ViewController.h */,
 				C54FA8B21D21006100A0D3C3 /* ViewController.m */,
+				C59C82701D2F54AD00B70654 /* GJDebug */,
 				C54FA8CA1D2103E300A0D3C3 /* Capture */,
 				C54FA8C31D21009300A0D3C3 /* Audio */,
 				C54FA8C21D21008F00A0D3C3 /* Video */,
@@ -141,6 +146,8 @@
 				C54FA8D31D21380D00A0D3C3 /* GJAudioQueueRecoder.m */,
 				C56579401D22184D00950A5F /* GJAudioQueuePlayer.h */,
 				C56579411D22184D00950A5F /* GJAudioQueuePlayer.mm */,
+				C59C82771D2F8A1F00B70654 /* AudioPraseStream.h */,
+				C59C82781D2F8A1F00B70654 /* AudioPraseStream.m */,
 			);
 			path = Audio;
 			sourceTree = "<group>";
@@ -165,6 +172,14 @@
 				C54FA8D01D2105DB00A0D3C3 /* OpenGLView20.m */,
 			);
 			path = OpenGLPlayer;
+			sourceTree = "<group>";
+		};
+		C59C82701D2F54AD00B70654 /* GJDebug */ = {
+			isa = PBXGroup;
+			children = (
+				C59C82751D2F54FD00B70654 /* GJDebug.h */,
+			);
+			path = GJDebug;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -240,6 +255,7 @@
 			files = (
 				C55D800A1D23B91200A6E2A4 /* PCMDecodeFromAAC.mm in Sources */,
 				C54FA8CD1D2103FD00A0D3C3 /* GJCaptureTool.m in Sources */,
+				C59C82791D2F8A1F00B70654 /* AudioPraseStream.m in Sources */,
 				C54FA8D11D2105DB00A0D3C3 /* OpenGLView20.m in Sources */,
 				C565793F1D22100400950A5F /* GJH264Encoder.m in Sources */,
 				C54FA8C61D2100BB00A0D3C3 /* GJOpenALPlayer.mm in Sources */,
@@ -364,7 +380,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = media/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "--.media";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -377,7 +393,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = media/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = "--.media";
 				PRODUCT_NAME = "$(TARGET_NAME)";

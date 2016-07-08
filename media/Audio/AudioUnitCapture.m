@@ -64,7 +64,7 @@ static OSStatus recordingCallback(void *inRefCon,
     bufferList.mBuffers[0] = buffer;
     
     OSStatus status;
-    
+
     status = AudioUnitRender([globalUnit audioUnit],
                              ioActionFlags,
                              inTimeStamp,

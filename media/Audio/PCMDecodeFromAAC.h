@@ -24,6 +24,6 @@
 @property (nonatomic,weak) id<PCMDecodeFromAACDelegate>delegate;
 
 
--(void)decodeBuffer:(uint8_t*)buffer withLenth:(uint32_t)totalLenth;
+-(void)decodeBuffer:(uint8_t*)buffer numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins;
 - (instancetype)initWithDestDescription:(AudioStreamBasicDescription*)description SourceDescription:(AudioStreamBasicDescription*)sourceDescription sourceMaxBufferLenth:(int)maxLenth;
 @end

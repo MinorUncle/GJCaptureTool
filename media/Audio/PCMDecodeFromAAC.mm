@@ -9,6 +9,8 @@
 
 #import "GJQueue.h"
 #import "PCMDecodeFromAAC.h"
+#import "GJDebug.h"
+
 
 @interface PCMDecodeFromAAC ()
 {
@@ -125,13 +127,17 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     return noErr;
 }
 
--(void)decodeBuffer:(uint8_t*)data withLenth:(uint32_t)totalLenth{
-    AudioBuffer buffer;
-    buffer.mData = data;
-    buffer.mDataByteSize = totalLenth;
-    buffer.mNumberChannels = _sourceFormatDescription.mChannelsPerFrame;
-    _resumeQueue.queuePush(buffer);
-    
+-(void)decodeBuffer:(uint8_t*)data numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins{
+    int offset =0;
+    for (int i = 0; i<numberOfPackets; i++) {
+        offset += packetDescriptioins[i].mStartOffset;
+        AudioBuffer buffer;
+        buffer.mData = data+offset;
+        buffer.mDataByteSize = packetDescriptioins[i].mDataByteSize;
+        buffer.mNumberChannels = _sourceFormatDescription.mChannelsPerFrame;
+        _resumeQueue.queuePush(buffer);
+    }
+
     [self _createEncodeConverter];
 }
 
@@ -159,7 +165,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
     OSStatus status = AudioConverterNew(&_sourceFormatDescription, &_destFormatDescription, &_decodeConvert);
     assert(!status);
-    NSLog(@"AudioConverterNewSpecific success");
+    CAPTURE_DEBUG("AudioConverterNewSpecific success");
 
     _destMaxOutSize = 0;
     status = AudioConverterGetProperty(_decodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
@@ -180,25 +186,19 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
 
 -(void)_converterStart{
-    
     _isRunning = YES;
     AudioStreamPacketDescription packetDesc;
     while (_isRunning) {
         memset(&packetDesc, 0, sizeof(packetDesc));
-        NSLog(@"codeChar in");
 
         self.outCacheBufferList->mBuffers[0].mDataByteSize = _outputDataPacketCount * _destFormatDescription.mBytesPerPacket;
         OSStatus status = AudioConverterFillComplexBuffer(_decodeConvert, encodeInputDataProc, (__bridge void*)self, &_outputDataPacketCount, self.outCacheBufferList, &packetDesc);
-        NSLog(@"codeChar out");
         // assert(!status);
         if (status != noErr || status == -1) {
             char* codeChar = (char*)&status;
-            NSLog(@"AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
-            continue;
+            CAPTURE_DEBUG("AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
+            break;
         }
-
-        static int j =0;
-        NSLog(@"decode out times:%d",j++);
         
         if ([self.delegate respondsToSelector:@selector(pcmDecode:completeBuffer:lenth:)]) {
             [self.delegate pcmDecode:self completeBuffer:self.outCacheBufferList->mBuffers[0].mData lenth:self.outCacheBufferList->mBuffers[0].mDataByteSize];

@@ -15,11 +15,12 @@
 #import <MediaPlayer/MediaPlayer.h>
 #import "PCMDecodeFromAAC.h"
 #import "AACEncoderFromPCM.h"
-
+#import "AudioPraseStream.h"
 #import "AudioUnitCapture.h"
-@interface ViewController ()<GJCaptureToolDelegate,GJH264DecoderDelegate,GJH264EncoderDelegate,AACEncoderFromPCMDelegate,PCMDecodeFromAACDelegate>
+@interface ViewController ()<GJCaptureToolDelegate,GJH264DecoderDelegate,GJH264EncoderDelegate,AACEncoderFromPCMDelegate,PCMDecodeFromAACDelegate,AudioStreamPraseDelegate>
 {
     GJAudioQueuePlayer* _audioPlayer;
+    AudioPraseStream* _praseStream;
     NSTimer* _timer;
     int _totalCount;
     float _totalByte;
@@ -46,7 +47,9 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeFile layer:_viewContainer.layer];
+    _praseStream = [[AudioPraseStream alloc]initWithFileType:kAudioFileAAC_ADTSType fileSize:0 error:nil];
+    _praseStream.delegate = self;
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeAudioStream layer:_viewContainer.layer];
     _captureTool.delegate = self;
     _captureTool.fps = 15;
     _encoder = [[GJH264Encoder alloc]init];
@@ -92,14 +95,15 @@
 
 -(void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection{
     [super traitCollectionDidChange:previousTraitCollection];
-    [self adjustOrientation];
+//    [self adjustOrientation];
 }
 
 -(void)adjustOrientation{
-    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
-    AVCaptureConnection *captureConnection=[_captureTool.captureVideoPreviewLayer connection];
-    captureConnection.videoOrientation = (AVCaptureVideoOrientation)orientation;
-    [_captureTool adjustOrientation];
+//    UIInterfaceOrientation orientation = [[UIApplication sharedApplication] statusBarOrientation];
+//    AVCaptureConnection *captureConnection=[_captureTool.captureVideoPreviewLayer connection];
+//    captureConnection.videoOrientation = (AVCaptureVideoOrientation)orientation;
+//    [_captureTool adjustOrientation];
+    
 }
 //旋转后重新设置大小
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation{
@@ -173,6 +177,7 @@
     size_t h = CVPixelBufferGetHeight(imageBuffer);
     
     
+    
 //    _totalCount ++;
 //    _totalByte += w*h*1.5;
     [_playView displayYUV420pData:baseAdd width:(uint32_t)w height:(uint32_t)h];
@@ -180,13 +185,22 @@
 -(void)pcmDecode:(PCMDecodeFromAAC *)decoder completeBuffer:(void *)buffer lenth:(int)lenth{
     if (_audioPlayer == nil) {
         _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:decoder.destFormatDescription bufferSize:decoder.destMaxOutSize macgicCookie:nil];
-
     }
-        [_audioPlayer playData:buffer lenth:lenth packetCount:0 packetDescriptions:NULL isEof:NO];
-
+    NSLog(@"PCMDecodeFromAAC:%d",lenth);
+    [_audioPlayer playData:buffer lenth:lenth packetCount:0 packetDescriptions:NULL isEof:NO];
 }
 -(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder encodeCompleteBuffer:(uint8_t *)buffer Lenth:(long)totalLenth packetCount:(int)count packets:(AudioStreamPacketDescription *)packets{
-    [_audioDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
+    [_praseStream parseData:buffer lenth:(int)totalLenth error:nil];
+    NSLog(@"AACEncoderFromPCM:count:%d  lenth:%ld",count,totalLenth);
+//    [_audioDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
+
+}
+- (void)audioFileStream:(AudioPraseStream *)audioFileStream audioData:(const void *)audioData numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins{
+    for (int i = 0; i<numberOfPackets; i++) {
+        [_audioDecoder decodeBuffer:(uint8_t*)audioData numberOfBytes:numberOfBytes numberOfPackets:numberOfPackets packetDescriptions:packetDescriptioins];
+    }
+//    NSLog(@"audioFileStream:%d",numberOfPackets);
+    NSLog(@"audioFileStream count:%d  lenth:%d",numberOfPackets,numberOfBytes);
 
 }
 -(void)GJCaptureTool:(GJCaptureTool*)captureTool didRecodeFile:(NSURL*)fileUrl{
