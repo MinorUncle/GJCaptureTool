@@ -10,7 +10,7 @@
 #import <pthread.h>
 #import "GJQueue.h"
 
-const int MCAudioQueueBufferCount = 10;
+const int MCAudioQueueBufferCount = 20;
 
 @interface MCAudioQueueBuffer : NSObject
 @property (nonatomic,assign) AudioQueueBufferRef buffer;
@@ -23,9 +23,10 @@ const int MCAudioQueueBufferCount = 10;
 @private
     AudioQueueRef _audioQueue;
     GJQueue<AudioQueueBufferRef>* _reusableQueue;
+    
     NSMutableArray *_buffers;
 //    NSMutableArray *_reusableBuffers;
-    
+    dispatch_queue_t _playQueue;
     BOOL _isRunning;
     BOOL _started;
     NSTimeInterval _playedTime;
@@ -79,52 +80,62 @@ const int MCAudioQueueBufferCount = 10;
     char *formatName = (char *)&(_format.mFormatID);
             NSLog(@"format is: %c%c%c%c     -----------", formatName[3], formatName[2], formatName[1], formatName[0]);
     
-    OSStatus status = AudioQueueNewOutput(&_format,MCAudioQueueOutputCallback, (__bridge void *)(self), NULL, NULL, 0, &_audioQueue);
-    assert(!status);
-    if (status != noErr)
-    {
-        _audioQueue = NULL;
-        return;
-    }
-    
-    status = AudioQueueAddPropertyListener(_audioQueue, kAudioQueueProperty_IsRunning, MCAudioQueuePropertyCallback, (__bridge void *)(self));
-    assert(!status);
-    if (status != noErr)
-    {
-        AudioQueueDispose(_audioQueue, YES);
-        _audioQueue = NULL;
-        return;
-    }
-    
-    if (_reusableQueue->currentLenth() == 0)
-    {
-        for (int i = 0; i < MCAudioQueueBufferCount; ++i)
+    _playQueue = dispatch_queue_create("playQueue", DISPATCH_QUEUE_CONCURRENT);
+    dispatch_async(_playQueue, ^{
+        OSStatus status = AudioQueueNewOutput(&_format,MCAudioQueueOutputCallback, (__bridge void *)(self),CFRunLoopGetCurrent(), kCFRunLoopCommonModes, 0, &_audioQueue);
+        assert(!status);
+        if (status != noErr)
         {
-            AudioQueueBufferRef buffer;
-            status = AudioQueueAllocateBuffer(_audioQueue, _bufferSize, &buffer);
-            if (status != noErr)
-            {
-                AudioQueueDispose(_audioQueue, YES);
-                _audioQueue = NULL;
-                break;
-            }
-            _reusableQueue->queuePush(buffer);
+            _audioQueue = NULL;
+            return;
         }
-    }
-    
+        
+        status = AudioQueueAddPropertyListener(_audioQueue, kAudioQueueProperty_IsRunning, MCAudioQueuePropertyCallback, (__bridge void *)(self));
+        assert(!status);
+        if (status != noErr)
+        {
+            AudioQueueDispose(_audioQueue, YES);
+            _audioQueue = NULL;
+            return;
+        }
+        
+        
 #if TARGET_OS_IPHONE
-    UInt32 property = kAudioQueueHardwareCodecPolicy_PreferSoftware;
-    [self setProperty:kAudioQueueProperty_HardwareCodecPolicy dataSize:sizeof(property) data:&property error:NULL];
+        UInt32 property = kAudioQueueHardwareCodecPolicy_PreferSoftware;
+        [self setProperty:kAudioQueueProperty_HardwareCodecPolicy dataSize:sizeof(property) data:&property error:NULL];
 #endif
-    
-    if (magicCookie)
-    {
-        AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_MagicCookie, [magicCookie bytes], (UInt32)[magicCookie length]);
-    }
-    
-    [self setVolumeParameter];
-    [self _start];
+        
+        if (magicCookie)
+        {
+            status = AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_MagicCookie, [magicCookie bytes], (UInt32)[magicCookie length]);
+            NSLog(@"status:%d",status);
+        }
+        
+        
+        if (_reusableQueue->currentLenth() == 0)
+        {
+            for (int i = 0; i < MCAudioQueueBufferCount; ++i)
+            {
+                AudioQueueBufferRef buffer;
+                status = AudioQueueAllocateBuffer(_audioQueue, _bufferSize, &buffer);
+                if (status != noErr)
+                {
+                    AudioQueueDispose(_audioQueue, YES);
+                    _audioQueue = NULL;
+                    NSLog(@"AudioQueueAllocateBuffer faile");
+                    assert(!status);
+                    return ;
+                }
+                _reusableQueue->queuePush(buffer);
+            }
+        }
 
+        
+        [self setVolumeParameter];
+        [self start];
+        CFRunLoopRun();
+    });
+   
 }
 
 - (void)_disposeAudioOutputQueue
@@ -136,10 +147,13 @@ const int MCAudioQueueBufferCount = 10;
     }
 }
 
-- (BOOL)_start
+- (BOOL)start
 {
-   
-    
+//    UInt32 isRunning;
+//    [self getProperty:kAudioQueueProperty_IsRunning dataSize:&isRunning data:&isRunning error:nil];
+//    if (isRunning) {
+//        return YES;
+//    }
     OSStatus status = AudioQueueStart(_audioQueue, NULL);
     _started = status == noErr;
     if (status != 0) {
@@ -153,7 +167,7 @@ const int MCAudioQueueBufferCount = 10;
 
 - (BOOL)resume
 {
-    return [self _start];
+    return [self start];
 }
 
 - (BOOL)pause
@@ -177,6 +191,8 @@ const int MCAudioQueueBufferCount = 10;
 
 - (BOOL)stop:(BOOL)immediately
 {
+    _started = NO;
+    _playedTime = 0;
     OSStatus status = noErr;
     if (immediately)
     {
@@ -186,45 +202,31 @@ const int MCAudioQueueBufferCount = 10;
     {
         status = AudioQueueStop(_audioQueue, false);
     }
-    _started = NO;
-    _playedTime = 0;
+
     return status == noErr;
 }
 
 - (BOOL)playData:(const void *)data lenth:(int)lenth packetCount:(UInt32)packetCount packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof{
-    if (lenth > _bufferSize)
+    if (!_started)
     {
-    
         return NO;
     }
-    AudioQueueBufferRef bufferObj;
-    _reusableQueue->queuePop(&bufferObj);
-
-
-    memcpy(bufferObj->mAudioData, data, lenth);
-    bufferObj->mAudioDataByteSize = lenth;
-    
-    OSStatus status = AudioQueueEnqueueBuffer(_audioQueue, bufferObj, packetCount, packetDescriptions);
-    assert(!status);
-    
-//    if (status == noErr)
-//    {
-//        if (_reusableBuffers.count == 0 || isEof)
-//        {
-//            if (!_started && ![self _start])
-//            {
-//                return NO;
-//            }
-//        }
-//    }
-    UInt32 isrunning = 0;
-    UInt32 isrunningSize = 0;
-    status = AudioQueueGetProperty(_audioQueue, kAudioQueueProperty_IsRunning, &isrunning, &isrunningSize);
-    if (!isrunning) {
-        [self _start];
+    for (int i = 0; i<packetCount; i++) {
+        AudioQueueBufferRef bufferObj;
+        _reusableQueue->queuePop(&bufferObj);
+        
+#pragma warning 后期优化 针对多包问题，但是效率更低
+        memcpy(bufferObj->mAudioData, (char*)data + packetDescriptions[i].mStartOffset, lenth-packetDescriptions[i].mStartOffset);
+        bufferObj->mAudioDataByteSize = lenth;
+        AudioStreamPacketDescription desc = packetDescriptions[i];
+        desc.mStartOffset = 0;
+        desc.mDataByteSize -= packetDescriptions->mStartOffset;
+        //AudioStreamPacketDescription->mStartOffset 一定要等于0，，郁闷；
+        AudioQueueEnqueueBuffer(_audioQueue, bufferObj, packetCount, &desc);
+        //    assert(!status);
     }
 
-    return status == noErr;
+    return YES;
 }
 
 - (BOOL)setProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32)dataSize data:(const void *)data error:(NSError *__autoreleasing *)outError

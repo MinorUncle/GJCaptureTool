@@ -74,10 +74,7 @@ uint8_t *sps = NULL;
     
     callBackRecord.decompressionOutputRefCon = (__bridge void *)self;
     
-    NSDictionary *destinationImageBufferAttributes = [NSDictionary dictionaryWithObjectsAndKeys:
-                                                      [NSNumber numberWithBool:YES],
-                                                      (id)kCVPixelBufferOpenGLESCompatibilityKey,
-                                                      nil];
+    NSDictionary *destinationImageBufferAttributes = @{(id)kCVPixelBufferOpenGLESCompatibilityKey:@YES};
     //使用UIImageView播放时可以设置这个
     //    NSDictionary *destinationImageBufferAttributes =[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:NO],(id)kCVPixelBufferOpenGLESCompatibilityKey,[NSNumber numberWithInt:kCVPixelFormatType_32BGRA],(id)kCVPixelBufferPixelFormatTypeKey,nil];
     

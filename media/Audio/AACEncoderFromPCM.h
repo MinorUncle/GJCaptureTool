@@ -10,6 +10,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <CoreMedia/CoreMedia.h>
 
+#define MAX_PCM_LENTH 2048+10
 @class AACEncoderFromPCM;
 @protocol AACEncoderFromPCMDelegate<NSObject>
 -(void)AACEncoderFromPCM:(AACEncoderFromPCM*)encoder encodeCompleteBuffer:(uint8_t*)buffer Lenth:(long)totalLenth packetCount:(int)count packets:(AudioStreamPacketDescription*)packets;
@@ -24,4 +25,7 @@
 
 -(void)encodeWithBuffer:(CMSampleBufferRef)buffer;
 - (instancetype)initWithDestDescription:(AudioStreamBasicDescription)description;
+
+- (NSData *)fetchMagicCookie;
+
 @end

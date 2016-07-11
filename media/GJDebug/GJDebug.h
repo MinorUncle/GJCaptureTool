@@ -48,8 +48,8 @@
 #define AudioPraseStream_DEBUG(format, ...) _GJ_DEBUG( "AudioPraseStream_DEBUG: ", format,##__VA_ARGS__)
 #define AudioPraseStream_LOG(format, ...) _GJ_LOG( @"AudioPraseStream_LOG: ", format,##__VA_ARGS__)
 
-#ifndef DEBUG
-//#ifdef DEBUG
+//#ifndef DEBUG
+#ifdef DEBUG
 #define GJQueueLOG(format, ...) printf(format,##__VA_ARGS__)
 #else
 #define GJQueueLOG(format, ...)

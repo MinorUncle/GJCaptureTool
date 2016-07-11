@@ -49,7 +49,7 @@
     [super viewDidLoad];
     _praseStream = [[AudioPraseStream alloc]initWithFileType:kAudioFileAAC_ADTSType fileSize:0 error:nil];
     _praseStream.delegate = self;
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeAudioStream layer:_viewContainer.layer];
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeAudioStream|GJCaptureTypeVideoStream layer:_viewContainer.layer];
     _captureTool.delegate = self;
     _captureTool.fps = 15;
     _encoder = [[GJH264Encoder alloc]init];
@@ -79,8 +79,11 @@
     if (sender.selected) {
         _timer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateSpeed) userInfo:nil repeats:YES];
         [_captureTool startRecodeing];
+        [_audioPlayer start];
+        
     }else{
         [_timer invalidate];
+        [_audioPlayer stop:YES];
         [_captureTool stopRecode];
     }
 }
@@ -128,11 +131,27 @@
 -(void)GJCaptureTool:(GJCaptureTool*)captureView recodeVideoYUVData:(CMSampleBufferRef)sampleBuffer{
 //    CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
 //    CVPixelBufferLockBaseAddress(imageBuffer, 0);
-//    void* baseAdd = CVPixelBufferGetBaseAddress(imageBuffer);
-//    CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
+//    char* baseAdd = CVPixelBufferGetBaseAddress(imageBuffer);
 //    size_t w = CVPixelBufferGetWidth(imageBuffer);
 //    size_t h = CVPixelBufferGetHeight(imageBuffer);
-//    [_playView displayYUV420pData:baseAdd width:(uint32_t)w height:(uint32_t)h];
+//    OSType p =CVPixelBufferGetPixelFormatType(imageBuffer);
+//    char* ty = (char*)&p;
+//    NSLog(@"ty:%c%c%c%c",ty[3],ty[2],ty[1],ty[0]);
+//    size_t q = CVPixelBufferGetDataSize(imageBuffer);
+//    size_t s = CVPixelBufferGetPlaneCount(imageBuffer);
+//    size_t sd = CVPixelBufferGetBytesPerRow(imageBuffer);
+//    size_t sds1 = CVPixelBufferGetWidthOfPlane(imageBuffer, 1);
+//    size_t ds1 = CVPixelBufferGetHeightOfPlane(imageBuffer, 1);
+//    char* planeAdd1 = CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 1);
+//    
+//    size_t sds0 = CVPixelBufferGetWidthOfPlane(imageBuffer, 0);
+//    size_t ds0 = CVPixelBufferGetHeightOfPlane(imageBuffer, 0);
+//    char* planeAdd0 = CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 0);
+//        NSLog(@"sd:%ld,add:%ld",planeAdd1-planeAdd0,planeAdd0 - baseAdd);
+//    CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
+//    long d = planeAdd0 - baseAdd;
+//
+//    [_playView displayYUV420pData:(void*)(baseAdd + d) width:(uint32_t)w height:(uint32_t)h];
 
     [_encoder encodeSampleBuffer:sampleBuffer];
     
@@ -151,6 +170,7 @@
 //        char* codeChar = (char*)&(formtID);
 //        NSLog(@"GJAudioQueueRecoder format：%c%c%c%c ",codeChar[3],codeChar[2],codeChar[1],codeChar[0]);
 //        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:*base bufferSize:4000 macgicCookie:nil];
+//        [_audioPlayer start];
 //    }
 //    AudioBufferList bufferOut;
 //    CMBlockBufferRef bufferRetain;
@@ -172,15 +192,31 @@
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer{
     CVPixelBufferLockBaseAddress(imageBuffer, 0);
     void* baseAdd = CVPixelBufferGetBaseAddress(imageBuffer);
-    CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
     size_t w = CVPixelBufferGetWidth(imageBuffer);
     size_t h = CVPixelBufferGetHeight(imageBuffer);
+    OSType p =CVPixelBufferGetPixelFormatType(imageBuffer);
+    char* ty = (char*)&p;
+    NSLog(@"ty:%c%c%c%c",ty[3],ty[2],ty[1],ty[0]);
+    size_t q = CVPixelBufferGetDataSize(imageBuffer);
+    size_t s = CVPixelBufferGetPlaneCount(imageBuffer);
+    size_t sd = CVPixelBufferGetBytesPerRow(imageBuffer);
+    size_t sds1 = CVPixelBufferGetWidthOfPlane(imageBuffer, 1);
+    size_t ds1 = CVPixelBufferGetHeightOfPlane(imageBuffer, 1);
+    void* planeAdd1 = CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 1);
     
+    size_t sds0 = CVPixelBufferGetWidthOfPlane(imageBuffer, 0);
+    size_t ds0 = CVPixelBufferGetHeightOfPlane(imageBuffer, 0);
+    void* planeAdd0 = CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 0);
+    NSLog(@"sd:%ld,add:%ld",planeAdd1-planeAdd0,planeAdd0 - baseAdd);
+    CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
+    long d = planeAdd0 - baseAdd;
+    
+
     
     
 //    _totalCount ++;
 //    _totalByte += w*h*1.5;
-    [_playView displayYUV420pData:baseAdd width:(uint32_t)w height:(uint32_t)h];
+    [_playView displayYUV420pData:baseAdd+d width:(uint32_t)w height:(uint32_t)h];
 }
 -(void)pcmDecode:(PCMDecodeFromAAC *)decoder completeBuffer:(void *)buffer lenth:(int)lenth{
     if (_audioPlayer == nil) {
@@ -190,14 +226,20 @@
     [_audioPlayer playData:buffer lenth:lenth packetCount:0 packetDescriptions:NULL isEof:NO];
 }
 -(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder encodeCompleteBuffer:(uint8_t *)buffer Lenth:(long)totalLenth packetCount:(int)count packets:(AudioStreamPacketDescription *)packets{
-    [_praseStream parseData:buffer lenth:(int)totalLenth error:nil];
+    if (_audioPlayer == nil) {
+        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:encoder.destFormatDescription bufferSize:encoder.destMaxOutSize macgicCookie:[encoder fetchMagicCookie]];
+    }
+//    NSLog(@"PCMDecodeFromAAC:%d",lenth);
+        [_audioPlayer playData:buffer lenth:(UInt32)totalLenth packetCount:count packetDescriptions:packets isEof:NO];
+//
+//    [_praseStream parseData:buffer lenth:(int)totalLenth error:nil];
     NSLog(@"AACEncoderFromPCM:count:%d  lenth:%ld",count,totalLenth);
-//    [_audioDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
+//    [_audioDecoder decodeBuffer:buffer numberOfBytes:(UInt32)totalLenth numberOfPackets:1 packetDescriptions:packets];
 
 }
 - (void)audioFileStream:(AudioPraseStream *)audioFileStream audioData:(const void *)audioData numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins{
     for (int i = 0; i<numberOfPackets; i++) {
-        [_audioDecoder decodeBuffer:(uint8_t*)audioData numberOfBytes:numberOfBytes numberOfPackets:numberOfPackets packetDescriptions:packetDescriptioins];
+//        [_audioDecoder decodeBuffer:(uint8_t*)audioData numberOfBytes:numberOfBytes numberOfPackets:numberOfPackets packetDescriptions:packetDescriptioins];
     }
 //    NSLog(@"audioFileStream:%d",numberOfPackets);
     NSLog(@"audioFileStream count:%d  lenth:%d",numberOfPackets,numberOfBytes);

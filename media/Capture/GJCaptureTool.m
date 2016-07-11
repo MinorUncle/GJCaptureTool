@@ -127,6 +127,8 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         CAPTURE_LOG("添加图片输出失败");
         return NO;
     }
+    NSDictionary * imageOutputSettings = @{AVVideoCodecKey:AVVideoCodecJPEG};
+    _captureImageOutput.outputSettings = imageOutputSettings;
     _imageQueue = dispatch_queue_create("_imageQueue", DISPATCH_QUEUE_CONCURRENT);
     return YES;
 
@@ -170,6 +172,8 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         CAPTURE_LOG("添加视频数据输出成功");
     }
     _videoConnect = [_captureDataOutput connectionWithMediaType:AVMediaTypeVideo];
+    self.captureDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)};
+
        //链接创建后
     NSError * error;
     if([self.captureDevice lockForConfiguration:&error]){
@@ -318,7 +322,6 @@ faile:
     if ((_captureType & GJCaptureTypeVideoStream) == GJCaptureTypeVideoStream){
 //        AVCaptureConnection *captureConnection=[self.captureDataOutput connectionWithMediaType:AVMediaTypeVideo];
 //        captureConnection.videoOrientation=[self.captureVideoPreviewLayer connection].videoOrientation;
-//       self.captureDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange)};
         [self.captureDataOutput setSampleBufferDelegate:self queue:_videoStreamQueue];
     }
     if ((_captureType & GJCaptureTypeAudioStream) == GJCaptureTypeAudioStream){
