@@ -185,6 +185,8 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         return NO;
     }
     _videoStreamQueue = dispatch_queue_create("_videoStreamQueue", DISPATCH_QUEUE_CONCURRENT);
+    
+    
     return YES;
 FAILURE:
     return NO;
@@ -410,6 +412,7 @@ faile:
         CAPTURE_LOG("error:%s",error.localizedDescription.UTF8String);
         return;
     }
+    
 }
 
 

@@ -68,7 +68,9 @@ uint8_t *sps = NULL;
 }
 -(void) createDecompSession
 {
-    _decompressionSession = NULL;
+    if (_decompressionSession != nil) {
+        VTDecompressionSessionInvalidate(_decompressionSession);
+    }
     VTDecompressionOutputCallbackRecord callBackRecord;
     callBackRecord.decompressionOutputCallback = decodeOutputCallback;
     
@@ -85,6 +87,8 @@ uint8_t *sps = NULL;
                                                     &callBackRecord,
                                                     &_decompressionSession);
     NSLog(@"Video Decompression Session Create: \t %@", (status == noErr) ? @"successful!" : @"failed...");
+    
+
 }
 
 
@@ -177,16 +181,25 @@ void decodeOutputCallback(
         
         uint8_t*  parameterSetPointers[2] = {sps, pps};
         size_t parameterSetSizes[2] = {_spsSize-4, _ppsSize-4};
-        if (_formatDesc != nil) {
-            CFRelease(_formatDesc);
-        }
-        
+       
+        CMVideoFormatDescriptionRef  desc;
         status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,
                                                                      (const uint8_t *const*)parameterSetPointers,
                                                                      parameterSetSizes, 4,
-                                                                     &_formatDesc);
-        
-        if((status == noErr) && (_decompressionSession == NULL))
+                                                                     &desc);
+        BOOL shouldReCreate = NO;
+        if (_formatDesc != nil) {
+            CGRect rect = CMVideoFormatDescriptionGetCleanAperture(_formatDesc, YES);
+            CGRect rect1 = CMVideoFormatDescriptionGetCleanAperture(desc, YES);
+            if (!CGRectEqualToRect(rect, rect1)) {
+                shouldReCreate = YES;
+            }
+            CFRelease(_formatDesc);
+        }
+        _formatDesc = desc;
+
+
+        if((status == noErr) && (_decompressionSession == NULL || shouldReCreate))
         {
             [self createDecompSession];
         }
@@ -196,7 +209,6 @@ void decodeOutputCallback(
         }else{
             nalu_type = (frame[thirdStartCodeIndex + 4] & 0x1F);
         }
-
     }
     
 //    NSLog(@"numtpty:%d",nalu_type);
@@ -248,6 +260,8 @@ void decodeOutputCallback(
                                       blockBuffer, true, NULL, NULL,
                                       _formatDesc, 1, 0, NULL, 1,
                                       &sampleSize, &sampleBuffer);
+        
+        
         if (status != 0) {
             NSLog(@"\t\t SampleBufferCreate: \t %@", (status == noErr) ? @"successful!" : @"failed...");
         }
@@ -288,7 +302,6 @@ void decodeOutputCallback(
     VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
     VTDecodeInfoFlags flagOut;
     VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
-    NSLog(@"VTDecodeInfoFlags:%ul",(unsigned int)flagOut);
 }
 NSString * const naluTypesStrings[] =
 {

@@ -10,6 +10,8 @@
 @interface GJH264Encoder()
 {
     long encoderFrameCount;
+    int32_t _currentWidth;
+    int32_t _currentHeight;
     
 }
 @property(nonatomic)VTCompressionSessionRef enCodeSession;
@@ -33,20 +35,27 @@ GJH264Encoder* encoder ;
 //编码
 -(void)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
+    BOOL fourceKey;
     CVImageBufferRef imgRef = CMSampleBufferGetImageBuffer(sampleBuffer);
     int32_t h = (int32_t)CVPixelBufferGetHeight(imgRef);
     int32_t w = (int32_t)CVPixelBufferGetWidth(imgRef);
-    if (_enCodeSession == nil) {
- 
+    if (_enCodeSession == nil || h != _currentHeight || w != _currentWidth) {
+        fourceKey = YES;
         [self creatEnCodeSessionWithWidth:w height:h];
     }
     CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount, 10);
+    NSMutableDictionary * properties = [[NSMutableDictionary alloc]init];
+    [properties setObject:@1.0f forKey:(__bridge NSString *)kVTCompressionPropertyKey_Quality];
+    [properties setObject:@(300*1000) forKey:(__bridge NSString *)kVTCompressionPropertyKey_AverageBitRate];
+    if (fourceKey) {
+        [properties setObject:@YES forKey:(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame];
+    }
     OSStatus status = VTCompressionSessionEncodeFrame(
                                                       _enCodeSession,
                                                       imgRef,
                                                       presentationTimeStamp,
                                                       kCMTimeInvalid, // may be kCMTimeInvalid
-                                                      NULL,
+                                                       (__bridge CFDictionaryRef)properties,
                                                       NULL,
                                                       NULL );
     encoderFrameCount++;
@@ -58,6 +67,9 @@ GJH264Encoder* encoder ;
 }
 
 -(void)creatEnCodeSessionWithWidth:(int32_t)w height:(int32_t)h{
+    if (_enCodeSession != nil) {
+        VTCompressionSessionInvalidate(_enCodeSession);
+    }
     OSStatus t = VTCompressionSessionCreate(
                                             NULL,
                                             w,
@@ -70,11 +82,13 @@ GJH264Encoder* encoder ;
                                             NULL,
                                             &_enCodeSession);
     NSLog(@"VTCompressionSessionCreate status:%d",(int)t);
+    _currentWidth = w;
+    _currentHeight = h;
     VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
-    VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse);
+    //b帧
+    VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanTrue);
     VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_H264_High_5_2);
     VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_H264EntropyMode, kVTH264EntropyMode_CABAC);
-    
     
     SInt32 bitRate = 0.5;
     CFNumberRef ref = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &bitRate);
@@ -108,8 +122,13 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         return;
     }
     
-    bool keyframe = !CFDictionaryContainsKey( (CFArrayGetValueAtIndex(CMSampleBufferGetSampleAttachmentsArray(sample, true), 0)), kCMSampleAttachmentKey_NotSync);
+    CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sample);
+    size_t length, totalLength;
+    uint8_t *dataPointer;
+    OSStatus statusCodeRet = CMBlockBufferGetDataPointer(dataBuffer, 0, &length, &totalLength, (char**)&dataPointer);
     
+    
+    bool keyframe = !CFDictionaryContainsKey( (CFArrayGetValueAtIndex(CMSampleBufferGetSampleAttachmentsArray(sample, true), 0)), kCMSampleAttachmentKey_NotSync);
     
     if (keyframe)
     {
@@ -140,13 +159,17 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
                 free(data);
             }
         }
+        
+        //抛弃sps,pps
+        uint32_t spsPpsLength = 0;
+        memcpy(&spsPpsLength, dataPointer, 4);
+        spsPpsLength = CFSwapInt32BigToHost(spsPpsLength);
+        dataPointer += spsPpsLength + 4;
+        totalLength -= spsPpsLength + 4;
+
     }
     
-    CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sample);
-    size_t length, totalLength;
-    uint8_t *dataPointer;
-    OSStatus statusCodeRet = CMBlockBufferGetDataPointer(dataBuffer, 0, &length, &totalLength, (char**)&dataPointer);
-    
+
     
     if (statusCodeRet == noErr) {
         
@@ -171,6 +194,9 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 }
 -(void)stop{
     _enCodeSession = nil;
+}
+-(void)dealloc{
+    VTCompressionSessionInvalidate(_enCodeSession);
 }
 //-(void)restart{
 //

@@ -17,7 +17,6 @@
 #define _GJ_DEBUG(...)
 #endif
 
-#include <stdio.h>
 #ifndef DEBUG
 //#ifdef DEBUG
 #define _GJ_LOG(name, format, ...) NSLog( name format ,##__VA_ARGS__)
@@ -39,17 +38,17 @@
 #define GJOpenAL_DEBUG(format, ...) _GJ_DEBUG( "GJOpenAL_DEBUG: ", format,##__VA_ARGS__)
 #define GJOpenAL_LOG(format, ...) _GJ_LOG( @"GJOpenAL_LOG: ", format,##__VA_ARGS__)
 
-#define AACEncoderFromPCM_DEBUG(format, ...) _GJ_DEBUG( "AACEncoderFromPCM_DEBUG: ", format,##__VA_ARGS__)
-#define AACEncoderFromPCM_LOG(format, ...) _GJ_LOG( @"AACEncoderFromPCM_LOG: ", format,##__VA_ARGS__)
+#define AACEncoderFromPCM_DEBUG(format, ...)// _GJ_DEBUG( "AACEncoderFromPCM_DEBUG: ", format,##__VA_ARGS__)
+#define AACEncoderFromPCM_LOG(format, ...) //_GJ_LOG( @"AACEncoderFromPCM_LOG: ", format,##__VA_ARGS__)
 
-#define PCMDecodeFromAAC_DEBUG(format, ...) _GJ_DEBUG( "PCMDecodeFromAAC_DEBUG: ", format,##__VA_ARGS__)
-#define PCMDecodeFromAAC_LOG(format, ...) _GJ_LOG( @"PCMDecodeFromAAC_LOG: ", format,##__VA_ARGS__)
+#define PCMDecodeFromAAC_DEBUG(format, ...)// _GJ_DEBUG( "PCMDecodeFromAAC_DEBUG: ", format,##__VA_ARGS__)
+#define PCMDecodeFromAAC_LOG(format, ...)// _GJ_LOG( @"PCMDecodeFromAAC_LOG: ", format,##__VA_ARGS__)
 
 #define AudioPraseStream_DEBUG(format, ...) _GJ_DEBUG( "AudioPraseStream_DEBUG: ", format,##__VA_ARGS__)
 #define AudioPraseStream_LOG(format, ...) _GJ_LOG( @"AudioPraseStream_LOG: ", format,##__VA_ARGS__)
 
-//#ifndef DEBUG
-#ifdef DEBUG
+#ifndef DEBUG
+//#ifdef DEBUG
 #define GJQueueLOG(format, ...) printf(format,##__VA_ARGS__)
 #else
 #define GJQueueLOG(format, ...)

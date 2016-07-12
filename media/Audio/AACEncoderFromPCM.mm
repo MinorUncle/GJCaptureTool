@@ -117,7 +117,6 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     assert(inBufferList.mBuffers[0].mDataByteSize <= MAX_PCM_LENTH);
 
-    NSLog(@"inBufferList lenth:%d",inBufferList.mBuffers[0].mDataByteSize);
 
 //    if (_resumeQueue == nil) {
 //         _resumeQueue = new GJAudioBufferQueue(inBufferList.mBuffers[0].mDataByteSize+10);
