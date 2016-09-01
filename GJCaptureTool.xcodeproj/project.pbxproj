@@ -33,7 +33,6 @@
 		C561ACB11D51D3DC00113453 /* libpostproc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C561AC851D51D3DC00113453 /* libpostproc.a */; };
 		C561ACB21D51D3DC00113453 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C561AC861D51D3DC00113453 /* libswresample.a */; };
 		C561ACB31D51D3DC00113453 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C561AC871D51D3DC00113453 /* libswscale.a */; };
-		C561ACB41D51D3DC00113453 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C561AC8B1D51D3DC00113453 /* Info.plist */; };
 		C561ACB51D51D3DC00113453 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC8C1D51D3DC00113453 /* main.m */; };
 		C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC8F1D51D3DC00113453 /* OpenGLView20.m */; };
 		C561ACB71D51D3DC00113453 /* GJOpenALPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = C561AC921D51D3DC00113453 /* GJOpenALPlayer.mm */; };
@@ -74,7 +73,7 @@
 		C561AC051D51D3DC00113453 /* H264Decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264Decoder.h; sourceTree = "<group>"; };
 		C561AC061D51D3DC00113453 /* H264Decoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = H264Decoder.mm; sourceTree = "<group>"; };
 		C561AC071D51D3DC00113453 /* H264Encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264Encoder.h; sourceTree = "<group>"; };
-		C561AC081D51D3DC00113453 /* H264Encoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = H264Encoder.mm; sourceTree = "<group>"; };
+		C561AC081D51D3DC00113453 /* H264Encoder.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = H264Encoder.mm; sourceTree = "<group>"; };
 		C561AC091D51D3DC00113453 /* H264StreamToTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264StreamToTS.h; sourceTree = "<group>"; };
 		C561AC0A1D51D3DC00113453 /* H264StreamToTS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = H264StreamToTS.m; sourceTree = "<group>"; };
 		C561AC0B1D51D3DC00113453 /* RtmpSendH264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RtmpSendH264.h; sourceTree = "<group>"; };
@@ -602,7 +601,6 @@
 				TargetAttributes = {
 					C54FA8A71D21006000A0D3C3 = {
 						CreatedOnToolsVersion = 7.3;
-						DevelopmentTeam = X33DX68294;
 					};
 				};
 			};
@@ -629,7 +627,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C561ACB41D51D3DC00113453 /* Info.plist in Resources */,
 				C561ACA41D51D3DC00113453 /* Main.storyboard in Resources */,
 				C561AC9C1D51D3DC00113453 /* Assets.xcassets in Resources */,
 				C561ACA31D51D3DC00113453 /* LaunchScreen.storyboard in Resources */,
@@ -785,7 +782,7 @@
 					"$(PROJECT_DIR)/GJCaptureTool/FFmpeg/lib",
 					"$(PROJECT_DIR)/GJCaptureTool/X264/lib",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "--.media";
+				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool";
 				PRODUCT_NAME = GJCaptureTool;
 			};
 			name = Debug;
@@ -794,7 +791,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/GJCaptureTool/X264/include\"",
 					"\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"",
@@ -807,7 +804,7 @@
 					"$(PROJECT_DIR)/GJCaptureTool/FFmpeg/lib",
 					"$(PROJECT_DIR)/GJCaptureTool/X264/lib",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "--.media";
+				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool";
 				PRODUCT_NAME = GJCaptureTool;
 			};
 			name = Release;

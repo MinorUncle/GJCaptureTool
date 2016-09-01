@@ -11,7 +11,6 @@ extern "C"{
 #import "imgutils.h"
 }
 #import "H264Encoder.h"
-#import "GJQueue.h"
 @interface H264Encoder()
 {
     AVCodec* _videoEncoder;
@@ -22,12 +21,11 @@ extern "C"{
 //    AVFrame* _yuvFrame;
     AVPacket* _videoPacket;
     dispatch_queue_t _videoDecodeQueue;
-    GJQueue<char*>* _queue;
 
 }
 @end
 @implementation H264Encoder
-@synthesize height = _height,width = _width;
+@synthesize height = _height,width = _width,extendata = _extendata;
 - (instancetype)initWithWidth:(int)width height:(int)height
 {
     self = [super init];
@@ -67,13 +65,7 @@ extern "C"{
     _frame->format = AV_PIX_FMT_YUV420P;
     
     
-    _queue = new GJQueue<char*>(2);
-    _queue->shouldNonatomic = YES;
-    _queue->shouldWait = YES;
-    for (int i = 0; i<2; i++) {
-        char* data = (char*)malloc(_videoEncoderContext->width* _videoEncoderContext->height*1.5);
-        _queue->queuePush(data);
-    }
+   
 }
 static int framePts = 0;
 -(void)encoderData:(CMSampleBufferRef)sampleBufferRef{
@@ -93,24 +85,35 @@ static int framePts = 0;
     uint8_t* address = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(imgRef, 0);
     _frame->linesize[0] = (int)CVPixelBufferGetWidthOfPlane(imgRef, 0);
     _frame->linesize[1] = (int)CVPixelBufferGetWidthOfPlane(imgRef, 1);
-    _frame->pts = framePts++;
+    
+    CMTime pts = CMSampleBufferGetPresentationTimeStamp(sampleBufferRef);
+    float VALUE = pts.value / pts.timescale;
+    NSLog(@"pts:%lf  value:%lld CMTimeScale:%d  CMTimeFlags:%d CMTimeEpoch:%lld",VALUE, pts.value,pts.timescale,pts.flags,pts.epoch);
+
+    _frame->pts = pts.value;
 
     int errorCode = av_image_fill_arrays(_frame->data, _frame->linesize, address, _videoEncoderContext->pix_fmt, _width, _height, 1);
-
-    
+    CVPixelBufferUnlockBaseAddress(imgRef, 0);
     [self showErrWidhCode:errorCode preStr:@"av_image_fill_arrays"];
     errorCode = avcodec_send_frame(_videoEncoderContext, _frame);
     [self showErrWidhCode:errorCode preStr:@"avcodec_send_frame"];
-    CVPixelBufferUnlockBaseAddress(imgRef, 0);
 
     errorCode = avcodec_receive_packet(_videoEncoderContext, _videoPacket);
     [self showErrWidhCode:errorCode preStr:@"avcodec_receive_packet"];
     
     if (!errorCode) {
-        [self.delegate H264Encoder:self h264:_videoPacket->data size:_videoPacket->size];
+   
+        
+        [self.delegate H264Encoder:self h264:_videoPacket->data size:_videoPacket->size pts:_videoPacket->pts dts:_videoPacket->dts];
     }
-
 }
+-(NSData *)extendata{
+    if (_extendata == nil) {
+        _extendata = [NSData dataWithBytes:_videoEncoderContext->extradata length:_videoEncoderContext->extradata_size];
+    }
+    return _extendata;
+}
+
 -(void)showErrWidhCode:(int)errorCode preStr:(NSString*)preStr{
     char* c = (char*)&errorCode;
     if (errorCode <0 ) {

@@ -22,6 +22,18 @@
 @property(nonatomic,readonly,retain)NSData* parameterSet;
 @property(assign,nonatomic) int32_t currentWidth;
 @property(assign,nonatomic) int32_t currentHeight;
+@property(assign,nonatomic) int32_t bitRate;
+@property(assign,nonatomic) int32_t maxKeyFrameInterval;//gop_size
+@property(assign,nonatomic) float quality;//
+@property(assign,nonatomic) CFStringRef profileLevel;//
+@property(assign,nonatomic) CFStringRef entropyMode;//
+@property(assign,nonatomic) BOOL allowBFrame;//
+@property(assign,nonatomic) BOOL allowPFrame;//
+
+@property(assign,nonatomic) int expectedFrameRate;//
+
+
+
 -(void)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer;
 -(void)stop;
 @end

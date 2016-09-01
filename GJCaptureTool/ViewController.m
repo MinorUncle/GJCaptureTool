@@ -1,6 +1,6 @@
 //
 //  ViewController.m
-//  media
+//  GJCaptureTool
 //
 //  Created by tongguan on 16/6/27.
 //  Copyright © 2016年 MinorUncle. All rights reserved.
@@ -20,10 +20,13 @@
 #import "H264Decoder.h"
 #import "H264Encoder.h"
 #import "H264StreamToTS.h"
+
+#import "RtmpSendH264.h"
 @interface ViewController ()<GJCaptureToolDelegate,GJH264DecoderDelegate,GJH264EncoderDelegate,AACEncoderFromPCMDelegate,PCMDecodeFromAACDelegate,AudioStreamPraseDelegate,H264DecoderDelegate,H264EncoderDelegate>
 {
     GJAudioQueuePlayer* _audioPlayer;
     AudioPraseStream* _praseStream;
+    RtmpSendH264* _rtmpSend;
     BOOL _stop;
     H264StreamToTS* _toTS;
     H264Decoder* _decode;
@@ -65,7 +68,7 @@
     [super viewDidLoad];
     _praseStream = [[AudioPraseStream alloc]initWithFileType:kAudioFileAAC_ADTSType fileSize:0 error:nil];
     _praseStream.delegate = self;
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeVideoStream layer:_viewContainer.layer];
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeVideoStream|GJCaptureTypeAudioStream layer:_viewContainer.layer];
     _captureTool.delegate = self;
     _captureTool.fps = 15;
     _gjEncoder = [[GJH264Encoder alloc]init];
@@ -196,8 +199,7 @@
 }
 #pragma mark ---delegate
 -(void)GJCaptureTool:(GJCaptureTool*)captureView recodeVideoYUVData:(CMSampleBufferRef)sampleBuffer{
-    @autoreleasepool {
-        
+    
 //        CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
 //        CVPixelBufferLockBaseAddress(imageBuffer, 0);
 //        void* baseAdd = CVPixelBufferGetBaseAddress(imageBuffer);
@@ -230,7 +232,7 @@
 //    [_playView displayYUV420pData:(void*)(baseAdd + d) width:(uint32_t)w height:(uint32_t)h];
 
     [_gjEncoder encodeSampleBuffer:sampleBuffer];
-        
+    
         
         
 //            if (_encoder == nil) {
@@ -242,7 +244,6 @@
 //            }
 //            [_encoder encoderData:sampleBuffer];
     
-    }
 }
 -(void)GJCaptureTool:(GJCaptureTool*)captureView recodeAudioPCMData:(CMSampleBufferRef)sampleBuffer{
     
@@ -275,7 +276,7 @@
     
     _totalCount ++;
     _totalByte += totalLenth;
-    
+//
 //    if (_decode == nil) {
 //        _decode = [[H264Decoder alloc]initWithWidth:encoder.currentWidth height:encoder.currentHeight];
 //        _decode.decoderDelegate = self;
@@ -322,13 +323,21 @@
     
 }
 
--(void)H264Encoder:(H264Encoder *)encoder h264:(uint8_t *)data size:(int)size{
-    if (_decode == nil) {
-        _decode = [[H264Decoder alloc]initWithWidth:encoder.width height:encoder.height];
-        _decode.decoderDelegate = self;
+-(void)H264Encoder:(H264Encoder *)encoder h264:(uint8_t *)data size:(int)size pts:(int64_t)pts dts:(int64_t)dts{
+//    if (_decode == nil) {
+//        _decode = [[H264Decoder alloc]initWithWidth:encoder.width height:encoder.height];
+//        _decode.decoderDelegate = self;
+//    }
+//    [_decode decodeData:data lenth:size];
+    
+//        [_gjDecoder decodeBuffer:data withLenth:size];
+    if (_rtmpSend == nil) {
+        _rtmpSend = [[RtmpSendH264 alloc]initWithOutUrl:@"rtmp://192.168.1.144:5920/rtmplive/room"];
+        _rtmpSend.width = encoder.width;
+        _rtmpSend.height = encoder.height;
+        _rtmpSend.videoExtradata = encoder.extendata;
     }
-    [_decode decodeData:data lenth:size];
-    //    [_gjDecoder decodeBuffer:data withLenth:size];
+    [_rtmpSend sendH264Buffer:data lengh:size pts:pts dts:dts eof:NO];
 }
 -(void)H264Decoder:(H264Decoder *)decoder GetYUV:(char *)data size:(int)size width:(float)width height:(float)height{
     //    [_openglView displayYUV420pData:(void*)(data) width:(uint32_t)width height:(uint32_t)height];
@@ -346,12 +355,22 @@
     NSLog(@"PCMDecodeFromAAC:%d",lenth);
     [_audioPlayer playData:buffer lenth:lenth packetCount:0 packetDescriptions:NULL isEof:NO];
 }
+static int aacFramePerS;
+static int aacIndex;
 -(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder encodeCompleteBuffer:(uint8_t *)buffer Lenth:(long)totalLenth packetCount:(int)count packets:(AudioStreamPacketDescription *)packets{
-    if (_audioPlayer == nil) {
-        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:encoder.destFormatDescription bufferSize:encoder.destMaxOutSize macgicCookie:[encoder fetchMagicCookie]];
+    aacIndex++;
+    if (aacFramePerS == 0) {
+        aacFramePerS = encoder.destFormatDescription.mSampleRate;
+        _rtmpSend.audioStreamFormat = encoder.destFormatDescription;
     }
-//    NSLog(@"PCMDecodeFromAAC:%d",lenth);
-        [_audioPlayer playData:buffer lenth:(UInt32)totalLenth packetCount:count packetDescriptions:packets isEof:NO];
+
+    [_rtmpSend sendAACBuffer:buffer lenth:(int)totalLenth pts:aacIndex/aacFramePerS dts:aacIndex eof:NO];
+    
+//    if (_audioPlayer == nil) {
+//        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:encoder.destFormatDescription bufferSize:encoder.destMaxOutSize macgicCookie:[encoder fetchMagicCookie]];
+//    }
+////    NSLog(@"PCMDecodeFromAAC:%d",lenth);
+//        [_audioPlayer playData:buffer lenth:(UInt32)totalLenth packetCount:count packetDescriptions:packets isEof:NO];
 //
 //    [_praseStream parseData:buffer lenth:(int)totalLenth error:nil];
    // NSLog(@"AACEncoderFromPCM:count:%d  lenth:%ld",count,totalLenth);

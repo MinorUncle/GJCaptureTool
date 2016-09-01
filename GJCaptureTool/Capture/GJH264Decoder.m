@@ -7,42 +7,6 @@
 //
 
 #import "GJH264Decoder.h"
-
-#define maxCount 10
-//////会覆盖队列
-@interface queue : NSObject 
-{
-    uint8_t* bufferQueue[maxCount];
-    int bufferSize[maxCount];
-}
-@property (assign,readonly) int start;
-@property (assign,readonly)int end;
-
-@end
-@implementation queue
-
--(void)push:(uint8_t*)buffer size:(int)size{
-    bufferQueue[_end] = buffer;
-    bufferSize[_end] = size;
-    _end = (_end+1) % maxCount;
-}
--(Boolean)popBuffer:(uint8_t**)outputBuffer size:(int*)outputSize{
-    if (_end == _start) {
-        return false;
-    }
-    int temp = _start;
-    _start = (_start+1) % maxCount;
-    
-    
-    *outputBuffer = bufferQueue[temp];
-    *outputSize = bufferSize[temp];
-    
-    bufferSize[temp] = 0;
-    return true;
-}
-
-@end
-
 @interface GJH264Decoder()
 {
     dispatch_queue_t _decodeQueue;
@@ -62,6 +26,7 @@ uint8_t *sps = NULL;
     self = [super init];
     if (self) {
         decoder = self;
+        
         _decodeQueue = dispatch_queue_create("decodeQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
@@ -76,6 +41,7 @@ uint8_t *sps = NULL;
     
     callBackRecord.decompressionOutputRefCon = (__bridge void *)self;
     
+    
     NSDictionary *destinationImageBufferAttributes = @{(id)kCVPixelBufferOpenGLESCompatibilityKey:@YES};
     //使用UIImageView播放时可以设置这个
     //    NSDictionary *destinationImageBufferAttributes =[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:NO],(id)kCVPixelBufferOpenGLESCompatibilityKey,[NSNumber numberWithInt:kCVPixelFormatType_32BGRA],(id)kCVPixelBufferPixelFormatTypeKey,nil];
@@ -86,9 +52,7 @@ uint8_t *sps = NULL;
                                                     (__bridge CFDictionaryRef)(destinationImageBufferAttributes),
                                                     &callBackRecord,
                                                     &_decompressionSession);
-    NSLog(@"Video Decompression Session Create: \t %@", (status == noErr) ? @"successful!" : @"failed...");
-    
-
+    NSLog(@"Video Decompression Session Create: %@  code:%d  thread:%@", (status == noErr) ? @"successful!" : @"failed...",status,[NSThread currentThread]);
 }
 
 
@@ -119,7 +83,7 @@ void decodeOutputCallback(
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     OSStatus status;
-    //    NSData* d = [NSData dataWithBytes:frame length:frameSize];
+        NSData* d = [NSData dataWithBytes:frame length:frameSize];
     //      NSLog(@"d:%@",d);
     uint8_t *data = NULL;
     
@@ -135,7 +99,7 @@ void decodeOutputCallback(
     
     int nalu_type = (frame[startCodeIndex + 4] & 0x1F);
     
-    if (nalu_type != 7 && _formatDesc == NULL)
+    if (nalu_type != 7 && _decompressionSession == NULL)
     {
         NSLog(@"Video error: Frame is not an I Frame and format description is null");
         return;
@@ -188,6 +152,18 @@ void decodeOutputCallback(
                                                                      parameterSetSizes, 4,
                                                                      &desc);
         BOOL shouldReCreate = NO;
+        FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
+        CMVideoDimensions fordesc = CMVideoFormatDescriptionGetDimensions(desc);
+        
+        char* code = (char*)&re;
+        NSLog(@"code:%c %c %c %c ",code[3],code[2],code[1],code[0]);
+        CFArrayRef arr = CMVideoFormatDescriptionGetExtensionKeysCommonWithImageBuffers();
+        signed long count = CFArrayGetCount(arr);
+        for (int i = 0; i<count; i++) {
+           CFPropertyListRef  list = CMFormatDescriptionGetExtension(desc, CFArrayGetValueAtIndex(arr, i));
+            NSLog(@"key:%@,%@",CFArrayGetValueAtIndex(arr, i),list);
+        }
+        
         if (_formatDesc != nil) {
             CGRect rect = CMVideoFormatDescriptionGetCleanAperture(_formatDesc, YES);
             CGRect rect1 = CMVideoFormatDescriptionGetCleanAperture(desc, YES);
@@ -198,8 +174,8 @@ void decodeOutputCallback(
         }
         CGRect rect1 = CMVideoFormatDescriptionGetCleanAperture(desc, YES);
 
+        
         _formatDesc = desc;
-
 
         if((status == noErr) && (_decompressionSession == NULL || shouldReCreate))
         {
@@ -215,7 +191,6 @@ void decodeOutputCallback(
     
 //    NSLog(@"numtpty:%d",nalu_type);
 //    if(1)   //5则帧，1则p帧
-    
     int offset = _spsSize + _ppsSize;
     blockLength = frameSize - offset;
     data = &frame[offset];
@@ -227,11 +202,11 @@ void decodeOutputCallback(
                                                 0,
                                                 blockLength,
                                                 0, &blockBuffer);
+    
     if (status != 0) {
         NSLog(@"\t\t BlockBufferCreation: \t %@", (status == kCMBlockBufferNoErr) ? @"successful!" : @"failed...");
         return;
     }
-    
     
 //    if (nalu_type == 1)     //p帧
 //    {
@@ -250,6 +225,7 @@ void decodeOutputCallback(
 //                                                    blockLength,
 //                                                    0, &blockBuffer);
 //    }
+    
     if (blockLength == 0) {
         return;
     }
@@ -282,9 +258,6 @@ void decodeOutputCallback(
         CFRelease(blockBuffer);
         blockBuffer = NULL;
     }
-    
-  
-    
 }
 
 -(uint32_t)findFlgIndexData:(uint8_t*)frame lenth:(uint32_t)frameSize{
