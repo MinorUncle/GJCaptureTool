@@ -33,8 +33,9 @@ typedef enum _GJCaptureType{
 @property (strong,nonatomic) AVCaptureStillImageOutput *captureImageOutput;//音频输出流
 @property (strong,nonatomic) AVCaptureAudioDataOutput *captureAudioOutput;//音频输出流
 @property (weak,nonatomic) id<GJCaptureToolDelegate> delegate;//
+@property (copy,nonatomic)NSString* sessionPreset;//default = AVCaptureSessionPreset640x480
 
-- (instancetype)initWithType:(GJCaptureType)type layer:(CALayer*)layer;
+- (instancetype)initWithType:(GJCaptureType)type fps:(int)fps layer:(CALayer*)layer;
 
 -(void)setFocusCursorWithPoint:(CGPoint)point;
 -(void)setFocusMode:(AVCaptureFocusMode )focusMode;

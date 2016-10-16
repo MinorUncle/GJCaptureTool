@@ -11,7 +11,7 @@
 
 @class GJH264Encoder;
 @protocol GJH264EncoderDelegate <NSObject>
--(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(uint8_t*)buffer withLenth:(long)totalLenth;
+-(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(uint8_t*)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame;
 @end
 
 
@@ -22,6 +22,9 @@
 @property(nonatomic,readonly,retain)NSData* parameterSet;
 @property(assign,nonatomic) int32_t currentWidth;
 @property(assign,nonatomic) int32_t currentHeight;
--(void)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer;
+@property(assign,nonatomic,readonly)int gop_size;
+@property(assign,nonatomic,readonly)int allow_B_frames;
+@property(assign,nonatomic,readonly)int bit_rate;
+-(void)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer fourceKey:(BOOL)fourceKey;
 -(void)stop;
 @end

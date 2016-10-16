@@ -8,6 +8,8 @@
 #import "GJCaptureTool.h"
 #import "GJDebug.h"
 //#ifndef DEBUG
+#import <AVFoundation/AVAudioSettings.h>
+#import <CoreAudio/CoreAudioTypes.h>
 
 typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 
@@ -50,12 +52,12 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 @synthesize captureVideoPreviewLayer = _captureVideoPreviewLayer;
 #pragma mark -- initFunction
 
-- (instancetype)initWithType:(GJCaptureType)type layer:(CALayer*)layer
+- (instancetype)initWithType:(GJCaptureType)type fps:(int)fps layer:(CALayer*)layer
 {
     self = [super init];
     if (self) {
-        
-
+        _fps = fps;
+        _sessionPreset = AVCaptureSessionPreset640x480;
         
         [layer addObserver:self forKeyPath:@"bounds" options:NSKeyValueObservingOptionNew context:nil];
         _captureVideoPreviewLayer = [[AVCaptureVideoPreviewLayer alloc]init];
@@ -66,7 +68,6 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         [layer addSublayer:_captureVideoPreviewLayer];
         [layer addSublayer:_focusCursor];
         _captureType = type;
-        [layer addSublayer:_focusCursor];
         
         [self _initSession];
         [self _initVideoInpute];
@@ -133,9 +134,14 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     return YES;
 
 }
+-(void)setSessionPreset:(NSString *)sessionPreset{
+    if ([_captureSession canSetSessionPreset:sessionPreset]) {//设置分辨率
+        _captureSession.sessionPreset=sessionPreset;
+    }
+}
 -(BOOL)_initVideoInpute{
-    if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset640x480]) {//设置分辨率
-        _captureSession.sessionPreset=AVCaptureSessionPreset640x480;
+    if ([_captureSession canSetSessionPreset:_sessionPreset]) {//设置分辨率
+        _captureSession.sessionPreset=_sessionPreset;
     }
     //获得输入设备
     self.captureDevice=[self getCameraDeviceWithPosition:AVCaptureDevicePositionBack];//取得后置摄像头
@@ -217,8 +223,6 @@ FAILURE:
         CAPTURE_LOG("无法添加音频输入");
     }
     _audioConnect = [_captureAudioOutput connectionWithMediaType:AVMediaTypeAudio];
-    _audioStreamQueue = dispatch_queue_create("_audioStreamQueue", DISPATCH_QUEUE_CONCURRENT);
-
     return YES;
 faile:
     return NO;
@@ -327,6 +331,9 @@ faile:
         [self.captureDataOutput setSampleBufferDelegate:self queue:_videoStreamQueue];
     }
     if ((_captureType & GJCaptureTypeAudioStream) == GJCaptureTypeAudioStream){
+        if (_audioStreamQueue == nil) {
+            _audioStreamQueue = dispatch_queue_create("_audioStreamQueue", DISPATCH_QUEUE_CONCURRENT);
+        }
         [self.captureAudioOutput setSampleBufferDelegate:self queue:_audioStreamQueue];
     }
    

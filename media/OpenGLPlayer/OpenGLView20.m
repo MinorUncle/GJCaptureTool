@@ -241,7 +241,7 @@ static const GLfloat coordVertices[] = {
     
     glBindFramebuffer(GL_FRAMEBUFFER, _framebuffer);
     glBindRenderbuffer(GL_RENDERBUFFER, _renderBuffer);
-    
+
     
     if (![_glContext renderbufferStorage:GL_RENDERBUFFER fromDrawable:(CAEAGLLayer *)self.layer])
     {

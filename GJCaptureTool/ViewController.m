@@ -65,9 +65,8 @@
     [super viewDidLoad];
     _praseStream = [[AudioPraseStream alloc]initWithFileType:kAudioFileAAC_ADTSType fileSize:0 error:nil];
     _praseStream.delegate = self;
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeVideoStream layer:_viewContainer.layer];
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeVideoStream fps:15 layer:_viewContainer.layer];
     _captureTool.delegate = self;
-    _captureTool.fps = 15;
     _gjEncoder = [[GJH264Encoder alloc]init];
     _gjDecoder = [[GJH264Decoder alloc]init];
     _audioEncoder = [[AACEncoderFromPCM alloc]init];
@@ -229,7 +228,7 @@
         
 //    [_playView displayYUV420pData:(void*)(baseAdd + d) width:(uint32_t)w height:(uint32_t)h];
 
-    [_gjEncoder encodeSampleBuffer:sampleBuffer];
+    [_gjEncoder encodeSampleBuffer:sampleBuffer fourceKey:NO];
         
         
         
@@ -270,7 +269,7 @@
 //    [_audioPlayer playData:bufferOut.mBuffers[0].mData lenth:bufferOut.mBuffers[0].mDataByteSize packetCount:0 packetDescriptions:NULL isEof:NO];
 //    CFRelease(bufferRetain);
 }
--(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth{
+-(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame{
     
     
     _totalCount ++;
@@ -281,7 +280,9 @@
 //        _decode.decoderDelegate = self;
 //    }
 //    [_decode decodeData:buffer lenth:(int)totalLenth];
-    
+    if (keyFrame) {
+        [_gjDecoder decodeBuffer:(uint8_t*)encoder.parameterSet.bytes withLenth:(uint32_t)encoder.parameterSet.length];
+    }
     [_gjDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
 }
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer{

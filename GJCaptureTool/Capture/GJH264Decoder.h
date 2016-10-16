@@ -8,12 +8,14 @@
 
 #import <Foundation/Foundation.h>
 #import <VideoToolbox/VideoToolbox.h>
+#import "Formats.h"
 @class GJH264Decoder;
 @protocol GJH264DecoderDelegate <NSObject>
 -(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer;
 @end
 
 @interface GJH264Decoder : NSObject
+
 @property(nonatomic,weak)id<GJH264DecoderDelegate> delegate;
 -(void)decodeBuffer:(uint8_t*)buffer withLenth:(uint32_t)totalLenth;
 
