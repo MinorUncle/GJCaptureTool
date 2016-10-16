@@ -1,6 +1,6 @@
 //
 //  AudioPraseStream.h
-//  media
+//  GJCaptureTool
 //
 //  Created by tongguan on 16/7/8.
 //  Copyright © 2016年 MinorUncle. All rights reserved.

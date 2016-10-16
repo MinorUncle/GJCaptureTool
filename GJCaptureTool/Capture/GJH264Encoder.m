@@ -25,10 +25,14 @@ GJH264Encoder* encoder ;
 {
     self = [super init];
     if (self) {
+        _entropyMode = kVTH264EntropyMode_CABAC;
+        _profileLevel = kVTProfileLevel_H264_Main_AutoLevel;
+        _allowBFrame = YES;
+        _bitRate = 300*1024;
+        _quality = 1.0;
+        _maxKeyFrameInterval = 10;
+        _expectedFrameRate = 0;
         encoder = self;
-        _allow_B_frames = YES;
-        _gop_size = 20;
-        _bit_rate = 300*1024;
     }
     return self;
 }
@@ -45,8 +49,10 @@ GJH264Encoder* encoder ;
         [self creatEnCodeSessionWithWidth:w height:h];
     }
     CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount, 10);
-    NSMutableDictionary * properties = [[NSMutableDictionary alloc]init];
+    NSMutableDictionary * properties;
+ 
     if (fourceKey) {
+        properties = [[NSMutableDictionary alloc]init];
         [properties setObject:@YES forKey:(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame];
     }
     OSStatus status = VTCompressionSessionEncodeFrame(
@@ -68,7 +74,7 @@ GJH264Encoder* encoder ;
     if (_enCodeSession != nil) {
         VTCompressionSessionInvalidate(_enCodeSession);
     }
-    OSStatus t = VTCompressionSessionCreate(
+    OSStatus result = VTCompressionSessionCreate(
                                             NULL,
                                             w,
                                             h,
@@ -79,41 +85,71 @@ GJH264Encoder* encoder ;
                                             encodeOutputCallback,
                                             NULL,
                                             &_enCodeSession);
-    NSLog(@"VTCompressionSessionCreate status:%d",(int)t);
+    NSLog(@"VTCompressionSessionCreate status:%d",(int)result);
     _currentWidth = w;
     _currentHeight = h;
-    VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_RealTime, kCFBooleanTrue);
-    //b帧
-    if (_allow_B_frames) {
-        VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanTrue);
-    }else{
-        VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowFrameReordering, kCFBooleanFalse);
-    }
-    VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ProfileLevel, kVTProfileLevel_H264_High_5_2);
-    VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_H264EntropyMode, kVTH264EntropyMode_CABAC);
     
-    SInt32 bitRate = _bit_rate;
-    CFNumberRef ref = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &bitRate);
-    VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, ref);
-    CFRelease(ref);
-    
-    float quality = 0.1;
-    CFNumberRef  qualityRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType,&quality);
-    VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_Quality,qualityRef);
-    CFRelease(qualityRef);
-    
-    int frameInterval = _gop_size;
-    CFNumberRef  frameIntervalRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &frameInterval);
-    VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_MaxKeyFrameInterval,frameIntervalRef);
-    CFRelease(frameIntervalRef);
-    
-    VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
-    //    UInt32 num = 5;
-    //    ref = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type,&num);
-    //    VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ExpectedFrameRate,ref);
-    
-    
+    [self _setCompressionSession];
+
+    result = VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
+ 
 }
+
+-(void)_setCompressionSession{
+    //    kVTCompressionPropertyKey_MaxFrameDelayCount
+    //    kVTCompressionPropertyKey_MaxH264SliceBytes
+    //    kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder
+    //    kVTCompressionPropertyKey_RealTime
+
+    OSStatus result =0;
+    //b帧
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowFrameReordering, _allowBFrame?kCFBooleanTrue:kCFBooleanFalse);
+    if (result != 0) {
+        NSLog(@"kVTCompressionPropertyKey_AllowFrameReordering set error");
+    }
+    //p帧
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowTemporalCompression, _allowPFrame?kCFBooleanTrue:kCFBooleanFalse);
+    if (result != 0) {
+        NSLog(@"kVTCompressionPropertyKey_AllowTemporalCompression set error");
+    }
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ProfileLevel, _profileLevel);
+    if (result != 0) {
+        NSLog(@"kVTCompressionPropertyKey_ProfileLevel set error");
+    }
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_H264EntropyMode, _entropyMode);
+    if (result != 0) {
+        NSLog(@"kVTCompressionPropertyKey_H264EntropyMode set error");
+    }
+    
+    CFNumberRef bitRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &_bitRate);
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, bitRate);
+    CFRelease(bitRate);
+    if (result != 0) {
+        NSLog(@"kVTCompressionPropertyKey_AverageBitRate set error");
+    }
+    
+    CFNumberRef  qualityRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType,&_quality);
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_Quality,qualityRef);
+    CFRelease(qualityRef);
+    if (result != 0) {
+        NSLog(@"kVTCompressionPropertyKey_Quality set error");
+    }
+    CFNumberRef  frameIntervalRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &_maxKeyFrameInterval);
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_MaxKeyFrameInterval,frameIntervalRef);
+    CFRelease(frameIntervalRef);
+    if (result != 0) {
+        NSLog(@"kVTCompressionPropertyKey_MaxKeyFrameInterval set error");
+    }
+    
+    CFNumberRef frameRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &_expectedFrameRate);
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ExpectedFrameRate,frameRate);
+    CFRelease(frameRate);
+    if (result != 0) {
+        NSLog(@"kVTCompressionPropertyKey_ExpectedFrameRate set error");
+    }
+}
+
+
 
 void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon,OSStatus statu,VTEncodeInfoFlags infoFlags,
                           CMSampleBufferRef sample ){
@@ -166,6 +202,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         }
         
         //抛弃sps,pps
+        NSData* dt = [NSData dataWithBytes:dataPointer length:MIN(totalLength, 100)];
         uint32_t spsPpsLength = 0;
         memcpy(&spsPpsLength, dataPointer, 4);
         spsPpsLength = CFSwapInt32BigToHost(spsPpsLength);
@@ -206,6 +243,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 }
 -(void)dealloc{
     VTCompressionSessionInvalidate(_enCodeSession);
+    
 }
 //-(void)restart{
 //
