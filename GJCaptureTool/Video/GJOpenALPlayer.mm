@@ -107,19 +107,6 @@
         _queue.queuePush(bufferID);
     }
 }
--(void)deleteQueueBuffers{
-    ALenum error;
-    ALuint bufferID = 0;
-    for (int i = 0; i<DEFAULT_MAX_COUNT; i++) {
-        bufferID = _queue.buffer[i];
-        alDeleteBuffers(1, &bufferID);
-        error = alGetError();
-        if (error != AL_NO_ERROR) {
-            GJOpenAL_DEBUG("deleteBuffers:%d 错误, 错误信息: %d\n",bufferID,error);
-        }
-    }
-    _queue._inPointer = _queue._outPointer;
-}
 -(void)stop{
     _state = OpenalStateStop;
     ALint state;
@@ -228,7 +215,18 @@
     
     ALuint bufferID = 0;
     if (!_queue.queuePop(&bufferID)) {
-        return;
+        if (_queue.currentLenth()>DEFAULT_MAX_COUNT) {
+            NSLog(@"audio cache over flat ");
+            return;
+        }
+        ALenum error;
+            alGenBuffers(1, &bufferID);
+            error = alGetError();
+            if (error != AL_NO_ERROR) {
+                GJOpenAL_DEBUG("alGenBuffers errorCode:%d\n",error);
+                return;
+            }
+        
     };
     //将数据存入缓存区
     if (bitPerFrame ==0) {
@@ -330,7 +328,7 @@
     
     // NSLog(@"Processed = %d\n", processed);
     // NSLog(@"Queued = %d\n", queued);
-    while (processed--)
+    while (processed-->0)
     {
         ALuint  buffer;
         alSourceUnqueueBuffers(_outSourceID, 1, &buffer);
@@ -339,9 +337,22 @@
     return YES;
 }
 
+-(void)deleteQueueBuffers{
+    ALenum error;
+    ALuint bufferID = 0;
+
+    while (_queue.queuePop(&bufferID)) {
+        alDeleteBuffers(1, &bufferID);
+        error = alGetError();
+        if (error != AL_NO_ERROR) {
+            GJOpenAL_DEBUG("deleteBuffers:%d 错误, 错误信息: %d\n",bufferID,error);
+        }
+    }
+}
 
 - (void)dealloc
 {
+    [self deleteQueueBuffers];
     GJOpenAL_DEBUG("openal 销毁\n");
 }
 

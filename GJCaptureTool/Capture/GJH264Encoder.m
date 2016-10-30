@@ -11,6 +11,7 @@
 @interface GJH264Encoder()
 {
     long encoderFrameCount;
+    BOOL _shouldRecreate;
  
     
 }
@@ -25,19 +26,25 @@ GJH264Encoder* encoder ;
 {
     self = [super init];
     if (self) {
-        _entropyMode = kVTH264EntropyMode_CABAC;
-        _profileLevel = kVTProfileLevel_H264_Main_AutoLevel;
-        _allowBFrame = YES;
-        _bitRate = 300*1024;
+        _shouldRecreate=YES;
+        memset(&_destFormat, 0, sizeof(H264Format));
+        _destFormat.model=EntropyMode_CABAC;
+        _destFormat.level=profileLevelMain;
+        _destFormat.allowBframe=true;
+        _destFormat.allowPframe=true;
+        _destFormat.baseFormat.bitRate=300*1024;
+        _destFormat.gopSize=10;
+        
         _quality = 1.0;
-        _maxKeyFrameInterval = 10;
         _expectedFrameRate = 0;
         encoder = self;
     }
     return self;
 }
 
-
+-(void)setDestFormat:(H264Format)destFormat{
+    _destFormat = destFormat;
+}
 
 //编码
 -(void)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer fourceKey:(BOOL)fourceKey
@@ -45,7 +52,7 @@ GJH264Encoder* encoder ;
     CVImageBufferRef imgRef = CMSampleBufferGetImageBuffer(sampleBuffer);
     int32_t h = (int32_t)CVPixelBufferGetHeight(imgRef);
     int32_t w = (int32_t)CVPixelBufferGetWidth(imgRef);
-    if (_enCodeSession == nil || h != _currentHeight || w != _currentWidth) {
+    if (_shouldRecreate) {
         [self creatEnCodeSessionWithWidth:w height:h];
     }
     CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount, 10);
@@ -85,9 +92,12 @@ GJH264Encoder* encoder ;
                                             encodeOutputCallback,
                                             NULL,
                                             &_enCodeSession);
-    NSLog(@"VTCompressionSessionCreate status:%d",(int)result);
-    _currentWidth = w;
-    _currentHeight = h;
+    if (!_enCodeSession) {
+        NSLog(@"VTCompressionSessionCreate 失败------------------status:%d",(int)result);
+    }
+    _shouldRecreate=NO;
+    _destFormat.baseFormat.width = w;
+    _destFormat.baseFormat.height = h;
     
     [self _setCompressionSession];
 
@@ -103,25 +113,25 @@ GJH264Encoder* encoder ;
 
     OSStatus result =0;
     //b帧
-    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowFrameReordering, _allowBFrame?kCFBooleanTrue:kCFBooleanFalse);
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowFrameReordering, _destFormat.allowBframe?kCFBooleanTrue:kCFBooleanFalse);
     if (result != 0) {
         NSLog(@"kVTCompressionPropertyKey_AllowFrameReordering set error");
     }
     //p帧
-    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowTemporalCompression, _allowPFrame?kCFBooleanTrue:kCFBooleanFalse);
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowTemporalCompression, _destFormat.allowPframe?kCFBooleanTrue:kCFBooleanFalse);
     if (result != 0) {
         NSLog(@"kVTCompressionPropertyKey_AllowTemporalCompression set error");
     }
-    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ProfileLevel, _profileLevel);
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ProfileLevel, getCFStrByLevel(_destFormat.level));
     if (result != 0) {
         NSLog(@"kVTCompressionPropertyKey_ProfileLevel set error");
     }
-    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_H264EntropyMode, _entropyMode);
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_H264EntropyMode, getCFStrByEntropyMode(_destFormat.model));
     if (result != 0) {
         NSLog(@"kVTCompressionPropertyKey_H264EntropyMode set error");
     }
     
-    CFNumberRef bitRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &_bitRate);
+    CFNumberRef bitRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &(_destFormat.baseFormat.bitRate));
     result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, bitRate);
     CFRelease(bitRate);
     if (result != 0) {
@@ -134,7 +144,7 @@ GJH264Encoder* encoder ;
     if (result != 0) {
         NSLog(@"kVTCompressionPropertyKey_Quality set error");
     }
-    CFNumberRef  frameIntervalRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &_maxKeyFrameInterval);
+    CFNumberRef  frameIntervalRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &(_destFormat.gopSize));
     result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_MaxKeyFrameInterval,frameIntervalRef);
     CFRelease(frameIntervalRef);
     if (result != 0) {

@@ -24,7 +24,6 @@ const int MCAudioQueueBufferCount = 20;
     AudioQueueRef _audioQueue;
     GJQueue<AudioQueueBufferRef>* _reusableQueue;
     
-    NSMutableArray *_buffers;
 //    NSMutableArray *_reusableBuffers;
     dispatch_queue_t _playQueue;
     BOOL _isRunning;
@@ -50,7 +49,6 @@ const int MCAudioQueueBufferCount = 20;
         _format = format;
         _volume = 1.0f;
         _bufferSize = bufferSize;
-        _buffers = [[NSMutableArray alloc] init];
         
         _reusableQueue = new GJQueue<AudioQueueBufferRef>(MCAudioQueueBufferCount);
         _reusableQueue->shouldWait = YES;
@@ -82,7 +80,7 @@ const int MCAudioQueueBufferCount = 20;
     
     _playQueue = dispatch_queue_create("playQueue", DISPATCH_QUEUE_CONCURRENT);
     dispatch_async(_playQueue, ^{
-        OSStatus status = AudioQueueNewOutput(&_format,MCAudioQueueOutputCallback, (__bridge void *)(self),CFRunLoopGetCurrent(), kCFRunLoopCommonModes, 0, &_audioQueue);
+        OSStatus status = AudioQueueNewOutput(&_format,MCAudioQueueOutputCallback, (__bridge void *)(self),CFRunLoopGetCurrent(), kCFRunLoopDefaultMode, 0, &_audioQueue);
         assert(!status);
         if (status != noErr)
         {
@@ -211,21 +209,40 @@ const int MCAudioQueueBufferCount = 20;
     {
         return NO;
     }
-    for (int i = 0; i<packetCount; i++) {
         AudioQueueBufferRef bufferObj;
         _reusableQueue->queuePop(&bufferObj);
         
 #pragma warning 后期优化 针对多包问题，但是效率更低
-        memcpy(bufferObj->mAudioData, (char*)data + packetDescriptions[i].mStartOffset, lenth-packetDescriptions[i].mStartOffset);
-        bufferObj->mAudioDataByteSize = lenth;
-        AudioStreamPacketDescription desc = packetDescriptions[i];
-        desc.mStartOffset = 0;
-        desc.mDataByteSize -= packetDescriptions->mStartOffset;
+        SInt64 offset = packetCount >= 1 ? packetDescriptions[0].mStartOffset : 0;
+        memcpy(bufferObj->mAudioData, (char*)data +  offset, lenth-offset);
+        bufferObj->mAudioDataByteSize = (uint32_t)(lenth-offset);
+//        AudioStreamPacketDescription desc = packetDescriptions[i];
+//        desc.mStartOffset = 0;
+//        desc.mDataByteSize -= packetDescriptions->mStartOffset;
         //AudioStreamPacketDescription->mStartOffset 一定要等于0，，郁闷；
-        AudioQueueEnqueueBuffer(_audioQueue, bufferObj, packetCount, &desc);
-        //    assert(!status);
-    }
+        OSStatus status = AudioQueueEnqueueBuffer(_audioQueue, bufferObj, packetCount, packetDescriptions);
+        assert(!status);
 
+    
+    
+    
+//    for (int i = 0; i<packetCount; i++) {
+//        AudioQueueBufferRef bufferObj;
+//        _reusableQueue->queuePop(&bufferObj);
+//        
+//#pragma warning 后期优化 针对多包问题，但是效率更低
+//        memcpy(bufferObj->mAudioData, (char*)data + packetDescriptions[i].mStartOffset, lenth-packetDescriptions[i].mStartOffset);
+//        bufferObj->mAudioDataByteSize = lenth;
+//        AudioStreamPacketDescription desc = packetDescriptions[i];
+//        desc.mStartOffset = 0;
+//        desc.mDataByteSize -= packetDescriptions->mStartOffset;
+//        //AudioStreamPacketDescription->mStartOffset 一定要等于0，，郁闷；
+//        AudioQueueEnqueueBuffer(_audioQueue, bufferObj, 1, packetDescriptions);
+//        //    assert(!status);
+//    }
+    
+    
+    
     return YES;
 }
 

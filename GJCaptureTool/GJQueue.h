@@ -12,8 +12,11 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <assert.h>
-#import "GJDebug.h"
-
+#ifdef DEBUG
+#define GJQueueLOG(format, ...) printf(format,##__VA_ARGS__)
+#else
+#define GJQueueLOG(format, ...)
+#endif
 
 #define DEFAULT_MAX_COUNT 10
 
@@ -21,7 +24,11 @@
 template <class T> class GJQueue{
     
 private:
-   
+    T *buffer;
+    long _inPointer;  //尾
+    long _outPointer; //头
+    int _capacity;
+    int _allocSize;
     
     pthread_mutex_t _mutex;
     pthread_cond_t _inCond;
@@ -38,11 +45,6 @@ private:
     void _init();
     void _resize();
 public:
-    T *buffer;
-    long _inPointer;  //尾
-    long _outPointer; //头
-    int _capacity;
-    int _allocSize;
     
     ~GJQueue(){
         _mutexDestory();
@@ -50,10 +52,8 @@ public:
     };
     
 #pragma mark DELEGATE
-    //没有数据时是否支持等待，当为autoResize 为YES时，push永远不会等待,default false
-    bool shouldWait;
-    //是否多线程，default false
-    bool shouldNonatomic;
+    bool shouldWait;  //没有数据时是否支持等待，当为autoResize 为YES时，push永远不会等待
+    bool shouldNonatomic; //是否多线程，
     //是否支持自动增长，当为YES时，push永远不会等待，只会重新申请内存,默认为false
     bool autoResize;
     /**
@@ -76,7 +76,7 @@ public:
 
 template<class T>
 int GJQueue<T>::currentLenth(){
-    return (int)(_outPointer - _inPointer);
+    return _outPointer - _inPointer;
 }
 template<class T>
 GJQueue<T>::GJQueue()
@@ -98,7 +98,6 @@ template<class T>
 void GJQueue<T>::_init()
 {
     buffer = (T*)malloc(sizeof(T)*_capacity);
-    memset(buffer, 0, sizeof(T)*_capacity);
     _allocSize = _capacity;
     autoResize = false;
     shouldWait = false;
@@ -252,7 +251,7 @@ bool GJQueue<T>::_unLock(pthread_mutex_t* mutex){
 template<class T>
 void GJQueue<T>::_resize(){
     
-    T* temBuffer = (T*)malloc(sizeof(T)*(_allocSize + _capacity));
+    T* temBuffer = (T*)malloc(sizeof(T)*(_allocSize + (_allocSize/_capacity)*_capacity));
     for (long i = _outPointer,j =0; i<_inPointer; i++,j++) {
         temBuffer[j] = buffer[i%_allocSize];
     }
@@ -261,6 +260,5 @@ void GJQueue<T>::_resize(){
     _inPointer = _allocSize;
     _outPointer = 0;
     _allocSize += _capacity;
-    
 }
 #endif /* GJQueue_h */

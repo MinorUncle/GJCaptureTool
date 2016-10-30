@@ -88,12 +88,12 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         return -1;
     }
     
-    if (outDataPacketDescription) {
-        AudioStreamPacketDescription* packetDesc = &(((__bridge AACEncoderFromPCM*)inUserData)->_sourcePCMPacketDescription);
-        packetDesc->mStartOffset = 0;
-        packetDesc->mDataByteSize = ioData->mBuffers[0].mDataByteSize;
-        packetDesc->mVariableFramesInPacket = 0;
-    }
+//    if (outDataPacketDescription) {
+//        AudioStreamPacketDescription* packetDesc = &(((__bridge AACEncoderFromPCM*)inUserData)->_sourcePCMPacketDescription);
+//        packetDesc->mStartOffset = 0;
+//        packetDesc->mDataByteSize = ioData->mBuffers[0].mDataByteSize;
+//        packetDesc->mVariableFramesInPacket = 0;
+//    }
     return noErr;
 }
 - (NSData *)fetchMagicCookie{
@@ -109,6 +109,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     
     AudioBufferList inBufferList;
     CMBlockBufferRef blockBuffer;
+    
     OSStatus status = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sampleBuffer, nil, &inBufferList, sizeof(inBufferList), NULL, NULL, 0, &blockBuffer);
     assert(!status);
     if (status != noErr) {
@@ -121,20 +122,21 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 //    if (_resumeQueue == nil) {
 //         _resumeQueue = new GJAudioBufferQueue(inBufferList.mBuffers[0].mDataByteSize+10);
 //    }
-//    
+//
+    
     _resumeQueue.queuePush(inBufferList.mBuffers[0]);
     _retainQueue.queuePush(blockBuffer);
     
 //    CFRelease(blockBuffer);
-    [self _createEncodeConverterWithBuffer:sampleBuffer];
+    if (_encodeConvert == NULL) {
+        [self _createEncodeConverterWithBuffer:sampleBuffer];
+    }
+
 
 }
 
 
 -(BOOL)_createEncodeConverterWithBuffer:(CMSampleBufferRef)sampleBuffer{
-    if (_encodeConvert != NULL) {
-        return YES;
-    }
     
     const AudioStreamBasicDescription* sourceFormat = CMAudioFormatDescriptionGetStreamBasicDescription(CMSampleBufferGetFormatDescription(sampleBuffer));
     assert(sourceFormat);
@@ -183,7 +185,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     
     _outCacheBufferList.mNumberBuffers = 1;
-    _outCacheBufferList.mBuffers[0].mNumberChannels = 1;
+    _outCacheBufferList.mBuffers[0].mNumberChannels = sourceFormat->mChannelsPerFrame;
     _outCacheBufferList.mBuffers[0].mData = (void*)malloc(_destMaxOutSize);
     _outCacheBufferList.mBuffers[0].mDataByteSize = _destMaxOutSize;
     
