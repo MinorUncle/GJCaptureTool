@@ -83,7 +83,7 @@ void decodeOutputCallback(
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     OSStatus status;
-        NSData* d = [NSData dataWithBytes:frame length:frameSize];
+//        NSData* d = [NSData dataWithBytes:frame length:frameSize];
     //      NSLog(@"d:%@",d);
     uint8_t *data = NULL;
     

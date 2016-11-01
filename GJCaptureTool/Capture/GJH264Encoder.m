@@ -195,10 +195,13 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             OSStatus statusCode = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 1, &pparameterSet, &pparameterSetSize, &pparameterSetCount, &ppHeadSize );
             if (statusCode == noErr)
             {
+                
                 uint8_t* data = malloc(4+4+sparameterSetSize+pparameterSetSize);
-                memcpy(&data[0], "\x00\x00\x00\x01", 4);
+//                memcpy(&data[0], "\x00\x00\x00\x01", 4);
+                memcpy(&data[0], &sparameterSetSize, 4);
                 memcpy(&data[4], sparameterSet, sparameterSetSize);
-                memcpy(&data[4+sparameterSetSize], "\x00\x00\x00\x01", 4);
+//                memcpy(&data[4+sparameterSetSize], "\x00\x00\x00\x01", 4);
+                memcpy(&data[4+sparameterSetSize], &pparameterSetSize, 4);
                 memcpy(&data[8+sparameterSetSize], pparameterSet, pparameterSetSize);
                 NSData* parm = [NSData dataWithBytesNoCopy:data length:pparameterSetSize+sparameterSetSize+8 freeWhenDone:YES];
 //                [NSData dataWithBytes:data length:pparameterSetSize+sparameterSetSize+8];
@@ -210,9 +213,8 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //                free(data);
             }
         }
-        
         //抛弃sps,pps
-        NSData* dt = [NSData dataWithBytes:dataPointer length:MIN(totalLength, 100)];
+//        NSData* dt = [NSData dataWithBytes:dataPointer length:MIN(totalLength, 100)];
         uint32_t spsPpsLength = 0;
         memcpy(&spsPpsLength, dataPointer, 4);
         spsPpsLength = CFSwapInt32BigToHost(spsPpsLength);

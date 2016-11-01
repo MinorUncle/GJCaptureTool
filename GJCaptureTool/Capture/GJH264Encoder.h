@@ -14,10 +14,6 @@
 @protocol GJH264EncoderDelegate <NSObject>
 -(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(uint8_t*)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame;
 @end
-
-
-
-
 @interface GJH264Encoder : NSObject
 @property(nonatomic,weak)id<GJH264EncoderDelegate> deleagte;
 @property(nonatomic,readonly,retain)NSData* parameterSet;
@@ -35,8 +31,9 @@
 @property(assign,nonatomic)H264Format destFormat;
 
 @property(assign,nonatomic) int expectedFrameRate;//
-
-
-
 -(void)stop;
 @end
+
+void praseVideoParamet(uint8_t* inparameterSet,uint8_t** inoutSetArry,int* inoutArryCount){
+    
+}

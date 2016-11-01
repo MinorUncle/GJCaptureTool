@@ -67,7 +67,6 @@ extern "C"{
     
    
 }
-static int framePts = 0;
 -(void)encoderData:(CMSampleBufferRef)sampleBufferRef{
     CVImageBufferRef imgRef = CMSampleBufferGetImageBuffer(sampleBufferRef);
     

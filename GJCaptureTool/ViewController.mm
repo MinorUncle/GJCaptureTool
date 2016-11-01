@@ -12,7 +12,7 @@
 #import "Audio/GJAudioQueuePlayer.h"
 #import "GJH264Decoder.h"
 #import "GJH264Encoder.h"
-#import <MediaPlayer/MediaPlayer.h>
+#import <MediaPlayer/MPMoviePlayerViewController.h>
 #import "PCMDecodeFromAAC.h"
 #import "AACEncoderFromPCM.h"
 #import "AudioPraseStream.h"
@@ -20,14 +20,15 @@
 #import "H264Decoder.h"
 #import "H264Encoder.h"
 #import "H264StreamToTS.h"
-#import "rtmp.h"
+//#import "rtmp.h"
 #import "RtmpSendH264.h"
 #import "GJFormats.h"
+#import "LibRtmpSession.hpp"
 @interface ViewController ()<GJCaptureToolDelegate,GJH264DecoderDelegate,GJH264EncoderDelegate,AACEncoderFromPCMDelegate,PCMDecodeFromAACDelegate,AudioStreamPraseDelegate,H264DecoderDelegate,H264EncoderDelegate>
 {
     GJAudioQueuePlayer* _audioPlayer;
     AudioPraseStream* _praseStream;
-    RTMP* _rtmpSend;
+    LibRtmpSession* _rtmpSend;
     BOOL _stop;
     H264StreamToTS* _toTS;
     H264Decoder* _decode;
@@ -72,7 +73,7 @@
     [super viewDidLoad];
 //    _praseStream = [[AudioPraseStream alloc]initWithFileType:kAudioFileAAC_ADTSType fileSize:0 error:nil];
 //    _praseStream.delegate = self;
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeVideoStream|GJCaptureTypeAudioStream fps:15 layer:_viewContainer.layer];
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeVideoStream fps:15 layer:_viewContainer.layer];
     _captureTool.delegate = self;
     _gjEncoder = [[GJH264Encoder alloc]init];
     _gjDecoder = [[GJH264Decoder alloc]init];
@@ -82,9 +83,8 @@
     _audioDecoder.delegate = self;
     _gjDecoder.delegate = self;
     _gjEncoder.deleagte = self;
-    
-    _rtmpSend = RTMP_Alloc();
-    RTMP_Init(_rtmpSend);
+    char* url="rtmp://192.168.1.2:5920/rtmplive/room";
+    _rtmpSend = new LibRtmpSession(url);
     // Do any additional setup after loading the view, typically from a nib.
 }
 -(void)viewDidAppear:(BOOL)animated{
@@ -118,42 +118,45 @@
 }
 -(void)connect{
     
-    if(!RTMP_SetupURL(_rtmpSend, "rtmp://192.168.1.102:1935/myapp/room")){
-        NSLog(@"RTMP_SetupURL error");
+//    if(!RTMP_SetupURL(_rtmpSend, "rtmp://192.168.1.2:5920/rtmplive/room")){
+//        NSLog(@"RTMP_SetupURL error");
+//        _stateLab.text = @"url设置失败";
+//        
+//        RTMP_Free(_rtmpSend);
+//        _rtmpSend=NULL;
+//        
+//        return;
+//    };
+//    _stateLab.text = @"连接中";
+//    RTMP_EnableWrite(_rtmpSend);
+//    if(!RTMP_Connect(_rtmpSend, nil)){
+//        NSLog(@"RTMP_Connect error");
+//        _stateLab.text = @"连接失败";
+//        
+//        RTMP_Free(_rtmpSend);
+//        _rtmpSend=NULL;
+//        
+//        return;
+//    };
+//    _stateLab.text = @"连接流中";
+//    
+//    if (RTMP_ConnectStream(_rtmpSend,0) == FALSE) {
+//        _stateLab.text = @"连接流失败";
+//        
+//        NSLog(@"RTMP_ConnectStream error");
+//        RTMP_Close(_rtmpSend);
+//        RTMP_Free(_rtmpSend);
+//        _rtmpSend=NULL;
+//        return ;
+//    }
+    if (_rtmpSend->Connect(RTMP_TYPE_PUSH)>=0) {
+        _stateLab.text = @"连接成功";
+    }else{
         _stateLab.text = @"连接失败";
-        
-        RTMP_Free(_rtmpSend);
-        _rtmpSend=NULL;
-        
-        return;
-    };
-    _stateLab.text = @"连接中";
-    RTMP_EnableWrite(_rtmpSend);
-    if(!RTMP_Connect(_rtmpSend, nil)){
-        NSLog(@"RTMP_Connect error");
-        _stateLab.text = @"连接失败";
-        
-        RTMP_Free(_rtmpSend);
-        _rtmpSend=NULL;
-        
-        return;
-    };
-    _stateLab.text = @"连接流中";
-    
-    if (RTMP_ConnectStream(_rtmpSend,0) == FALSE) {
-        _stateLab.text = @"连接失败";
-        
-        NSLog(@"RTMP_ConnectStream error");
-        RTMP_Close(_rtmpSend);
-        RTMP_Free(_rtmpSend);
-        _rtmpSend=NULL;
-        return ;
     }
-    _stateLab.text = @"连接成功";
 };
 -(void)disConnect{
-    RTMP_Close(_rtmpSend);
-    RTMP_Free(_rtmpSend);
+    _rtmpSend->DisConnect();
     _stateLab.text = @"未连接";
 
 }
@@ -327,70 +330,71 @@
 #define RTMP_HEAD_SIZE   (sizeof(RTMPPacket)+RTMP_MAX_HEADER_SIZE)
 -(void) sendH264Packet:(unsigned char *)data size:(unsigned int) size key:(int) bIsKeyFrame time:(unsigned int )nTimeStamp
 {
-    if(data == NULL && size<11)
-    {
-        return ;
-    }
-    
-    unsigned char *body = (unsigned char*)malloc(size+9);
-    memset(body,0,size+9);
-    
-    int i = 0;
-    if(bIsKeyFrame)
-    {
-        body[i++] = 0x17;// 1:Iframe  7:AVC
-        body[i++] = 0x01;// AVC NALU
-        body[i++] = 0x00;
-        body[i++] = 0x00;
-        body[i++] = 0x00;
-        
-        memcpy(&body[i],data,size);
-    }
-    else
-    {
-        body[i++] = 0x27;// 2:Pframe  7:AVC
-        body[i++] = 0x01;// AVC NALU
-        body[i++] = 0x00;
-        body[i++] = 0x00;
-        body[i++] = 0x00;
-        memcpy(&body[i],data,size);
-    }
-    
-    [self SendPacket:RTMP_PACKET_TYPE_VIDEO body:body size:i+size time:nTimeStamp];
-    
-    free(body);
+//    if(data == NULL && size<11)
+//    {
+//        return ;
+//    }
+//    
+//    unsigned char *body = (unsigned char*)malloc(size+9);
+//    memset(body,0,size+9);
+//    
+//    int i = 0;
+//    if(bIsKeyFrame)
+//    {
+//        body[i++] = 0x17;// 1:Iframe  7:AVC
+//
+//    }
+//    else
+//    {
+//        body[i++] = 0x27;// 2:Pframe  7:AVC
+//
+//    }
+//    
+//    body[i++] = 0x01;// AVC NALU
+//    body[i++] = 0x00;
+//    body[i++] = 0x00;
+//    body[i++] = 0x00;
+//    
+//    body[i++] = size>>24;
+//    body[i++] = size>>16;
+//    body[i++] = size>>8;
+//    body[i++] = size&0xff;;
+//    memcpy(&body[i],data,size);
+//    
+//    [self SendPacket:RTMP_PACKET_TYPE_VIDEO body:body size:i+size-12 time:nTimeStamp];
+//    
+//    free(body);
     
 }
 -(void) SendPacket:(int) type body:(char*)body size:(int) size time:(int) time{
-    RTMPPacket * packet;
-    
-    /*分配包内存和初始化,len为包体长度*/
-    packet = (RTMPPacket *)malloc(sizeof(RTMPPacket));
-    memset(packet,0,sizeof(RTMPPacket));
-    
-    /*包体内存*/
-    packet->m_body = body;
-    packet->m_nBodySize = size;
-    
-    /*
-     * 此处省略包体填充
-     */
-    packet->m_hasAbsTimestamp = 0;
-    packet->m_packetType = RTMP_PACKET_TYPE_VIDEO; /*此处为类型有两种一种是音频,一种是视频*/
-    packet->m_nInfoField2 = _rtmpSend->m_stream_id;
-    packet->m_nChannel = 0x04;
-    packet->m_headerType = RTMP_PACKET_SIZE_LARGE;
-    NSDate * current  = [NSDate date];
-    packet->m_nTimeStamp = [current timeIntervalSinceDate:_beginDate]*1000;
-    
-    /*发送*/
-    if (RTMP_IsConnected(_rtmpSend)) {
-        int ret = RTMP_SendPacket(_rtmpSend,packet,false); /*TRUE为放进发送队列,FALSE是不放进发送队列,直接发送*/
-        NSLog(@"RTMP_SendPacket :%d",ret);
-    }
-    
-    /*释放内存*/
-    free(packet);
+//    RTMPPacket * packet = (RTMPPacket*)malloc(sizeof(RTMPPacket));
+//    RTMPPacket_Alloc(packet,size);
+//    RTMPPacket_Reset(packet);
+//    /*分配包内存和初始化,len为包体长度*/
+//    
+//    /*包体内存*/
+//    memcpy(packet->m_body,body,size);
+//    packet->m_nBodySize = size;
+//    
+//    /*
+//     * 此处省略包体填充
+//     */
+//    packet->m_hasAbsTimestamp = 0;
+//    packet->m_packetType = RTMP_PACKET_TYPE_VIDEO; /*此处为类型有两种一种是音频,一种是视频*/
+//    packet->m_nInfoField2 = _rtmpSend->m_stream_id;
+//    packet->m_nChannel = 0x04;
+//    packet->m_headerType = RTMP_PACKET_SIZE_LARGE;
+//    NSDate * current  = [NSDate date];
+//    packet->m_nTimeStamp = [current timeIntervalSinceDate:_beginDate]*1000;
+//    
+//    /*发送*/
+//    if (RTMP_IsConnected(_rtmpSend)) {
+//        int ret = RTMP_SendPacket(_rtmpSend,packet,false); /*TRUE为放进发送队列,FALSE是不放进发送队列,直接发送*/
+//        NSLog(@"RTMP_SendPacket :%d",ret);
+//    }
+//    
+//    /*释放内存*/
+//    free(packet);
 
 }
 -(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame{
@@ -398,10 +402,18 @@
     
     _totalCount ++;
     _totalByte += totalLenth;
+    if (keyFrame) {
+        unsigned char * spsppsData = (unsigned char *)encoder.parameterSet.bytes;
+        size_t spsSize = (size_t)spsppsData[0];
+        size_t ppsSize = (size_t)spsppsData[4+ spsSize];
+        _rtmpSend->SendVideoSpsPps(&spsppsData[8+ spsSize], ppsSize,&spsppsData[4], spsSize);
+        NSLog(@"SendH264Packet   spspps:%ld",spsSize+ ppsSize);
+
+    }
+    _rtmpSend->SendH264Packet(buffer, (unsigned int)totalLenth, keyFrame, [[NSDate date]timeIntervalSinceDate:_beginDate]);
+    NSLog(@"SendH264Packet   packetsize:%ld",totalLenth);
     
-//    if (keyFrame) {
-//        [self sendH264Packet:(unsigned char *)encoder.parameterSet.bytes size:(unsigned  int)encoder.parameterSet.length key:keyFrame time:[[NSDate date]timeIntervalSinceDate:_beginDate]];
-////    }
+//[self sendH264Packet:(unsigned char *)encoder.parameterSet.bytes size:(unsigned  int)encoder.parameterSet.length key:keyFrame time:[[NSDate date]timeIntervalSinceDate:_beginDate]];
 //
     
     //
@@ -410,10 +422,10 @@
 //        _decode.decoderDelegate = self;
 //    }
 //    [_decode decodeData:buffer lenth:(int)totalLenth];
-    if (keyFrame) {
-        [_gjDecoder decodeBuffer:(uint8_t*)encoder.parameterSet.bytes withLenth:(uint32_t)encoder.parameterSet.length];
-    }
-    [_gjDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
+//    if (keyFrame) {
+//        [_gjDecoder decodeBuffer:(uint8_t*)encoder.parameterSet.bytes withLenth:(uint32_t)encoder.parameterSet.length];
+//    }
+//    [_gjDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
 }
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer{
 //    CVPixelBufferLockBaseAddress(imageBuffer, 0);
