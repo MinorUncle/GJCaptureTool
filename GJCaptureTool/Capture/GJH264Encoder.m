@@ -45,7 +45,7 @@ GJH264Encoder* encoder ;
     _destFormat.level=profileLevelMain;
     _destFormat.allowBframe=true;
     _destFormat.allowPframe=true;
-    _destFormat.baseFormat.bitRate=300*1024;
+    _destFormat.baseFormat.bitRate=300*1024*8;//bit/s
     _destFormat.gopSize=10;
     
     _quality = 1.0;
@@ -59,6 +59,8 @@ GJH264Encoder* encoder ;
 //编码
 -(void)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer fourceKey:(BOOL)fourceKey
 {
+    
+    
     CVImageBufferRef imgRef = CMSampleBufferGetImageBuffer(sampleBuffer);
     int32_t h = (int32_t)CVPixelBufferGetHeight(imgRef);
     int32_t w = (int32_t)CVPixelBufferGetWidth(imgRef);
@@ -77,6 +79,7 @@ GJH264Encoder* encoder ;
         properties = [[NSMutableDictionary alloc]init];
         [properties setObject:@YES forKey:(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame];
     }
+    
     OSStatus status = VTCompressionSessionEncodeFrame(
                                                       _enCodeSession,
                                                       imgRef,
@@ -90,6 +93,12 @@ GJH264Encoder* encoder ;
         NSLog(@"encodeSampleBuffer error:%d",(int)status);
         return;
     }
+    CFNumberRef outBit=0;
+    VTSessionCopyProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, NULL, &outBit);
+    int32_t bit = 0;
+    CFNumberGetValue(outBit,kCFNumberSInt32Type,&bit);
+    NSLog(@"kCFNumberSInt32Type:%d",bit);
+
 }
 
 -(void)creatEnCodeSessionWithWidth:(int32_t)w height:(int32_t)h{
@@ -165,6 +174,7 @@ GJH264Encoder* encoder ;
     if (result != 0) {
         NSLog(@"kVTCompressionPropertyKey_MaxKeyFrameInterval set error");
     }
+
     
     CFNumberRef frameRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &_expectedFrameRate);
     result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ExpectedFrameRate,frameRate);
@@ -254,9 +264,8 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             uint8_t* data = dataPointer + bufferOffset;
             memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
             CMTime dt = CMSampleBufferGetDecodeTimeStamp(sample);
-            CMTime pt =  CMSampleBufferGetPresentationTimeStamp(sample);
 
-            [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:data withLenth:NALUnitLength +AVCCHeaderLength keyFrame:keyframe pts:pt.value dts:dt.value];
+            [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:data withLenth:NALUnitLength +AVCCHeaderLength keyFrame:keyframe dts:dt.value];
             keyframe = false;
             NSLog(@"h264编码成功,%d",NALUnitLength);
             bufferOffset += AVCCHeaderLength + NALUnitLength;

@@ -74,8 +74,8 @@ void decodeOutputCallback(
 
     }
     
-    if ([decoder.delegate respondsToSelector:@selector(GJH264Decoder:decodeCompleteImageData:)]) {
-        [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer];
+    if ([decoder.delegate respondsToSelector:@selector(GJH264Decoder:decodeCompleteImageData:pts:)]) {
+        [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:(uint)presentationTimeStamp.value*VIDEO_TIMESCALE/presentationTimeStamp.timescale];
     }
 }
 
@@ -153,7 +153,7 @@ void decodeOutputCallback(
                                                                      &desc);
         BOOL shouldReCreate = NO;
         FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
-        CMVideoDimensions fordesc = CMVideoFormatDescriptionGetDimensions(desc);
+//        CMVideoDimensions fordesc = CMVideoFormatDescriptionGetDimensions(desc);
         
         char* code = (char*)&re;
         NSLog(@"code:%c %c %c %c ",code[3],code[2],code[1],code[0]);
@@ -172,7 +172,7 @@ void decodeOutputCallback(
             }
             CFRelease(_formatDesc);
         }
-        CGRect rect1 = CMVideoFormatDescriptionGetCleanAperture(desc, YES);
+//        CGRect rect1 = CMVideoFormatDescriptionGetCleanAperture(desc, YES);
 
         
         _formatDesc = desc;

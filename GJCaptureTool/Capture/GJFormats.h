@@ -23,6 +23,8 @@ typedef enum EntropyMode{
     EntropyMode_CAVLC,
 }EntropyMode;
 
+#define VIDEO_TIMESCALE 1000
+
 #if __COREFOUNDATION_CFBASE__
 static CFStringRef  getCFStrByLevel(ProfileLevel level){
     CFStringRef ref;

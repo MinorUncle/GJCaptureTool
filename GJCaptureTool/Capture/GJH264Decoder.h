@@ -11,7 +11,7 @@
 #import "GJFormats.h"
 @class GJH264Decoder;
 @protocol GJH264DecoderDelegate <NSObject>
--(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer;
+-(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(uint)pts;
 @end
 
 @interface GJH264Decoder : NSObject

@@ -73,7 +73,7 @@
     [super viewDidLoad];
 //    _praseStream = [[AudioPraseStream alloc]initWithFileType:kAudioFileAAC_ADTSType fileSize:0 error:nil];
 //    _praseStream.delegate = self;
-    int fps = 15;
+    int fps = 28;
     _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeVideoStream fps:fps layer:_viewContainer.layer];
     _captureTool.delegate = self;
     _gjEncoder = [[GJH264Encoder alloc]initWithFps:fps];
@@ -167,8 +167,6 @@
     _ptsLab.text = [NSString stringWithFormat:@"PTS:%.0fkb/s",_totalByte/1024.0];
     _totalByte = 0;
 }
-
-
 
 
 -(UIImage *) imageFromPixelBuffer:(CVImageBufferRef) imageBuffer{
@@ -399,7 +397,7 @@
 //    free(packet);
 
 }
--(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame pts:(int64_t)pts dts:(int64_t)dts{
+-(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame dts:(int64_t)dts{
     
     
     _totalCount ++;
@@ -413,12 +411,12 @@
         size_t spsSize = (size_t)spsppsData[0];
         size_t ppsSize = (size_t)spsppsData[4+ spsSize];
 
-        _rtmpSend->SendVideoSpsPps(spsppsData+8+spsSize, ppsSize, spsppsData+4, spsSize,pts,dts);
+        _rtmpSend->SendVideoSpsPps(spsppsData+8+spsSize, ppsSize, spsppsData+4, spsSize,dts);
     }
         NSData* data = [NSData dataWithBytes:buffer length:30];
     
-        NSLog(@"SendVideoRawData:%@,\nlenth:%lu,pts:%lld  dts:%lld",data,totalLenth,pts,dts);
-    _rtmpSend->SendH264Packet(buffer, totalLenth, keyFrame,dts, pts);
+        NSLog(@"SendVideoRawData:%@,\nlenth:%lu  dts:%lld",data,totalLenth,dts);
+    _rtmpSend->SendH264Packet(buffer, totalLenth, keyFrame,dts);
     
 //    if (keyFrame) {
 //        unsigned char * spsppsData = (unsigned char *)encoder.parameterSet.bytes;
@@ -452,7 +450,7 @@
 //    printf("fram type:%x,",buffer[4]);
 //    [_gjDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
 }
--(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer{
+-(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(uint)pts{
 //    CVPixelBufferLockBaseAddress(imageBuffer, 0);
 //    void* baseAdd = CVPixelBufferGetBaseAddress(imageBuffer);
 //    size_t w = CVPixelBufferGetWidth(imageBuffer);

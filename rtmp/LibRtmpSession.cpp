@@ -463,7 +463,7 @@ int LibRtmpSession::SendPacket(unsigned int nPacketType,unsigned char *data,unsi
     return nRet;
 }
 
-int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char * sps,int sps_len ,int pts,int dts)
+int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char * sps,int sps_len ,int dts)
 {
     unsigned char * body=NULL;
     int iIndex = 0;
@@ -537,7 +537,7 @@ int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char
     return iRet;
 }
 
-int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIsKeyFrame,unsigned int dts,int pts)
+int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIsKeyFrame,unsigned int dts)
 {
     if(data == NULL && size<11)
     {

@@ -48,9 +48,9 @@ extern "C" {
         int SendAudioData(unsigned char* buf, int size);
         int SendAACData(unsigned char* buf, int size, unsigned int timeStamp);
         
-        int SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char * sps,int sps_len, int pts,int dts);
+        int SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char * sps,int sps_len,int dts);
         int SendVideoData(unsigned char* buf, int size);
-        int SendH264Packet(unsigned char *data,unsigned int size,int bIsKeyFrame,unsigned int nTimeStamp,int pts);
+        int SendH264Packet(unsigned char *data,unsigned int size,int bIsKeyFrame,unsigned int nTimeStamp);
         
         int ReadData(unsigned char* buf, int iSize);
         int GetReadStatus();
