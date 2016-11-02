@@ -73,9 +73,10 @@
     [super viewDidLoad];
 //    _praseStream = [[AudioPraseStream alloc]initWithFileType:kAudioFileAAC_ADTSType fileSize:0 error:nil];
 //    _praseStream.delegate = self;
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeVideoStream fps:15 layer:_viewContainer.layer];
+    int fps = 15;
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureTypeVideoStream fps:fps layer:_viewContainer.layer];
     _captureTool.delegate = self;
-    _gjEncoder = [[GJH264Encoder alloc]init];
+    _gjEncoder = [[GJH264Encoder alloc]initWithFps:fps];
     _gjDecoder = [[GJH264Decoder alloc]init];
     _audioEncoder = [[AACEncoderFromPCM alloc]init];
     _audioEncoder.delegate = self;
@@ -83,7 +84,7 @@
     _audioDecoder.delegate = self;
     _gjDecoder.delegate = self;
     _gjEncoder.deleagte = self;
-    char* url="rtmp://192.168.1.2:5920/rtmplive/room";
+    char* url="rtmp://192.168.1.16:5920/rtmplive/room";
     _rtmpSend = new LibRtmpSession(url);
     // Do any additional setup after loading the view, typically from a nib.
 }
@@ -286,9 +287,10 @@
         
 //    [_playView displayYUV420pData:(void*)(baseAdd + d) width:(uint32_t)w height:(uint32_t)h];
 
+  
     [_gjEncoder encodeSampleBuffer:sampleBuffer fourceKey:NO];
     
-        
+    
 //            if (_encoder == nil) {
 //                CVImageBufferRef imgRef = CMSampleBufferGetImageBuffer(sampleBuffer);
 //                int w = (int)CVPixelBufferGetWidth(imgRef);
@@ -397,21 +399,36 @@
 //    free(packet);
 
 }
--(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame{
+-(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame pts:(int64_t)pts dts:(int64_t)dts{
     
     
     _totalCount ++;
     _totalByte += totalLenth;
+    if (!_rtmpSend->GetConnectedFlag()) {
+        assert(0);
+        return;
+    }
     if (keyFrame) {
         unsigned char * spsppsData = (unsigned char *)encoder.parameterSet.bytes;
         size_t spsSize = (size_t)spsppsData[0];
         size_t ppsSize = (size_t)spsppsData[4+ spsSize];
-        _rtmpSend->SendVideoSpsPps(&spsppsData[8+ spsSize], ppsSize,&spsppsData[4], spsSize);
-        NSLog(@"SendH264Packet   spspps:%ld",spsSize+ ppsSize);
 
+        _rtmpSend->SendVideoSpsPps(spsppsData+8+spsSize, ppsSize, spsppsData+4, spsSize,pts,dts);
     }
-    _rtmpSend->SendH264Packet(buffer, (unsigned int)totalLenth, keyFrame, [[NSDate date]timeIntervalSinceDate:_beginDate]);
-    NSLog(@"SendH264Packet   packetsize:%ld",totalLenth);
+        NSData* data = [NSData dataWithBytes:buffer length:30];
+    
+        NSLog(@"SendVideoRawData:%@,\nlenth:%lu,pts:%lld  dts:%lld",data,totalLenth,pts,dts);
+    _rtmpSend->SendH264Packet(buffer, totalLenth, keyFrame,dts, pts);
+    
+//    if (keyFrame) {
+//        unsigned char * spsppsData = (unsigned char *)encoder.parameterSet.bytes;
+//        size_t spsSize = (size_t)spsppsData[0];
+//        size_t ppsSize = (size_t)spsppsData[4+ spsSize];
+//        _rtmpSend->SendVideoSpsPps(&spsppsData[8+ spsSize], ppsSize,&spsppsData[4], spsSize);
+//        NSLog(@"SendH264Packet   spspps:%ld",spsSize+ ppsSize);
+//    }
+//    _rtmpSend->SendH264Packet(buffer, (unsigned int)totalLenth, keyFrame, [[NSDate date]timeIntervalSinceDate:_beginDate]);
+//    NSLog(@"SendH264Packet   packetsize:%ld",totalLenth);
     
 //[self sendH264Packet:(unsigned char *)encoder.parameterSet.bytes size:(unsigned  int)encoder.parameterSet.length key:keyFrame time:[[NSDate date]timeIntervalSinceDate:_beginDate]];
 //
@@ -423,8 +440,16 @@
 //    }
 //    [_decode decodeData:buffer lenth:(int)totalLenth];
 //    if (keyFrame) {
-//        [_gjDecoder decodeBuffer:(uint8_t*)encoder.parameterSet.bytes withLenth:(uint32_t)encoder.parameterSet.length];
+//        unsigned char * spsppsData = (unsigned char*)malloc(encoder.parameterSet.length);
+//        memcpy(spsppsData, (unsigned char *)encoder.parameterSet.bytes, encoder.parameterSet.length);
+//        size_t spsSize = (size_t)spsppsData[0];
+//        size_t ppsSize = (size_t)spsppsData[4+ spsSize];
+//        memcpy(spsppsData, "\x00\x00\x00\x01", 4);
+//        memcpy(spsppsData+4+spsSize, "\x00\x00\x00\x01", 4);
+//        [_gjDecoder decodeBuffer:(uint8_t*)spsppsData withLenth:(uint32_t)encoder.parameterSet.length];
+//        free(spsppsData);
 //    }
+//    printf("fram type:%x,",buffer[4]);
 //    [_gjDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
 }
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer{

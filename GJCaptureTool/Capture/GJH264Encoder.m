@@ -22,26 +22,36 @@
 int _keyInterval;////key内的p帧数量
 
 GJH264Encoder* encoder ;
+-(instancetype)initWithFps:(uint)fps{
+    self = [super init];
+    if (self) {
+        [self setUpParm];
+        _destFormat.baseFormat.fps=fps;
+    }
+    return self;
+}
 - (instancetype)init
 {
     self = [super init];
     if (self) {
-        _shouldRecreate=YES;
-        memset(&_destFormat, 0, sizeof(H264Format));
-        _destFormat.model=EntropyMode_CABAC;
-        _destFormat.level=profileLevelMain;
-        _destFormat.allowBframe=true;
-        _destFormat.allowPframe=true;
-        _destFormat.baseFormat.bitRate=300*1024;
-        _destFormat.gopSize=10;
-        
-        _quality = 1.0;
-        _expectedFrameRate = 0;
-        encoder = self;
+        [self setUpParm];
     }
     return self;
 }
-
+-(void)setUpParm{
+    _shouldRecreate=YES;
+    memset(&_destFormat, 0, sizeof(H264Format));
+    _destFormat.model=EntropyMode_CABAC;
+    _destFormat.level=profileLevelMain;
+    _destFormat.allowBframe=true;
+    _destFormat.allowPframe=true;
+    _destFormat.baseFormat.bitRate=300*1024;
+    _destFormat.gopSize=10;
+    
+    _quality = 1.0;
+    _expectedFrameRate = 0;
+    encoder = self;
+}
 -(void)setDestFormat:(H264Format)destFormat{
     _destFormat = destFormat;
 }
@@ -55,7 +65,12 @@ GJH264Encoder* encoder ;
     if (_shouldRecreate) {
         [self creatEnCodeSessionWithWidth:w height:h];
     }
-    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount, 10);
+    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount*1000.0/_destFormat.baseFormat.fps, 1000);
+    
+    CMTime during = kCMTimeInvalid;
+    if (_destFormat.baseFormat.fps>0) {
+        during = CMTimeMake(1, _destFormat.baseFormat.fps);
+    }
     NSMutableDictionary * properties;
  
     if (fourceKey) {
@@ -66,7 +81,7 @@ GJH264Encoder* encoder ;
                                                       _enCodeSession,
                                                       imgRef,
                                                       presentationTimeStamp,
-                                                      kCMTimeInvalid, // may be kCMTimeInvalid
+                                                      during, // may be kCMTimeInvalid
                                                        (__bridge CFDictionaryRef)properties,
                                                       NULL,
                                                       NULL );
@@ -175,7 +190,6 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     uint8_t *dataPointer;
     OSStatus statusCodeRet = CMBlockBufferGetDataPointer(dataBuffer, 0, &length, &totalLength, (char**)&dataPointer);
     
-    
     bool keyframe = !CFDictionaryContainsKey( (CFArrayGetValueAtIndex(CMSampleBufferGetSampleAttachmentsArray(sample, true), 0)), kCMSampleAttachmentKey_NotSync);
     
     if (encoder.parameterSet == nil && keyframe)
@@ -239,8 +253,10 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
             uint8_t* data = dataPointer + bufferOffset;
             memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
-            
-            [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:data withLenth:NALUnitLength +AVCCHeaderLength keyFrame:keyframe];
+            CMTime dt = CMSampleBufferGetDecodeTimeStamp(sample);
+            CMTime pt =  CMSampleBufferGetPresentationTimeStamp(sample);
+
+            [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:data withLenth:NALUnitLength +AVCCHeaderLength keyFrame:keyframe pts:pt.value dts:dt.value];
             keyframe = false;
             NSLog(@"h264编码成功,%d",NALUnitLength);
             bufferOffset += AVCCHeaderLength + NALUnitLength;

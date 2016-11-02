@@ -463,12 +463,12 @@ int LibRtmpSession::SendPacket(unsigned int nPacketType,unsigned char *data,unsi
     return nRet;
 }
 
-int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char * sps,int sps_len)
+int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char * sps,int sps_len ,int pts,int dts)
 {
     unsigned char * body=NULL;
     int iIndex = 0;
     
-    int rtmpLength = 1025;
+    int rtmpLength = 16+pps_len+sps_len;
     RTMPPacket rtmp_pack;
     RTMPPacket_Reset(&rtmp_pack);
     RTMPPacket_Alloc(&rtmp_pack,rtmpLength);
@@ -478,9 +478,15 @@ int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char
     body[iIndex++] = 0x17;
     body[iIndex++] = 0x00;
     
+//    int val = pts-dts;
+//    body[iIndex++] = (val >> 16) & 0xff;// Decoder delay
+//    body[iIndex++] = (val >> 8) & 0xff;
+//    body[iIndex++] = (val >> 0) & 0xff;
+    
+    body[iIndex++] = 0x00;// Decoder delay
     body[iIndex++] = 0x00;
     body[iIndex++] = 0x00;
-    body[iIndex++] = 0x00;
+
     
     body[iIndex++] = 0x01;
     body[iIndex++] = sps[1];
@@ -505,7 +511,7 @@ int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char
     rtmp_pack.m_packetType = RTMP_PACKET_TYPE_VIDEO;
     rtmp_pack.m_nBodySize = iIndex;
     rtmp_pack.m_nChannel = 0x04;
-    rtmp_pack.m_nTimeStamp = 0;
+    rtmp_pack.m_nTimeStamp = dts;
     rtmp_pack.m_hasAbsTimestamp = 0;
     rtmp_pack.m_headerType = RTMP_PACKET_SIZE_MEDIUM;
     
@@ -527,12 +533,11 @@ int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char
         }
         _iMetaDataFlag = 1;
     }
-    //free(packet);
-    
+    RTMPPacket_Free(&rtmp_pack);
     return iRet;
 }
 
-int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIsKeyFrame,unsigned int nTimeStamp)
+int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIsKeyFrame,unsigned int dts,int pts)
 {
     if(data == NULL && size<11)
     {
@@ -547,6 +552,10 @@ int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIs
     {
         body[i++] = 0x17;// 1:Iframe  7:AVC
         body[i++] = 0x01;// AVC NALU
+        
+//        body[i++] = (val >> 16) & 0xff;// Decoder delay
+//        body[i++] = (val >> 8) & 0xff;
+//        body[i++] = (val >> 0) & 0xff;
         body[i++] = 0x00;
         body[i++] = 0x00;
         body[i++] = 0x00;
@@ -572,7 +581,7 @@ int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIs
         memcpy(&body[i],data,size);
     }
     
-    int bRet = SendPacket(RTMP_PACKET_TYPE_VIDEO,body,i+size,nTimeStamp);
+    int bRet = SendPacket(RTMP_PACKET_TYPE_VIDEO,body,i+size,dts);
     
     free(body);
     
@@ -826,7 +835,7 @@ int LibRtmpSession::SendVideoData(unsigned char* buf, int videodatalen){
         }
         if((_pMetaData->Sps) && (_pMetaData->Pps))
         {
-            SendVideoSpsPps(_pMetaData->Pps,_pMetaData->nPpsLen,_pMetaData->Sps,_pMetaData->nSpsLen);
+//            SendVideoSpsPps(_pMetaData->Pps,_pMetaData->nPpsLen,_pMetaData->Sps,_pMetaData->nSpsLen);
         }
     }
     //LOGI("SendVideoData..._iMetaDataFlag=%d, itemscnt=%d", _iMetaDataFlag, itemscnt);
@@ -877,7 +886,7 @@ int LibRtmpSession::SendVideoData(unsigned char* buf, int videodatalen){
         }else{
             uiVideoTimestamp = RTMP_GetTime()-_uiStartTimestamp;
         }
-        iRet =SendH264Packet(pSendBuffer, iSendSize, isKey, uiVideoTimestamp);
+//        iRet =SendH264Packet(pSendBuffer, iSendSize, isKey, uiVideoTimestamp);
         if(isKey != 0)
         {
             LOGI("SCREEN_CONTENT_REAL_TIME(%d) I Frame return %d, 0x%02x, timestamp=%u, audio_ts=%d", iSendSize, iRet, pSendBuffer[0], uiVideoTimestamp, _uiAudioDTS);
