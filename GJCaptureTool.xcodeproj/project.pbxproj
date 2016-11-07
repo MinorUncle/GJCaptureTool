@@ -16,6 +16,9 @@
 		AE10F8DD1D7F1E0E008BAE29 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AE10F8D51D7F1E0E008BAE29 /* libswresample.a */; };
 		AE10F8DE1D7F1E0E008BAE29 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AE10F8D61D7F1E0E008BAE29 /* libswscale.a */; };
 		AE10F8E11D7F1E4B008BAE29 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AE10F8E01D7F1E4B008BAE29 /* libx264.a */; };
+		AE8B47BF1DD0D30100A824D8 /* GJBufferPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AE8B47BD1DD0D30100A824D8 /* GJBufferPool.cpp */; };
+		AEF5E4181DCB6D0400EECE53 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AEF5E4161DCB6D0400EECE53 /* libcrypto.a */; };
+		AEF5E4191DCB6D0400EECE53 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AEF5E4171DCB6D0400EECE53 /* libopenssl.a */; };
 		AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */; };
 		C54FA8C91D2103AA00A0D3C3 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C54FA8C81D2103AA00A0D3C3 /* OpenAL.framework */; };
 		C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C561ABEB1D51D3DC00113453 /* AppDelegate.m */; };
@@ -44,8 +47,6 @@
 		C573F1761D4B417B002607B6 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F1751D4B417B002607B6 /* VideoToolbox.framework */; };
 		C59106021DC894BC00BCC938 /* LibRtmpSession.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C59106001DC894BC00BCC938 /* LibRtmpSession.cpp */; };
 		C59106041DC899DC00BCC938 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C59106031DC899DC00BCC938 /* MediaPlayer.framework */; };
-		C591E83D1DC6E83D00BCC938 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C591E83A1DC6E83D00BCC938 /* libcrypto.a */; };
-		C591E83E1DC6E83D00BCC938 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C591E83B1DC6E83D00BCC938 /* libopenssl.a */; };
 		C591E85B1DC6ECED00BCC938 /* amf.c in Sources */ = {isa = PBXBuildFile; fileRef = C591E84D1DC6ECED00BCC938 /* amf.c */; };
 		C591E85C1DC6ECED00BCC938 /* hashswf.c in Sources */ = {isa = PBXBuildFile; fileRef = C591E8531DC6ECED00BCC938 /* hashswf.c */; };
 		C591E85D1DC6ECED00BCC938 /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = C591E8551DC6ECED00BCC938 /* log.c */; };
@@ -77,6 +78,8 @@
 		AE10F8D51D7F1E0E008BAE29 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libswresample.a; sourceTree = "<group>"; };
 		AE10F8D61D7F1E0E008BAE29 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libswscale.a; sourceTree = "<group>"; };
 		AE10F8E01D7F1E4B008BAE29 /* libx264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264.a; sourceTree = "<group>"; };
+		AE8B47BD1DD0D30100A824D8 /* GJBufferPool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GJBufferPool.cpp; sourceTree = "<group>"; };
+		AE8B47BE1DD0D30100A824D8 /* GJBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJBufferPool.h; sourceTree = "<group>"; };
 		AEEA477A1DC3AB770075EE63 /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		AEEA477B1DC3AB770075EE63 /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
 		AEEA477C1DC3AB770075EE63 /* asn1_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
@@ -152,6 +155,8 @@
 		AEEA47C21DC3AB770075EE63 /* x509.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x509.h; sourceTree = "<group>"; };
 		AEEA47C31DC3AB770075EE63 /* x509_vfy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x509_vfy.h; sourceTree = "<group>"; };
 		AEEA47C41DC3AB770075EE63 /* x509v3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x509v3.h; sourceTree = "<group>"; };
+		AEF5E4161DCB6D0400EECE53 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
+		AEF5E4171DCB6D0400EECE53 /* libopenssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopenssl.a; sourceTree = "<group>"; };
 		AEFEF2151DB3A2480004CF39 /* GJFormats.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJFormats.h; sourceTree = "<group>"; };
 		AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		C54FA8A81D21006000A0D3C3 /* GJCaptureTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GJCaptureTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -311,8 +316,6 @@
 		C59106011DC894BC00BCC938 /* LibRtmpSession.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = LibRtmpSession.hpp; sourceTree = "<group>"; };
 		C59106031DC899DC00BCC938 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 		C59106051DC89C0F00BCC938 /* sps_decode.h */ = {isa = PBXFileReference; fileEncoding = 2147484705; lastKnownFileType = sourcecode.c.h; path = sps_decode.h; sourceTree = "<group>"; };
-		C591E83A1DC6E83D00BCC938 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
-		C591E83B1DC6E83D00BCC938 /* libopenssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopenssl.a; sourceTree = "<group>"; };
 		C591E8441DC6ECAC00BCC938 /* librtmp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = librtmp.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		C591E84D1DC6ECED00BCC938 /* amf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = amf.c; sourceTree = "<group>"; };
 		C591E84E1DC6ECED00BCC938 /* amf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = amf.h; sourceTree = "<group>"; };
@@ -338,9 +341,7 @@
 				C59106041DC899DC00BCC938 /* MediaPlayer.framework in Frameworks */,
 				C591E8601DC6ED5900BCC938 /* librtmp.a in Frameworks */,
 				AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */,
-				C591E83E1DC6E83D00BCC938 /* libopenssl.a in Frameworks */,
 				AE10F8DD1D7F1E0E008BAE29 /* libswresample.a in Frameworks */,
-				C591E83D1DC6E83D00BCC938 /* libcrypto.a in Frameworks */,
 				AE10F8D91D7F1E0E008BAE29 /* libavfilter.a in Frameworks */,
 				AE10F8DC1D7F1E0E008BAE29 /* libpostproc.a in Frameworks */,
 				C573F1761D4B417B002607B6 /* VideoToolbox.framework in Frameworks */,
@@ -361,6 +362,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AEF5E4191DCB6D0400EECE53 /* libopenssl.a in Frameworks */,
+				AEF5E4181DCB6D0400EECE53 /* libcrypto.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -393,7 +396,7 @@
 		AEEA47721DC3AB770075EE63 /* rtmpdump */ = {
 			isa = PBXGroup;
 			children = (
-				C591E8391DC6E7EF00BCC938 /* lib */,
+				AEF5E4151DCB6D0400EECE53 /* lib */,
 				AEEA47731DC3AB770075EE63 /* include */,
 			);
 			path = rtmpdump;
@@ -497,6 +500,15 @@
 			path = openssl;
 			sourceTree = "<group>";
 		};
+		AEF5E4151DCB6D0400EECE53 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				AEF5E4161DCB6D0400EECE53 /* libcrypto.a */,
+				AEF5E4171DCB6D0400EECE53 /* libopenssl.a */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
 		AEFEF2291DB3B9A80004CF39 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -543,6 +555,8 @@
 				C561AC0D1D51D3DC00113453 /* FFmpeg */,
 				C561AC881D51D3DC00113453 /* GJDebug */,
 				C561AC8A1D51D3DC00113453 /* GJQueue.h */,
+				AE8B47BD1DD0D30100A824D8 /* GJBufferPool.cpp */,
+				AE8B47BE1DD0D30100A824D8 /* GJBufferPool.h */,
 				C561AC8B1D51D3DC00113453 /* Info.plist */,
 				C561AC8C1D51D3DC00113453 /* main.m */,
 				C561AC8D1D51D3DC00113453 /* OpenGLPlayer */,
@@ -824,15 +838,6 @@
 			path = include;
 			sourceTree = "<group>";
 		};
-		C591E8391DC6E7EF00BCC938 /* lib */ = {
-			isa = PBXGroup;
-			children = (
-				C591E83A1DC6E83D00BCC938 /* libcrypto.a */,
-				C591E83B1DC6E83D00BCC938 /* libopenssl.a */,
-			);
-			path = lib;
-			sourceTree = "<group>";
-		};
 		C591E8451DC6ECAC00BCC938 /* rtmp */ = {
 			isa = PBXGroup;
 			children = (
@@ -967,6 +972,7 @@
 				C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */,
 				C561ACA81D51D3DC00113453 /* H264Decoder.mm in Sources */,
 				C561ACA01D51D3DC00113453 /* GJAudioQueuePlayer.mm in Sources */,
+				AE8B47BF1DD0D30100A824D8 /* GJBufferPool.cpp in Sources */,
 				C561ACA61D51D3DC00113453 /* GJH264Decoder.m in Sources */,
 				C561AC9F1D51D3DC00113453 /* AudioUnitCapture.m in Sources */,
 			);
@@ -1102,6 +1108,7 @@
 				DEVELOPMENT_TEAM = X33DX68294;
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/GJCaptureTool/X264/include\"",
+					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"",
 				);
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
@@ -1129,6 +1136,7 @@
 				DEVELOPMENT_TEAM = X33DX68294;
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/GJCaptureTool/X264/include\"",
+					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"",
 				);
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
@@ -1155,6 +1163,10 @@
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/rtmpdump/include\"";
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -1169,6 +1181,10 @@
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/rtmpdump/include\"";
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
+				);
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;

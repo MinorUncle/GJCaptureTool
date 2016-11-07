@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 #include <pthread.h>
-
+#include "GJBufferPool.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -77,6 +77,9 @@ extern "C" {
         int _iWidth;
         int _iHeight;
         int _iFps;
+        
+        GJQueue<GJPoolBuffer*> _videoQueue;
+        
         
         char _szRtmpUrl[256];
         RTMP* _pRtmp;

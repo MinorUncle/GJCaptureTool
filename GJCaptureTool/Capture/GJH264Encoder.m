@@ -45,7 +45,7 @@ GJH264Encoder* encoder ;
     _destFormat.level=profileLevelMain;
     _destFormat.allowBframe=true;
     _destFormat.allowPframe=true;
-    _destFormat.baseFormat.bitRate=300*1024*8;//bit/s
+    _destFormat.baseFormat.bitRate=100*1024*8;//bit/s
     _destFormat.gopSize=10;
     
     _quality = 1.0;

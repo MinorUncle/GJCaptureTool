@@ -82,6 +82,10 @@ LibRtmpSession::LibRtmpSession(char* szRtmpUrl):_pRtmp(NULL)
     
     _pMetaData = (RTMPMetadata*)malloc(sizeof(RTMPMetadata));
     memset((void*)_pMetaData, 0, sizeof(RTMPMetadata));
+    
+    _videoQueue.shouldWait=false;
+    _videoQueue.shouldNonatomic=true;
+    _videoQueue.autoResize=true;
 }
 
 LibRtmpSession::~LibRtmpSession(){
@@ -99,6 +103,10 @@ LibRtmpSession::~LibRtmpSession(){
         if (_pMetaData) {
             free(_pMetaData);
         }
+    }
+    GJPoolBuffer*buffer;
+    while (_videoQueue.queuePop(&buffer)) {
+        free(buffer);
     }
 }
 
@@ -471,7 +479,15 @@ int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char
     int rtmpLength = 16+pps_len+sps_len;
     RTMPPacket rtmp_pack;
     RTMPPacket_Reset(&rtmp_pack);
-    RTMPPacket_Alloc(&rtmp_pack,rtmpLength);
+    GJPoolBuffer* buffer=NULL;
+    if (!_videoQueue.queuePop(&buffer)) {
+        buffer = new GJPoolBuffer(RTMP_MAX_HEADER_SIZE+rtmpLength);
+    }else if (buffer->caputreSize()<RTMP_MAX_HEADER_SIZE+rtmpLength){
+        buffer->resizeCapture(RTMP_MAX_HEADER_SIZE+rtmpLength, false);
+    }
+    rtmp_pack.m_body=(char*)buffer->data()+RTMP_MAX_HEADER_SIZE;
+    
+//    RTMPPacket_Alloc(&rtmp_pack,rtmpLength);
     
     body = (unsigned char *)rtmp_pack.m_body;
     
@@ -532,20 +548,53 @@ int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char
             memcpy(_pMetaData->Sps, sps, sps_len);
         }
         _iMetaDataFlag = 1;
+    
     }
-    RTMPPacket_Free(&rtmp_pack);
+    _videoQueue.queuePush(buffer);
+//    RTMPPacket_Free(&rtmp_pack);
     return iRet;
 }
 
 int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIsKeyFrame,unsigned int dts)
 {
+    
+    int rtmpLength = size+9;
+    RTMPPacket rtmp_pack;
+    RTMPPacket_Reset(&rtmp_pack);
+    GJPoolBuffer* buffer=NULL;
+    if (!_videoQueue.queuePop(&buffer)) {
+        buffer = new GJPoolBuffer(RTMP_MAX_HEADER_SIZE+rtmpLength);
+    }else if (buffer->caputreSize()<RTMP_MAX_HEADER_SIZE+rtmpLength){
+        buffer->resizeCapture(RTMP_MAX_HEADER_SIZE+rtmpLength, false);
+    }
+    
+    rtmp_pack.m_body=(char*)buffer->data()+RTMP_MAX_HEADER_SIZE;
+    
+    rtmp_pack.m_nBodySize = rtmpLength;
+    memcpy(rtmp_pack.m_body,data,rtmpLength);
+    rtmp_pack.m_hasAbsTimestamp = 0;
+    rtmp_pack.m_packetType = RTMP_PACKET_TYPE_VIDEO;
+    
+    if(_pRtmp)rtmp_pack.m_nInfoField2 = _pRtmp->m_stream_id;
+    
+    rtmp_pack.m_nChannel = 0x04;
+    
+    rtmp_pack.m_headerType = RTMP_PACKET_SIZE_LARGE;
+
+    rtmp_pack.m_nTimeStamp = dts;
+    
+   
+    
+    
+    
     if(data == NULL && size<11)
     {
         return FALSE;
     }
     
-    unsigned char *body = (unsigned char*)malloc(size+9);
-    memset(body,0,size+9);
+   
+
+    unsigned char *body = (unsigned char*)rtmp_pack.m_body;
     
     int i = 0;
     if(bIsKeyFrame)
@@ -580,12 +629,11 @@ int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIs
         body[i++] = size & 0xFF;
         memcpy(&body[i],data,size);
     }
+
+    int nRet = RtmpPacketSend(&rtmp_pack);
     
-    int bRet = SendPacket(RTMP_PACKET_TYPE_VIDEO,body,i+size,dts);
-    
-    free(body);
-    
-    return bRet;
+    _videoQueue.queuePush(buffer);
+    return nRet;
 }
 
 int LibRtmpSession::SendAACData(unsigned char* buf, int size, unsigned int timeStamp)

@@ -22,8 +22,10 @@
 #import "H264StreamToTS.h"
 //#import "rtmp.h"
 #import "RtmpSendH264.h"
+#import "GJBufferPool.h"
 #import "GJFormats.h"
 #import "LibRtmpSession.hpp"
+#import "rtmp/log.h"
 @interface ViewController ()<GJCaptureToolDelegate,GJH264DecoderDelegate,GJH264EncoderDelegate,AACEncoderFromPCMDelegate,PCMDecodeFromAACDelegate,AudioStreamPraseDelegate,H264DecoderDelegate,H264EncoderDelegate>
 {
     GJAudioQueuePlayer* _audioPlayer;
@@ -34,6 +36,8 @@
     H264Decoder* _decode;
     H264Encoder* _encoder;
     
+    GJBufferPool _videoYUVPool;
+    GJBufferPool _videoH264Pool;
     NSTimer* _timer;
     int _totalCount;
     float _totalByte;
@@ -84,7 +88,7 @@
     _audioDecoder.delegate = self;
     _gjDecoder.delegate = self;
     _gjEncoder.deleagte = self;
-    char* url="rtmp://192.168.1.16:5920/rtmplive/room";
+    char* url="rtmp://192.168.1.102:1935/myapp/room";
     _rtmpSend = new LibRtmpSession(url);
     // Do any additional setup after loading the view, typically from a nib.
 }
@@ -118,6 +122,7 @@
     }
 }
 -(void)connect{
+    RTMP_LogSetLevel(RTMP_LOGDEBUG);
     
 //    if(!RTMP_SetupURL(_rtmpSend, "rtmp://192.168.1.2:5920/rtmplive/room")){
 //        NSLog(@"RTMP_SetupURL error");
@@ -150,6 +155,7 @@
 //        _rtmpSend=NULL;
 //        return ;
 //    }
+    
     if (_rtmpSend->Connect(RTMP_TYPE_PUSH)>=0) {
         _stateLab.text = @"连接成功";
     }else{
@@ -403,7 +409,16 @@
     _totalCount ++;
     _totalByte += totalLenth;
     if (!_rtmpSend->GetConnectedFlag()) {
-        assert(0);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            _stateLab.text = @"连接中。。。";
+            
+            if (_rtmpSend->Connect(RTMP_TYPE_PUSH)>=0) {
+                _stateLab.text = @"连接成功";
+            }else{
+                _stateLab.text = @"连接失败";
+            }
+        });
+      
         return;
     }
     if (keyFrame) {
