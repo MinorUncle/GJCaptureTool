@@ -178,7 +178,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         CAPTURE_LOG("添加视频数据输出成功");
     }
     _videoConnect = [_captureDataOutput connectionWithMediaType:AVMediaTypeVideo];
-    self.captureDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)};
+    self.captureDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange)};
 
        //链接创建后
     NSError * error;

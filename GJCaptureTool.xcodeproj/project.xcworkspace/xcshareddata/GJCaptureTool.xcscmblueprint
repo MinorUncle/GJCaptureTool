@@ -1,0 +1,30 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "8531738AFD4FE1FAF1D2FBB5BC4445ED8B189CFD",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "8531738AFD4FE1FAF1D2FBB5BC4445ED8B189CFD" : 9223372036854775807,
+    "0B93145D3ABCBD6C31A0B6C6E9862005A459ADD3" : 9223372036854775807
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "4A40DBAC-5404-444B-91AB-93552CD743F6",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "8531738AFD4FE1FAF1D2FBB5BC4445ED8B189CFD" : "GJCaptureTool\/",
+    "0B93145D3ABCBD6C31A0B6C6E9862005A459ADD3" : "ffmpegCode\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "GJCaptureTool",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "GJCaptureTool.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/MinorUncle\/ffmpegCode.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "0B93145D3ABCBD6C31A0B6C6E9862005A459ADD3"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/MinorUncle\/GJCaptureTool.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "8531738AFD4FE1FAF1D2FBB5BC4445ED8B189CFD"
+    }
+  ]
+}

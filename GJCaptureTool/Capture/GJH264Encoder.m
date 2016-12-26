@@ -182,6 +182,9 @@ GJH264Encoder* encoder ;
     if (result != 0) {
         NSLog(@"kVTCompressionPropertyKey_ExpectedFrameRate set error");
     }
+    
+    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_CleanAperture,frameRate);
+
 }
 
 
@@ -238,12 +241,13 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             }
         }
         //抛弃sps,pps
-//        NSData* dt = [NSData dataWithBytes:dataPointer length:MIN(totalLength, 100)];
-        uint32_t spsPpsLength = 0;
-        memcpy(&spsPpsLength, dataPointer, 4);
-        spsPpsLength = CFSwapInt32BigToHost(spsPpsLength);
-        dataPointer += spsPpsLength + 4;
-        totalLength -= spsPpsLength + 4;
+        NSData* dt = [NSData dataWithBytes:dataPointer length:MIN(totalLength, 100)];
+        NSLog(@"t:%@",dt);
+        uint32_t seiLength = 0;
+        memcpy(&seiLength, dataPointer, 4);
+        seiLength = CFSwapInt32BigToHost(seiLength);
+        dataPointer += seiLength + 4;
+        totalLength -= seiLength + 4;
 
     }
     

@@ -148,7 +148,7 @@ void av_image_copy(uint8_t *dst_data[4], int dst_linesizes[4],
  */
 int av_image_fill_arrays(uint8_t *dst_data[4], int dst_linesize[4],
                          const uint8_t *src,
-                         enum AVPixelFormat pix_fmt, int width, int height, int  );
+                         enum AVPixelFormat pix_fmt, int width, int height, int align);
 
 /**
  * Return the size in bytes of the amount of data required to store an

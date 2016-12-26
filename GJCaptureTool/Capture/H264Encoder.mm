@@ -46,6 +46,8 @@ extern "C"{
     _videoEncoder = avcodec_find_encoder(AV_CODEC_ID_H264);
     _videoEncoderContext = avcodec_alloc_context3(_videoEncoder);
     _videoEncoderContext->pix_fmt = AV_PIX_FMT_YUV420P;
+    _videoEncoderContext->slices = 1;
+    
     _videoEncoderContext->width = _width;
     _videoEncoderContext->height = _height;
     _videoEncoderContext->gop_size = _gop_size;
@@ -90,24 +92,40 @@ extern "C"{
     NSLog(@"pts:%lf  value:%lld CMTimeScale:%d  CMTimeFlags:%d CMTimeEpoch:%lld",VALUE, pts.value,pts.timescale,pts.flags,pts.epoch);
 
     _frame->pts = pts.value;
-
-    int errorCode = av_image_fill_arrays(_frame->data, _frame->linesize, address, _videoEncoderContext->pix_fmt, _width, _height, 1);
-    CVPixelBufferUnlockBaseAddress(imgRef, 0);
+    av_init_packet(_videoPacket);
+    int errorCode = av_image_fill_arrays(_frame->data, _frame->linesize, address, _videoEncoderContext->pix_fmt, _width, _height, sizeof(long));
     [self showErrWidhCode:errorCode preStr:@"av_image_fill_arrays"];
-    errorCode = avcodec_send_frame(_videoEncoderContext, _frame);
-    [self showErrWidhCode:errorCode preStr:@"avcodec_send_frame"];
-
-    errorCode = avcodec_receive_packet(_videoEncoderContext, _videoPacket);
-    [self showErrWidhCode:errorCode preStr:@"avcodec_receive_packet"];
-    
-    if (!errorCode) {
-   
-        
-        [self.delegate H264Encoder:self h264:_videoPacket->data size:_videoPacket->size pts:_videoPacket->pts dts:_videoPacket->dts];
+    int getOutput = 0;
+    int res = avcodec_encode_video2(_videoEncoderContext, _videoPacket, _frame, &getOutput);
+    uint8_t* datab = _videoPacket->data;
+    if (datab) {
+        NSData* data = [ NSData dataWithBytes:datab length:_videoPacket->size];
+        NSLog(@"data:%@",data);
+        printf("cdata:");
     }
+    if(_videoPacket->flags & AV_PKT_FLAG_KEY){
+        NSLog(@"key frame");
+    }else{
+        NSLog(@"not key");
+    }
+    
+    while (datab<_videoPacket->data+_videoPacket->size) {
+        printf("%02x",*datab++);
+    }
+//    errorCode = avcodec_send_frame(_videoEncoderContext, _frame);
+//    [self showErrWidhCode:errorCode preStr:@"avcodec_send_frame"];
+//
+//    errorCode = avcodec_receive_packet(_videoEncoderContext, _videoPacket);
+//    [self showErrWidhCode:errorCode preStr:@"avcodec_receive_packet"];
+    
+    if (getOutput) {
+        [self.delegate H264Encoder:self h264:_videoPacket->data size:_videoPacket->size pts:_videoPacket->pts dts:_videoPacket->dts];
+        av_packet_unref(_videoPacket);
+    }
+    CVPixelBufferUnlockBaseAddress(imgRef, 0);
 }
 -(NSData *)extendata{
-    if (_extendata == nil) {
+    if (_extendata == nil && _videoEncoderContext->extradata_size>0) {
         _extendata = [NSData dataWithBytes:_videoEncoderContext->extradata length:_videoEncoderContext->extradata_size];
     }
     return _extendata;

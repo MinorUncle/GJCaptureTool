@@ -8,7 +8,7 @@
 
 #import "GJAudioQueueRecoder.h"
 #import <AudioToolbox/AudioFormat.h>
-
+#import <AudioToolbox/AudioSession.h>
 
 @interface GJAudioQueueRecoder()
 {
@@ -156,6 +156,14 @@ OSStatus SetMagicCookieForFile (AudioQueueRef inQueue,AudioFileID   inFile) {
     }
     _pAqData->mCurrentPacket = 0;                           // 1
     _pAqData->mIsRunning = true;                            // 2
+    UInt32 category = kAudioSessionCategory_PlayAndRecord;
+    AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(category), &category);
+    
+    UInt32 audioRoute = kAudioSessionOverrideAudioRoute_Speaker;
+    AudioSessionSetProperty(kAudioSessionProperty_OverrideAudioRoute, sizeof(audioRoute), &audioRoute);
+    
+    AudioSessionSetActive(true);
+    
     OSStatus status = AudioQueueStart(_pAqData->mQueue,NULL);
    assert(!status);
     // 9
