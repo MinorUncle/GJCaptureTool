@@ -16,10 +16,11 @@
 		042F92DD1E03BE8200B1AA7A /* libpostproc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 042F92D41E03BE6800B1AA7A /* libpostproc.a */; };
 		042F92DE1E03BE8200B1AA7A /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 042F92C61E03BE6800B1AA7A /* libswresample.a */; };
 		042F92DF1E03BE8200B1AA7A /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 042F92D61E03BE6800B1AA7A /* libswscale.a */; };
+		04300FF31E1366F70059262A /* liblibQueue.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 04300FF21E1366E80059262A /* liblibQueue.a */; };
 		0432266B1DDEF38F0012A0C0 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 043226691DDEF38F0012A0C0 /* libcrypto.a */; };
 		0432266C1DDEF38F0012A0C0 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0432266A1DDEF38F0012A0C0 /* libopenssl.a */; };
+		045C61B31E1CE4430047E673 /* libMp4v2Code.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 045C61B01E1CE4390047E673 /* libMp4v2Code.a */; };
 		AE10F8E11D7F1E4B008BAE29 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AE10F8E01D7F1E4B008BAE29 /* libx264.a */; };
-		AE8B47BF1DD0D30100A824D8 /* GJBufferPool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AE8B47BD1DD0D30100A824D8 /* GJBufferPool.cpp */; };
 		AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */; };
 		C54FA8C91D2103AA00A0D3C3 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C54FA8C81D2103AA00A0D3C3 /* OpenAL.framework */; };
 		C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C561ABEB1D51D3DC00113453 /* AppDelegate.m */; };
@@ -128,6 +129,41 @@
 			remoteGlobalIDString = C58157021D9E537800B9118F;
 			remoteInfo = swscale;
 		};
+		04300FEF1E1366E80059262A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 04300FEA1E1366E70059262A /* GJQueue.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = C50856801C97EE2A002094FA;
+			remoteInfo = GJQueue;
+		};
+		04300FF11E1366E80059262A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 04300FEA1E1366E70059262A /* GJQueue.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 04300FDA1E13669C0059262A;
+			remoteInfo = libQueue;
+		};
+		04300FF41E1367090059262A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 04300FEA1E1366E70059262A /* GJQueue.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 04300FD91E13669C0059262A;
+			remoteInfo = libQueue;
+		};
+		045C61AF1E1CE4390047E673 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = C56C9D7E1D87CE1B0092E69D;
+			remoteInfo = Mp4v2Code;
+		};
+		045C61B11E1CE4390047E673 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = C5E7F6A51D8E2EB60018CBC6;
+			remoteInfo = Mp4V2_Demo;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -145,6 +181,11 @@
 /* Begin PBXFileReference section */
 		040EBEC81DFFD2660040AED0 /* GJCaptureTool.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GJCaptureTool.entitlements; sourceTree = "<group>"; };
 		042F92B61E03BE6700B1AA7A /* ffmpegCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ffmpegCode.xcodeproj; path = ../ffmpegCode/ffmpegCode.xcodeproj; sourceTree = "<group>"; };
+		04300FEA1E1366E70059262A /* GJQueue.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GJQueue.xcodeproj; path = ../queue/GJQueue.xcodeproj; sourceTree = "<group>"; };
+		043010021E13756D0059262A /* GJQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJQueue.h; path = ../../../../../../../../../../develop/queue/GJQueue.h; sourceTree = "<group>"; };
+		043010031E13756D0059262A /* GJBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJBufferPool.h; path = ../../../../../../../../../../develop/queue/GJBufferPool.h; sourceTree = "<group>"; };
+		043010041E138FC50059262A /* GJBufferPool+cplus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "GJBufferPool+cplus.h"; path = "../../../../../../../../../../develop/queue/GJBufferPool+cplus.h"; sourceTree = "<group>"; };
+		043010051E138FC50059262A /* GJQueue+cplus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "GJQueue+cplus.h"; path = "../../../../../../../../../../develop/queue/GJQueue+cplus.h"; sourceTree = "<group>"; };
 		043226691DDEF38F0012A0C0 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
 		0432266A1DDEF38F0012A0C0 /* libopenssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopenssl.a; sourceTree = "<group>"; };
 		044517461E10C72100196254 /* avcodec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = avcodec.h; sourceTree = "<group>"; };
@@ -252,9 +293,8 @@
 		044517B21E10C72100196254 /* version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
 		044517B41E10C72100196254 /* swscale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = swscale.h; sourceTree = "<group>"; };
 		044517B51E10C72100196254 /* version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
+		045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Mp4v2Code.xcodeproj; path = ../GJMp4Demo/Mp4v2Code.xcodeproj; sourceTree = "<group>"; };
 		AE10F8E01D7F1E4B008BAE29 /* libx264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264.a; sourceTree = "<group>"; };
-		AE8B47BD1DD0D30100A824D8 /* GJBufferPool.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = GJBufferPool.cpp; sourceTree = "<group>"; };
-		AE8B47BE1DD0D30100A824D8 /* GJBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJBufferPool.h; sourceTree = "<group>"; };
 		AEEA477A1DC3AB770075EE63 /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		AEEA477B1DC3AB770075EE63 /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
 		AEEA477C1DC3AB770075EE63 /* asn1_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
@@ -366,7 +406,6 @@
 		C561AC0B1D51D3DC00113453 /* RtmpSendH264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RtmpSendH264.h; sourceTree = "<group>"; };
 		C561AC0C1D51D3DC00113453 /* RtmpSendH264.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RtmpSendH264.mm; sourceTree = "<group>"; };
 		C561AC891D51D3DC00113453 /* GJDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJDebug.h; sourceTree = "<group>"; };
-		C561AC8A1D51D3DC00113453 /* GJQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJQueue.h; sourceTree = "<group>"; };
 		C561AC8B1D51D3DC00113453 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C561AC8C1D51D3DC00113453 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		C561AC8E1D51D3DC00113453 /* OpenGLView20.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLView20.h; sourceTree = "<group>"; };
@@ -407,6 +446,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				045C61B31E1CE4430047E673 /* libMp4v2Code.a in Frameworks */,
+				04300FF31E1366F70059262A /* liblibQueue.a in Frameworks */,
 				042F92D71E03BE8200B1AA7A /* libavcodec.a in Frameworks */,
 				042F92D81E03BE8200B1AA7A /* libavdevice.a in Frameworks */,
 				042F92D91E03BE8200B1AA7A /* libavfilter.a in Frameworks */,
@@ -455,6 +496,27 @@
 				042F92D61E03BE6800B1AA7A /* libswscale.a */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		04300FEB1E1366E70059262A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				04300FF01E1366E80059262A /* GJQueue.app */,
+				04300FF21E1366E80059262A /* liblibQueue.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		04300FFB1E1374EC0059262A /* libQueue */ = {
+			isa = PBXGroup;
+			children = (
+				043010041E138FC50059262A /* GJBufferPool+cplus.h */,
+				043010051E138FC50059262A /* GJQueue+cplus.h */,
+				043010021E13756D0059262A /* GJQueue.h */,
+				043010031E13756D0059262A /* GJBufferPool.h */,
+			);
+			name = libQueue;
+			path = "../../../Library/Developer/Xcode/DerivedData/GJCaptureTool-fcplchmptjcsdzdeorzkqrveprzl/Build/Products/Debug-iphoneos/include/libQueue";
 			sourceTree = "<group>";
 		};
 		043226681DDEF38F0012A0C0 /* lib */ = {
@@ -658,6 +720,15 @@
 			path = lib;
 			sourceTree = "<group>";
 		};
+		045C61A01E1CE4380047E673 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				045C61B01E1CE4390047E673 /* libMp4v2Code.a */,
+				045C61B21E1CE4390047E673 /* Mp4V2_Demo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		AE10F8DF1D7F1E4B008BAE29 /* lib */ = {
 			isa = PBXGroup;
 			children = (
@@ -785,6 +856,8 @@
 		C54FA89F1D21006000A0D3C3 = {
 			isa = PBXGroup;
 			children = (
+				045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */,
+				04300FEA1E1366E70059262A /* GJQueue.xcodeproj */,
 				042F92B61E03BE6700B1AA7A /* ffmpegCode.xcodeproj */,
 				C561ABE91D51D3DC00113453 /* GJCaptureTool */,
 				C573F1751D4B417B002607B6 /* VideoToolbox.framework */,
@@ -810,6 +883,7 @@
 		C561ABE91D51D3DC00113453 /* GJCaptureTool */ = {
 			isa = PBXGroup;
 			children = (
+				04300FFB1E1374EC0059262A /* libQueue */,
 				044517431E10C72100196254 /* FFmpeg */,
 				040EBEC81DFFD2660040AED0 /* GJCaptureTool.entitlements */,
 				C561ABEA1D51D3DC00113453 /* AppDelegate.h */,
@@ -820,9 +894,6 @@
 				C561ABFC1D51D3DC00113453 /* Main.storyboard */,
 				C561ABFE1D51D3DC00113453 /* Capture */,
 				C561AC881D51D3DC00113453 /* GJDebug */,
-				C561AC8A1D51D3DC00113453 /* GJQueue.h */,
-				AE8B47BD1DD0D30100A824D8 /* GJBufferPool.cpp */,
-				AE8B47BE1DD0D30100A824D8 /* GJBufferPool.h */,
 				C561AC8B1D51D3DC00113453 /* Info.plist */,
 				C561AC8C1D51D3DC00113453 /* main.m */,
 				C561AC8D1D51D3DC00113453 /* OpenGLPlayer */,
@@ -958,6 +1029,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				04300FF51E1367090059262A /* PBXTargetDependency */,
 			);
 			name = GJCaptureTool;
 			productName = media;
@@ -992,7 +1064,7 @@
 				TargetAttributes = {
 					C54FA8A71D21006000A0D3C3 = {
 						CreatedOnToolsVersion = 7.3;
-						DevelopmentTeam = X33DX68294;
+						DevelopmentTeam = 9VXBV77545;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -1027,6 +1099,14 @@
 				{
 					ProductGroup = 042F92B71E03BE6700B1AA7A /* Products */;
 					ProjectRef = 042F92B61E03BE6700B1AA7A /* ffmpegCode.xcodeproj */;
+				},
+				{
+					ProductGroup = 04300FEB1E1366E70059262A /* Products */;
+					ProjectRef = 04300FEA1E1366E70059262A /* GJQueue.xcodeproj */;
+				},
+				{
+					ProductGroup = 045C61A01E1CE4380047E673 /* Products */;
+					ProjectRef = 045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -1108,6 +1188,34 @@
 			remoteRef = 042F92D51E03BE6800B1AA7A /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		04300FF01E1366E80059262A /* GJQueue.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = GJQueue.app;
+			remoteRef = 04300FEF1E1366E80059262A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		04300FF21E1366E80059262A /* liblibQueue.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = liblibQueue.a;
+			remoteRef = 04300FF11E1366E80059262A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		045C61B01E1CE4390047E673 /* libMp4v2Code.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libMp4v2Code.a;
+			remoteRef = 045C61AF1E1CE4390047E673 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		045C61B21E1CE4390047E673 /* Mp4V2_Demo.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = Mp4V2_Demo.app;
+			remoteRef = 045C61B11E1CE4390047E673 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -1144,7 +1252,6 @@
 				C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */,
 				C561ACA81D51D3DC00113453 /* H264Decoder.mm in Sources */,
 				C561ACA01D51D3DC00113453 /* GJAudioQueuePlayer.mm in Sources */,
-				AE8B47BF1DD0D30100A824D8 /* GJBufferPool.cpp in Sources */,
 				C561ACA61D51D3DC00113453 /* GJH264Decoder.m in Sources */,
 				C561AC9F1D51D3DC00113453 /* AudioUnitCapture.m in Sources */,
 			);
@@ -1164,6 +1271,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		04300FF51E1367090059262A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libQueue;
+			targetProxy = 04300FF41E1367090059262A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C561ABFA1D51D3DC00113453 /* LaunchScreen.storyboard */ = {
@@ -1278,7 +1393,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 9VXBV77545;
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/GJCaptureTool/X264/include\"",
 					"\"$(SRCROOT)\"",
@@ -1293,7 +1408,7 @@
 					"$(PROJECT_DIR)/GJCaptureTool/X264/lib",
 					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool";
+				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool.TEST";
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1306,7 +1421,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 9VXBV77545;
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/GJCaptureTool/X264/include\"",
 					"\"$(SRCROOT)\"",
@@ -1321,7 +1436,7 @@
 					"$(PROJECT_DIR)/GJCaptureTool/X264/lib",
 					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool";
+				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool.TEST";
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";

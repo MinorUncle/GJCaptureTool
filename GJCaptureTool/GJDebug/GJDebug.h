@@ -38,11 +38,11 @@
 #define GJOpenAL_DEBUG(format, ...) _GJ_DEBUG( "GJOpenAL_DEBUG: ", format,##__VA_ARGS__)
 #define GJOpenAL_LOG(format, ...) _GJ_LOG( @"GJOpenAL_LOG: ", format,##__VA_ARGS__)
 
-#define AACEncoderFromPCM_DEBUG(format, ...)// _GJ_DEBUG( "AACEncoderFromPCM_DEBUG: ", format,##__VA_ARGS__)
-#define AACEncoderFromPCM_LOG(format, ...) //_GJ_LOG( @"AACEncoderFromPCM_LOG: ", format,##__VA_ARGS__)
+#define AACEncoderFromPCM_DEBUG(format, ...) _GJ_DEBUG( "AACEncoderFromPCM_DEBUG: ", format,##__VA_ARGS__)
+#define AACEncoderFromPCM_LOG(format, ...) _GJ_LOG( @"AACEncoderFromPCM_LOG: ", format,##__VA_ARGS__)
 
-#define PCMDecodeFromAAC_DEBUG(format, ...)// _GJ_DEBUG( "PCMDecodeFromAAC_DEBUG: ", format,##__VA_ARGS__)
-#define PCMDecodeFromAAC_LOG(format, ...)// _GJ_LOG( @"PCMDecodeFromAAC_LOG: ", format,##__VA_ARGS__)
+#define PCMDecodeFromAAC_DEBUG(format, ...) _GJ_DEBUG( "PCMDecodeFromAAC_DEBUG: ", format,##__VA_ARGS__)
+#define PCMDecodeFromAAC_LOG(format, ...) _GJ_LOG( @"PCMDecodeFromAAC_LOG: ", format,##__VA_ARGS__)
 
 #define AudioPraseStream_DEBUG(format, ...) _GJ_DEBUG( "AudioPraseStream_DEBUG: ", format,##__VA_ARGS__)
 #define AudioPraseStream_LOG(format, ...) _GJ_LOG( @"AudioPraseStream_LOG: ", format,##__VA_ARGS__)

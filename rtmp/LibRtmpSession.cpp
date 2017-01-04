@@ -82,10 +82,7 @@ LibRtmpSession::LibRtmpSession(char* szRtmpUrl):_pRtmp(NULL)
     
     _pMetaData = (RTMPMetadata*)malloc(sizeof(RTMPMetadata));
     memset((void*)_pMetaData, 0, sizeof(RTMPMetadata));
-    
-    _videoQueue.shouldWait=false;
-    _videoQueue.shouldNonatomic=true;
-    _videoQueue.autoResize=true;
+    GJBufferPoolCreate(&_videoPool);
 }
 
 LibRtmpSession::~LibRtmpSession(){
@@ -104,10 +101,7 @@ LibRtmpSession::~LibRtmpSession(){
             free(_pMetaData);
         }
     }
-    GJPoolBuffer*buffer;
-    while (_videoQueue.queuePop(&buffer)) {
-        free(buffer);
-    }
+    GJBufferPoolRelease(&_videoPool);
 }
 
 int LibRtmpSession::Connect(int iFlag){
@@ -479,13 +473,10 @@ int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char
     int rtmpLength = 16+pps_len+sps_len;
     RTMPPacket rtmp_pack;
     RTMPPacket_Reset(&rtmp_pack);
-    GJPoolBuffer* buffer=NULL;
-    if (!_videoQueue.queuePop(&buffer)) {
-        buffer = new GJPoolBuffer(RTMP_MAX_HEADER_SIZE+rtmpLength);
-    }else if (buffer->caputreSize()<RTMP_MAX_HEADER_SIZE+rtmpLength){
-        buffer->resizeCapture(RTMP_MAX_HEADER_SIZE+rtmpLength, false);
-    }
-    rtmp_pack.m_body=(char*)buffer->data()+RTMP_MAX_HEADER_SIZE;
+    void* buffer=NULL;
+    buffer = GJBufferPoolGetData(_videoPool, RTMP_MAX_HEADER_SIZE+rtmpLength);
+
+    rtmp_pack.m_body=(char*)buffer+RTMP_MAX_HEADER_SIZE;
     
 //    RTMPPacket_Alloc(&rtmp_pack,rtmpLength);
     
@@ -550,7 +541,7 @@ int LibRtmpSession::SendVideoSpsPps(unsigned char *pps,int pps_len,unsigned char
         _iMetaDataFlag = 1;
     
     }
-    _videoQueue.queuePush(buffer);
+    GJBufferPoolSetData(_videoPool, buffer);
 //    RTMPPacket_Free(&rtmp_pack);
     return iRet;
 }
@@ -561,14 +552,10 @@ int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIs
     int rtmpLength = size+9;
     RTMPPacket rtmp_pack;
     RTMPPacket_Reset(&rtmp_pack);
-    GJPoolBuffer* buffer=NULL;
-    if (!_videoQueue.queuePop(&buffer)) {
-        buffer = new GJPoolBuffer(RTMP_MAX_HEADER_SIZE+rtmpLength);
-    }else if (buffer->caputreSize()<RTMP_MAX_HEADER_SIZE+rtmpLength){
-        buffer->resizeCapture(RTMP_MAX_HEADER_SIZE+rtmpLength, false);
-    }
+    void* buffer=GJBufferPoolGetData(_videoPool, RTMP_MAX_HEADER_SIZE+rtmpLength);
+
     
-    rtmp_pack.m_body=(char*)buffer->data()+RTMP_MAX_HEADER_SIZE;
+    rtmp_pack.m_body=(char*)buffer+RTMP_MAX_HEADER_SIZE;
     
     rtmp_pack.m_nBodySize = rtmpLength;
     memcpy(rtmp_pack.m_body,data,rtmpLength);
@@ -632,7 +619,7 @@ int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIs
 
     int nRet = RtmpPacketSend(&rtmp_pack);
     
-    _videoQueue.queuePush(buffer);
+    GJBufferPoolSetData(_videoPool, buffer);
     return nRet;
 }
 

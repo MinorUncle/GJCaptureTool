@@ -7,7 +7,7 @@
 //
 
 
-#import "GJQueue.h"
+#import "GJQueue+cplus.h"
 #import "PCMDecodeFromAAC.h"
 #import "GJDebug.h"
 
@@ -68,8 +68,6 @@
 }
 -(void)initQueue{
     _outputDataPacketCount = 1024;
-    _resumeQueue.shouldWait = YES;
-    _resumeQueue.shouldNonatomic = YES;
     _resumeQueue.autoResize = NO;
 
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_CONCURRENT);
@@ -104,7 +102,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     AudioStreamPacketDescription* description = (AudioStreamPacketDescription*)&(((__bridge PCMDecodeFromAAC*)inUserData)->_inPacketDescript);
 
     
-    if (param->queuePop(&popBuffer)) {
+    if (param->queuePop(&popBuffer,1000)) {
         ioData->mBuffers[0].mData = popBuffer.mData;
         ioData->mBuffers[0].mNumberChannels = popBuffer.mNumberChannels;
         ioData->mBuffers[0].mDataByteSize = popBuffer.mDataByteSize;
@@ -135,7 +133,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         buffer.mData = data+offset;
         buffer.mDataByteSize = packetDescriptioins[i].mDataByteSize;
         buffer.mNumberChannels = _sourceFormatDescription.mChannelsPerFrame;
-        _resumeQueue.queuePush(buffer);
+        _resumeQueue.queuePush(buffer,1000);
     }
 
     [self _createEncodeConverter];

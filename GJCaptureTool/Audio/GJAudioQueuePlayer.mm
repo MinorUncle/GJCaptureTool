@@ -8,7 +8,7 @@
 
 #import "GJAudioQueuePlayer.h"
 #import <pthread.h>
-#import "GJQueue.h"
+#import "GJQueue+cplus.h"
 
 const int MCAudioQueueBufferCount = 20;
 
@@ -51,8 +51,7 @@ const int MCAudioQueueBufferCount = 20;
         _bufferSize = bufferSize;
         
         _reusableQueue = new GJQueue<AudioQueueBufferRef>(MCAudioQueueBufferCount);
-        _reusableQueue->shouldWait = YES;
-        _reusableQueue->shouldNonatomic = YES;
+
         _reusableQueue->autoResize = NO;
 
         [self _createAudioOutputQueue:macgicCookie];
@@ -124,7 +123,7 @@ const int MCAudioQueueBufferCount = 20;
                     assert(!status);
                     return ;
                 }
-                _reusableQueue->queuePush(buffer);
+                _reusableQueue->queuePush(buffer,1000);
             }
         }
 
@@ -210,7 +209,7 @@ const int MCAudioQueueBufferCount = 20;
         return NO;
     }
         AudioQueueBufferRef bufferObj;
-        _reusableQueue->queuePop(&bufferObj);
+        _reusableQueue->queuePop(&bufferObj,1000);
         
 #pragma warning 后期优化 针对多包问题，但是效率更低
         SInt64 offset = packetCount >= 1 ? packetDescriptions[0].mStartOffset : 0;
@@ -318,7 +317,7 @@ static void MCAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, A
 
 - (void)handleAudioQueueOutputCallBack:(AudioQueueRef)audioQueue buffer:(AudioQueueBufferRef)buffer
 {
-    _reusableQueue->queuePush(buffer);
+    _reusableQueue->queuePush(buffer,1000);
 }
 
 static void MCAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, AudioQueuePropertyID inID)

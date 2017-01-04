@@ -11,9 +11,9 @@
 
 #include <stdio.h>
 #include <pthread.h>
-#include "GJBufferPool.h"
 #ifdef __cplusplus
 extern "C" {
+#include "GJBufferPool.h"
 #endif
     
 #define RTMP_TYPE_PLAY 0
@@ -78,7 +78,7 @@ extern "C" {
         int _iHeight;
         int _iFps;
         
-        GJQueue<GJPoolBuffer*> _videoQueue;
+        GJBufferPool* _videoPool;
         
         
         char _szRtmpUrl[256];

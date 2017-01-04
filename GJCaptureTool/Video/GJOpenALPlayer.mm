@@ -8,7 +8,7 @@
 
 #import "GJOpenALPlayer.h"
 #import <AVFoundation/AVFoundation.h>
-#import "GJQueue.h"
+#import "GJQueue+cplus.h"
 #import "GJDebug.h"
 
 
@@ -93,8 +93,7 @@
     return YES;
 }
 -(void)initBuffers{
-    _queue.shouldWait = false;
-    _queue.shouldNonatomic = true;
+
     ALenum error;
     for (int i = 0; i<DEFAULT_MAX_COUNT ; i++) {
         ALuint bufferID = 1;

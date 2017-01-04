@@ -22,7 +22,6 @@
 #import "H264StreamToTS.h"
 //#import "rtmp.h"
 #import "RtmpSendH264.h"
-#import "GJBufferPool.h"
 #import "GJFormats.h"
 #import "LibRtmpSession.hpp"
 #import "rtmp/log.h"
@@ -30,7 +29,14 @@
 extern "C"{
 #import "avformat.h"
 #import "swscale.h"
+#import "avcodec.h"
+#import "GJQueue.h"
+#import "GJBufferPool.h"
+
 }
+GJQueue* _mp4VideoQueue;
+GJQueue* _mp4AudioQueue;
+BOOL _recodeState;
 
 @interface ViewController ()<GJCaptureToolDelegate,GJH264DecoderDelegate,GJH264EncoderDelegate,AACEncoderFromPCMDelegate,PCMDecodeFromAACDelegate,AudioStreamPraseDelegate,H264DecoderDelegate,H264EncoderDelegate,GJAudioQueueRecoderDelegate>
 {
@@ -41,7 +47,6 @@ extern "C"{
     H264StreamToTS* _toTS;
     H264Decoder* _decode;
     H264Encoder* _encoder;
-    
     GJBufferPool _videoYUVPool;
     GJBufferPool _videoH264Pool;
     NSTimer* _timer;
@@ -50,6 +55,9 @@ extern "C"{
     NSDate* _beginDate;
     MPMoviePlayerViewController* _player;
     GJAudioQueueRecoder* _audioRecoder;
+    AVFormatContext* pMp4VFormat;
+    AVFormatContext* pMp4AFormat;
+
 }
 @property(nonatomic,strong)UIImageView* imageView;
 
@@ -79,14 +87,16 @@ extern "C"{
     }
     return _imageView;
 }
-
+#define FPS 15
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    queueCreate(&_mp4AudioQueue, 10);
+    queueCreate(&_mp4VideoQueue, 10);
 //    _praseStream = [[AudioPraseStream alloc]initWithFileType:kAudioFileAAC_ADTSType fileSize:0 error:nil];
 //    _praseStream.delegate = self;
-    int fps = 28;
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeVideoStream|GJCaptureTypeAudioStream) fps:fps layer:_viewContainer.layer];
+    int fps = FPS;
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeVideoStream | GJCaptureTypeAudioStream) fps:fps layer:_viewContainer.layer];
     _captureTool.delegate = self;
     _gjEncoder = [[GJH264Encoder alloc]initWithFps:fps];
     _gjDecoder = [[GJH264Decoder alloc]init];
@@ -144,12 +154,15 @@ extern "C"{
         _beginDate = [NSDate date];
         _timer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateSpeed) userInfo:nil repeats:YES];
         [_captureTool startRecodeing];
-        [_audioPlayer start];
+//        [_audioPlayer start];
+        _recodeState = YES;
+        [self mp4RecodeInit];
 
     }else{
         [_timer invalidate];
-        [_audioPlayer stop:YES];
+//        [_audioPlayer stop:YES];
         [_captureTool stopRecode];
+        _recodeState = NO;
     
     }
 }
@@ -338,7 +351,6 @@ extern "C"{
     
 }
 -(void)GJCaptureTool:(GJCaptureTool*)captureView recodeAudioPCMData:(CMSampleBufferRef)sampleBuffer{
-    return;
     
     [_audioEncoder encodeWithBuffer:sampleBuffer];
 
@@ -437,7 +449,18 @@ extern "C"{
 
 }
 -(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame dts:(int64_t)dts{
+    GJData* bufData = (GJData*)malloc(sizeof(GJData));
+    bufData->data = malloc(totalLenth);
+    bufData->size = totalLenth;
+    memcpy(bufData->data, buffer, totalLenth);
+    queuePush(_mp4VideoQueue, bufData, 2000);
+    //    if (_decode == nil) {
+    //        _decode = [[H264Decoder alloc]initWithWidth:encoder.width height:encoder.height];
+    //        _decode.decoderDelegate = self;
+    //    }
+    //    [_decode decodeData:data lenth:size];
     
+
     
     _totalCount ++;
     _totalByte += totalLenth;
@@ -551,15 +574,24 @@ extern "C"{
 }
 
 -(void)H264Encoder:(H264Encoder *)encoder h264:(uint8_t *)data size:(int)size pts:(int64_t)pts dts:(int64_t)dts{
+    GJData* bufData = (GJData*)malloc(sizeof(GJData));
+    bufData->data = malloc(size);
+    bufData->size = size;
+    memcpy(bufData->data, data, size);
+    queuePush(_mp4VideoQueue, bufData, 2000);
+    static int64_t preDts,prePts;
+    printf("dts:%lld pts:%lld\n",preDts - dts,prePts - pts);
+    prePts = pts; preDts = dts;
+
 //    if (_decode == nil) {
 //        _decode = [[H264Decoder alloc]initWithWidth:encoder.width height:encoder.height];
 //        _decode.decoderDelegate = self;
 //    }
 //    [_decode decodeData:data lenth:size];
-    
-    uint8_t* datab = (uint8_t*)data;
-    NSData* d = [NSData dataWithBytes:datab length:100];
-    NSLog(@"data:%@",d );
+
+//    uint8_t* datab = (uint8_t*)data;
+//    NSData* d = [NSData dataWithBytes:datab length:100];
+//    NSLog(@"data:%@",d );
 //    while (datab<_videoPacket->data+_videoPacket->size) {
 //        if (datab[0] == 0 && datab[1] == 0 && datab[2] == 1 && datab[3] == 0x65) {
 //            datab--;
@@ -581,7 +613,7 @@ extern "C"{
 //    d = [NSData dataWithBytes:sour length:100];
 //    NSLog(@"data2:%@",d );
     
-        [_gjDecoder decodeBuffer:data withLenth:size];
+//        [_gjDecoder decodeBuffer:data withLenth:size];
 
     
 //    ///rtmpsendh264
@@ -627,6 +659,7 @@ extern "C"{
 }
 static int aacFramePerS;
 static int aacIndex;
+
 -(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder encodeCompleteBuffer:(uint8_t *)buffer Lenth:(long)totalLenth packetCount:(int)count packets:(AudioStreamPacketDescription *)packets{
     aacIndex++;
 //    if (aacFramePerS == 0) {
@@ -644,7 +677,13 @@ static int aacIndex;
 
 //    [_praseStream parseData:buffer lenth:(int)totalLenth error:nil];
     NSLog(@"AACEncoderFromPCM:count:%d  lenth:%ld",count,totalLenth);
+    GJData* bufData = (GJData*)malloc(sizeof(GJData));
+    bufData->data = malloc(totalLenth);
+    bufData->size = totalLenth;
+    memcpy(bufData->data, buffer, totalLenth);
+    queuePush(_mp4AudioQueue, bufData, 2000);
     
+
     
 //    [_audioDecoder decodeBuffer:buffer numberOfBytes:(UInt32)totalLenth numberOfPackets:count packetDescriptions:packets];
 
@@ -668,197 +707,250 @@ static int aacIndex;
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+static int read_packet(void *opaque, uint8_t *buf, int buf_size){
+    GJQueue* q = (GJQueue*)opaque;
+    GJData* popValue=NULL;
+    int readSize = 0;
+    static int readIndex = 0;
+    while (readSize == 0 && _recodeState) {
+        if( queuePeekTopOutValue(q, (void**)&popValue,1000) >= 0){
+            if (popValue->size<= readIndex) {
+                readIndex = 0;
+                queuePop(q, (void**)&popValue, 1000);
+                free(popValue->data);
+                free(popValue);
+            }else{
+                if(buf_size - readSize <= popValue->size - readIndex){
+                    int size = buf_size - readSize;
+                    memcpy(buf+readSize, (uint8_t*)popValue->data+readIndex, size);
+                    readSize += size;
+                    readIndex += size;
+                }else{
+                    int size = (int)popValue->size - readIndex;
+                    memcpy(buf+readSize, (uint8_t*)popValue->data+readIndex, size);
+                    readSize += size;
+                    readIndex += size;
+                }
+            }
+        };
+    }
+
+    return readSize;
+}
+AVFormatContext* pMp4OFormat = NULL;
+
+int vdts,adts;
 
 
-//-(void)initWriteMp4{
-//    av_register_all();
-//
-//}
-//-(void)writeMp4:(uint8_t*)data size:(int)size{
-//    
-//    
-//    
-//    AVFormatContext* pFormat = NULL;
-//    if (avformat_open_input(&pFormat, SRC_FILE, NULL, NULL) < 0)
-//    {
-//        return 0;
-//    }
-//    AVCodecContext* video_dec_ctx = NULL;
-//    AVCodec* video_dec = NULL;
-//    if (avformat_find_stream_info(pFormat, NULL) < 0)
-//    {
-//        return 0;
-//    }
-//    av_dump_format(pFormat, 0, SRC_FILE, 0);
-//    video_dec_ctx = pFormat->streams[0]->codec;
-//    video_dec = avcodec_find_decoder(video_dec_ctx->codec_id);
-//    if (avcodec_open2(video_dec_ctx, video_dec, NULL) < 0)
-//    {
-//        return 0;
-//    }
-//    
-//    AVFormatContext* pOFormat = NULL;
-//    AVOutputFormat* ofmt = NULL;
-//    if (avformat_alloc_output_context2(&pOFormat, NULL, NULL, OUT_FILE) < 0)
-//    {
-//        return 0;
-//    }
-//    ofmt = pOFormat->oformat;
-//    if (avio_open(&(pOFormat->pb), OUT_FILE, AVIO_FLAG_READ_WRITE) < 0)
-//    {
-//        return 0;
-//    }
-//    AVCodecContext *video_enc_ctx = NULL;
-//    AVCodec *video_enc = NULL;
-//    video_enc = avcodec_find_encoder(AV_CODEC_ID_H264);
-//    AVStream *video_st = avformat_new_stream(pOFormat, video_enc);
-//    if (!video_st)
-//        return 0;
-//    video_enc_ctx = video_st->codec;
-//    video_enc_ctx->width = video_dec_ctx->width;
-//    video_enc_ctx->height = video_dec_ctx->height;
-//    video_enc_ctx->pix_fmt = PIX_FMT_YUV420P;
-//    video_enc_ctx->time_base.num = 1;
-//    video_enc_ctx->time_base.den = 25;
-//    video_enc_ctx->bit_rate = video_dec_ctx->bit_rate;
-//    video_enc_ctx->gop_size = 250;
-//    video_enc_ctx->max_b_frames = 10;
-//    //H264
-//    //pCodecCtx->me_range = 16;
-//    //pCodecCtx->max_qdiff = 4;
-//    video_enc_ctx->qmin = 10;
-//    video_enc_ctx->qmax = 51;
-//    if (avcodec_open2(video_enc_ctx, video_enc, NULL) < 0)
-//    {
-//        printf("编码器打开失败！\n");
-//        return 0;
-//    }
-//    printf("Output264video Information====================\n");
-//    av_dump_format(pOFormat, 0, OUT_FILE, 1);
-//    printf("Output264video Information====================\n");
-//    
-//    //mp4 file
-//    AVFormatContext* pMp4Format = NULL;
-//    AVOutputFormat* pMp4OFormat = NULL;
-//    if (avformat_alloc_output_context2(&pMp4Format, NULL, NULL, OUT_FMT_FILE) < 0)
-//    {
-//        return 0;
-//    }
+-(BOOL)mp4RecodeInit{
+    av_register_all();
+    NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
+    path = [path stringByAppendingPathComponent:@"outfmtfile.mp4"];
+    avformat_alloc_output_context2(&pMp4OFormat, NULL, NULL, path.UTF8String);
+    if (!pMp4OFormat) {
+        printf( "Could not create output context\n");
+        return -4;
+    }
+    if( [self initWriteMp4Video]<0){
+        return -1;
+    };
+    if( [self initWriteMp4Audio]<0){
+        return -1;
+    };
+    
+    //Output information------------------
+    av_dump_format(pMp4OFormat, 0, path.UTF8String, 1);
+
+    //Open output file
+    
+    if (!(pMp4OFormat->flags & AVFMT_NOFILE)) {
+        int ret = avio_open(&pMp4OFormat->pb, path.UTF8String, AVIO_FLAG_WRITE);
+        if (ret < 0) {
+            printf( "Could not open output file '%s'", path.UTF8String);
+            return -7;
+        }
+    }
+    
+    //Write file header
+    if (avformat_write_header(pMp4OFormat, NULL) < 0) {
+        printf( "Error occurred when opening output file\n");
+        return -8;
+    }
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        while (_recodeState) {
+            if (queueGetLength(_mp4VideoQueue)*2 > queueGetLength(_mp4AudioQueue)) {
+                [self writeVideo];
+            }else{
+                [self writeAudio];
+            }
+        }
+        int ret = av_write_trailer(pMp4OFormat);
+        NSLog(@"av_write_trailer:%d",ret);
+    });
+    return YES;
+}
+-(BOOL)initWriteMp4Audio{
+   
+    int ret;
+    AVIOContext* pb = NULL;
+    AVInputFormat* piFmt = NULL;
+    pMp4AFormat = avformat_alloc_context();
+    pMp4AFormat->max_analyze_duration = 1000;
+    pMp4AFormat->flags = AVFMT_NOFILE;
+    unsigned char* m_bufAvalloc;
+
+    m_bufAvalloc = (unsigned char*)av_malloc(32768);
+    pb = avio_alloc_context(m_bufAvalloc, 32768, 0, _mp4AudioQueue,read_packet, NULL, NULL);
+    
+    if (av_probe_input_buffer(pb, &piFmt, "", NULL, 0, 0) < 0)
+        return -1;
+    else{
+        printf("format:%s[%s]\n", piFmt->name, piFmt->long_name);
+    }
+    
+    pMp4AFormat->pb = pb;
+    
+    //Input
+    if (avformat_open_input(&pMp4AFormat, "", piFmt, NULL) != 0){//iformat，priv_data赋值，pb, nbstreams,streams为null
+        printf("Couldn't open input stream.（无法打开输入流）\n");
+        return -2;
+    }
+    pMp4AFormat->streams[0]->time_base =  av_make_q(1,1000);
+//    av_format_set_video_codec(pMp4IFormat, avcodec_find_decoder(AV_CODEC_ID_H264));
+//    av_format_set_audio_codec(pMp4IFormat, avcodec_find_decoder(AV_CODEC_ID_AAC));
+    if ((ret = avformat_find_stream_info(pMp4AFormat, 0)) < 0) {
+        printf( "Failed to retrieve input stream information");
+        return -3;
+    }
+    //    pMp4OFormat = pMp4Format->oformat;
+    for(int i = 0;i<pMp4AFormat->nb_streams;i++) {
+        if (pMp4AFormat->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+            //Create output AVStream according to input AVStream
+            AVStream *in_stream = pMp4AFormat->streams[0];
+            AVStream *out_stream = avformat_new_stream(pMp4OFormat, in_stream->codec->codec);
+            if (!out_stream) {
+                printf( "Failed allocating output stream\n");
+                return -5;
+            }
+            //Copy the settings of AVCodecContext
+            if (avcodec_copy_context(out_stream->codec, in_stream->codec) < 0) {
+                printf( "Failed to copy context from input to output stream codec context\n");
+                return -6;
+            }
+            out_stream->codec->codec_tag = 0;
+            if (pMp4OFormat->oformat->flags & AVFMT_GLOBALHEADER)
+            {
+                out_stream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
+            }
+            out_stream->time_base = in_stream->time_base;
+            break;
+        }
+    }
+    
+      return TRUE;
+}
+-(int)initWriteMp4Video{
+  
+    int ret;
+    AVIOContext* pb = NULL;
+    AVInputFormat* piFmt = NULL;
+    
+    pMp4VFormat = avformat_alloc_context();
+    pMp4VFormat->max_analyze_duration = 1000;
+    pMp4VFormat->flags = AVFMT_NOFILE;
+    unsigned char* m_bufAvalloc;
+
+    m_bufAvalloc = (unsigned char*)av_malloc(32768);
+    pb = avio_alloc_context(m_bufAvalloc, 32768, 0, _mp4VideoQueue,read_packet, NULL, NULL);
+    
+    if (av_probe_input_buffer(pb, &piFmt, "", NULL, 0, 0) < 0)
+        return -1;
+    else{
+        printf("format:%s[%s]\n", piFmt->name, piFmt->long_name);
+    }
+    pMp4VFormat->pb = pb;
+    //Input
+    if (avformat_open_input(&pMp4VFormat, "", piFmt, NULL) != 0){//iformat，priv_data赋值，pb, nbstreams,streams为null
+        printf("Couldn't open input stream.（无法打开输入流）\n");
+        return -2;
+    }
+    pMp4VFormat->streams[0]->time_base = av_make_q(1,1000);
+    if ((ret = avformat_find_stream_info(pMp4VFormat, 0)) < 0) {
+        printf( "Failed to retrieve input stream information");
+        return -3;
+    }
+    
+    //Output
 //    pMp4OFormat = pMp4Format->oformat;
-//    if (avio_open(&(pMp4Format->pb), OUT_FMT_FILE, AVIO_FLAG_READ_WRITE) < 0)
-//    {
-//        return 0;
-//    }
-//    
-//    for (int i = 0; i < pFormat->nb_streams; i++) {
-//        AVStream *in_stream = pFormat->streams[i];
-//        AVStream *out_stream = avformat_new_stream(pMp4Format, in_stream->codec->codec);
-//        if (!out_stream) {
-//            return 0;
-//        }
-//        int ret = 0;
-//        ret = avcodec_copy_context(out_stream->codec, in_stream->codec);
-//        if (ret < 0) {
-//            fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
-//            return 0;
-//        }
-//        out_stream->codec->codec_tag = 0;
-//        if (pMp4Format->oformat->flags & AVFMT_GLOBALHEADER)
-//            out_stream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
-//    }
-//    
-//    
-//    av_dump_format(pMp4Format, 0, OUT_FMT_FILE, 1);
-//    
-//    if (avformat_write_header(pMp4Format, NULL) < 0)
-//    {
-//        return 0;
-//    }
-//    
-//    
-//    ////
-//    
-//    
-//    
-//    av_opt_set(video_enc_ctx->priv_data, "preset", "superfast", 0);
-//    av_opt_set(video_enc_ctx->priv_data, "tune", "zerolatency", 0);
-//    avformat_write_header(pOFormat, NULL);
-//    AVPacket *pkt = new AVPacket();
-//    av_init_packet(pkt);
-//    AVFrame *pFrame = avcodec_alloc_frame();
-//    int ts = 0;
-//    while (1)
-//    {
-//        if (av_read_frame(pFormat, pkt) < 0)
-//        {
-//            avio_close(pOFormat->pb);
-//            av_write_trailer(pMp4Format);
-//            avio_close(pMp4Format->pb);
-//            delete pkt;
-//            return 0;
-//        }
-//        if (pkt->stream_index == 0)
-//        {
-//            
-//            int got_picture = 0, ret = 0;
-//            ret = avcodec_decode_video2(video_dec_ctx, pFrame, &got_picture, pkt);
-//            if (ret < 0)
-//            {
-//                delete pkt;
-//                return 0;
-//            }
-//            pFrame->pts = pFrame->pkt_pts;//ts++;
-//            if (got_picture)
-//            {
-//                AVPacket *tmppkt = new AVPacket;
-//                av_init_packet(tmppkt);
-//                int size = video_enc_ctx->width*video_enc_ctx->height * 3 / 2;
-//                char* buf = new char[size];
-//                memset(buf, 0, size);
-//                tmppkt->data = (uint8_t*)buf;
-//                tmppkt->size = size;
-//                ret = avcodec_encode_video2(video_enc_ctx, tmppkt, pFrame, &got_picture);
-//                if (ret < 0)
-//                {
-//                    avio_close(pOFormat->pb);
-//                    delete buf;
-//                    return 0;
-//                }
-//                if (got_picture)
-//                {
-//                    //ret = av_interleaved_write_frame(pOFormat, tmppkt);
-//                    AVStream *in_stream = pFormat->streams[pkt->stream_index];
-//                    AVStream *out_stream = pMp4Format->streams[pkt->stream_index];
-//                    
-//                    tmppkt->pts = av_rescale_q_rnd(tmppkt->pts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF);
-//                    tmppkt->dts = av_rescale_q_rnd(tmppkt->dts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF);
-//                    tmppkt->duration = av_rescale_q(tmppkt->duration, in_stream->time_base, out_stream->time_base);
-//                    tmppkt->pos = -1;
-//                    ret = av_interleaved_write_frame(pMp4Format, tmppkt);
-//                    if (ret < 0)
-//                        return 0;
-//                    delete tmppkt;
-//                    delete buf;
-//                }
-//            }
-//            //avcodec_free_frame(&pFrame);
-//        }
-//        else if (pkt->stream_index == 1)
-//        {
-//            AVStream *in_stream = pFormat->streams[pkt->stream_index];
-//            AVStream *out_stream = pMp4Format->streams[pkt->stream_index];
-//            
-//            pkt->pts = av_rescale_q_rnd(pkt->pts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF);
-//            pkt->dts = av_rescale_q_rnd(pkt->dts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF);
-//            pkt->duration = av_rescale_q(pkt->duration, in_stream->time_base, out_stream->time_base);
-//            pkt->pos = -1;
-//            if (av_interleaved_write_frame(pMp4Format, pkt) < 0)
-//                return 0;
-//        }
-//    }
-//    avcodec_free_frame(&pFrame);
-//    return 0;
-//}
+    for(int i = 0;i<pMp4VFormat->nb_streams;i++) {
+        if (pMp4VFormat->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {        //Create output AVStream according to input AVStream
+            AVStream *in_stream = pMp4VFormat->streams[0];
+            AVStream *out_stream = avformat_new_stream(pMp4OFormat, in_stream->codec->codec);
+            if (!out_stream) {
+                printf( "Failed allocating output stream\n");
+                return -5;
+            }
+            if (avcodec_copy_context(out_stream->codec, in_stream->codec) < 0) {
+                printf( "Failed to copy context from input to output stream codec context\n");
+                return -6;
+            }
+            out_stream->codec->codec_tag = 0;
+            if (pMp4OFormat->oformat->flags & AVFMT_GLOBALHEADER)
+            {
+                out_stream->codec->flags |= CODEC_FLAG_GLOBAL_HEADER;
+            }
+            out_stream->time_base = in_stream->time_base;
+            break;
+        }
+    }
+    return TRUE;
+}
+static float audioDts;
+-(int)writeAudio{
+    AVPacket filter_pkt;
+    av_init_packet(&filter_pkt);
+    if (av_read_frame(pMp4AFormat, &filter_pkt) >= 0) {
+        filter_pkt.dts = audioDts++ *1024 / 44100 * pMp4AFormat->streams[0]->time_base.den / pMp4AFormat->streams[0]->time_base.num;
+        filter_pkt.dts = av_rescale_q(filter_pkt.dts, pMp4AFormat->streams[0]->time_base, pMp4OFormat->streams[0]->time_base);
+        static AVBSFContext* bsfContext;
+        filter_pkt.stream_index = 1;
+        AVPacket filtered_packet;
+        if (bsfContext == NULL) {
+            const AVBitStreamFilter *bsf = av_bsf_get_by_name("aac_adtstoasc");
+            av_bsf_alloc(bsf, &bsfContext);
+        }
+        int ret=0;
+        av_init_packet(&filtered_packet);
+        if (( ret = av_bsf_send_packet(bsfContext, &filter_pkt)) < 0) {
+            av_packet_unref(&filter_pkt);
+            return -1;
+        }
+        if ((ret = av_bsf_receive_packet(bsfContext, &filtered_packet)) < 0)return -1;
+        int re = av_interleaved_write_frame(pMp4OFormat, &filtered_packet);
+        NSLog(@"write audio:%d",re);
+    }
+
+    return 0;
+}
+static float videoDts;
+
+-(void)writeVideo{
+    AVPacket filter_pkt;
+    av_init_packet(&filter_pkt);
+    if (av_read_frame(pMp4VFormat, &filter_pkt) >= 0) {
+        filter_pkt.dts = videoDts++ / FPS * pMp4VFormat->streams[0]->time_base.den / pMp4VFormat->streams[0]->time_base.num;
+        filter_pkt.dts = av_rescale_q(filter_pkt.dts, pMp4VFormat->streams[0]->time_base, pMp4OFormat->streams[0]->time_base);
+        filter_pkt.stream_index = 0;
+        int re = av_interleaved_write_frame(pMp4OFormat, &filter_pkt);
+        av_packet_unref(&filter_pkt);
+        NSLog(@"write video:%d",re);
+    }
+
+}
 
 
+-(void)dealloc{
+    queueRelease(&_mp4VideoQueue);
+    queueRelease(&_mp4AudioQueue);
+}
 @end

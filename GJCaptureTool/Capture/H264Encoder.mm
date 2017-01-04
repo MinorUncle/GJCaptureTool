@@ -32,7 +32,7 @@ extern "C"{
     if (self) {
         _height = height;
         _width = width;
-        _max_b_frames = 4;
+        _max_b_frames = 1;
         _gop_size = 20;
         _bit_rate = 400000;
         [self _createEncoder];
@@ -55,7 +55,9 @@ extern "C"{
     _videoEncoderContext->time_base.den=25;
     _videoEncoderContext->bit_rate = _bit_rate;
     _videoEncoderContext->bit_rate_tolerance = 200;
-    _videoEncoderContext->max_b_frames = _max_b_frames;
+    _videoEncoderContext->profile = FF_PROFILE_H264_MAIN;
+
+//    _videoEncoderContext->max_b_frames = _max_b_frames;
 
     int errorCode = avcodec_open2(_videoEncoderContext, _videoEncoder, nil);
     [self showErrWidhCode:errorCode preStr:@"avcodec_open2"];
@@ -88,8 +90,8 @@ extern "C"{
     _frame->linesize[1] = (int)CVPixelBufferGetWidthOfPlane(imgRef, 1);
     
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sampleBufferRef);
-    float VALUE = pts.value / pts.timescale;
-    NSLog(@"pts:%lf  value:%lld CMTimeScale:%d  CMTimeFlags:%d CMTimeEpoch:%lld",VALUE, pts.value,pts.timescale,pts.flags,pts.epoch);
+//    float VALUE = pts.value / pts.timescale;
+//    NSLog(@"pts:%lf  value:%lld CMTimeScale:%d  CMTimeFlags:%d CMTimeEpoch:%lld",VALUE, pts.value,pts.timescale,pts.flags,pts.epoch);
 
     _frame->pts = pts.value;
     av_init_packet(_videoPacket);
@@ -97,21 +99,21 @@ extern "C"{
     [self showErrWidhCode:errorCode preStr:@"av_image_fill_arrays"];
     int getOutput = 0;
     int res = avcodec_encode_video2(_videoEncoderContext, _videoPacket, _frame, &getOutput);
-    uint8_t* datab = _videoPacket->data;
-    if (datab) {
-        NSData* data = [ NSData dataWithBytes:datab length:_videoPacket->size];
-        NSLog(@"data:%@",data);
-        printf("cdata:");
-    }
-    if(_videoPacket->flags & AV_PKT_FLAG_KEY){
-        NSLog(@"key frame");
-    }else{
-        NSLog(@"not key");
-    }
-    
-    while (datab<_videoPacket->data+_videoPacket->size) {
-        printf("%02x",*datab++);
-    }
+//    uint8_t* datab = _videoPacket->data;
+//    if (datab) {
+//        NSData* data = [ NSData dataWithBytes:datab length:_videoPacket->size];
+//        NSLog(@"data:%@",data);
+//        printf("cdata:");
+//    }
+//    if(_videoPacket->flags & AV_PKT_FLAG_KEY){
+//        NSLog(@"key frame");
+//    }else{
+//        NSLog(@"not key");
+//    }
+//    
+//    while (datab<_videoPacket->data+_videoPacket->size) {
+//        printf("%02x",*datab++);
+//    }
 //    errorCode = avcodec_send_frame(_videoEncoderContext, _frame);
 //    [self showErrWidhCode:errorCode preStr:@"avcodec_send_frame"];
 //

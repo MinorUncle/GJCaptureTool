@@ -5,7 +5,7 @@
 //  Created by tongguan on 16/1/8.
 //  Copyright © 2016年 未成年大叔. All rights reserved.
 //
-#import "GJQueue.h"
+#import "GJQueue+cplus.h"
 #import "AACEncoderFromPCM.h"
 #import "GJDebug.h"
 
@@ -15,7 +15,6 @@
     AudioConverterRef _encodeConvert;
     AudioBufferList _outCacheBufferList;
     GJQueue<AudioBuffer>_resumeQueue;
-    GJQueue<CMBlockBufferRef>_retainQueue;
     BOOL _isRunning;//状态，是否运行
     dispatch_queue_t _encoderQueue;
     AudioStreamPacketDescription _sourcePCMPacketDescription;
@@ -50,13 +49,10 @@
     return self;
 }
 -(void)initQueue{
-    _resumeQueue.shouldNonatomic = YES;
-    _resumeQueue.shouldWait = YES;
+
     _resumeQueue.autoResize = NO;
     
-    _retainQueue.shouldNonatomic = YES;
-    _retainQueue.shouldWait = NO;
-    _retainQueue.autoResize = NO;
+
 
     _encoderQueue = dispatch_queue_create("audioEncodeQueue", DISPATCH_QUEUE_CONCURRENT);
 }
@@ -66,10 +62,10 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
     
     GJQueue<AudioBuffer>* param =   &((__bridge AACEncoderFromPCM*)inUserData)->_resumeQueue;
-    GJQueue<CMBlockBufferRef>* retainQueue =   &((__bridge AACEncoderFromPCM*)inUserData)->_retainQueue;
     CMBlockBufferRef bufferRef;
     AudioBuffer popBuffer;
-    if (param->queuePop(&popBuffer)) {
+    while (!param->queuePop(&popBuffer,10000) && ((__bridge AACEncoderFromPCM*)inUserData)->_isRunning) {};
+    if (((__bridge AACEncoderFromPCM*)inUserData)->_isRunning) {
         ioData->mBuffers[0].mData = popBuffer.mData;
         ioData->mBuffers[0].mNumberChannels = popBuffer.mNumberChannels;
         ioData->mBuffers[0].mDataByteSize = popBuffer.mDataByteSize;
@@ -79,9 +75,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         
         AudioStreamBasicDescription* baseDescription = &(((__bridge AACEncoderFromPCM*)inUserData)->_sourceFormatDescription);
         *ioNumberDataPackets = ioData->mBuffers[0].mDataByteSize / baseDescription->mBytesPerPacket;
-        if (retainQueue->queuePop(&bufferRef)) {
-            CFRelease(bufferRef);
-        }
+        free(popBuffer.mData);
     }else{
       
         *ioNumberDataPackets = 0;
@@ -123,10 +117,12 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 //         _resumeQueue = new GJAudioBufferQueue(inBufferList.mBuffers[0].mDataByteSize+10);
 //    }
 //
-    
-    _resumeQueue.queuePush(inBufferList.mBuffers[0]);
-    _retainQueue.queuePush(blockBuffer);
-    
+    AudioBuffer buffer = inBufferList.mBuffers[0];
+    buffer.mData = malloc(buffer.mDataByteSize);
+    memcpy(buffer.mData, inBufferList.mBuffers[0].mData, buffer.mDataByteSize);
+    _resumeQueue.queuePush(buffer);
+    CFRelease(blockBuffer);
+
 //    CFRelease(blockBuffer);
     if (_encodeConvert == NULL) {
         [self _createEncodeConverterWithBuffer:sampleBuffer];
