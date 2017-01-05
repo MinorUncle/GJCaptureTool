@@ -171,7 +171,6 @@ void decodeOutputCallback(
             }
                 break;
             case 5:
-            case 6:
             case 1:
             {
                 int offset = _spsSize + _ppsSize;

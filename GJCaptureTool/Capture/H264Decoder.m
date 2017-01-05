@@ -6,10 +6,10 @@
 //  Copyright © 2016年 MinorUncle. All rights reserved.
 //
 
-extern "C"{
+
 #import "avformat.h"
 #import "swscale.h"
-}
+
 #import "GJQueue.h"
 #import "H264Decoder.h"
 @interface H264Decoder()
@@ -17,7 +17,7 @@ extern "C"{
     AVFormatContext *_formatContext;
     AVCodec* _videoDecoder;
     AVCodecContext* _videoDecoderContext;
-    SwsContext* _videoSwsContext;
+    struct SwsContext* _videoSwsContext;
     AVCodec* _audioDecoder;
     AVCodecContext* _audioDecoderContext;
     AVFrame* _frame;

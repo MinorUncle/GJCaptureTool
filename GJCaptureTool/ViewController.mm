@@ -32,6 +32,7 @@ extern "C"{
 #import "avcodec.h"
 #import "GJQueue.h"
 #import "GJBufferPool.h"
+#import "sps_decode.h"
 
 }
 GJQueue* _mp4VideoQueue;
@@ -93,6 +94,7 @@ BOOL _recodeState;
     [super viewDidLoad];
     queueCreate(&_mp4AudioQueue, 10);
     queueCreate(&_mp4VideoQueue, 10);
+    
 //    _praseStream = [[AudioPraseStream alloc]initWithFileType:kAudioFileAAC_ADTSType fileSize:0 error:nil];
 //    _praseStream.delegate = self;
     int fps = FPS;
@@ -156,7 +158,7 @@ BOOL _recodeState;
         [_captureTool startRecodeing];
 //        [_audioPlayer start];
         _recodeState = YES;
-        [self mp4RecodeInit];
+//        [self mp4RecodeInit];
 
     }else{
         [_timer invalidate];
@@ -337,17 +339,17 @@ BOOL _recodeState;
 //    [_playView displayYUV420pData:(void*)(baseAdd + d) width:(uint32_t)w height:(uint32_t)h];
 
   
-//    [_gjEncoder encodeSampleBuffer:sampleBuffer fourceKey:NO];
+    [_gjEncoder encodeSampleBuffer:sampleBuffer fourceKey:NO];
     
     
-            if (_encoder == nil) {
-                CVImageBufferRef imgRef = CMSampleBufferGetImageBuffer(sampleBuffer);
-                int w = (int)CVPixelBufferGetWidth(imgRef);
-                int h = (int)CVPixelBufferGetHeight(imgRef);
-                _encoder = [[H264Encoder alloc]initWithWidth:w height:h];
-                _encoder.delegate = self;
-            }
-            [_encoder encoderData:sampleBuffer];
+//            if (_encoder == nil) {
+//                CVImageBufferRef imgRef = CMSampleBufferGetImageBuffer(sampleBuffer);
+//                int w = (int)CVPixelBufferGetWidth(imgRef);
+//                int h = (int)CVPixelBufferGetHeight(imgRef);
+//                _encoder = [[H264Encoder alloc]initWithWidth:w height:h];
+//                _encoder.delegate = self;
+//            }
+//            [_encoder encoderData:sampleBuffer];
     
 }
 -(void)GJCaptureTool:(GJCaptureTool*)captureView recodeAudioPCMData:(CMSampleBufferRef)sampleBuffer{
@@ -449,11 +451,11 @@ BOOL _recodeState;
 
 }
 -(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame dts:(int64_t)dts{
-    GJData* bufData = (GJData*)malloc(sizeof(GJData));
-    bufData->data = malloc(totalLenth);
-    bufData->size = totalLenth;
-    memcpy(bufData->data, buffer, totalLenth);
-    queuePush(_mp4VideoQueue, bufData, 2000);
+//    GJData* bufData = (GJData*)malloc(sizeof(GJData));
+//    bufData->data = malloc(totalLenth);
+//    bufData->size = totalLenth;
+//    memcpy(bufData->data, buffer, totalLenth);
+//    queuePush(_mp4VideoQueue, bufData, 2000);
     //    if (_decode == nil) {
     //        _decode = [[H264Decoder alloc]initWithWidth:encoder.width height:encoder.height];
     //        _decode.decoderDelegate = self;
@@ -508,21 +510,21 @@ BOOL _recodeState;
 //        _decode.decoderDelegate = self;
 //    }
 //    [_decode decodeData:buffer lenth:(int)totalLenth];
-    NSData* buff = [NSData dataWithBytes:buffer length:100];
-    NSLog(@"buffer:%@",buff);
-    if (keyFrame) {
-        unsigned char * spsppsData = (unsigned char*)malloc(encoder.parameterSet.length);
-        memcpy(spsppsData, (unsigned char *)encoder.parameterSet.bytes, encoder.parameterSet.length);
-        size_t spsSize = (size_t)spsppsData[0];
-        size_t ppsSize = (size_t)spsppsData[4+ spsSize];
-        memcpy(spsppsData, "\x00\x00\x00\x01", 4);
-        memcpy(spsppsData+4+spsSize, "\x00\x00\x00\x01", 4);
-        NSData* spspps = [NSData dataWithBytes:spsppsData length:encoder.parameterSet.length];
-        NSLog(@"spspps:%@",spspps);
-        [_gjDecoder decodeBuffer:(uint8_t*)spsppsData withLenth:(uint32_t)encoder.parameterSet.length];
-
-        free(spsppsData);
-    }
+//    NSData* buff = [NSData dataWithBytes:buffer length:100];
+//    NSLog(@"buffer:%@",buff);
+//    if (keyFrame) {
+//        unsigned char * spsppsData = (unsigned char*)malloc(encoder.parameterSet.length);
+//        memcpy(spsppsData, (unsigned char *)encoder.parameterSet.bytes, encoder.parameterSet.length);
+//        size_t spsSize = (size_t)spsppsData[0];
+//        size_t ppsSize = (size_t)spsppsData[4+ spsSize];
+//        memcpy(spsppsData, "\x00\x00\x00\x01", 4);
+//        memcpy(spsppsData+4+spsSize, "\x00\x00\x00\x01", 4);
+//        NSData* spspps = [NSData dataWithBytes:spsppsData length:encoder.parameterSet.length];
+//        NSLog(@"spspps:%@",spspps);
+//        [_gjDecoder decodeBuffer:(uint8_t*)spsppsData withLenth:(uint32_t)encoder.parameterSet.length];
+//
+//        free(spsppsData);
+//    }
 
 //    printf("fram type:%x,",buffer[4]);
     [_gjDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
@@ -559,7 +561,9 @@ BOOL _recodeState;
 //    memcpy(cacheData, planeAdd0, sds0*ds0);
 //    memcpy(cacheData+sds0*ds0, planeAdd1, sds1*ds1);
 //
-    UIImage* image = [self imageFromPixelBuffer:imageBuffer];
+
+    CIImage* cimage = [CIImage imageWithCVPixelBuffer:imageBuffer];
+    UIImage* image = [UIImage imageWithCIImage:cimage];
     // Update the display with the captured image for DEBUG purposes
     dispatch_async(dispatch_get_main_queue(), ^{
         
@@ -574,6 +578,10 @@ BOOL _recodeState;
 }
 
 -(void)H264Encoder:(H264Encoder *)encoder h264:(uint8_t *)data size:(int)size pts:(int64_t)pts dts:(int64_t)dts{
+    int w,h,fps;
+    int *pw = &w ,*ph = &h, *pfps = &fps;
+    h264_decode_sps((BYTE*)data+4,size,&pw,&ph,&pfps);
+    
     GJData* bufData = (GJData*)malloc(sizeof(GJData));
     bufData->data = malloc(size);
     bufData->size = size;

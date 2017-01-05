@@ -38,8 +38,8 @@ static UINT Ue(BYTE *pBuff, UINT nLen, UINT** nStartBit)
 		nZeroNum++;
 		(*tmp)++;
 	}
-	(*tmp) ++;
-
+	(*tmp) ++;//0000 0001
+              //0000 000167
 
 	//¼ÆËã½á¹û
 	DWORD dwRet = 0;

@@ -36,10 +36,10 @@
 		C561ACA51D51D3DC00113453 /* GJCaptureTool.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC001D51D3DC00113453 /* GJCaptureTool.m */; };
 		C561ACA61D51D3DC00113453 /* GJH264Decoder.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC021D51D3DC00113453 /* GJH264Decoder.m */; };
 		C561ACA71D51D3DC00113453 /* GJH264Encoder.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC041D51D3DC00113453 /* GJH264Encoder.m */; };
-		C561ACA81D51D3DC00113453 /* H264Decoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = C561AC061D51D3DC00113453 /* H264Decoder.mm */; };
-		C561ACA91D51D3DC00113453 /* H264Encoder.mm in Sources */ = {isa = PBXBuildFile; fileRef = C561AC081D51D3DC00113453 /* H264Encoder.mm */; };
+		C561ACA81D51D3DC00113453 /* H264Decoder.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC061D51D3DC00113453 /* H264Decoder.m */; };
+		C561ACA91D51D3DC00113453 /* H264Encoder.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC081D51D3DC00113453 /* H264Encoder.m */; };
 		C561ACAA1D51D3DC00113453 /* H264StreamToTS.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC0A1D51D3DC00113453 /* H264StreamToTS.m */; };
-		C561ACAB1D51D3DC00113453 /* RtmpSendH264.mm in Sources */ = {isa = PBXBuildFile; fileRef = C561AC0C1D51D3DC00113453 /* RtmpSendH264.mm */; };
+		C561ACAB1D51D3DC00113453 /* RtmpSendH264.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC0C1D51D3DC00113453 /* RtmpSendH264.m */; };
 		C561ACB51D51D3DC00113453 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC8C1D51D3DC00113453 /* main.m */; };
 		C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC8F1D51D3DC00113453 /* OpenGLView20.m */; };
 		C561ACB71D51D3DC00113453 /* GJOpenALPlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = C561AC921D51D3DC00113453 /* GJOpenALPlayer.mm */; };
@@ -398,13 +398,13 @@
 		C561AC031D51D3DC00113453 /* GJH264Encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJH264Encoder.h; sourceTree = "<group>"; };
 		C561AC041D51D3DC00113453 /* GJH264Encoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJH264Encoder.m; sourceTree = "<group>"; };
 		C561AC051D51D3DC00113453 /* H264Decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264Decoder.h; sourceTree = "<group>"; };
-		C561AC061D51D3DC00113453 /* H264Decoder.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = H264Decoder.mm; sourceTree = "<group>"; };
+		C561AC061D51D3DC00113453 /* H264Decoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = H264Decoder.m; sourceTree = "<group>"; };
 		C561AC071D51D3DC00113453 /* H264Encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264Encoder.h; sourceTree = "<group>"; };
-		C561AC081D51D3DC00113453 /* H264Encoder.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = H264Encoder.mm; sourceTree = "<group>"; };
+		C561AC081D51D3DC00113453 /* H264Encoder.m */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = H264Encoder.m; sourceTree = "<group>"; };
 		C561AC091D51D3DC00113453 /* H264StreamToTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264StreamToTS.h; sourceTree = "<group>"; };
 		C561AC0A1D51D3DC00113453 /* H264StreamToTS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = H264StreamToTS.m; sourceTree = "<group>"; };
 		C561AC0B1D51D3DC00113453 /* RtmpSendH264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RtmpSendH264.h; sourceTree = "<group>"; };
-		C561AC0C1D51D3DC00113453 /* RtmpSendH264.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RtmpSendH264.mm; sourceTree = "<group>"; };
+		C561AC0C1D51D3DC00113453 /* RtmpSendH264.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RtmpSendH264.m; sourceTree = "<group>"; };
 		C561AC891D51D3DC00113453 /* GJDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJDebug.h; sourceTree = "<group>"; };
 		C561AC8B1D51D3DC00113453 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C561AC8C1D51D3DC00113453 /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
@@ -936,13 +936,13 @@
 				C561AC031D51D3DC00113453 /* GJH264Encoder.h */,
 				C561AC041D51D3DC00113453 /* GJH264Encoder.m */,
 				C561AC051D51D3DC00113453 /* H264Decoder.h */,
-				C561AC061D51D3DC00113453 /* H264Decoder.mm */,
+				C561AC061D51D3DC00113453 /* H264Decoder.m */,
 				C561AC071D51D3DC00113453 /* H264Encoder.h */,
-				C561AC081D51D3DC00113453 /* H264Encoder.mm */,
+				C561AC081D51D3DC00113453 /* H264Encoder.m */,
 				C561AC091D51D3DC00113453 /* H264StreamToTS.h */,
 				C561AC0A1D51D3DC00113453 /* H264StreamToTS.m */,
 				C561AC0B1D51D3DC00113453 /* RtmpSendH264.h */,
-				C561AC0C1D51D3DC00113453 /* RtmpSendH264.mm */,
+				C561AC0C1D51D3DC00113453 /* RtmpSendH264.m */,
 			);
 			path = Capture;
 			sourceTree = "<group>";
@@ -1239,18 +1239,18 @@
 				C591E8C01DC6FF8B00BCC938 /* ViewController.mm in Sources */,
 				C561ACA11D51D3DC00113453 /* GJAudioQueueRecoder.m in Sources */,
 				C561ACA71D51D3DC00113453 /* GJH264Encoder.m in Sources */,
-				C561ACA91D51D3DC00113453 /* H264Encoder.mm in Sources */,
+				C561ACA91D51D3DC00113453 /* H264Encoder.m in Sources */,
 				C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */,
 				C561ACA21D51D3DC00113453 /* PCMDecodeFromAAC.mm in Sources */,
 				C561AC9E1D51D3DC00113453 /* AudioPraseStream.m in Sources */,
 				C561ACAA1D51D3DC00113453 /* H264StreamToTS.m in Sources */,
 				C561AC9D1D51D3DC00113453 /* AACEncoderFromPCM.mm in Sources */,
-				C561ACAB1D51D3DC00113453 /* RtmpSendH264.mm in Sources */,
+				C561ACAB1D51D3DC00113453 /* RtmpSendH264.m in Sources */,
 				C561ACA51D51D3DC00113453 /* GJCaptureTool.m in Sources */,
 				C561ACB51D51D3DC00113453 /* main.m in Sources */,
 				C561ACB71D51D3DC00113453 /* GJOpenALPlayer.mm in Sources */,
 				C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */,
-				C561ACA81D51D3DC00113453 /* H264Decoder.mm in Sources */,
+				C561ACA81D51D3DC00113453 /* H264Decoder.m in Sources */,
 				C561ACA01D51D3DC00113453 /* GJAudioQueuePlayer.mm in Sources */,
 				C561ACA61D51D3DC00113453 /* GJH264Decoder.m in Sources */,
 				C561AC9F1D51D3DC00113453 /* AudioUnitCapture.m in Sources */,
@@ -1398,6 +1398,7 @@
 					"\"$(SRCROOT)/GJCaptureTool/X264/include\"",
 					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"",
+					"\"$(SRCROOT)/GJCaptureTool/kkimage\"",
 				);
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -1407,6 +1408,7 @@
 					"$(PROJECT_DIR)/GJCaptureTool/FFmpeg/lib",
 					"$(PROJECT_DIR)/GJCaptureTool/X264/lib",
 					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
+					"$(PROJECT_DIR)/GJCaptureTool",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool.TEST";
 				PRODUCT_NAME = GJCaptureTool;
@@ -1426,6 +1428,7 @@
 					"\"$(SRCROOT)/GJCaptureTool/X264/include\"",
 					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"",
+					"\"$(SRCROOT)/GJCaptureTool/kkimage\"",
 				);
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -1435,6 +1438,7 @@
 					"$(PROJECT_DIR)/GJCaptureTool/FFmpeg/lib",
 					"$(PROJECT_DIR)/GJCaptureTool/X264/lib",
 					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
+					"$(PROJECT_DIR)/GJCaptureTool",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool.TEST";
 				PRODUCT_NAME = GJCaptureTool;

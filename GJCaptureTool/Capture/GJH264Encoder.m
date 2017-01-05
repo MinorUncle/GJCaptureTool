@@ -12,14 +12,14 @@
 {
     long encoderFrameCount;
     BOOL _shouldRecreate;
- 
+    uint8_t *keyFrameCache;
+    size_t keyFrameCacheSize;
     
 }
 @property(nonatomic)VTCompressionSessionRef enCodeSession;
 @end
 
 @implementation GJH264Encoder
-int _keyInterval;////key内的p帧数量
 
 GJH264Encoder* encoder ;
 -(instancetype)initWithFps:(uint)fps{
@@ -97,7 +97,7 @@ GJH264Encoder* encoder ;
     VTSessionCopyProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, NULL, &outBit);
     int32_t bit = 0;
     CFNumberGetValue(outBit,kCFNumberSInt32Type,&bit);
-    NSLog(@"kCFNumberSInt32Type:%d",bit);
+    NSLog(@"kCFNumberSInt32Type bit:%d",bit);
 
 }
 
@@ -200,81 +200,98 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     
     CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sample);
     size_t length, totalLength;
+    size_t bufferOffset = 0;
     uint8_t *dataPointer;
     OSStatus statusCodeRet = CMBlockBufferGetDataPointer(dataBuffer, 0, &length, &totalLength, (char**)&dataPointer);
-    
+
     bool keyframe = !CFDictionaryContainsKey( (CFArrayGetValueAtIndex(CMSampleBufferGetSampleAttachmentsArray(sample, true), 0)), kCMSampleAttachmentKey_NotSync);
     
-    if (encoder.parameterSet == nil && keyframe)
+    if (keyframe)
     {
-        NSLog(@"key interval%d",_keyInterval);
-        _keyInterval = -1;
         CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sample);
         size_t sparameterSetSize, sparameterSetCount;
         int spHeadSize;
-        int ppHeadSize;
         const uint8_t *sparameterSet;
         OSStatus statusCode = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 0, &sparameterSet, &sparameterSetSize, &sparameterSetCount, &spHeadSize );
-        if (statusCode == noErr)
+        if (statusCode != noErr)
         {
-            size_t pparameterSetSize, pparameterSetCount;
-            const uint8_t *pparameterSet;
-            OSStatus statusCode = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 1, &pparameterSet, &pparameterSetSize, &pparameterSetCount, &ppHeadSize );
-            if (statusCode == noErr)
-            {
-                
-                uint8_t* data = malloc(4+4+sparameterSetSize+pparameterSetSize);
-//                memcpy(&data[0], "\x00\x00\x00\x01", 4);
-                memcpy(&data[0], &sparameterSetSize, 4);
-                memcpy(&data[4], sparameterSet, sparameterSetSize);
-//                memcpy(&data[4+sparameterSetSize], "\x00\x00\x00\x01", 4);
-                memcpy(&data[4+sparameterSetSize], &pparameterSetSize, 4);
-                memcpy(&data[8+sparameterSetSize], pparameterSet, pparameterSetSize);
-                NSData* parm = [NSData dataWithBytesNoCopy:data length:pparameterSetSize+sparameterSetSize+8 freeWhenDone:YES];
-//                [NSData dataWithBytes:data length:pparameterSetSize+sparameterSetSize+8];
-                [encoder setParameterSet:parm];
-                NSLog(@"data:%@",parm);
+            NSLog(@"CMVideoFormatDescriptionGetH264ParameterSetAt sps error:%d",statusCode);
+            return;
+        }
+        size_t pparameterSetSize, pparameterSetCount;
+        int ppHeadSize;
+        const uint8_t *pparameterSet;
+        statusCode = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 1, &pparameterSet, &pparameterSetSize, &pparameterSetCount, &ppHeadSize );
+        if ((statusCode != noErr))
+        {
+            NSLog(@"CMVideoFormatDescriptionGetH264ParameterSetAt pps error:%d",statusCode);
+            return;
+        }
+        size_t spsppsSize = 4+4+sparameterSetSize+pparameterSetSize;
+        if (encoder->keyFrameCacheSize < spsppsSize + totalLength) {
+            if (encoder->keyFrameCache) {
+                free(encoder->keyFrameCache);
+            }
+            encoder->keyFrameCache = (uint8_t*)malloc(spsppsSize + totalLength);
+            encoder->keyFrameCacheSize = spsppsSize + totalLength;
+        }
+        uint8_t* data = encoder->keyFrameCache;
+        memcpy(&data[0], "\x00\x00\x00\x01", 4);
+//        memcpy(&data[0], &sparameterSetSize, 4);
+        memcpy(&data[4], sparameterSet, sparameterSetSize);
+        memcpy(&data[4+sparameterSetSize], "\x00\x00\x00\x01", 4);
+//        memcpy(&data[4+sparameterSetSize], &pparameterSetSize, 4);
+        memcpy(&data[8+sparameterSetSize], pparameterSet, pparameterSetSize);
+        NSData* parm = [NSData dataWithBytes:data length:spsppsSize];
+        [encoder setParameterSet:parm];
+        NSLog(@"data:%@",parm);
 //                if ([encoder.deleagte respondsToSelector:@selector(GJH264Encoder:encodeCompleteBuffer:withLenth:)]) {
 //                    [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:data withLenth:pparameterSetSize+sparameterSetSize+8];
 //                }
 //                free(data);
-            }
-        }
-        //抛弃sps,pps
-        NSData* dt = [NSData dataWithBytes:dataPointer length:MIN(totalLength, 100)];
-        NSLog(@"t:%@",dt);
-        uint32_t seiLength = 0;
-        memcpy(&seiLength, dataPointer, 4);
-        seiLength = CFSwapInt32BigToHost(seiLength);
-        dataPointer += seiLength + 4;
-        totalLength -= seiLength + 4;
-
-    }
-    
-
-    
-    if (statusCodeRet == noErr) {
         
-        uint32_t bufferOffset = 0;
-        static const uint32_t AVCCHeaderLength = 4;
-        while (bufferOffset < totalLength) {
-            
-            _keyInterval++;
-            // Read the NAL unit length
-            uint32_t NALUnitLength = 0;
-            memcpy(&NALUnitLength, dataPointer + bufferOffset, AVCCHeaderLength);
-            
-            NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
-            uint8_t* data = dataPointer + bufferOffset;
-            memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
-            CMTime dt = CMSampleBufferGetDecodeTimeStamp(sample);
+//        拷贝keyframe;
+        memcpy(data+spsppsSize, dataPointer, totalLength);
+        dataPointer = data;
+        totalLength += spsppsSize;
+        bufferOffset = spsppsSize;
+        
+        //sei
+//        NSData* dt = [NSData dataWithBytes:dataPointer length:MIN(totalLength, 100)];
+//        NSLog(@"t:%@",dt);
+//        uint32_t seiLength = 0;
+//        memcpy(&seiLength, dataPointer, 4);
+//        seiLength = CFSwapInt32BigToHost(seiLength);
+//        
+//        dataPointer += seiLength + 4;
+//        totalLength -= seiLength + 4;
 
-            [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:data withLenth:NALUnitLength +AVCCHeaderLength keyFrame:keyframe dts:dt.value];
-            keyframe = false;
-            NSLog(@"h264编码成功,%d",NALUnitLength);
-            bufferOffset += AVCCHeaderLength + NALUnitLength;
-        }
     }
+    
+
+    
+
+        
+    static const uint32_t AVCCHeaderLength = 4;
+    while (bufferOffset < totalLength) {
+        
+        // Read the NAL unit length
+        uint32_t NALUnitLength = 0;
+        memcpy(&NALUnitLength, dataPointer + bufferOffset, AVCCHeaderLength);
+        
+        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
+        uint8_t* data = dataPointer + bufferOffset;
+        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
+        bufferOffset += AVCCHeaderLength + NALUnitLength;
+    }
+    
+    if (bufferOffset > totalLength) {
+        assert(0);
+    }
+    
+    CMTime dt = CMSampleBufferGetDecodeTimeStamp(sample);
+    
+    [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:dataPointer withLenth:bufferOffset keyFrame:keyframe dts:dt.value];    
 }
 -(void)setParameterSet:(NSData*)parm{
     _parameterSet = parm;
@@ -284,6 +301,9 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 }
 -(void)dealloc{
     VTCompressionSessionInvalidate(_enCodeSession);
+    if (keyFrameCache) {
+        free(keyFrameCache);
+    }
     
 }
 //-(void)restart{
