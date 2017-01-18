@@ -20,6 +20,9 @@
 		0432266B1DDEF38F0012A0C0 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 043226691DDEF38F0012A0C0 /* libcrypto.a */; };
 		0432266C1DDEF38F0012A0C0 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0432266A1DDEF38F0012A0C0 /* libopenssl.a */; };
 		045C61B31E1CE4430047E673 /* libMp4v2Code.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 045C61B01E1CE4390047E673 /* libMp4v2Code.a */; };
+		045C67801E1E2B570047E673 /* Mp4Writer.c in Sources */ = {isa = PBXBuildFile; fileRef = 045C677E1E1E2B570047E673 /* Mp4Writer.c */; };
+		046F59871E2DBA39007901EB /* sps_decode.c in Sources */ = {isa = PBXBuildFile; fileRef = 046F59861E2DBA39007901EB /* sps_decode.c */; };
+		046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
 		AE10F8E11D7F1E4B008BAE29 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AE10F8E01D7F1E4B008BAE29 /* libx264.a */; };
 		AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */; };
 		C54FA8C91D2103AA00A0D3C3 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C54FA8C81D2103AA00A0D3C3 /* OpenAL.framework */; };
@@ -164,6 +167,20 @@
 			remoteGlobalIDString = C5E7F6A51D8E2EB60018CBC6;
 			remoteInfo = Mp4V2_Demo;
 		};
+		0460FDBA1E28680E00F5A308 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = AEDBBB271DC5B24E00FD72D5;
+			remoteInfo = DarwinStreamCode;
+		};
+		0460FDBC1E28680E00F5A308 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = AEDBBB451DC5B2C200FD72D5;
+			remoteInfo = CommonUtilites;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -294,6 +311,40 @@
 		044517B41E10C72100196254 /* swscale.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = swscale.h; sourceTree = "<group>"; };
 		044517B51E10C72100196254 /* version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = version.h; sourceTree = "<group>"; };
 		045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Mp4v2Code.xcodeproj; path = ../GJMp4Demo/Mp4v2Code.xcodeproj; sourceTree = "<group>"; };
+		045C677E1E1E2B570047E673 /* Mp4Writer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Mp4Writer.c; sourceTree = "<group>"; };
+		045C677F1E1E2B570047E673 /* Mp4Writer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp4Writer.h; sourceTree = "<group>"; };
+		045C67901E1E2C090047E673 /* chapter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = chapter.h; sourceTree = "<group>"; };
+		045C67911E1E2C090047E673 /* file.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = file.h; sourceTree = "<group>"; };
+		045C67921E1E2C090047E673 /* file_prop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = file_prop.h; sourceTree = "<group>"; };
+		045C67931E1E2C090047E673 /* general.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = general.h; sourceTree = "<group>"; };
+		045C67941E1E2C090047E673 /* isma.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = isma.h; sourceTree = "<group>"; };
+		045C67951E1E2C090047E673 /* itmf_generic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = itmf_generic.h; sourceTree = "<group>"; };
+		045C67961E1E2C090047E673 /* itmf_tags.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = itmf_tags.h; sourceTree = "<group>"; };
+		045C67971E1E2C090047E673 /* mp4atom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mp4atom.h; sourceTree = "<group>"; };
+		045C67981E1E2C090047E673 /* mp4v2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mp4v2.h; sourceTree = "<group>"; };
+		045C67991E1E2C090047E673 /* platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = platform.h; sourceTree = "<group>"; };
+		045C679A1E1E2C090047E673 /* project.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = project.h; sourceTree = "<group>"; };
+		045C679B1E1E2C090047E673 /* sample.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sample.h; sourceTree = "<group>"; };
+		045C679C1E1E2C090047E673 /* src.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = src.h; sourceTree = "<group>"; };
+		045C679D1E1E2C090047E673 /* streaming.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = streaming.h; sourceTree = "<group>"; };
+		045C679E1E1E2C090047E673 /* track.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = track.h; sourceTree = "<group>"; };
+		045C679F1E1E2C090047E673 /* track_prop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = track_prop.h; sourceTree = "<group>"; };
+		0460FD931E2862C700F5A308 /* aac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = aac.cpp; sourceTree = "<group>"; };
+		0460FD941E2862C700F5A308 /* aac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aac.h; sourceTree = "<group>"; };
+		0460FD951E2862C700F5A308 /* audio_ffmpeg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = audio_ffmpeg.cpp; sourceTree = "<group>"; };
+		0460FD961E2862C700F5A308 /* audio_ffmpeg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = audio_ffmpeg.h; sourceTree = "<group>"; };
+		0460FD971E2862C700F5A308 /* g711.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = g711.cpp; sourceTree = "<group>"; };
+		0460FD981E2862C700F5A308 /* g711.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = g711.h; sourceTree = "<group>"; };
+		0460FD991E2862C700F5A308 /* mp4.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = mp4.cpp; sourceTree = "<group>"; };
+		0460FD9A1E2862C700F5A308 /* mp4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mp4.h; sourceTree = "<group>"; };
+		0460FD9B1E2862C700F5A308 /* PlayMediaDecodec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlayMediaDecodec.cpp; sourceTree = "<group>"; };
+		0460FD9C1E2862C700F5A308 /* PlayMediaEncode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlayMediaEncode.cpp; sourceTree = "<group>"; };
+		0460FD9D1E2862C700F5A308 /* PlayMediaFormat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlayMediaFormat.cpp; sourceTree = "<group>"; };
+		0460FD9E1E2862C700F5A308 /* PlayMediaSDK.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlayMediaSDK.cpp; sourceTree = "<group>"; };
+		0460FD9F1E2862C700F5A308 /* PlayMediaSDK.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayMediaSDK.h; sourceTree = "<group>"; };
+		0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = DarwinStreamCode.xcodeproj; path = ../DarwinStreamingServerCode/DarwinStreamCode/DarwinStreamCode.xcodeproj; sourceTree = "<group>"; };
+		046F59861E2DBA39007901EB /* sps_decode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sps_decode.c; sourceTree = "<group>"; };
+		046F599D1E2E1C38007901EB /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
 		AE10F8E01D7F1E4B008BAE29 /* libx264.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264.a; sourceTree = "<group>"; };
 		AEEA477A1DC3AB770075EE63 /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		AEEA477B1DC3AB770075EE63 /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
@@ -446,6 +497,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */,
 				045C61B31E1CE4430047E673 /* libMp4v2Code.a in Frameworks */,
 				04300FF31E1366F70059262A /* liblibQueue.a in Frameworks */,
 				042F92D71E03BE8200B1AA7A /* libavcodec.a in Frameworks */,
@@ -729,6 +781,58 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		045C678F1E1E2C090047E673 /* Mp4v2 */ = {
+			isa = PBXGroup;
+			children = (
+				045C67901E1E2C090047E673 /* chapter.h */,
+				045C67911E1E2C090047E673 /* file.h */,
+				045C67921E1E2C090047E673 /* file_prop.h */,
+				045C67931E1E2C090047E673 /* general.h */,
+				045C67941E1E2C090047E673 /* isma.h */,
+				045C67951E1E2C090047E673 /* itmf_generic.h */,
+				045C67961E1E2C090047E673 /* itmf_tags.h */,
+				045C67971E1E2C090047E673 /* mp4atom.h */,
+				045C67981E1E2C090047E673 /* mp4v2.h */,
+				045C67991E1E2C090047E673 /* platform.h */,
+				045C679A1E1E2C090047E673 /* project.h */,
+				045C679B1E1E2C090047E673 /* sample.h */,
+				045C679C1E1E2C090047E673 /* src.h */,
+				045C679D1E1E2C090047E673 /* streaming.h */,
+				045C679E1E1E2C090047E673 /* track.h */,
+				045C679F1E1E2C090047E673 /* track_prop.h */,
+			);
+			path = Mp4v2;
+			sourceTree = "<group>";
+		};
+		0460FD921E2862C700F5A308 /* PlayMediaSDK */ = {
+			isa = PBXGroup;
+			children = (
+				0460FD931E2862C700F5A308 /* aac.cpp */,
+				0460FD941E2862C700F5A308 /* aac.h */,
+				0460FD951E2862C700F5A308 /* audio_ffmpeg.cpp */,
+				0460FD961E2862C700F5A308 /* audio_ffmpeg.h */,
+				0460FD971E2862C700F5A308 /* g711.cpp */,
+				0460FD981E2862C700F5A308 /* g711.h */,
+				0460FD991E2862C700F5A308 /* mp4.cpp */,
+				0460FD9A1E2862C700F5A308 /* mp4.h */,
+				0460FD9B1E2862C700F5A308 /* PlayMediaDecodec.cpp */,
+				0460FD9C1E2862C700F5A308 /* PlayMediaEncode.cpp */,
+				0460FD9D1E2862C700F5A308 /* PlayMediaFormat.cpp */,
+				0460FD9E1E2862C700F5A308 /* PlayMediaSDK.cpp */,
+				0460FD9F1E2862C700F5A308 /* PlayMediaSDK.h */,
+			);
+			path = PlayMediaSDK;
+			sourceTree = "<group>";
+		};
+		0460FDB61E28680E00F5A308 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0460FDBB1E28680E00F5A308 /* DarwinStreamCode.app */,
+				0460FDBD1E28680E00F5A308 /* libCommonUtilites.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		AE10F8DF1D7F1E4B008BAE29 /* lib */ = {
 			isa = PBXGroup;
 			children = (
@@ -847,6 +951,7 @@
 		AEFEF2291DB3B9A80004CF39 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				046F599D1E2E1C38007901EB /* libstdc++.tbd */,
 				C59106031DC899DC00BCC938 /* MediaPlayer.framework */,
 				AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */,
 			);
@@ -856,6 +961,7 @@
 		C54FA89F1D21006000A0D3C3 = {
 			isa = PBXGroup;
 			children = (
+				0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */,
 				045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */,
 				04300FEA1E1366E70059262A /* GJQueue.xcodeproj */,
 				042F92B61E03BE6700B1AA7A /* ffmpegCode.xcodeproj */,
@@ -883,6 +989,8 @@
 		C561ABE91D51D3DC00113453 /* GJCaptureTool */ = {
 			isa = PBXGroup;
 			children = (
+				0460FD921E2862C700F5A308 /* PlayMediaSDK */,
+				045C678F1E1E2C090047E673 /* Mp4v2 */,
 				04300FFB1E1374EC0059262A /* libQueue */,
 				044517431E10C72100196254 /* FFmpeg */,
 				040EBEC81DFFD2660040AED0 /* GJCaptureTool.entitlements */,
@@ -943,6 +1051,8 @@
 				C561AC0A1D51D3DC00113453 /* H264StreamToTS.m */,
 				C561AC0B1D51D3DC00113453 /* RtmpSendH264.h */,
 				C561AC0C1D51D3DC00113453 /* RtmpSendH264.m */,
+				045C677F1E1E2B570047E673 /* Mp4Writer.h */,
+				045C677E1E1E2B570047E673 /* Mp4Writer.c */,
 			);
 			path = Capture;
 			sourceTree = "<group>";
@@ -995,6 +1105,7 @@
 			isa = PBXGroup;
 			children = (
 				C59106051DC89C0F00BCC938 /* sps_decode.h */,
+				046F59861E2DBA39007901EB /* sps_decode.c */,
 				C59106001DC894BC00BCC938 /* LibRtmpSession.cpp */,
 				C59106011DC894BC00BCC938 /* LibRtmpSession.hpp */,
 				C591E84D1DC6ECED00BCC938 /* amf.c */,
@@ -1064,7 +1175,7 @@
 				TargetAttributes = {
 					C54FA8A71D21006000A0D3C3 = {
 						CreatedOnToolsVersion = 7.3;
-						DevelopmentTeam = 9VXBV77545;
+						DevelopmentTeam = K7MDP8Y272;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -1096,6 +1207,10 @@
 			productRefGroup = C54FA8A91D21006000A0D3C3 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
+				{
+					ProductGroup = 0460FDB61E28680E00F5A308 /* Products */;
+					ProjectRef = 0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */;
+				},
 				{
 					ProductGroup = 042F92B71E03BE6700B1AA7A /* Products */;
 					ProjectRef = 042F92B61E03BE6700B1AA7A /* ffmpegCode.xcodeproj */;
@@ -1216,6 +1331,20 @@
 			remoteRef = 045C61B11E1CE4390047E673 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		0460FDBB1E28680E00F5A308 /* DarwinStreamCode.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = DarwinStreamCode.app;
+			remoteRef = 0460FDBA1E28680E00F5A308 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		0460FDBD1E28680E00F5A308 /* libCommonUtilites.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libCommonUtilites.a;
+			remoteRef = 0460FDBC1E28680E00F5A308 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -1236,6 +1365,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				045C67801E1E2B570047E673 /* Mp4Writer.c in Sources */,
 				C591E8C01DC6FF8B00BCC938 /* ViewController.mm in Sources */,
 				C561ACA11D51D3DC00113453 /* GJAudioQueueRecoder.m in Sources */,
 				C561ACA71D51D3DC00113453 /* GJH264Encoder.m in Sources */,
@@ -1264,6 +1394,7 @@
 				C591E85F1DC6ECED00BCC938 /* rtmp.c in Sources */,
 				C59106021DC894BC00BCC938 /* LibRtmpSession.cpp in Sources */,
 				C591E85D1DC6ECED00BCC938 /* log.c in Sources */,
+				046F59871E2DBA39007901EB /* sps_decode.c in Sources */,
 				C591E85E1DC6ECED00BCC938 /* parseurl.c in Sources */,
 				C591E85C1DC6ECED00BCC938 /* hashswf.c in Sources */,
 				C591E85B1DC6ECED00BCC938 /* amf.c in Sources */,
@@ -1393,12 +1524,14 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = 9VXBV77545;
+				DEVELOPMENT_TEAM = K7MDP8Y272;
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/GJCaptureTool/X264/include\"",
 					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"",
 					"\"$(SRCROOT)/GJCaptureTool/kkimage\"",
+					"\"$(SRCROOT)/GJCaptureTool/Mp4v2\"",
+					"\"$(SRCROOT)/../GJMp4Demo/Mp4v2Code\"",
 				);
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -1423,12 +1556,14 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = 9VXBV77545;
+				DEVELOPMENT_TEAM = K7MDP8Y272;
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/GJCaptureTool/X264/include\"",
 					"\"$(SRCROOT)\"",
 					"\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"",
 					"\"$(SRCROOT)/GJCaptureTool/kkimage\"",
+					"\"$(SRCROOT)/GJCaptureTool/Mp4v2\"",
+					"\"$(SRCROOT)/../GJMp4Demo/Mp4v2Code\"",
 				);
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -1454,7 +1589,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/rtmpdump/include\"";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
@@ -1472,7 +1607,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/rtmpdump/include\"";
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",

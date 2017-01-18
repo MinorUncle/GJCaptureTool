@@ -25,8 +25,11 @@ GJH264Encoder* encoder ;
 -(instancetype)initWithFps:(uint)fps{
     self = [super init];
     if (self) {
+
         [self setUpParm];
         _destFormat.baseFormat.fps=fps;
+        _expectedFrameRate = _destFormat.baseFormat.fps;
+
     }
     return self;
 }
@@ -43,13 +46,12 @@ GJH264Encoder* encoder ;
     memset(&_destFormat, 0, sizeof(H264Format));
     _destFormat.model=EntropyMode_CABAC;
     _destFormat.level=profileLevelMain;
-    _destFormat.allowBframe=true;
+    _destFormat.allowBframe=false;
     _destFormat.allowPframe=true;
-    _destFormat.baseFormat.bitRate=100*1024*8;//bit/s
+    _destFormat.baseFormat.bitRate=300*1024*8;//bit/s
     _destFormat.gopSize=10;
     
     _quality = 1.0;
-    _expectedFrameRate = 0;
     encoder = self;
 }
 -(void)setDestFormat:(H264Format)destFormat{
@@ -162,12 +164,12 @@ GJH264Encoder* encoder ;
         NSLog(@"kVTCompressionPropertyKey_AverageBitRate set error");
     }
     
-    CFNumberRef  qualityRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType,&_quality);
-    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_Quality,qualityRef);
-    CFRelease(qualityRef);
-    if (result != 0) {
-        NSLog(@"kVTCompressionPropertyKey_Quality set error");
-    }
+//    CFNumberRef  qualityRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType,&_quality);
+//    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_Quality,qualityRef);
+//    CFRelease(qualityRef);
+//    if (result != 0) {
+//        NSLog(@"kVTCompressionPropertyKey_Quality set error");
+//    }
     CFNumberRef  frameIntervalRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &(_destFormat.gopSize));
     result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_MaxKeyFrameInterval,frameIntervalRef);
     CFRelease(frameIntervalRef);
@@ -242,9 +244,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         memcpy(&data[4+sparameterSetSize], "\x00\x00\x00\x01", 4);
 //        memcpy(&data[4+sparameterSetSize], &pparameterSetSize, 4);
         memcpy(&data[8+sparameterSetSize], pparameterSet, pparameterSetSize);
-        NSData* parm = [NSData dataWithBytes:data length:spsppsSize];
-        [encoder setParameterSet:parm];
-        NSLog(@"data:%@",parm);
+ 
 //                if ([encoder.deleagte respondsToSelector:@selector(GJH264Encoder:encodeCompleteBuffer:withLenth:)]) {
 //                    [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:data withLenth:pparameterSetSize+sparameterSetSize+8];
 //                }
@@ -291,7 +291,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     
     CMTime dt = CMSampleBufferGetDecodeTimeStamp(sample);
     
-    [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:dataPointer withLenth:bufferOffset keyFrame:keyframe dts:dt.value];    
+    [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:dataPointer withLenth:bufferOffset keyFrame:keyframe dts:dt.value*1.0/dt.timescale];
 }
 -(void)setParameterSet:(NSData*)parm{
     _parameterSet = parm;
@@ -303,6 +303,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     VTCompressionSessionInvalidate(_enCodeSession);
     if (keyFrameCache) {
         free(keyFrameCache);
+        keyFrameCacheSize = 0;
     }
     
 }

@@ -77,11 +77,12 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
     //    OSStatus status = AudioFileWritePackets (pAqData->mAudioFile,false,inBuffer->mAudioDataByteSize,inPacketDesc,pAqData->mCurrentPacket,&inNumPackets,inBuffer->mAudioData);
     pAqData->mCurrentPacket += inNumPackets;                     // 4
     if (!pAqData->mIsRunning)return;
-    AudioQueueEnqueueBuffer (pAqData->mQueue,inBuffer,0,NULL);
     if ([tempSelf.delegate respondsToSelector:@selector(GJAudioQueueRecoder:streamData:lenth:packetCount:packetDescriptions:)]) {
         if (inPacketDesc == NULL)inNumPackets = 0;       
         [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:inBuffer->mAudioData lenth:inBuffer->mAudioDataByteSize packetCount:inNumPackets packetDescriptions:inPacketDesc];
     }
+    AudioQueueEnqueueBuffer (pAqData->mQueue,inBuffer,0,NULL);
+
 
 };
 

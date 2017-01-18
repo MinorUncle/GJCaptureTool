@@ -33,6 +33,7 @@ extern "C"{
 #import "GJQueue.h"
 #import "GJBufferPool.h"
 #import "sps_decode.h"
+#import "Mp4Writer.h"
 
 }
 GJQueue* _mp4VideoQueue;
@@ -58,6 +59,8 @@ BOOL _recodeState;
     GJAudioQueueRecoder* _audioRecoder;
     AVFormatContext* pMp4VFormat;
     AVFormatContext* pMp4AFormat;
+    
+    Mp4WriterContext* _mp4Write;
 
 }
 @property(nonatomic,strong)UIImageView* imageView;
@@ -84,6 +87,8 @@ BOOL _recodeState;
 -(UIImageView *)imageView{
     if (_imageView == nil) {
         _imageView = [[UIImageView alloc]initWithFrame:_playView.bounds];
+        _imageView.contentMode = UIViewContentModeScaleAspectFit;
+        _imageView.backgroundColor = [UIColor whiteColor];
         [_playView addSubview:_imageView];
     }
     return _imageView;
@@ -98,9 +103,11 @@ BOOL _recodeState;
 //    _praseStream = [[AudioPraseStream alloc]initWithFileType:kAudioFileAAC_ADTSType fileSize:0 error:nil];
 //    _praseStream.delegate = self;
     int fps = FPS;
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeVideoStream | GJCaptureTypeAudioStream) fps:fps layer:_viewContainer.layer];
+    _viewContainer.backgroundColor = [UIColor redColor];
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeVideoStream|GJCaptureTypeAudioStream) fps:fps layer:_viewContainer.layer];
     _captureTool.delegate = self;
     _gjEncoder = [[GJH264Encoder alloc]initWithFps:fps];
+    
     _gjDecoder = [[GJH264Decoder alloc]init];
     _audioEncoder = [[AACEncoderFromPCM alloc]init];
     _audioEncoder.delegate = self;
@@ -155,16 +162,23 @@ BOOL _recodeState;
 
         _beginDate = [NSDate date];
         _timer = [NSTimer scheduledTimerWithTimeInterval:1.0 target:self selector:@selector(updateSpeed) userInfo:nil repeats:YES];
+        
+        NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
+        path = [path stringByAppendingPathComponent:@"outfmtfile.mp4"];
+        mp4WriterCreate(&_mp4Write, path.UTF8String,15);
+        _recodeState = YES;
         [_captureTool startRecodeing];
 //        [_audioPlayer start];
-        _recodeState = YES;
+
 //        [self mp4RecodeInit];
 
     }else{
         [_timer invalidate];
 //        [_audioPlayer stop:YES];
-        [_captureTool stopRecode];
         _recodeState = NO;
+        [_captureTool stopRecode];
+        mp4WriterClose(&_mp4Write);
+        NSLog(@"write end");
     
     }
 }
@@ -306,8 +320,17 @@ BOOL _recodeState;
 }
 #pragma mark ---delegate
 -(void)GJCaptureTool:(GJCaptureTool*)captureView recodeVideoYUVData:(CMSampleBufferRef)sampleBuffer{
-
-//        CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+    
+//    CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+//    CIImage* cimage = [CIImage imageWithCVPixelBuffer:imageBuffer];
+//    UIImage* image = [UIImage imageWithCIImage:cimage];
+//    // Update the display with the captured image for DEBUG purposes
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        
+//        self.imageView.image = image;
+//    });
+//
+////        CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
 //        CVPixelBufferLockBaseAddress(imageBuffer, 0);
 //        uint8_t* baseAdd = (uint8_t*)CVPixelBufferGetBaseAddress(imageBuffer);
 //        size_t w = CVPixelBufferGetWidth(imageBuffer);
@@ -450,7 +473,13 @@ BOOL _recodeState;
 //    free(packet);
 
 }
--(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame dts:(int64_t)dts{
+-(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame dts:(double)dts{
+    if (_recodeState == YES) {
+        if (_mp4Write) {
+
+            mp4WriterAddVideo(_mp4Write, buffer, totalLenth,dts);
+        }
+    }
 //    GJData* bufData = (GJData*)malloc(sizeof(GJData));
 //    bufData->data = malloc(totalLenth);
 //    bufData->size = totalLenth;
@@ -527,7 +556,7 @@ BOOL _recodeState;
 //    }
 
 //    printf("fram type:%x,",buffer[4]);
-    [_gjDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
+//    [_gjDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
 }
 
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(uint)pts{
@@ -580,7 +609,7 @@ BOOL _recodeState;
 -(void)H264Encoder:(H264Encoder *)encoder h264:(uint8_t *)data size:(int)size pts:(int64_t)pts dts:(int64_t)dts{
     int w,h,fps;
     int *pw = &w ,*ph = &h, *pfps = &fps;
-    h264_decode_sps((BYTE*)data+4,size,&pw,&ph,&pfps);
+//    h264_decode_sps((BYTE*)data+4,size,&pw,&ph,&pfps);
     
     GJData* bufData = (GJData*)malloc(sizeof(GJData));
     bufData->data = malloc(size);
@@ -670,6 +699,14 @@ static int aacIndex;
 
 -(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder encodeCompleteBuffer:(uint8_t *)buffer Lenth:(long)totalLenth packetCount:(int)count packets:(AudioStreamPacketDescription *)packets{
     aacIndex++;
+    
+    if (_recodeState == YES) {
+        if (_mp4Write) {
+            
+            mp4WriterAddAudio(_mp4Write, buffer, totalLenth);
+        }
+    }
+    return;
 //    if (aacFramePerS == 0) {
 //        aacFramePerS = encoder.destFormatDescription.mSampleRate;
 //        _rtmpSend.audioStreamFormat = encoder.destFormatDescription;

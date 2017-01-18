@@ -13,7 +13,9 @@
 #include <math.h>
 #include <stdarg.h>
 #include <memory.h>
+extern "C"{
 #include "sps_decode.h"
+}
 #include "rtmp.h"
 //#include "android/log.h"
 #include <stdlib.h>
@@ -312,7 +314,7 @@ void LibRtmpSession::GetSpsInfo(unsigned char* pSpsData, int iLength)
     int* Width = &_iWidth;
     int* Height = &_iHeight;
     int* Fps = &_iFps;
-    h264_decode_sps(pSpsData, iLength, &Width, &Height, &Fps);
+//    h264_decode_sps(pSpsData, iLength, &Width, &Height, &Fps);
 }
 
 void LibRtmpSession::MakeAudioSpecificConfig(char* pConfig, int aactype, int sampleRate, int channels){
@@ -848,7 +850,7 @@ int LibRtmpSession::SendVideoData(unsigned char* buf, int videodatalen){
                     int* Width = &_iWidth;
                     int* Height = &_iHeight;
                     int* Fps = &_iFps;
-                    h264_decode_sps(_pMetaData->Sps,_pMetaData->nSpsLen, &Width, &Height, &Fps);
+//                    h264_decode_sps(_pMetaData->Sps,_pMetaData->nSpsLen, &Width, &Height, &Fps);
                     
                     _pMetaData->nWidth = _iWidth;
                     _pMetaData->nHeight = _iHeight;

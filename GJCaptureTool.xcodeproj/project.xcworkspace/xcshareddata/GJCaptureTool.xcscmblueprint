@@ -7,14 +7,16 @@
     "209E9479A1A97E12124DF571AB7D5159BE114365" : 9223372036854775807,
     "D157E2235DB6CAA02B4866781723863E4DFFD9EA" : 9223372036854775807,
     "8531738AFD4FE1FAF1D2FBB5BC4445ED8B189CFD" : 9223372036854775807,
-    "0B93145D3ABCBD6C31A0B6C6E9862005A459ADD3" : 9223372036854775807
+    "0B93145D3ABCBD6C31A0B6C6E9862005A459ADD3" : 9223372036854775807,
+    "1C9FDC6BD57F4F885A769CBC0880C8568DFADE4E" : 9223372036854775807
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "4A40DBAC-5404-444B-91AB-93552CD743F6",
   "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
     "209E9479A1A97E12124DF571AB7D5159BE114365" : "queue\/",
     "D157E2235DB6CAA02B4866781723863E4DFFD9EA" : "GJMp4Demo\/",
     "8531738AFD4FE1FAF1D2FBB5BC4445ED8B189CFD" : "GJCaptureTool\/",
-    "0B93145D3ABCBD6C31A0B6C6E9862005A459ADD3" : "ffmpegCode\/"
+    "0B93145D3ABCBD6C31A0B6C6E9862005A459ADD3" : "ffmpegCode\/",
+    "1C9FDC6BD57F4F885A769CBC0880C8568DFADE4E" : "DarwinStreamingServerCode\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "GJCaptureTool",
   "DVTSourceControlWorkspaceBlueprintVersion" : 204,
@@ -24,6 +26,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/MinorUncle\/ffmpegCode.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "0B93145D3ABCBD6C31A0B6C6E9862005A459ADD3"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/MinorUncle\/DarwinStreamingServerCode.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "1C9FDC6BD57F4F885A769CBC0880C8568DFADE4E"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:MinorUncle\/queue.git",
