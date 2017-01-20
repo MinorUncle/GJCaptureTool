@@ -8,8 +8,9 @@
 
 #import "GJOpenALPlayer.h"
 #import <AVFoundation/AVFoundation.h>
-#import "GJQueue+cplus.h"
+//#import "GJQueue+cplus.h"
 #import "GJDebug.h"
+#import "GJQueue.h"
 
 
 @interface GJOpenALPlayer()
@@ -27,7 +28,7 @@
 @end
 @implementation GJOpenALPlayer
 {
-    GJQueue<ALuint> _queue;
+    GJQueue* _queue;
 }
 //@synthesize outSourceID;
 
@@ -95,7 +96,8 @@
 -(void)initBuffers{
 
     ALenum error;
-    for (int i = 0; i<DEFAULT_MAX_COUNT ; i++) {
+    queueCreate(&_queue, 10);
+    for (int i = 0; i<10 ; i++) {
         ALuint bufferID = 1;
         alGenBuffers(1, &bufferID);
         error = alGetError();
@@ -103,7 +105,7 @@
             GJOpenAL_DEBUG("alGenBuffers errorCode:%d\n",error);
             break;
         }
-        _queue.queuePush(bufferID);
+        queuePush(_queue, (void*)bufferID);
     }
 }
 -(void)stop{
@@ -204,7 +206,7 @@
         return;
     }
     
-    if(_queue.currentLenth() < DEFAULT_MAX_COUNT*0.3){
+    if(queueGetLength(_queue) < 10*0.3){
         [self updataQueueBuffer];
     }
     error = alGetError();
@@ -213,8 +215,8 @@
     }
     
     ALuint bufferID = 0;
-    if (!_queue.queuePop(&bufferID)) {
-        if (_queue.currentLenth()>DEFAULT_MAX_COUNT) {
+    if (!queuePop(_queue, (void**)&bufferID)) {
+        if (queueGetLength(_queue)>10) {
             NSLog(@"audio cache over flat ");
             return;
         }
@@ -331,7 +333,8 @@
     {
         ALuint  buffer;
         alSourceUnqueueBuffers(_outSourceID, 1, &buffer);
-        _queue.queuePush(buffer);
+        queuePush(_queue, (void*)buffer);
+//        _queue.queuePush(buffer);
     }
     return YES;
 }
@@ -340,7 +343,7 @@
     ALenum error;
     ALuint bufferID = 0;
 
-    while (_queue.queuePop(&bufferID)) {
+    while (queuePop(_queue, (void**)&bufferID)) {
         alDeleteBuffers(1, &bufferID);
         error = alGetError();
         if (error != AL_NO_ERROR) {

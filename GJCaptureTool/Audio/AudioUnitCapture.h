@@ -18,7 +18,6 @@
 
 - (void)startRecording:(void(^)(uint8_t* pcmData, int size))dataBlock;
 - (void)stopRecording;
-
 - (void)destoryBlcock;
 
 @end

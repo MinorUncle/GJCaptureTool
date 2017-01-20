@@ -8,14 +8,20 @@
 
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
-
+#import "GJQueue.h"
+typedef enum _PlayStatus{
+    kPlayInvalidStatus = 0,
+    kPlayStopStatus,
+    kPlayRunningStatus,
+    kPlayPauseStatus,
+}PlayStatus;
 @interface GJAudioQueuePlayer : NSObject
 
 @property (nonatomic,assign,readonly) BOOL available;
 @property (nonatomic,assign,readonly) AudioStreamBasicDescription format;
 @property (nonatomic,assign) float volume;
 @property (nonatomic,assign) UInt32 bufferSize;
-@property (nonatomic,assign,readonly) BOOL isRunning;
+@property (nonatomic,assign,readonly) PlayStatus status;
 
 /**
  *  return playedTime of audioqueue, return invalidPlayedTime when error occurs.
@@ -34,7 +40,8 @@
  *
  *  @return whether successfully played
  */
-- (BOOL)playData:(const void *)data lenth:(int)lenth packetCount:(UInt32)packetCount packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof;
+
+- (BOOL)playData:(RetainBuffer*)bufferData packetCount:(UInt32)packetCount packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof;
 
 /**
  *  pause & resume

@@ -1,190 +1,141 @@
 //
-//  GJAudioQueueRecode.m
-//  Decoder
+//  GJAudioQueueRecoder.m
+//  GJCaptureTool
 //
-//  Created by tongguan on 16/2/22.
-//  Copyright © 2016年 未成年大叔. All rights reserved.
+//  Created by mac on 17/1/19.
+//  Copyright © 2017年 MinorUncle. All rights reserved.
 //
 
 #import "GJAudioQueueRecoder.h"
-#import <AudioToolbox/AudioFormat.h>
-#import <AudioToolbox/AudioSession.h>
+#import <AudioToolbox/AudioToolbox.h>
+#import <AVFoundation/AVFoundation.h>
+#define NUMBER_BUFFERS 4
 
-@interface GJAudioQueueRecoder()
-{
-    AudioFormatID _currentFormatID;
+
+@interface GJAudioQueueRecoder(){
+   
+    AudioQueueBufferRef          _mAudioBuffers[NUMBER_BUFFERS];
 }
-@end
-@implementation GJAudioQueueRecoder
-- (instancetype)initWithStreamDestFormat:(AudioStreamBasicDescription*)format{
-    self = [super init];
-    if (self) {
-        _pAqData = malloc(sizeof(AQRecorderState));
+@property(assign,nonatomic) AudioQueueRef mAudioQueue;
+@end;
 
-        [self _createAudioQueueWithFormat:format];
-        _deriveBufferSize(_pAqData->mQueue, _destFormatDescription, 0.02, &_pAqData->bufferByteSize);
-        _destMaxOutSize = _pAqData->bufferByteSize;
-        [self _PrepareAudioQueueBuffers];
-    }
-    return self;
 
-}
-- (instancetype)initWithPath:(NSString*)path fileType:(AudioFileTypeID)fileType
-{
-    self = [super init];
-    if (self) {
-        _pAqData = malloc(sizeof(AQRecorderState));
-
-        [self initDefaultFormat];
-        [self _createAudioQueueWithFormat:NULL];
-        _deriveBufferSize(_pAqData->mQueue, _destFormatDescription, 0.02, &_pAqData->bufferByteSize);
-        _destMaxOutSize = _pAqData->bufferByteSize;
-
-        [self _PrepareAudioQueueBuffers];
-
-        [self _createAudioQueueFileWithFilePath:path fileType:fileType];
-        SetMagicCookieForFile(_pAqData->mQueue, _pAqData->mAudioFile);        
-    }
-    return self;
-}
--(void)initDefaultFormat{  //pcm
-    //pcm format
-        memset(&_destFormatDescription, 0, sizeof(_destFormatDescription));
-    
-        _destFormatDescription.mFormatID         = kAudioFormatLinearPCM; // 2
-        _destFormatDescription.mSampleRate       = 44100.0;               // 3
-        _destFormatDescription.mChannelsPerFrame = 2;                     // 4
-        _destFormatDescription.mBitsPerChannel   = 16;                    // 5
-        _destFormatDescription.mBytesPerPacket   =                        // 6
-        _destFormatDescription.mBytesPerFrame =
-        _destFormatDescription.mChannelsPerFrame * sizeof (SInt16) * 16;
-        _destFormatDescription.mFramesPerPacket  = 1;                     // 7
-    
-        _destFormatDescription.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
-    
-        UInt32 size = sizeof(AudioStreamBasicDescription);
-        AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormatDescription);
-
-}
 
 static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer,const AudioTimeStamp *inStartTime,UInt32 inNumPackets, const AudioStreamPacketDescription  *inPacketDesc){
-    
     GJAudioQueueRecoder* tempSelf = (__bridge GJAudioQueueRecoder*)aqData;
-    AQRecorderState *pAqData = tempSelf.pAqData;               // 1
     
-    //关闭写文件
-    
-    //    OSStatus status = AudioFileWritePackets (pAqData->mAudioFile,false,inBuffer->mAudioDataByteSize,inPacketDesc,pAqData->mCurrentPacket,&inNumPackets,inBuffer->mAudioData);
-    pAqData->mCurrentPacket += inNumPackets;                     // 4
-    if (!pAqData->mIsRunning)return;
-    if ([tempSelf.delegate respondsToSelector:@selector(GJAudioQueueRecoder:streamData:lenth:packetCount:packetDescriptions:)]) {
-        if (inPacketDesc == NULL)inNumPackets = 0;       
-        [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:inBuffer->mAudioData lenth:inBuffer->mAudioDataByteSize packetCount:inNumPackets packetDescriptions:inPacketDesc];
+    if (tempSelf.status == kRecoderRunningStatus){
+        RetainBuffer* buffer = retainBufferAlloc(inBuffer->mAudioDataByteSize, NULL, NULL);
+        [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:buffer packetCount:inNumPackets packetDescriptions:inPacketDesc];
+        AudioQueueEnqueueBuffer (tempSelf.mAudioQueue,inBuffer,0,NULL);
     }
-    AudioQueueEnqueueBuffer (pAqData->mQueue,inBuffer,0,NULL);
-
-
 };
 
--(BOOL)_createAudioQueueWithFormat:(AudioStreamBasicDescription*)format{
-    if (format == NULL) {
-        [self initDefaultFormat];
-    }else{
-        _destFormatDescription = *format;
+
+@implementation GJAudioQueueRecoder
+- (instancetype)initWithStreamWithSampleRate:(Float64)sampleRate channel:(UInt32)channel formatID:(UInt32)formatID{
+    self = [super init];
+    if (self) {
+        [self _initWithSampleRate:sampleRate channel:channel formatID:formatID];
     }
-  
+    
+    return self;
+}
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        [self _initWithSampleRate:44100 channel:2 formatID:kAudioFormatLinearPCM];
+    }
+    return self;
+}
+-(BOOL)_initWithSampleRate:(Float64)sampleRate channel:(UInt32)channel formatID:(UInt32)formatID{
+    AudioStreamBasicDescription format = {0};
+    format.mFormatID         = formatID; // 2
+    format.mSampleRate       = sampleRate;               // 3
+    format.mChannelsPerFrame = channel;                     // 4
+    format.mFramesPerPacket  = 1;                     // 7
+    format.mBitsPerChannel   = 16;                    // 5
+    format.mBytesPerFrame   = format.mChannelsPerFrame * format.mBitsPerChannel/8;
+    format.mFramesPerPacket = format.mBytesPerFrame * format.mFramesPerPacket ;
+    format.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
     UInt32 size = sizeof(AudioStreamBasicDescription);
-    OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormatDescription);
-    assert(!status);
-
-    status = AudioQueueNewInput ( &_destFormatDescription, handleInputBuffer, (__bridge void * _Nullable)(self),  NULL, kCFRunLoopCommonModes, 0, &_pAqData->mQueue );
-    assert(!status);
+    AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &format);
+    _format = format;
     
-    size = sizeof(AudioStreamBasicDescription);
-    status = AudioQueueGetProperty(_pAqData->mQueue, kAudioQueueProperty_StreamDescription, &_destFormatDescription, &size);
-    assert(!status);
-    return YES;
-}
--(BOOL)_createAudioQueueFileWithFilePath:(NSString* )filePath fileType:(AudioFileTypeID)fileType{
-    CFURLRef audioFileURL = CFURLCreateFromFileSystemRepresentation ( NULL,(UInt8*)[filePath UTF8String], filePath.length, false);
-    
-   OSStatus status = AudioFileCreateWithURL (audioFileURL, fileType, &_destFormatDescription,kAudioFileFlags_EraseFile,&_pAqData->mAudioFile);
-    assert(!status);
-    return YES;
-}
-
-void _deriveBufferSize (AudioQueueRef audioQueue,AudioStreamBasicDescription  ASBDescription, Float64 seconds, UInt32                       *outBufferSize) {
-    static const int maxBufferSize = 0x5000;                 // 5
-    
-    int maxPacketSize = ASBDescription.mBytesPerPacket;       // 6
-    if (maxPacketSize == 0) {                                 // 7
-        UInt32 maxVBRPacketSize = sizeof(maxPacketSize);
-        AudioQueueGetProperty (audioQueue,kAudioQueueProperty_MaximumOutputPacketSize,&maxPacketSize,&maxVBRPacketSize);
-    }
-    Float64 numBytesForTime = ASBDescription.mSampleRate * maxPacketSize * seconds; // 8
-    *outBufferSize = (UInt32)(numBytesForTime < maxBufferSize ? numBytesForTime : maxBufferSize);                     // 9
-}
-
-OSStatus SetMagicCookieForFile (AudioQueueRef inQueue,AudioFileID   inFile) {
-    OSStatus result = noErr;                                    // 3
-    UInt32 cookieSize;                                          // 4
-    
-    OSStatus status = AudioQueueGetPropertySize (inQueue,kAudioQueueProperty_MagicCookie,&cookieSize);
-    if (status == noErr) {
-        char* magicCookie =(char *) malloc (cookieSize);                       // 6
-        status =AudioQueueGetProperty (inQueue,kAudioQueueProperty_MagicCookie,magicCookie,&cookieSize);
-        if (status == noErr)
-            result = AudioFileSetProperty ( inFile,kAudioFilePropertyMagicCookieData,cookieSize,magicCookie);
-        free (magicCookie);                                     // 9
-    }
-    return result;                                              // 10
-}
-
--(BOOL)_PrepareAudioQueueBuffers{
-    if (_pAqData == NULL) {
+    OSStatus status = AudioQueueNewInput ( &format, handleInputBuffer, (__bridge void * _Nullable)(self),  NULL, 0, 0, &_mAudioQueue);
+    if (status < 0) {
+        NSLog(@"AudioQueueNewInput error:%d",status);
+        _mAudioQueue = NULL;
         return NO;
     }
-    for (int i = 0; i < kNumberBuffers; ++i) {           // 1
-        assert(!AudioQueueAllocateBuffer (_pAqData->mQueue,_pAqData->bufferByteSize,&_pAqData->mBuffers[i]));
-        
-        assert(!AudioQueueEnqueueBuffer (_pAqData->mQueue,_pAqData->mBuffers[i],0,NULL));
+    UInt32 maxPacketSize = 0;
+    UInt32 parmSize = sizeof(maxPacketSize);
+    status = AudioQueueGetProperty (_mAudioQueue,kAudioQueueProperty_MaximumOutputPacketSize,&maxPacketSize,&parmSize);
+    if (status < 0) {
+        maxPacketSize = 1024;
     }
+    _maxOutSize = maxPacketSize;
+    
+    for (int i = 0; i < NUMBER_BUFFERS; ++i) {           // 1
+        status = AudioQueueAllocateBuffer (_mAudioQueue,maxPacketSize,&_mAudioBuffers[i]);
+        if (status < 0) {
+            NSLog(@"AudioQueueAllocateBuffer error:%d",status);
+            return NO;
+        }
+        status = AudioQueueEnqueueBuffer (_mAudioQueue,_mAudioBuffers[i],0,NULL);
+        if (status < 0) {
+            NSLog(@"AudioQueueEnqueueBuffer error:%d",status);
+            return NO;
+        }
+    }
+    _status = kRecoderStopStatus;
     return YES;
 }
+
 -(BOOL)startRecodeAudio{
-    if (_pAqData == NULL) {
+    //    BOOL isHead = NO;
+    //    AVAudioSessionRouteDescription* route = [[AVAudioSession sharedInstance] currentRoute];
+    //    for (AVAudioSessionPortDescription* desc in [route outputs]) {
+    //        if ([[desc portType] isEqualToString:AVAudioSessionPortHeadphones])
+    //            isHead = YES;
+    //    }
+    if (_status == kRecoderRunningStatus || _status == kRecoderInvalidStatus) {
         return NO;
     }
-    _pAqData->mCurrentPacket = 0;                           // 1
-    _pAqData->mIsRunning = true;                            // 2
-    UInt32 category = kAudioSessionCategory_PlayAndRecord;
-    AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(category), &category);
-    
-    UInt32 audioRoute = kAudioSessionOverrideAudioRoute_Speaker;
-    AudioSessionSetProperty(kAudioSessionProperty_OverrideAudioRoute, sizeof(audioRoute), &audioRoute);
-    
-    AudioSessionSetActive(true);
-    
-    OSStatus status = AudioQueueStart(_pAqData->mQueue,NULL);
-   assert(!status);
-    // 9
-    return YES;
-}
+    [[AVAudioSession sharedInstance]setCategory:AVAudioSessionCategoryPlayAndRecord error:NULL];
+    [[AVAudioSession sharedInstance]setActive:YES error:NULL];
+    NSArray<AVAudioSessionPortDescription*>* inputs = [AVAudioSession sharedInstance].availableInputs;
+    for (AVAudioSessionPortDescription* input in inputs) {//设置非内置麦克风
+        if (![input.portType isEqualToString:AVAudioSessionPortBuiltInMic]) {
+            [[AVAudioSession sharedInstance]setPreferredInput:input error:NULL];
+            break;
+        }
+    }
+    OSStatus status = AudioQueueStart(_mAudioQueue,NULL);
+    if (status < 0) {
+        NSLog(@"start error:%d",status);
+        return NO;
+    }else{
+        _status = kRecoderRunningStatus;
+        return YES;
+    }
+};
 -(void)stop{
-    AudioQueueStop(_pAqData->mQueue,true);
-    AudioFileClose(_pAqData->mAudioFile);
-
-    _pAqData->mIsRunning = false;                          }
--(void)clean{
-    AudioQueueDispose(_pAqData->mQueue, true);
-    
-    AudioFileClose(_pAqData->mAudioFile);
-    free(_pAqData);
-
-    
+    if (_status == kRecoderRunningStatus) {
+        _status = kRecoderStopStatus;
+        AudioQueueStop(_mAudioQueue,true);
+        
+    }
+}
+-(void)pause{
+    if (_status == kRecoderRunningStatus) {
+        _status = kRecoderPauseStatus;
+        AudioQueuePause(_mAudioQueue);
+    }
 }
 -(void)dealloc{
-    [self clean];
-}
+    AudioQueueDispose(_mAudioQueue, true);
 
+}
 @end

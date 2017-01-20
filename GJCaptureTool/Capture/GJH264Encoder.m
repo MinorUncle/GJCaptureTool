@@ -120,6 +120,7 @@ GJH264Encoder* encoder ;
                                             &_enCodeSession);
     if (!_enCodeSession) {
         NSLog(@"VTCompressionSessionCreate 失败------------------status:%d",(int)result);
+        return;
     }
     _shouldRecreate=NO;
     _destFormat.baseFormat.width = w;

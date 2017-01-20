@@ -5,16 +5,16 @@
 //  Created by tongguan on 16/1/8.
 //  Copyright © 2016年 未成年大叔. All rights reserved.
 //
-#import "GJQueue+cplus.h"
 #import "AACEncoderFromPCM.h"
 #import "GJDebug.h"
+#import "GJQueue.h"
 
 
 @interface AACEncoderFromPCM ()
 {
     AudioConverterRef _encodeConvert;
     AudioBufferList _outCacheBufferList;
-    GJQueue<AudioBuffer>_resumeQueue;
+    GJQueue* _resumeQueue;
     BOOL _isRunning;//状态，是否运行
     dispatch_queue_t _encoderQueue;
     AudioStreamPacketDescription _sourcePCMPacketDescription;
@@ -49,8 +49,8 @@
     return self;
 }
 -(void)initQueue{
-
-    _resumeQueue.autoResize = NO;
+    queueCreate(&_resumeQueue, 10);
+    _resumeQueue->autoResize = NO;
     
 
 
@@ -61,33 +61,33 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 { //<span style="font-family: Arial, Helvetica, sans-serif;">AudioConverterFillComplexBuffer 编码过程中，会要求这个函数来填充输入数据，也就是原始PCM数据</span>
 
     
-    GJQueue<AudioBuffer>* param =   &((__bridge AACEncoderFromPCM*)inUserData)->_resumeQueue;
-    CMBlockBufferRef bufferRef;
-    AudioBuffer popBuffer;
-    while (!param->queuePop(&popBuffer,10000) && ((__bridge AACEncoderFromPCM*)inUserData)->_isRunning) {};
-    if (((__bridge AACEncoderFromPCM*)inUserData)->_isRunning) {
-        ioData->mBuffers[0].mData = popBuffer.mData;
-        ioData->mBuffers[0].mNumberChannels = popBuffer.mNumberChannels;
-        ioData->mBuffers[0].mDataByteSize = popBuffer.mDataByteSize;
-        if (popBuffer.mDataByteSize == 0) {
-            NSLog(@"cuowu");
-        }
-        
-        AudioStreamBasicDescription* baseDescription = &(((__bridge AACEncoderFromPCM*)inUserData)->_sourceFormatDescription);
-        *ioNumberDataPackets = ioData->mBuffers[0].mDataByteSize / baseDescription->mBytesPerPacket;
-        free(popBuffer.mData);
-    }else{
-      
-        *ioNumberDataPackets = 0;
-        return -1;
-    }
-    
-//    if (outDataPacketDescription) {
-//        AudioStreamPacketDescription* packetDesc = &(((__bridge AACEncoderFromPCM*)inUserData)->_sourcePCMPacketDescription);
-//        packetDesc->mStartOffset = 0;
-//        packetDesc->mDataByteSize = ioData->mBuffers[0].mDataByteSize;
-//        packetDesc->mVariableFramesInPacket = 0;
+//    GJQueue* param =   ((__bridge AACEncoderFromPCM*)inUserData)->_resumeQueue;
+//    CMBlockBufferRef bufferRef;
+//    AudioBuffer popBuffer;
+//    while (!queuepop && ((__bridge AACEncoderFromPCM*)inUserData)->_isRunning) {};
+//    if (((__bridge AACEncoderFromPCM*)inUserData)->_isRunning) {
+//        ioData->mBuffers[0].mData = popBuffer.mData;
+//        ioData->mBuffers[0].mNumberChannels = popBuffer.mNumberChannels;
+//        ioData->mBuffers[0].mDataByteSize = popBuffer.mDataByteSize;
+//        if (popBuffer.mDataByteSize == 0) {
+//            NSLog(@"cuowu");
+//        }
+//        
+//        AudioStreamBasicDescription* baseDescription = &(((__bridge AACEncoderFromPCM*)inUserData)->_sourceFormatDescription);
+//        *ioNumberDataPackets = ioData->mBuffers[0].mDataByteSize / baseDescription->mBytesPerPacket;
+//        free(popBuffer.mData);
+//    }else{
+//      
+//        *ioNumberDataPackets = 0;
+//        return -1;
 //    }
+//    
+////    if (outDataPacketDescription) {
+////        AudioStreamPacketDescription* packetDesc = &(((__bridge AACEncoderFromPCM*)inUserData)->_sourcePCMPacketDescription);
+////        packetDesc->mStartOffset = 0;
+////        packetDesc->mDataByteSize = ioData->mBuffers[0].mDataByteSize;
+////        packetDesc->mVariableFramesInPacket = 0;
+////    }
     return noErr;
 }
 - (NSData *)fetchMagicCookie{
@@ -101,32 +101,33 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
 -(void)encodeWithBuffer:(CMSampleBufferRef)sampleBuffer{
     
-    AudioBufferList inBufferList;
-    CMBlockBufferRef blockBuffer;
-    
-    OSStatus status = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sampleBuffer, nil, &inBufferList, sizeof(inBufferList), NULL, NULL, 0, &blockBuffer);
-    assert(!status);
-    if (status != noErr) {
-        NSLog(@"CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer error:%d",status);
-        return;
-    }
-    assert(inBufferList.mBuffers[0].mDataByteSize <= MAX_PCM_LENTH);
-
-
-//    if (_resumeQueue == nil) {
-//         _resumeQueue = new GJAudioBufferQueue(inBufferList.mBuffers[0].mDataByteSize+10);
+//    AudioBufferList inBufferList;
+//    CMBlockBufferRef blockBuffer;
+//    
+//    OSStatus status = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sampleBuffer, nil, &inBufferList, sizeof(inBufferList), NULL, NULL, 0, &blockBuffer);
+//    assert(!status);
+//    if (status != noErr) {
+//        NSLog(@"CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer error:%d",status);
+//        return;
 //    }
+//    assert(inBufferList.mBuffers[0].mDataByteSize <= MAX_PCM_LENTH);
 //
-    AudioBuffer buffer = inBufferList.mBuffers[0];
-    buffer.mData = malloc(buffer.mDataByteSize);
-    memcpy(buffer.mData, inBufferList.mBuffers[0].mData, buffer.mDataByteSize);
-    _resumeQueue.queuePush(buffer);
-    CFRelease(blockBuffer);
-
+//
+////    if (_resumeQueue == nil) {
+////         _resumeQueue = new GJAudioBufferQueue(inBufferList.mBuffers[0].mDataByteSize+10);
+////    }
+////
+//    queuePush(_resumeQueue, blockBuffer);
+//    AudioBuffer buffer = inBufferList.mBuffers[0];
+//    buffer.mData = malloc(buffer.mDataByteSize);
+//    memcpy(buffer.mData, inBufferList.mBuffers[0].mData, buffer.mDataByteSize);
+//    _resumeQueue.queuePush(buffer);
 //    CFRelease(blockBuffer);
-    if (_encodeConvert == NULL) {
-        [self _createEncodeConverterWithBuffer:sampleBuffer];
-    }
+//
+////    CFRelease(blockBuffer);
+//    if (_encodeConvert == NULL) {
+//        [self _createEncodeConverterWithBuffer:sampleBuffer];
+//    }
 
 
 }

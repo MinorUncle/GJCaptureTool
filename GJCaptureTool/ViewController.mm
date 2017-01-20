@@ -59,6 +59,7 @@ BOOL _recodeState;
     GJAudioQueueRecoder* _audioRecoder;
     AVFormatContext* pMp4VFormat;
     AVFormatContext* pMp4AFormat;
+    AudioUnitCapture* _unitAudioRecoder;
     
     Mp4WriterContext* _mp4Write;
 
@@ -104,7 +105,7 @@ BOOL _recodeState;
 //    _praseStream.delegate = self;
     int fps = FPS;
     _viewContainer.backgroundColor = [UIColor redColor];
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeVideoStream|GJCaptureTypeAudioStream) fps:fps layer:_viewContainer.layer];
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeVideoStream) fps:fps layer:_viewContainer.layer];
     _captureTool.delegate = self;
     _gjEncoder = [[GJH264Encoder alloc]initWithFps:fps];
     
@@ -118,9 +119,10 @@ BOOL _recodeState;
 //    char* url="rtmp://192.168.1.102:1935/myapp/room";
 //    _rtmpSend = new LibRtmpSession(url);
     // Do any additional setup after loading the view, typically from a nib.
+    
 //    AudioStreamBasicDescription format;
 //    memset( &format, 0x00, sizeof(format) );
-//    
+////
 //    UInt32 size = sizeof(format.mChannelsPerFrame);
 //    OSStatus err = AudioSessionGetProperty(kAudioSessionProperty_CurrentHardwareInputNumberChannels,
 //                                           &size,
@@ -133,15 +135,33 @@ BOOL _recodeState;
 //    format.mFramesPerPacket     = 1;
 //    format.mBitsPerChannel		= 16;
 //    format.mBytesPerPacket		= format.mBytesPerFrame = (format.mBitsPerChannel / 8) * format.mChannelsPerFrame;
-//
-//    _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamDestFormat:&format];
+//    _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:2 formatID:kAudioFormatLinearPCM];
 //    _audioRecoder.delegate = self;
 //    [_audioRecoder startRecodeAudio];
+    
+//    _unitAudioRecoder = [[AudioUnitCapture alloc]initWithSamplerate:44100];
+//    [_unitAudioRecoder startRecording:^(uint8_t *pcmData, int size) {
+//        NSLog(@"dataSize:%d",size);
+//    }];
+    
 }
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamData:(void*)data lenth:(int)lenth packetCount:(int)packetCount packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions{
 
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder streamData:(RetainBuffer *)dataBuffer packetCount:(int)packetCount packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions{
+    if (_audioPlayer == nil) {
+        
+        const AudioStreamBasicDescription base = recoder.format;
+        AudioFormatID formtID = base.mFormatID;
+        char* codeChar = (char*)&(formtID);
+        NSLog(@"GJAudioQueueRecoder format：%c%c%c%c ",codeChar[3],codeChar[2],codeChar[1],codeChar[0]);
+        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:base bufferSize:recoder.maxOutSize macgicCookie:nil];
+        [_audioPlayer start];
+    }
+    [_audioPlayer playData:dataBuffer packetCount:0 packetDescriptions:NULL isEof:NO];    
     NSLog(@"GJAudioQueueRecoder");
+
 }
+
+
 
 -(void)viewDidAppear:(BOOL)animated{
     [super viewDidAppear:animated];
@@ -165,20 +185,27 @@ BOOL _recodeState;
         
         NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
         path = [path stringByAppendingPathComponent:@"outfmtfile.mp4"];
-        mp4WriterCreate(&_mp4Write, path.UTF8String,15);
-        _recodeState = YES;
-        [_captureTool startRecodeing];
-//        [_audioPlayer start];
+//        mp4WriterCreate(&_mp4Write, path.UTF8String,15);
+        //        [self mp4RecodeInit];
 
-//        [self mp4RecodeInit];
+        _recodeState = YES;
+//        [_captureTool startRecodeing];
+        
+        if (_audioRecoder == nil) {
+            _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:2 formatID:kAudioFormatLinearPCM];
+            _audioRecoder.delegate = self;
+        }
+
+        [_audioRecoder startRecodeAudio];
+        
 
     }else{
         [_timer invalidate];
-//        [_audioPlayer stop:YES];
         _recodeState = NO;
-        [_captureTool stopRecode];
-        mp4WriterClose(&_mp4Write);
-        NSLog(@"write end");
+//        [_captureTool stopRecode];
+//        mp4WriterClose(&_mp4Write);
+        
+        [_audioRecoder stop];
     
     }
 }
@@ -248,20 +275,20 @@ BOOL _recodeState;
         OSType p =CVPixelBufferGetPixelFormatType(imageBuffer);
         char* ty = (char*)&p;
         NSLog(@"ty:%c%c%c%c",ty[3],ty[2],ty[1],ty[0]);
-        size_t size = CVPixelBufferGetDataSize(imageBuffer);
-        size_t count = CVPixelBufferGetPlaneCount(imageBuffer);
-        
-        size_t sd = CVPixelBufferGetBytesPerRow(imageBuffer);
-        
-        size_t pw1 = CVPixelBufferGetWidthOfPlane(imageBuffer, 1);
-        size_t ph1 = CVPixelBufferGetHeightOfPlane(imageBuffer, 1);
-        
-        
-        size_t pw = CVPixelBufferGetWidthOfPlane(imageBuffer, 0);
-        size_t ph = CVPixelBufferGetHeightOfPlane(imageBuffer, 0);
-        
+//        size_t size = CVPixelBufferGetDataSize(imageBuffer);
+//        size_t count = CVPixelBufferGetPlaneCount(imageBuffer);
+//        
+//        size_t sd = CVPixelBufferGetBytesPerRow(imageBuffer);
+//        
+//        size_t pw1 = CVPixelBufferGetWidthOfPlane(imageBuffer, 1);
+//        size_t ph1 = CVPixelBufferGetHeightOfPlane(imageBuffer, 1);
+//        
+//        
+//        size_t pw = CVPixelBufferGetWidthOfPlane(imageBuffer, 0);
+//        size_t ph = CVPixelBufferGetHeightOfPlane(imageBuffer, 0);
+//        size_t bytesPerRow1 = CVPixelBufferGetBytesPerRowOfPlane(imageBuffer, 1);
+
         size_t bytesPerRow0 = CVPixelBufferGetBytesPerRowOfPlane(imageBuffer, 0);
-        size_t bytesPerRow1 = CVPixelBufferGetBytesPerRowOfPlane(imageBuffer, 1);
         
         size_t top,left,right,bottom;
         CVPixelBufferGetExtendedPixels(imageBuffer, &left, &right, &top, &bottom);
@@ -379,7 +406,7 @@ BOOL _recodeState;
     
     [_audioEncoder encodeWithBuffer:sampleBuffer];
 
-//    
+//
 //    if (_audioPlayer == nil) {
 //        
 //        CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sampleBuffer);
@@ -474,17 +501,22 @@ BOOL _recodeState;
 
 }
 -(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame dts:(double)dts{
+
+#if 0 // mp4v2
     if (_recodeState == YES) {
         if (_mp4Write) {
 
             mp4WriterAddVideo(_mp4Write, buffer, totalLenth,dts);
         }
     }
-//    GJData* bufData = (GJData*)malloc(sizeof(GJData));
-//    bufData->data = malloc(totalLenth);
-//    bufData->size = totalLenth;
-//    memcpy(bufData->data, buffer, totalLenth);
-//    queuePush(_mp4VideoQueue, bufData, 2000);
+    return;
+#endif
+    GJData* bufData = (GJData*)malloc(sizeof(GJData));
+    bufData->data = malloc(totalLenth);
+    bufData->size = totalLenth;
+    memcpy(bufData->data, buffer, totalLenth);
+    queuePush(_mp4VideoQueue, bufData, 2000);
+    
     //    if (_decode == nil) {
     //        _decode = [[H264Decoder alloc]initWithWidth:encoder.width height:encoder.height];
     //        _decode.decoderDelegate = self;
@@ -692,7 +724,7 @@ BOOL _recodeState;
         _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:decoder.destFormatDescription bufferSize:decoder.destMaxOutSize macgicCookie:nil];
     }
     NSLog(@"PCMDecodeFromAAC:%d",lenth);
-    [_audioPlayer playData:buffer lenth:lenth packetCount:0 packetDescriptions:NULL isEof:NO];
+//    [_audioPlayer playData:buffer lenth:lenth packetCount:0 packetDescriptions:NULL isEof:NO];
 }
 static int aacFramePerS;
 static int aacIndex;
@@ -700,6 +732,7 @@ static int aacIndex;
 -(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder encodeCompleteBuffer:(uint8_t *)buffer Lenth:(long)totalLenth packetCount:(int)count packets:(AudioStreamPacketDescription *)packets{
     aacIndex++;
     
+#if 0
     if (_recodeState == YES) {
         if (_mp4Write) {
             
@@ -707,6 +740,7 @@ static int aacIndex;
         }
     }
     return;
+#endif
 //    if (aacFramePerS == 0) {
 //        aacFramePerS = encoder.destFormatDescription.mSampleRate;
 //        _rtmpSend.audioStreamFormat = encoder.destFormatDescription;
@@ -799,9 +833,9 @@ int vdts,adts;
     if( [self initWriteMp4Video]<0){
         return -1;
     };
-    if( [self initWriteMp4Audio]<0){
-        return -1;
-    };
+//    if( [self initWriteMp4Audio]<0){
+//        return -1;
+//    };
     
     //Output information------------------
     av_dump_format(pMp4OFormat, 0, path.UTF8String, 1);
@@ -826,7 +860,7 @@ int vdts,adts;
             if (queueGetLength(_mp4VideoQueue)*2 > queueGetLength(_mp4AudioQueue)) {
                 [self writeVideo];
             }else{
-                [self writeAudio];
+//                [self writeAudio];
             }
         }
         int ret = av_write_trailer(pMp4OFormat);

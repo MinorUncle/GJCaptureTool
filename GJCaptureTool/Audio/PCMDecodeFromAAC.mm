@@ -7,15 +7,13 @@
 //
 
 
-#import "GJQueue+cplus.h"
 #import "PCMDecodeFromAAC.h"
 #import "GJDebug.h"
-
-
+#import "GJQueue.h"
 @interface PCMDecodeFromAAC ()
 {
     AudioConverterRef _decodeConvert;
-    GJQueue<AudioBuffer> _resumeQueue;
+    GJQueue* _resumeQueue;
     AudioStreamPacketDescription _inPacketDescript;
     BOOL _isRunning;//状态，是否运行
     int _sourceMaxLenth;
@@ -68,7 +66,8 @@
 }
 -(void)initQueue{
     _outputDataPacketCount = 1024;
-    _resumeQueue.autoResize = NO;
+    queueCreate(&_resumeQueue, 10);
+    _resumeQueue->autoResize = NO;
 
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_CONCURRENT);
 
@@ -97,21 +96,21 @@
 static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData,AudioStreamPacketDescription **outDataPacketDescription, void *inUserData)
 { //<span style="font-family: Arial, Helvetica, sans-serif;">AudioConverterFillComplexBuffer 编码过程中，会要求这个函数来填充输入数据，也就是原始PCM数据</span>
    
-    GJQueue<AudioBuffer>* param =   &((__bridge PCMDecodeFromAAC*)inUserData)->_resumeQueue;
-    AudioBuffer popBuffer;
+    GJQueue* param =   ((__bridge PCMDecodeFromAAC*)inUserData)->_resumeQueue;
+    AudioBuffer* popBuffer;
     AudioStreamPacketDescription* description = (AudioStreamPacketDescription*)&(((__bridge PCMDecodeFromAAC*)inUserData)->_inPacketDescript);
 
     
-    if (param->queuePop(&popBuffer,1000)) {
-        ioData->mBuffers[0].mData = popBuffer.mData;
-        ioData->mBuffers[0].mNumberChannels = popBuffer.mNumberChannels;
-        ioData->mBuffers[0].mDataByteSize = popBuffer.mDataByteSize;
-        *ioNumberDataPackets = 1;
+    if (queuePop(param,(void**)&popBuffer,1000)) {
+        ioData->mBuffers[0].mData = popBuffer->mData;
+        ioData->mBuffers[0].mNumberChannels = popBuffer->mNumberChannels;
+        ioData->mBuffers[0].mDataByteSize = popBuffer->mDataByteSize;
         
+        *ioNumberDataPackets = 1;
         description->mDataByteSize = ioData->mBuffers[0].mDataByteSize ;
         description->mStartOffset = 0;
         description->mVariableFramesInPacket = 0;
-        
+        free(popBuffer);
     }else{
         *ioNumberDataPackets = 0;
         return -1;
@@ -129,11 +128,11 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     int offset =0;
     for (int i = 0; i<numberOfPackets; i++) {
         offset += packetDescriptioins[i].mStartOffset;
-        AudioBuffer buffer;
-        buffer.mData = data+offset;
-        buffer.mDataByteSize = packetDescriptioins[i].mDataByteSize;
-        buffer.mNumberChannels = _sourceFormatDescription.mChannelsPerFrame;
-        _resumeQueue.queuePush(buffer,1000);
+        AudioBuffer* buffer = new AudioBuffer;
+        buffer->mData = data+offset;
+        buffer->mDataByteSize = packetDescriptioins[i].mDataByteSize;
+        buffer->mNumberChannels = _sourceFormatDescription.mChannelsPerFrame;
+        queuePush(_resumeQueue, &buffer);
     }
 
     [self _createEncodeConverter];
