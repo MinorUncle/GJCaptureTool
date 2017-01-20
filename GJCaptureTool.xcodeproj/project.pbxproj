@@ -32,7 +32,7 @@
 		C561AC9D1D51D3DC00113453 /* AACEncoderFromPCM.mm in Sources */ = {isa = PBXBuildFile; fileRef = C561ABEF1D51D3DC00113453 /* AACEncoderFromPCM.mm */; };
 		C561AC9E1D51D3DC00113453 /* AudioPraseStream.m in Sources */ = {isa = PBXBuildFile; fileRef = C561ABF11D51D3DC00113453 /* AudioPraseStream.m */; };
 		C561AC9F1D51D3DC00113453 /* AudioUnitCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = C561ABF31D51D3DC00113453 /* AudioUnitCapture.m */; };
-		C561ACA01D51D3DC00113453 /* GJAudioQueuePlayer.mm in Sources */ = {isa = PBXBuildFile; fileRef = C561ABF51D51D3DC00113453 /* GJAudioQueuePlayer.mm */; };
+		C561ACA01D51D3DC00113453 /* GJAudioQueuePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = C561ABF51D51D3DC00113453 /* GJAudioQueuePlayer.m */; };
 		C561ACA21D51D3DC00113453 /* PCMDecodeFromAAC.mm in Sources */ = {isa = PBXBuildFile; fileRef = C561ABF91D51D3DC00113453 /* PCMDecodeFromAAC.mm */; };
 		C561ACA31D51D3DC00113453 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C561ABFA1D51D3DC00113453 /* LaunchScreen.storyboard */; };
 		C561ACA41D51D3DC00113453 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C561ABFC1D51D3DC00113453 /* Main.storyboard */; };
@@ -439,7 +439,7 @@
 		C561ABF21D51D3DC00113453 /* AudioUnitCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioUnitCapture.h; sourceTree = "<group>"; };
 		C561ABF31D51D3DC00113453 /* AudioUnitCapture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioUnitCapture.m; sourceTree = "<group>"; };
 		C561ABF41D51D3DC00113453 /* GJAudioQueuePlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioQueuePlayer.h; sourceTree = "<group>"; };
-		C561ABF51D51D3DC00113453 /* GJAudioQueuePlayer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GJAudioQueuePlayer.mm; sourceTree = "<group>"; };
+		C561ABF51D51D3DC00113453 /* GJAudioQueuePlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioQueuePlayer.m; sourceTree = "<group>"; };
 		C561ABF61D51D3DC00113453 /* GJAudioQueueRecoderFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioQueueRecoderFile.h; sourceTree = "<group>"; };
 		C561ABF71D51D3DC00113453 /* GJAudioQueueRecoderFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioQueueRecoderFile.m; sourceTree = "<group>"; };
 		C561ABF81D51D3DC00113453 /* PCMDecodeFromAAC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PCMDecodeFromAAC.h; sourceTree = "<group>"; };
@@ -1024,7 +1024,7 @@
 				C561ABF21D51D3DC00113453 /* AudioUnitCapture.h */,
 				C561ABF31D51D3DC00113453 /* AudioUnitCapture.m */,
 				C561ABF41D51D3DC00113453 /* GJAudioQueuePlayer.h */,
-				C561ABF51D51D3DC00113453 /* GJAudioQueuePlayer.mm */,
+				C561ABF51D51D3DC00113453 /* GJAudioQueuePlayer.m */,
 				C561ABF61D51D3DC00113453 /* GJAudioQueueRecoderFile.h */,
 				C561ABF71D51D3DC00113453 /* GJAudioQueueRecoderFile.m */,
 				046F7E641E30ADE000712A2B /* GJAudioQueueRecoder.h */,
@@ -1385,7 +1385,7 @@
 				C561ACB71D51D3DC00113453 /* GJOpenALPlayer.mm in Sources */,
 				C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */,
 				C561ACA81D51D3DC00113453 /* H264Decoder.m in Sources */,
-				C561ACA01D51D3DC00113453 /* GJAudioQueuePlayer.mm in Sources */,
+				C561ACA01D51D3DC00113453 /* GJAudioQueuePlayer.m in Sources */,
 				C561ACA61D51D3DC00113453 /* GJH264Decoder.m in Sources */,
 				C561AC9F1D51D3DC00113453 /* AudioUnitCapture.m in Sources */,
 			);

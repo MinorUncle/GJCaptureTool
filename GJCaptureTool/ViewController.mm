@@ -147,17 +147,8 @@ BOOL _recodeState;
 }
 
 -(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder streamData:(RetainBuffer *)dataBuffer packetCount:(int)packetCount packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions{
-    if (_audioPlayer == nil) {
-        
-        const AudioStreamBasicDescription base = recoder.format;
-        AudioFormatID formtID = base.mFormatID;
-        char* codeChar = (char*)&(formtID);
-        NSLog(@"GJAudioQueueRecoder format：%c%c%c%c ",codeChar[3],codeChar[2],codeChar[1],codeChar[0]);
-        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:base bufferSize:recoder.maxOutSize macgicCookie:nil];
-        [_audioPlayer start];
-    }
+
     [_audioPlayer playData:dataBuffer packetCount:0 packetDescriptions:NULL isEof:NO];    
-    NSLog(@"GJAudioQueueRecoder");
 
 }
 
@@ -192,19 +183,29 @@ BOOL _recodeState;
 //        [_captureTool startRecodeing];
         
         if (_audioRecoder == nil) {
-            _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:2 formatID:kAudioFormatLinearPCM];
+            _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:2 formatID:kAudioFormatMPEG4AAC];
             _audioRecoder.delegate = self;
         }
 
         [_audioRecoder startRecodeAudio];
         
+        
+        if (_audioPlayer == nil) {
+            
+            const AudioStreamBasicDescription base = _audioRecoder.format;
+            AudioFormatID formtID = base.mFormatID;
+            char* codeChar = (char*)&(formtID);
+            NSLog(@"GJAudioQueueRecoder format：%c%c%c%c ",codeChar[3],codeChar[2],codeChar[1],codeChar[0]);
+            _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:base bufferSize:_audioRecoder.maxOutSize macgicCookie:nil];
+        }
+        [_audioPlayer start];
 
     }else{
         [_timer invalidate];
         _recodeState = NO;
 //        [_captureTool stopRecode];
 //        mp4WriterClose(&_mp4Write);
-        
+        [_audioPlayer stop:YES];
         [_audioRecoder stop];
     
     }
