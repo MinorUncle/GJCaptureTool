@@ -9,10 +9,10 @@
 #import <Foundation/Foundation.h>
 #import <CoreMedia/CoreMedia.h>
 #import <AudioToolbox/AudioToolbox.h>
-
+#import "GJQueue.h"
 @class PCMDecodeFromAAC;
 @protocol PCMDecodeFromAACDelegate <NSObject>
--(void)pcmDecode:(PCMDecodeFromAAC*)decoder completeBuffer:(void*)buffer lenth:(int)lenth;
+-(void)pcmDecode:(PCMDecodeFromAAC*)decoder completeBuffer:(RetainBuffer*)buffer packetDesc:(AudioStreamPacketDescription*)packetDesc;
 @end
 @interface PCMDecodeFromAAC : NSObject
 @property (nonatomic,assign,readonly) UInt32 destMaxOutSize;
@@ -24,6 +24,8 @@
 @property (nonatomic,weak) id<PCMDecodeFromAACDelegate>delegate;
 
 
--(void)decodeBuffer:(uint8_t*)buffer numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins;
+-(void)decodeBuffer:(RetainBuffer*)buffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins;
+
+
 - (instancetype)initWithDestDescription:(AudioStreamBasicDescription*)description SourceDescription:(AudioStreamBasicDescription*)sourceDescription sourceMaxBufferLenth:(int)maxLenth;
 @end

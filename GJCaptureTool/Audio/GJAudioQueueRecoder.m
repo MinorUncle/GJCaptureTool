@@ -11,12 +11,13 @@
 #import <AVFoundation/AVFoundation.h>
 #define NUMBER_BUFFERS 8
 
-#define DEFAULT_MAX_SIZE 1024
+#define DEFAULT_MAX_SIZE 2048
 
 
 @interface GJAudioQueueRecoder(){
    
     AudioQueueBufferRef          _mAudioBuffers[NUMBER_BUFFERS];
+    dispatch_queue_t _recodeQueue;
 }
 @property(assign,nonatomic) AudioQueueRef mAudioQueue;
 @end;
@@ -25,21 +26,14 @@
 
 static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer,const AudioTimeStamp *inStartTime,UInt32 inNumPackets, const AudioStreamPacketDescription  *inPacketDesc){
     GJAudioQueueRecoder* tempSelf = (__bridge GJAudioQueueRecoder*)aqData;
-//    static int times;
-//    NSData* data = [NSData dataWithBytes:inBuffer->mAudioData length:inBuffer->mAudioDataByteSize];
-//    NSLog(@"recoder audio times:%d data:%@",times++,data);
-    AudioQueueEnqueueBuffer (tempSelf.mAudioQueue,inBuffer,0,NULL);
-
-    return;
-    
+   
     if (tempSelf.status == kRecoderRunningStatus){
         RetainBuffer* buffer = retainBufferAlloc(inBuffer->mAudioDataByteSize, NULL, NULL);
         memcpy(buffer->data, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
-        [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:buffer packetCount:inNumPackets packetDescriptions:inPacketDesc];
+        [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:buffer packetDescriptions:inPacketDesc];
+        retainBufferUnRetain(buffer);
         AudioQueueEnqueueBuffer (tempSelf.mAudioQueue,inBuffer,0,NULL);
     }else{
-        static int count;
-        NSLog(@"count:%d",count++);
         AudioQueueFreeBuffer(inAQ, inBuffer);
     }
 };
@@ -88,42 +82,39 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
         default:
             break;
     }
-        UInt32 size = sizeof(AudioStreamBasicDescription);
-    AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &format);
+    UInt32 size = sizeof(AudioStreamBasicDescription);
+    OSStatus status  = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &format);
     _format = format;
-    
-    OSStatus status = AudioQueueNewInput ( &format, handleInputBuffer, (__bridge void * _Nullable)(self),  NULL, 0, 0, &_mAudioQueue);
+    _recodeQueue = dispatch_queue_create("recodequeue", DISPATCH_QUEUE_SERIAL);
+
+    status = AudioQueueNewInput ( &format, handleInputBuffer, (__bridge void * _Nullable)(self),  NULL, 0, 0, &_mAudioQueue);
     if (status != 0) {
+#ifdef DEBUG
         NSLog(@"AudioQueueNewInput error:%d",status);
         char *formatName = (char *)&(status);
-        NSLog(@"format is: %c%c%c%c     -----------", formatName[3], formatName[2], formatName[1], formatName[0]);
+        NSLog(@"error is: %c%c%c%c     -----------", formatName[3], formatName[2], formatName[1], formatName[0]);
+#endif
         _mAudioQueue = NULL;
+        
         return NO;
     }
     UInt32 maxPacketSize = 0;
     if (format.mFormatID == kAudioFormatLinearPCM) {
-        maxPacketSize = DEFAULT_MAX_SIZE;// * format.mBytesPerFrame*format.mFramesPerPacket;///
+        maxPacketSize = _format.mBytesPerPacket;// * format.mBytesPerFrame*format.mFramesPerPacket;///
     }else{
         UInt32 parmSize = sizeof(maxPacketSize);
         status = AudioQueueGetProperty (_mAudioQueue,kAudioQueueProperty_MaximumOutputPacketSize,&maxPacketSize,&parmSize);
         if (status < 0) {
-            maxPacketSize = DEFAULT_MAX_SIZE;
+            maxPacketSize = _format.mChannelsPerFrame*_format.mFramesPerPacket*2;
         }
     }
-
     _maxOutSize = maxPacketSize;
-    
     _status = kRecoderStopStatus;
     return YES;
 }
 
 -(BOOL)startRecodeAudio{
-    //    BOOL isHead = NO;
-    //    AVAudioSessionRouteDescription* route = [[AVAudioSession sharedInstance] currentRoute];
-    //    for (AVAudioSessionPortDescription* desc in [route outputs]) {
-    //        if ([[desc portType] isEqualToString:AVAudioSessionPortHeadphones])
-    //            isHead = YES;
-    //    }
+
     if (_status == kRecoderRunningStatus || _status == kRecoderInvalidStatus) {
         return NO;
     }

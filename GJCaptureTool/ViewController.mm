@@ -105,13 +105,14 @@ BOOL _recodeState;
 //    _praseStream.delegate = self;
     int fps = FPS;
     _viewContainer.backgroundColor = [UIColor redColor];
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeVideoStream) fps:fps layer:_viewContainer.layer];
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeAudioStream) fps:fps layer:_viewContainer.layer];
     _captureTool.delegate = self;
     _gjEncoder = [[GJH264Encoder alloc]initWithFps:fps];
     
     _gjDecoder = [[GJH264Decoder alloc]init];
     _audioEncoder = [[AACEncoderFromPCM alloc]init];
     _audioEncoder.delegate = self;
+    
     _audioDecoder = [[PCMDecodeFromAAC alloc]init];
     _audioDecoder.delegate = self;
     _gjDecoder.delegate = self;
@@ -146,9 +147,9 @@ BOOL _recodeState;
     
 }
 
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder streamData:(RetainBuffer *)dataBuffer packetCount:(int)packetCount packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions{
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder streamData:(RetainBuffer *)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions{
 
-    [_audioPlayer playData:dataBuffer packetCount:0 packetDescriptions:NULL isEof:NO];    
+    [_audioPlayer playData:dataBuffer packetDescriptions:packetDescriptions isEof:NO];
 
 }
 
@@ -180,25 +181,26 @@ BOOL _recodeState;
         //        [self mp4RecodeInit];
 
         _recodeState = YES;
-//        [_captureTool startRecodeing];
-        
-        if (_audioRecoder == nil) {
-            _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:2 formatID:kAudioFormatMPEG4AAC];
-            _audioRecoder.delegate = self;
-        }
+        [_captureTool startRecodeing];
 
-        [_audioRecoder startRecodeAudio];
-        
-        
-        if (_audioPlayer == nil) {
-            
-            const AudioStreamBasicDescription base = _audioRecoder.format;
-            AudioFormatID formtID = base.mFormatID;
-            char* codeChar = (char*)&(formtID);
-            NSLog(@"GJAudioQueueRecoder format：%c%c%c%c ",codeChar[3],codeChar[2],codeChar[1],codeChar[0]);
-            _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:base bufferSize:_audioRecoder.maxOutSize macgicCookie:nil];
-        }
-        [_audioPlayer start];
+
+//        if (_audioRecoder == nil) {
+//            _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:1 formatID:kAudioFormatMPEG4AAC];
+//            _audioRecoder.delegate = self;
+//        }
+//
+//        [_audioRecoder startRecodeAudio];
+//        
+//        
+//        if (_audioPlayer == nil) {
+//            
+//            const AudioStreamBasicDescription base = _audioRecoder.format;
+//            AudioFormatID formtID = base.mFormatID;
+//            char* codeChar = (char*)&(formtID);
+//            NSLog(@"GJAudioQueueRecoder format：%c%c%c%c ",codeChar[3],codeChar[2],codeChar[1],codeChar[0]);
+//            _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:base bufferSize:_audioRecoder.maxOutSize macgicCookie:nil];
+//        }
+//        [_audioPlayer start];
 
     }else{
         [_timer invalidate];
@@ -720,17 +722,18 @@ BOOL _recodeState;
 
     }
 }
--(void)pcmDecode:(PCMDecodeFromAAC *)decoder completeBuffer:(void *)buffer lenth:(int)lenth{
+-(void)pcmDecode:(PCMDecodeFromAAC *)decoder completeBuffer:(RetainBuffer *)buffer packetDesc:(AudioStreamPacketDescription *)packetDesc{
     if (_audioPlayer == nil) {
         _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:decoder.destFormatDescription bufferSize:decoder.destMaxOutSize macgicCookie:nil];
+        [_audioPlayer start];
     }
-    NSLog(@"PCMDecodeFromAAC:%d",lenth);
-//    [_audioPlayer playData:buffer lenth:lenth packetCount:0 packetDescriptions:NULL isEof:NO];
+    NSLog(@"PCMDecodeFromAAC:%d",buffer->size);
+    [_audioPlayer playData:buffer packetDescriptions:packetDesc isEof:NO];
 }
 static int aacFramePerS;
 static int aacIndex;
 
--(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder encodeCompleteBuffer:(uint8_t *)buffer Lenth:(long)totalLenth packetCount:(int)count packets:(AudioStreamPacketDescription *)packets{
+-(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder encodeCompleteBuffer:(RetainBuffer *)buffer packetDesc:(AudioStreamPacketDescription *)packet{
     aacIndex++;
     
 #if 0
@@ -756,16 +759,8 @@ static int aacIndex;
 //        [_audioPlayer playData:buffer lenth:(UInt32)totalLenth packetCount:count packetDescriptions:packets isEof:NO];
 
 //    [_praseStream parseData:buffer lenth:(int)totalLenth error:nil];
-    NSLog(@"AACEncoderFromPCM:count:%d  lenth:%ld",count,totalLenth);
-    GJData* bufData = (GJData*)malloc(sizeof(GJData));
-    bufData->data = malloc(totalLenth);
-    bufData->size = totalLenth;
-    memcpy(bufData->data, buffer, totalLenth);
-    queuePush(_mp4AudioQueue, bufData, 2000);
     
-
-    
-//    [_audioDecoder decodeBuffer:buffer numberOfBytes:(UInt32)totalLenth numberOfPackets:count packetDescriptions:packets];
+    [_audioDecoder decodeBuffer:buffer packetDescriptions:packet];
 
 }
 - (void)audioFileStream:(AudioPraseStream *)audioFileStream audioData:(const void *)audioData numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins{

@@ -28,7 +28,18 @@ typedef enum _PlayStatus{
  */
 @property (nonatomic,readonly) NSTimeInterval playedTime;
 
+
+
+/**
+ must on main thread
+
+ @param format format description
+ @param bufferSize bufferSize description
+ @param macgicCookie macgicCookie description
+ @return return value description
+ */
 - (instancetype)initWithFormat:(AudioStreamBasicDescription)format bufferSize:(UInt32)bufferSize macgicCookie:(NSData *)macgicCookie;
+- (instancetype)initWithSampleRate:(Float64)sampleRate channel:(UInt32)channel formatID:(UInt32)formatID;
 
 /**
  *  Play audio data, data length must be less than bufferSize.
@@ -41,7 +52,7 @@ typedef enum _PlayStatus{
  *  @return whether successfully played
  */
 
-- (BOOL)playData:(RetainBuffer*)bufferData packetCount:(UInt32)packetCount packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof;
+- (BOOL)playData:(RetainBuffer*)bufferData packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof;
 
 /**
  *  pause & resume

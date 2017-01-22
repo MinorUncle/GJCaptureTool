@@ -7,14 +7,14 @@
 //
 #import "AACEncoderFromPCM.h"
 #import "GJDebug.h"
-#import "GJQueue.h"
 
 
 @interface AACEncoderFromPCM ()
 {
     AudioConverterRef _encodeConvert;
     AudioBufferList _outCacheBufferList;
-    GJQueue* _resumeQueue;
+    GJQueue* _resumeRetainBlockQueue;
+
     BOOL _isRunning;//状态，是否运行
     dispatch_queue_t _encoderQueue;
     AudioStreamPacketDescription _sourcePCMPacketDescription;
@@ -49,9 +49,8 @@
     return self;
 }
 -(void)initQueue{
-    queueCreate(&_resumeQueue, 10);
-    _resumeQueue->autoResize = NO;
-    
+    queueCreate(&_resumeRetainBlockQueue, 10,true);
+    _resumeRetainBlockQueue->autoResize = NO;
 
 
     _encoderQueue = dispatch_queue_create("audioEncodeQueue", DISPATCH_QUEUE_CONCURRENT);
@@ -60,35 +59,29 @@
 static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData,AudioStreamPacketDescription **outDataPacketDescription, void *inUserData)
 { //<span style="font-family: Arial, Helvetica, sans-serif;">AudioConverterFillComplexBuffer 编码过程中，会要求这个函数来填充输入数据，也就是原始PCM数据</span>
 
-    
-//    GJQueue* param =   ((__bridge AACEncoderFromPCM*)inUserData)->_resumeQueue;
-//    CMBlockBufferRef bufferRef;
-//    AudioBuffer popBuffer;
-//    while (!queuepop && ((__bridge AACEncoderFromPCM*)inUserData)->_isRunning) {};
-//    if (((__bridge AACEncoderFromPCM*)inUserData)->_isRunning) {
-//        ioData->mBuffers[0].mData = popBuffer.mData;
-//        ioData->mBuffers[0].mNumberChannels = popBuffer.mNumberChannels;
-//        ioData->mBuffers[0].mDataByteSize = popBuffer.mDataByteSize;
-//        if (popBuffer.mDataByteSize == 0) {
-//            NSLog(@"cuowu");
-//        }
-//        
-//        AudioStreamBasicDescription* baseDescription = &(((__bridge AACEncoderFromPCM*)inUserData)->_sourceFormatDescription);
-//        *ioNumberDataPackets = ioData->mBuffers[0].mDataByteSize / baseDescription->mBytesPerPacket;
-//        free(popBuffer.mData);
-//    }else{
-//      
-//        *ioNumberDataPackets = 0;
-//        return -1;
-//    }
-//    
-////    if (outDataPacketDescription) {
-////        AudioStreamPacketDescription* packetDesc = &(((__bridge AACEncoderFromPCM*)inUserData)->_sourcePCMPacketDescription);
-////        packetDesc->mStartOffset = 0;
-////        packetDesc->mDataByteSize = ioData->mBuffers[0].mDataByteSize;
-////        packetDesc->mVariableFramesInPacket = 0;
-////    }
-    return noErr;
+    AACEncoderFromPCM* encoder = (__bridge AACEncoderFromPCM*)inUserData;
+    GJQueue* blockQueue =   encoder->_resumeRetainBlockQueue;
+    CMBlockBufferRef bufferRef;
+    while (encoder->_isRunning) {
+        if (queuePop(blockQueue, (void**)&bufferRef,1000)) {
+            size_t lenth;
+            char* point;
+            CMBlockBufferGetDataPointer(bufferRef, 0, NULL, &lenth, &point);
+            
+            ioData->mBuffers[0].mData = point;
+            ioData->mBuffers[0].mNumberChannels =encoder.sourceFormatDescription.mChannelsPerFrame;
+            ioData->mBuffers[0].mDataByteSize = (UInt32)lenth;
+            AudioStreamBasicDescription* baseDescription = &(encoder->_sourceFormatDescription);
+            *ioNumberDataPackets = ioData->mBuffers[0].mDataByteSize / baseDescription->mBytesPerPacket;
+            CFIndex count = CFGetRetainCount(bufferRef);
+            CFRelease(bufferRef);
+            return noErr;
+        }else{
+            break;
+        }
+    };
+    *ioNumberDataPackets = 0;
+    return -1;
 }
 - (NSData *)fetchMagicCookie{
     UInt32 size=0;
@@ -101,33 +94,23 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
 -(void)encodeWithBuffer:(CMSampleBufferRef)sampleBuffer{
     
-//    AudioBufferList inBufferList;
-//    CMBlockBufferRef blockBuffer;
-//    
-//    OSStatus status = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sampleBuffer, nil, &inBufferList, sizeof(inBufferList), NULL, NULL, 0, &blockBuffer);
-//    assert(!status);
-//    if (status != noErr) {
-//        NSLog(@"CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer error:%d",status);
-//        return;
-//    }
-//    assert(inBufferList.mBuffers[0].mDataByteSize <= MAX_PCM_LENTH);
-//
-//
-////    if (_resumeQueue == nil) {
-////         _resumeQueue = new GJAudioBufferQueue(inBufferList.mBuffers[0].mDataByteSize+10);
-////    }
-////
-//    queuePush(_resumeQueue, blockBuffer);
-//    AudioBuffer buffer = inBufferList.mBuffers[0];
-//    buffer.mData = malloc(buffer.mDataByteSize);
-//    memcpy(buffer.mData, inBufferList.mBuffers[0].mData, buffer.mDataByteSize);
-//    _resumeQueue.queuePush(buffer);
+    AudioBufferList inBufferList;
+    CMBlockBufferRef blockBuffer;
+    
+    OSStatus status = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sampleBuffer, nil, &inBufferList, sizeof(inBufferList), NULL, NULL, 0, &blockBuffer);
+    assert(!status);
+    if (status != noErr) {
+        NSLog(@"CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer error:%d",status);
+        return;
+    }
+    CFIndex count = CFGetRetainCount(blockBuffer);
+
+    assert(inBufferList.mBuffers[0].mDataByteSize <= MAX_PCM_LENTH);
+    queuePush(_resumeRetainBlockQueue, blockBuffer,1000);
 //    CFRelease(blockBuffer);
-//
-////    CFRelease(blockBuffer);
-//    if (_encodeConvert == NULL) {
-//        [self _createEncodeConverterWithBuffer:sampleBuffer];
-//    }
+    if (_encodeConvert == NULL) {
+        [self _createEncodeConverterWithBuffer:sampleBuffer];
+    }
 
 
 }
@@ -233,24 +216,24 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         
         
 //        NSData* data = [NSData dataWithBytes:_outCacheBufferList.mBuffers[0].mData length:_outCacheBufferList.mBuffers[0].mDataByteSize];
-        AACEncoderFromPCM_DEBUG("datalenth:%ld",[data length]);
+//        NSLog(@"encode data:%@",data);
+//        AACEncoderFromPCM_DEBUG("datalenth:%ld",[data length]);
        
-        UInt32 outDateLenth = _outCacheBufferList.mBuffers[0].mDataByteSize;
-        NSData * adts = [self adtsDataForPacketLength:outDateLenth];
-        NSMutableData * aacStreamData = [[NSMutableData alloc]initWithCapacity:adts.length + _outCacheBufferList.mBuffers[0].mDataByteSize];
-        [aacStreamData appendData:adts];
-        [aacStreamData appendBytes:_outCacheBufferList.mBuffers[0].mData length:outDateLenth];
         
-        packetDesc.mDataByteSize = (UInt32)aacStreamData.length;
-        packetDesc.mStartOffset = adts.length;
+
+        RetainBuffer* audioBuffer = retainBufferAlloc(_outCacheBufferList.mBuffers[0].mDataByteSize+7, NULL, NULL);
+        [self adtsDataForPacketLength:_outCacheBufferList.mBuffers[0].mDataByteSize+7 data:audioBuffer->data];
+        memcpy((uint8_t*)audioBuffer->data+7, _outCacheBufferList.mBuffers[0].mData, _outCacheBufferList.mBuffers[0].mDataByteSize);
+        packetDesc.mDataByteSize = (UInt32)_outCacheBufferList.mBuffers[0].mDataByteSize+7;
+        packetDesc.mStartOffset = 7;
         packetDesc.mVariableFramesInPacket = 0;
-        if ([self.delegate respondsToSelector:@selector(AACEncoderFromPCM:encodeCompleteBuffer:Lenth:packetCount:packets:)]) {
-            [self.delegate AACEncoderFromPCM:self  encodeCompleteBuffer:(u_int8_t*)[aacStreamData bytes] Lenth:aacStreamData.length packetCount:1 packets:&packetDesc];
+        if ([self.delegate respondsToSelector:@selector(AACEncoderFromPCM:encodeCompleteBuffer:packetDesc:)]) {
+            [self.delegate AACEncoderFromPCM:self  encodeCompleteBuffer:audioBuffer packetDesc:&packetDesc];
         }
     }
 }
 #pragma -mark =======ADTS=======
-- (NSData *)adtsDataForPacketLength:(NSUInteger)packetLength
+- (void)adtsDataForPacketLength:(NSUInteger)packetLength data:(char*)packet
 {
     /*=======adts=======
      7字节
@@ -269,7 +252,6 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
      
      */
     int adtsLength = 7;
-    char *packet = (char*)malloc(sizeof(adtsLength));
     //profile：表示使用哪个级别的AAC，有些芯片只支持AAC LC 。在MPEG-2 AAC中定义了3种：
     /*
      0-------Main profile
@@ -325,10 +307,6 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     packet[4] = (char)((fullLength&0x7FF) >> 3);
     packet[5] = (char)(((fullLength&7)<<5) + 0x1F);
     packet[6] = (char)0xFC;
-    
-    NSData *data = [NSData dataWithBytesNoCopy:packet length:adtsLength freeWhenDone:YES];
-    
-    return data;
 }
 
 int get_f_index(unsigned int sampling_frequency)

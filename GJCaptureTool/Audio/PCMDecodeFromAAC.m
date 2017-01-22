@@ -9,7 +9,6 @@
 
 #import "PCMDecodeFromAAC.h"
 #import "GJDebug.h"
-#import "GJQueue.h"
 @interface PCMDecodeFromAAC ()
 {
     AudioConverterRef _decodeConvert;
@@ -66,7 +65,7 @@
 }
 -(void)initQueue{
     _outputDataPacketCount = 1024;
-    queueCreate(&_resumeQueue, 10);
+    queueCreate(&_resumeQueue, 10,true);
     _resumeQueue->autoResize = NO;
 
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_CONCURRENT);
@@ -96,21 +95,21 @@
 static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData,AudioStreamPacketDescription **outDataPacketDescription, void *inUserData)
 { //<span style="font-family: Arial, Helvetica, sans-serif;">AudioConverterFillComplexBuffer 编码过程中，会要求这个函数来填充输入数据，也就是原始PCM数据</span>
    
-    GJQueue* param =   ((__bridge PCMDecodeFromAAC*)inUserData)->_resumeQueue;
-    AudioBuffer* popBuffer;
-    AudioStreamPacketDescription* description = (AudioStreamPacketDescription*)&(((__bridge PCMDecodeFromAAC*)inUserData)->_inPacketDescript);
+    PCMDecodeFromAAC* decode =(__bridge PCMDecodeFromAAC*)inUserData;
+    GJQueue* param =   decode->_resumeQueue;
+    RetainBuffer* retainBuffer;
+    AudioStreamPacketDescription* description = (AudioStreamPacketDescription*)&(decode->_inPacketDescript);
 
     
-    if (queuePop(param,(void**)&popBuffer,1000)) {
-        ioData->mBuffers[0].mData = popBuffer->mData;
-        ioData->mBuffers[0].mNumberChannels = popBuffer->mNumberChannels;
-        ioData->mBuffers[0].mDataByteSize = popBuffer->mDataByteSize;
-        
+    if (queuePop(param,(void**)&retainBuffer,1000)) {
+        ioData->mBuffers[0].mData = (uint8_t*)retainBuffer->data+7;
+        ioData->mBuffers[0].mNumberChannels = decode->_sourceFormatDescription.mChannelsPerFrame;
+        ioData->mBuffers[0].mDataByteSize = retainBuffer->size-7;
         *ioNumberDataPackets = 1;
         description->mDataByteSize = ioData->mBuffers[0].mDataByteSize ;
         description->mStartOffset = 0;
         description->mVariableFramesInPacket = 0;
-        free(popBuffer);
+        retainBufferUnRetain(retainBuffer);
     }else{
         *ioNumberDataPackets = 0;
         return -1;
@@ -118,24 +117,19 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     
     if (outDataPacketDescription) {
 
-        *outDataPacketDescription = description;
+        outDataPacketDescription[0] = description;
     }
     
     return noErr;
 }
 
--(void)decodeBuffer:(uint8_t*)data numberOfBytes:(UInt32)numberOfBytes numberOfPackets:(UInt32)numberOfPackets packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins{
-    int offset =0;
-    for (int i = 0; i<numberOfPackets; i++) {
-        offset += packetDescriptioins[i].mStartOffset;
-        AudioBuffer* buffer = new AudioBuffer;
-        buffer->mData = data+offset;
-        buffer->mDataByteSize = packetDescriptioins[i].mDataByteSize;
-        buffer->mNumberChannels = _sourceFormatDescription.mChannelsPerFrame;
-        queuePush(_resumeQueue, &buffer);
+-(void)decodeBuffer:(RetainBuffer*)audioBuffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins{
+    
+    retainBufferRetain(audioBuffer);
+    queuePush(_resumeQueue, audioBuffer,1000);
+    if (_decodeConvert == NULL) {
+        [self _createEncodeConverter];
     }
-
-    [self _createEncodeConverter];
 }
 
 -(AudioBufferList *)outCacheBufferList{
@@ -152,9 +146,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
 
 -(BOOL)_createEncodeConverter{
-    if (_decodeConvert != NULL) {
-        return YES;
-    }
+  
     UInt32 size = sizeof(AudioStreamBasicDescription);
     AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormatDescription);
     AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_sourceFormatDescription);
@@ -197,8 +189,12 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
             break;
         }
         
-        if ([self.delegate respondsToSelector:@selector(pcmDecode:completeBuffer:lenth:)]) {
-            [self.delegate pcmDecode:self completeBuffer:self.outCacheBufferList->mBuffers[0].mData lenth:self.outCacheBufferList->mBuffers[0].mDataByteSize];
+        if ([self.delegate respondsToSelector:@selector(pcmDecode:completeBuffer:packetDesc:)]) {
+            RetainBuffer* buffer = retainBufferAlloc(_destFormatDescription.mBytesPerPacket*_outputDataPacketCount, NULL, NULL);
+            memcpy(buffer->data, _outCacheBufferList->mBuffers[0].mData, _outCacheBufferList->mBuffers[0].mDataByteSize);
+            
+            AudioStreamPacketDescription desc = {0,0,buffer->size};
+            [self.delegate pcmDecode:self completeBuffer:buffer packetDesc:&desc];
         }
     }
 }
