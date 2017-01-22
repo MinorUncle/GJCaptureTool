@@ -19,6 +19,7 @@
     dispatch_queue_t _decodeQueue;
     UInt32 _outputDataPacketCount; //转码出去包的个数
 
+    RetainBuffer* _preRetainBuffer;
 }
 @property(nonatomic,assign)AudioBufferList* outCacheBufferList;
 
@@ -96,6 +97,11 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 { //<span style="font-family: Arial, Helvetica, sans-serif;">AudioConverterFillComplexBuffer 编码过程中，会要求这个函数来填充输入数据，也就是原始PCM数据</span>
    
     PCMDecodeFromAAC* decode =(__bridge PCMDecodeFromAAC*)inUserData;
+    
+    if (decode->_preRetainBuffer) {
+        retainBufferUnRetain(decode->_preRetainBuffer);
+        decode->_preRetainBuffer = NULL;
+    }
     GJQueue* param =   decode->_resumeQueue;
     RetainBuffer* retainBuffer;
     AudioStreamPacketDescription* description = (AudioStreamPacketDescription*)&(decode->_inPacketDescript);
@@ -109,7 +115,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         description->mDataByteSize = ioData->mBuffers[0].mDataByteSize ;
         description->mStartOffset = 0;
         description->mVariableFramesInPacket = 0;
-        retainBufferUnRetain(retainBuffer);
+        decode->_preRetainBuffer = retainBuffer;
     }else{
         *ioNumberDataPackets = 0;
         return -1;
@@ -200,7 +206,16 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 }
 
 -(void)dealloc{
-    free(_outCacheBufferList);
+    if (_outCacheBufferList) {
+        if (_outCacheBufferList->mBuffers[0].mData) {
+            free(_outCacheBufferList->mBuffers[0].mData);
+        }
+        free(_outCacheBufferList);
+    }
+    if (_preRetainBuffer) {
+        retainBufferUnRetain(_preRetainBuffer);
+        _preRetainBuffer = NULL;
+    }
 }
 
 #pragma mark - mutex

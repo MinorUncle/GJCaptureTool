@@ -18,6 +18,7 @@
     BOOL _isRunning;//状态，是否运行
     dispatch_queue_t _encoderQueue;
     AudioStreamPacketDescription _sourcePCMPacketDescription;
+    CMBlockBufferRef _preBlockBuffer;
 }
 @end
 
@@ -60,6 +61,11 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 { //<span style="font-family: Arial, Helvetica, sans-serif;">AudioConverterFillComplexBuffer 编码过程中，会要求这个函数来填充输入数据，也就是原始PCM数据</span>
 
     AACEncoderFromPCM* encoder = (__bridge AACEncoderFromPCM*)inUserData;
+    
+    if (encoder->_preBlockBuffer) {
+        CFRelease(encoder->_preBlockBuffer);
+        encoder->_preBlockBuffer = NULL;
+    }
     GJQueue* blockQueue =   encoder->_resumeRetainBlockQueue;
     CMBlockBufferRef bufferRef;
     while (encoder->_isRunning) {
@@ -73,13 +79,13 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
             ioData->mBuffers[0].mDataByteSize = (UInt32)lenth;
             AudioStreamBasicDescription* baseDescription = &(encoder->_sourceFormatDescription);
             *ioNumberDataPackets = ioData->mBuffers[0].mDataByteSize / baseDescription->mBytesPerPacket;
-            CFIndex count = CFGetRetainCount(bufferRef);
-            CFRelease(bufferRef);
+            encoder->_preBlockBuffer = bufferRef;
             return noErr;
         }else{
             break;
         }
     };
+    
     *ioNumberDataPackets = 0;
     return -1;
 }
@@ -103,8 +109,6 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         NSLog(@"CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer error:%d",status);
         return;
     }
-    CFIndex count = CFGetRetainCount(blockBuffer);
-
     assert(inBufferList.mBuffers[0].mDataByteSize <= MAX_PCM_LENTH);
     queuePush(_resumeRetainBlockQueue, blockBuffer,1000);
 //    CFRelease(blockBuffer);
@@ -330,7 +334,13 @@ int get_f_index(unsigned int sampling_frequency)
     }
 }
 -(void)dealloc{
-    free(&_outCacheBufferList.mBuffers[0]);
+    if (_outCacheBufferList.mBuffers[0].mData) {
+        free(_outCacheBufferList.mBuffers[0].mData);
+    }
+    if (_preBlockBuffer) {
+        CFRelease(_preBlockBuffer);
+        _preBlockBuffer = NULL;
+    }
 }
 #pragma mark - mutex
 
