@@ -9,24 +9,19 @@
 #import "GJH264Decoder.h"
 @interface GJH264Decoder()
 {
-    dispatch_queue_t _decodeQueue;
-    
+    dispatch_queue_t _decodeQueue;//解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
 }
 @property(nonatomic)VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
 
 @end
 @implementation GJH264Decoder
-GJH264Decoder *decoder;
-
 
 - (instancetype)init
 {
     self = [super init];
     if (self) {
-        decoder = self;
-        
-        _decodeQueue = dispatch_queue_create("decodeQueue", DISPATCH_QUEUE_SERIAL);
+        _decodeQueue = dispatch_queue_create("GJDecodeQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -70,9 +65,8 @@ void decodeOutputCallback(
         return;
     }else{
         NSLog(@"解码成功");
-
     }
-    
+    GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
     if ([decoder.delegate respondsToSelector:@selector(GJH264Decoder:decodeCompleteImageData:pts:)]) {
         [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:(uint)presentationTimeStamp.value*VIDEO_TIMESCALE/presentationTimeStamp.timescale];
     }
@@ -96,24 +90,25 @@ void decodeOutputCallback(
     return codeIndex;
 }
 
--(void)decodeBuffer:(uint8_t*)frame withLenth:(uint32_t)frameSize;
+-(void)decodeBuffer:(GJRetainBuffer *)buffer
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
+    
+    retainBufferRetain(buffer);
+    dispatch_async(_decodeQueue, ^{
     OSStatus status;
-//        NSData* d = [NSData dataWithBytes:frame length:frameSize];
-    //      NSLog(@"d:%@",d);
     uint8_t *data = NULL;
     uint8_t *pps = NULL;
     uint8_t *sps = NULL;
-
+    uint8_t *frame = buffer->data;
+    long frameSize = buffer->size;
     int _spsSize = 0;
     int _ppsSize = 0;
     long blockLength = 0;
-    
     CMSampleBufferRef sampleBuffer = NULL;
     CMBlockBufferRef blockBuffer = NULL;
 
-    uint8_t fristCodeSize = 0;
+    uint8_t fristCodeSize = 0;//兼容三个0和四个0
     uint8_t secondCodeSize = 0;
     uint8_t* fristPoint = [self startCodeIndex:frame size:frameSize codeSize:&fristCodeSize];
     uint8_t* secondPoint = [self startCodeIndex:fristPoint + fristCodeSize size:frame + frameSize - fristPoint - fristCodeSize codeSize:&secondCodeSize];
@@ -140,7 +135,7 @@ void decodeOutputCallback(
                     BOOL shouldReCreate = NO;
                     FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
                     //        CMVideoDimensions fordesc = CMVideoFormatDescriptionGetDimensions(desc);
-                    
+#if DEBUG
                     char* code = (char*)&re;
                     NSLog(@"code:%c %c %c %c ",code[3],code[2],code[1],code[0]);
                     CFArrayRef arr = CMVideoFormatDescriptionGetExtensionKeysCommonWithImageBuffers();
@@ -149,6 +144,7 @@ void decodeOutputCallback(
                         CFPropertyListRef  list = CMFormatDescriptionGetExtension(desc, CFArrayGetValueAtIndex(arr, i));
                         NSLog(@"key:%@,%@",CFArrayGetValueAtIndex(arr, i),list);
                     }
+#endif
                     
                     if (_formatDesc != nil) {
                         CGRect rect = CMVideoFormatDescriptionGetCleanAperture(_formatDesc, YES);
@@ -160,9 +156,7 @@ void decodeOutputCallback(
                     }
                     //        CGRect rect1 = CMVideoFormatDescriptionGetCleanAperture(desc, YES);
                     
-                    
                     _formatDesc = desc;
-                    
                     if((status == noErr) && (_decompressionSession == NULL || shouldReCreate))
                     {
                         [self createDecompSession];
@@ -173,7 +167,7 @@ void decodeOutputCallback(
             case 5:
             case 1:
             {
-                int offset = _spsSize + _ppsSize;
+//                int offset = _spsSize + _ppsSize;
                 blockLength = (int)(secondPoint - fristPoint);
                 data = fristPoint;
                 uint32_t dataLength32 = htonl (blockLength - fristCodeSize);
@@ -184,33 +178,6 @@ void decodeOutputCallback(
                                                             0,
                                                             blockLength,
                                                             0, &blockBuffer);
-                
-                if (status != 0) {
-                    NSLog(@"\t\t BlockBufferCreation: \t %@", (status == kCMBlockBufferNoErr) ? @"successful!" : @"failed...");
-                    return;
-                }
-                
-                //    if (nalu_type == 1)     //p帧
-                //    {
-                //        blockLength = frameSize;
-                //        data = frame;
-                ////        data = malloc(blockLength);
-                ////        data = memcpy(data, &frame[0], blockLength);
-                //
-                //        uint32_t dataLength32 = htonl (blockLength - 4);
-                //        memcpy (data, &dataLength32, sizeof (uint32_t));
-                //
-                //        status = CMBlockBufferCreateWithMemoryBlock(NULL, data,
-                //                                                    blockLength,
-                //                                                    kCFAllocatorNull, NULL,
-                //                                                    0,
-                //                                                    blockLength,
-                //                                                    0, &blockBuffer);
-                //    }
-                
-                if (blockLength == 0) {
-                    return;
-                }
                 
                 
                 if(status == noErr)
@@ -225,6 +192,8 @@ void decodeOutputCallback(
                     if (status != 0) {
                         NSLog(@"\t\t SampleBufferCreate: \t %@", (status == noErr) ? @"successful!" : @"failed...");
                     }
+                }else{
+                    goto ERROR;
                 }
                 if(status == noErr)
                 {
@@ -234,12 +203,12 @@ void decodeOutputCallback(
                     
                     [self render:sampleBuffer];
                     CFRelease(sampleBuffer);
+                }else{
+                    goto ERROR;
                 }
                 
-                if (NULL != blockBuffer) {
-                    CFRelease(blockBuffer);
-                    blockBuffer = NULL;
-                }}
+                CFRelease(blockBuffer);
+            }
                 
             default:
                 break;
@@ -249,114 +218,15 @@ void decodeOutputCallback(
         secondPoint = [self startCodeIndex:fristPoint + fristCodeSize size:frame + frameSize - fristPoint - fristCodeSize codeSize:&secondCodeSize];
     }
     
-//    int nalu_type = (frame[startCodeIndex + 4] & 0x1F);
-//    
-//    if (nalu_type != 7 && _decompressionSession == NULL)
-//    {
-//        NSLog(@"Video error: Frame is not an I Frame and format description is null");
-//        return;
-//    }
-//    
-//    if (nalu_type == 7)    ///sps
-//    {
-//        // 去掉起始头0x00 00 00 01   有的为0x00 00 01
-//        int i = [self findFlgIndexData:&frame[startCodeIndex + 4] lenth:frameSize - startCodeIndex -4];
-//        if (i != -1) {
-//            secondStartCodeIndex = i + startCodeIndex + 4;
-//            _spsSize = secondStartCodeIndex;
-//        }else{
-//            return;
-//        }
-//        
-//        nalu_type = (frame[secondStartCodeIndex + 4] & 0x1F);
-//    }
-//    
-//    if(nalu_type == 8)    ///pps
-//    {
-//        int i = [self findFlgIndexData:&frame[secondStartCodeIndex + 4] lenth:frameSize - secondStartCodeIndex - 4];
-//        if (i != -1) {
-//            thirdStartCodeIndex = i + secondStartCodeIndex + 4;
-//            _ppsSize = thirdStartCodeIndex - _spsSize;
-//        }else{
-//            thirdStartCodeIndex = frameSize;
-//            _ppsSize = thirdStartCodeIndex - _spsSize;
-//        }
-//        
-//           
-//        if (sps != NULL) {
-//            free(sps);
-//        }
-//        if (pps != NULL) {
-//            free(pps);
-//        }
-//        sps = malloc(_spsSize - 4);
-//        pps = malloc(_ppsSize - 4);
-//        
-//        memcpy (sps, &frame[4], _spsSize-4);
-//        memcpy (pps, &frame[_spsSize+4], _ppsSize-4);
-//        
-//        uint8_t*  parameterSetPointers[2] = {sps, pps};
-//        size_t parameterSetSizes[2] = {_spsSize-4, _ppsSize-4};
-//       
-//        CMVideoFormatDescriptionRef  desc;
-//        status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,
-//                                                                     (const uint8_t *const*)parameterSetPointers,
-//                                                                     parameterSetSizes, 4,
-//                                                                     &desc);
-//        BOOL shouldReCreate = NO;
-//        FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
-////        CMVideoDimensions fordesc = CMVideoFormatDescriptionGetDimensions(desc);
-//        
-//        char* code = (char*)&re;
-//        NSLog(@"code:%c %c %c %c ",code[3],code[2],code[1],code[0]);
-//        CFArrayRef arr = CMVideoFormatDescriptionGetExtensionKeysCommonWithImageBuffers();
-//        signed long count = CFArrayGetCount(arr);
-//        for (int i = 0; i<count; i++) {
-//           CFPropertyListRef  list = CMFormatDescriptionGetExtension(desc, CFArrayGetValueAtIndex(arr, i));
-//            NSLog(@"key:%@,%@",CFArrayGetValueAtIndex(arr, i),list);
-//        }
-//        
-//        if (_formatDesc != nil) {
-//            CGRect rect = CMVideoFormatDescriptionGetCleanAperture(_formatDesc, YES);
-//            CGRect rect1 = CMVideoFormatDescriptionGetCleanAperture(desc, YES);
-//            if (!CGRectEqualToRect(rect, rect1)) {
-//                shouldReCreate = YES;
-//            }
-//            CFRelease(_formatDesc);
-//        }
-////        CGRect rect1 = CMVideoFormatDescriptionGetCleanAperture(desc, YES);
-//
-//        
-//        _formatDesc = desc;
-//
-//        if((status == noErr) && (_decompressionSession == NULL || shouldReCreate))
-//        {
-//            [self createDecompSession];
-//        }
-//        
-//        if (frameSize <= thirdStartCodeIndex +4) {
-//            return;
-//        }else{
-//            nalu_type = (frame[thirdStartCodeIndex + 4] & 0x1F);
-//        }
-//    }
-    
-//    NSLog(@"numtpty:%d",nalu_type);
-//    if(1)   //5则帧，1则p帧
- 
+    retainBufferUnRetain(buffer);
+    return;
+ERROR:
+    retainBufferUnRetain(buffer);
+    return;
+    });
+
 }
 
--(uint32_t)findFlgIndexData:(uint8_t*)frame lenth:(uint32_t)frameSize{
-    for (uint32_t i = 0; i < frameSize - 3; i++)
-    {
-        if (frame[i] == 0x00 && frame[i+1] == 0x00 && frame[i+2] == 0x00 && frame[i+3] == 0x01)
-        {
-            
-            return i;
-        }
-    }
-    return -1;
-}
 //解码
 - (void) render:(CMSampleBufferRef)sampleBuffer
 {

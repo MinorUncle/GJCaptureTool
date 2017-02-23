@@ -26,6 +26,7 @@
 #import "LibRtmpSession.hpp"
 #import "rtmp/log.h"
 #import "GJAudioQueueRecoder.h"
+#import "GJRetainBuffer.h"
 extern "C"{
 #import "avformat.h"
 #import "swscale.h"
@@ -105,7 +106,7 @@ BOOL _recodeState;
 //    _praseStream.delegate = self;
     int fps = FPS;
     _viewContainer.backgroundColor = [UIColor redColor];
-    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeAudioStream) fps:fps layer:_viewContainer.layer];
+    _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeVideoStream) fps:fps layer:_viewContainer.layer];
     _captureTool.delegate = self;
     _gjEncoder = [[GJH264Encoder alloc]initWithFps:fps];
     
@@ -147,7 +148,7 @@ BOOL _recodeState;
     
 }
 
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder streamData:(RetainBuffer *)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions{
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder streamData:(GJRetainBuffer *)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions{
 
     [_audioPlayer playData:dataBuffer packetDescriptions:packetDescriptions isEof:NO];
 
@@ -181,6 +182,7 @@ BOOL _recodeState;
         //        [self mp4RecodeInit];
 
         _recodeState = YES;
+        
         [_captureTool startRecodeing];
 
 
@@ -190,7 +192,7 @@ BOOL _recodeState;
 //        }
 //
 //        [_audioRecoder startRecodeAudio];
-//        
+//
 //        
 //        if (_audioPlayer == nil) {
 //            
@@ -205,13 +207,15 @@ BOOL _recodeState;
     }else{
         [_timer invalidate];
         _recodeState = NO;
-//        [_captureTool stopRecode];
+        [_captureTool stopRecode];
 //        mp4WriterClose(&_mp4Write);
-        [_audioPlayer stop:YES];
-        [_audioRecoder stop];
+//        [_audioPlayer stop:YES];
+//        [_audioRecoder stop];
     
     }
 }
+
+
 -(void)connect{
     RTMP_LogSetLevel(RTMP_LOGDEBUG);
     
@@ -503,8 +507,12 @@ BOOL _recodeState;
 //    free(packet);
 
 }
--(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(uint8_t *)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame dts:(double)dts{
 
+-(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(GJRetainBuffer *)buffer keyFrame:(BOOL)keyFrame dts:(double)dts
+{
+
+    
+    [_gjDecoder decodeBuffer:buffer];
 #if 0 // mp4v2
     if (_recodeState == YES) {
         if (_mp4Write) {
@@ -514,11 +522,11 @@ BOOL _recodeState;
     }
     return;
 #endif
-    GJData* bufData = (GJData*)malloc(sizeof(GJData));
-    bufData->data = malloc(totalLenth);
-    bufData->size = totalLenth;
-    memcpy(bufData->data, buffer, totalLenth);
-    queuePush(_mp4VideoQueue, bufData, 2000);
+//    GJData* bufData = (GJData*)malloc(sizeof(GJData));
+//    bufData->data = malloc(buffer->size);
+//    bufData->size = buffer->size;
+//    memcpy(bufData->data, buffer, buffer->size);
+//    queuePush(_mp4VideoQueue, bufData, 2000);
     
     //    if (_decode == nil) {
     //        _decode = [[H264Decoder alloc]initWithWidth:encoder.width height:encoder.height];
@@ -529,7 +537,7 @@ BOOL _recodeState;
 
     
     _totalCount ++;
-    _totalByte += totalLenth;
+    _totalByte += buffer->size;
 //    if (!_rtmpSend->GetConnectedFlag()) {
 //        dispatch_async(dispatch_get_main_queue(), ^{
 //            _stateLab.text = @"连接中。。。";
@@ -711,6 +719,8 @@ BOOL _recodeState;
 //            [_gjDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
     
 }
+
+
 -(void)H264Decoder:(H264Decoder *)decoder GetYUV:(char *)data size:(int)size width:(float)width height:(float)height{
     //    [_openglView displayYUV420pData:(void*)(data) width:(uint32_t)width height:(uint32_t)height];
     @autoreleasepool {
@@ -722,7 +732,7 @@ BOOL _recodeState;
 
     }
 }
--(void)pcmDecode:(PCMDecodeFromAAC *)decoder completeBuffer:(RetainBuffer *)buffer packetDesc:(AudioStreamPacketDescription *)packetDesc{
+-(void)pcmDecode:(PCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer packetDesc:(AudioStreamPacketDescription *)packetDesc{
     if (_audioPlayer == nil) {
         _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:decoder.destFormatDescription bufferSize:decoder.destMaxOutSize macgicCookie:nil];
         [_audioPlayer start];
@@ -733,7 +743,7 @@ BOOL _recodeState;
 static int aacFramePerS;
 static int aacIndex;
 
--(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder encodeCompleteBuffer:(RetainBuffer *)buffer packetDesc:(AudioStreamPacketDescription *)packet{
+-(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder encodeCompleteBuffer:(GJRetainBuffer *)buffer packetDesc:(AudioStreamPacketDescription *)packet{
     aacIndex++;
     
 #if 0
@@ -788,7 +798,7 @@ static int read_packet(void *opaque, uint8_t *buf, int buf_size){
     int readSize = 0;
     static int readIndex = 0;
     while (readSize == 0 && _recodeState) {
-        if( queuePeekTopOutValue(q, (void**)&popValue,1000) >= 0){
+        if( queuePeekTopOutValue(q, (void**)&popValue,1000)){
             if (popValue->size<= readIndex) {
                 readIndex = 0;
                 queuePop(q, (void**)&popValue, 1000);

@@ -9,7 +9,8 @@
 #import <Foundation/Foundation.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import "GJFormats.h"
-
+#import "GJQueue.h"
+#import "GJRetainBuffer.h"
 @class GJH264Decoder;
 @protocol GJH264DecoderDelegate <NSObject>
 -(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(uint)pts;
@@ -18,6 +19,5 @@
 @interface GJH264Decoder : NSObject
 
 @property(nonatomic,weak)id<GJH264DecoderDelegate> delegate;
--(void)decodeBuffer:(uint8_t*)buffer withLenth:(uint32_t)totalLenth;
-
+-(void)decodeBuffer:(GJRetainBuffer*)buffer;
 @end

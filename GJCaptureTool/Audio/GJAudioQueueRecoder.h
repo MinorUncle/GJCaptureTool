@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreAudio/CoreAudioTypes.h>
-#import "GJQueue.h"
+#import "GJRetainBuffer.h"
 @class GJAudioQueueRecoder;
 
 typedef enum _RecoderStatus{
@@ -20,7 +20,7 @@ typedef enum _RecoderStatus{
 @protocol GJAudioQueueRecoderDelegate <NSObject>
 @optional
 
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamData:(RetainBuffer*)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions;
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamData:(GJRetainBuffer*)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions;
 
 @end
 @interface GJAudioQueueRecoder : NSObject
@@ -28,6 +28,12 @@ typedef enum _RecoderStatus{
 @property(nonatomic,assign,readonly)AudioStreamBasicDescription format;
 @property(nonatomic,weak)id<GJAudioQueueRecoderDelegate> delegate;
 @property(nonatomic,assign,readonly)RecoderStatus status;
+
+/**
+ 回调延迟，越小消耗越大，默认0.2,单位s
+ */
+@property(nonatomic,assign)float callbackDelay;
+
 
 - (instancetype)initWithStreamWithSampleRate:(Float64)sampleRate channel:(UInt32)channel formatID:(UInt32)formatID;
 

@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
-#import "GJQueue.h"
+#import "GJRetainBuffer.h"
 typedef enum _PlayStatus{
     kPlayInvalidStatus = 0,
     kPlayStopStatus,
@@ -52,7 +52,7 @@ typedef enum _PlayStatus{
  *  @return whether successfully played
  */
 
-- (BOOL)playData:(RetainBuffer*)bufferData packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof;
+- (BOOL)playData:(GJRetainBuffer*)bufferData packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof;
 
 /**
  *  pause & resume

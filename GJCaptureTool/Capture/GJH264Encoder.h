@@ -9,17 +9,19 @@
 #import <Foundation/Foundation.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import "GJFormats.h"
+#import "GJRetainBuffer.h"
+#import "GJBufferPool.h"
 
 @class GJH264Encoder;
 @protocol GJH264EncoderDelegate <NSObject>
--(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(uint8_t*)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame dts:(double)dts;
+//-(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(uint8_t*)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame dts:(double)dts;
+-(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(double)dts;
 @end
 @interface GJH264Encoder : NSObject
 @property(nonatomic,weak)id<GJH264EncoderDelegate> deleagte;
-@property(nonatomic,readonly,retain)NSData* parameterSet;
+//@property(nonatomic,readonly,retain)NSData* parameterSet;
 //@property(assign,nonatomic) int32_t currentWidth;
 //@property(assign,nonatomic) int32_t currentHeight;
--(void)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer fourceKey:(BOOL)fourceKey;
 //@property(assign,nonatomic) int32_t bitRate;
 //@property(assign,nonatomic) int32_t maxKeyFrameInterval;//gop_size
 @property(assign,nonatomic) float quality;//
@@ -33,8 +35,8 @@
 @property(assign,nonatomic) int expectedFrameRate;//
 
 -(instancetype)initWithFps:(uint)fps;
+-(void)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer fourceKey:(BOOL)fourceKey;
 
--(void)stop;
 @end
 
 void praseVideoParamet(uint8_t* inparameterSet,uint8_t** inoutSetArry,int* inoutArryCount){

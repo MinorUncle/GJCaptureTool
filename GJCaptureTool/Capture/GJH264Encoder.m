@@ -7,21 +7,21 @@
 //
 
 #import "GJH264Encoder.h"
-
+#import "GJRetainBufferPool.h"
 @interface GJH264Encoder()
 {
     long encoderFrameCount;
     BOOL _shouldRecreate;
-    uint8_t *keyFrameCache;
-    size_t keyFrameCacheSize;
-    
+    GJRetainBufferPool* _bufferPool;
 }
-@property(nonatomic)VTCompressionSessionRef enCodeSession;
+@property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
+@property(nonatomic,assign)GJRetainBufferPool* bufferPool;
+
+
 @end
 
 @implementation GJH264Encoder
 
-GJH264Encoder* encoder ;
 -(instancetype)initWithFps:(uint)fps{
     self = [super init];
     if (self) {
@@ -52,7 +52,6 @@ GJH264Encoder* encoder ;
     _destFormat.gopSize=10;
     
     _quality = 1.0;
-    encoder = self;
 }
 -(void)setDestFormat:(H264Format)destFormat{
     _destFormat = destFormat;
@@ -66,11 +65,11 @@ GJH264Encoder* encoder ;
     CVImageBufferRef imgRef = CMSampleBufferGetImageBuffer(sampleBuffer);
     int32_t h = (int32_t)CVPixelBufferGetHeight(imgRef);
     int32_t w = (int32_t)CVPixelBufferGetWidth(imgRef);
-    if (_shouldRecreate) {
+    if (_shouldRecreate || h != _destFormat.baseFormat.height || w != _destFormat.baseFormat.width) {
         [self creatEnCodeSessionWithWidth:w height:h];
     }
-    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount*1000.0/_destFormat.baseFormat.fps, 1000);
     
+    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount*1000.0/_destFormat.baseFormat.fps, 1000);
     CMTime during = kCMTimeInvalid;
     if (_destFormat.baseFormat.fps>0) {
         during = CMTimeMake(1, _destFormat.baseFormat.fps);
@@ -116,7 +115,7 @@ GJH264Encoder* encoder ;
                                             NULL,
                                             NULL,
                                             encodeOutputCallback,
-                                            NULL,
+                                            (__bridge void * _Nullable)(self),
                                             &_enCodeSession);
     if (!_enCodeSession) {
         NSLog(@"VTCompressionSessionCreate 失败------------------status:%d",(int)result);
@@ -125,7 +124,10 @@ GJH264Encoder* encoder ;
     _shouldRecreate=NO;
     _destFormat.baseFormat.width = w;
     _destFormat.baseFormat.height = h;
-    
+    if (_bufferPool != NULL) {
+        GJRetainBufferPoolRelease(&_bufferPool);
+    }
+    GJRetainBufferPoolCreate(&_bufferPool, w*h*4);///选最大size
     [self _setCompressionSession];
 
     result = VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
@@ -200,12 +202,14 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         NSLog(@"didCompressH264 data is not ready ");
         return;
     }
-    
+    GJH264Encoder* encoder = (__bridge GJH264Encoder *)(outputCallbackRefCon);
+    GJRetainBuffer* retainBuffer = GJRetainBufferPoolGetData(encoder.bufferPool);
+
     CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sample);
     size_t length, totalLength;
     size_t bufferOffset = 0;
     uint8_t *dataPointer;
-    OSStatus statusCodeRet = CMBlockBufferGetDataPointer(dataBuffer, 0, &length, &totalLength, (char**)&dataPointer);
+    CMBlockBufferGetDataPointer(dataBuffer, 0, &length, &totalLength, (char**)&dataPointer);
 
     bool keyframe = !CFDictionaryContainsKey( (CFArrayGetValueAtIndex(CMSampleBufferGetSampleAttachmentsArray(sample, true), 0)), kCMSampleAttachmentKey_NotSync);
     
@@ -231,25 +235,14 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             return;
         }
         size_t spsppsSize = 4+4+sparameterSetSize+pparameterSetSize;
-        if (encoder->keyFrameCacheSize < spsppsSize + totalLength) {
-            if (encoder->keyFrameCache) {
-                free(encoder->keyFrameCache);
-            }
-            encoder->keyFrameCache = (uint8_t*)malloc(spsppsSize + totalLength);
-            encoder->keyFrameCacheSize = spsppsSize + totalLength;
-        }
-        uint8_t* data = encoder->keyFrameCache;
+       
+        uint8_t* data = retainBuffer->data;
         memcpy(&data[0], "\x00\x00\x00\x01", 4);
 //        memcpy(&data[0], &sparameterSetSize, 4);
         memcpy(&data[4], sparameterSet, sparameterSetSize);
         memcpy(&data[4+sparameterSetSize], "\x00\x00\x00\x01", 4);
 //        memcpy(&data[4+sparameterSetSize], &pparameterSetSize, 4);
         memcpy(&data[8+sparameterSetSize], pparameterSet, pparameterSetSize);
- 
-//                if ([encoder.deleagte respondsToSelector:@selector(GJH264Encoder:encodeCompleteBuffer:withLenth:)]) {
-//                    [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:data withLenth:pparameterSetSize+sparameterSetSize+8];
-//                }
-//                free(data);
         
 //        拷贝keyframe;
         memcpy(data+spsppsSize, dataPointer, totalLength);
@@ -267,15 +260,16 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //        dataPointer += seiLength + 4;
 //        totalLength -= seiLength + 4;
 
+    }else{
+        memcpy(retainBuffer->data, dataPointer, totalLength);
+        dataPointer = retainBuffer->data;
     }
     
 
     
 
-        
     static const uint32_t AVCCHeaderLength = 4;
     while (bufferOffset < totalLength) {
-        
         // Read the NAL unit length
         uint32_t NALUnitLength = 0;
         memcpy(&NALUnitLength, dataPointer + bufferOffset, AVCCHeaderLength);
@@ -289,23 +283,18 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     if (bufferOffset > totalLength) {
         assert(0);
     }
-    
     CMTime dt = CMSampleBufferGetDecodeTimeStamp(sample);
-    
-    [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:dataPointer withLenth:bufferOffset keyFrame:keyframe dts:dt.value*1.0/dt.timescale];
+    retainBuffer->size = (int)bufferOffset;//size初始是最大值，一定要设置当前值
+    [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:retainBuffer keyFrame:keyframe dts:dt.value*1.0/dt.timescale];
+    retainBufferUnRetain(retainBuffer);
 }
--(void)setParameterSet:(NSData*)parm{
-    _parameterSet = parm;
-}
+
 -(void)stop{
     _enCodeSession = nil;
 }
 -(void)dealloc{
     VTCompressionSessionInvalidate(_enCodeSession);
-    if (keyFrameCache) {
-        free(keyFrameCache);
-        keyFrameCacheSize = 0;
-    }
+
     
 }
 //-(void)restart{

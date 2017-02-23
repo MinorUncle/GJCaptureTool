@@ -51,13 +51,13 @@
             if (self.mContext!=nil) {
                 self.mDevice = alcGetContextsDevice(_mContext);
                 if (self.mDevice == nil) {
-                    GJOpenAL_DEBUG("alcGetContextsDevice失败\n");
+                    GJQueuePrintf("alcGetContextsDevice失败\n");
                     return false;
                 }
-                GJOpenAL_DEBUG("alcGetContextsDevice 成功\n");
+                GJQueuePrintf("alcGetContextsDevice 成功\n");
                 
             }else{
-                GJOpenAL_DEBUG("alcOpenDevice失败\n");
+                GJQueuePrintf("alcOpenDevice失败\n");
                 return false;
             }
             
@@ -67,7 +67,7 @@
     if (!self.mContext) {
         self.mContext = alcCreateContext(self.mDevice, NULL);
         if (!self.mContext || !alcMakeContextCurrent(self.mContext)) {
-            GJOpenAL_DEBUG("alcCreateContext || alcMakeContextCurrent失败\n");
+            GJQueuePrintf("alcCreateContext || alcMakeContextCurrent失败\n");
             return false;
         }
     }
@@ -75,20 +75,20 @@
     alGenSources(1, &_outSourceID);
     ALenum error = alGetError();
     if (error != AL_NO_ERROR) {
-        GJOpenAL_DEBUG("alGenSources失败：%d",error);
+        GJQueuePrintf("alGenSources失败：%d",error);
     }
     //设为不循环
     alSourcei(_outSourceID, AL_LOOPING, AL_FALSE);
     error = alGetError();
     if (error != AL_NO_ERROR) {
-        GJOpenAL_DEBUG("alSourcei AL_LOOPING errorCode:%d\n",error);
+        GJQueuePrintf("alSourcei AL_LOOPING errorCode:%d\n",error);
     }
     //播放模式设为流式播放
     alSourcef(_outSourceID, AL_SOURCE_TYPE, AL_STREAMING);
     //清除错误
     error = alGetError();
     if (error != AL_NO_ERROR) {
-        GJOpenAL_DEBUG("alSourcei AL_SOURCE_TYPE errorCode:%d\n",error);
+        GJQueuePrintf("alSourcei AL_SOURCE_TYPE errorCode:%d\n",error);
     }
     [self initBuffers];
     return YES;
@@ -102,7 +102,7 @@
         alGenBuffers(1, &bufferID);
         error = alGetError();
         if (error != AL_NO_ERROR) {
-            GJOpenAL_DEBUG("alGenBuffers errorCode:%d\n",error);
+            GJQueuePrintf("alGenBuffers errorCode:%d\n",error);
             break;
         }
         queuePush(_queue, (void*)bufferID);
@@ -117,12 +117,12 @@
         alSourceStop(self.outSourceID);
         error = alGetError();
         if (error != AL_NO_ERROR) {
-            GJOpenAL_DEBUG("alSourceStop outSourceID:%d, error Code: %d\n",_outSourceID, error);
+            GJQueuePrintf("alSourceStop outSourceID:%d, error Code: %d\n",_outSourceID, error);
         }
         alSourcei(_outSourceID, AL_BUFFER, NULL);
         error = alGetError();
         if (error != AL_NO_ERROR) {
-            GJOpenAL_DEBUG("alSourcei AL_BUFFER ERROR: %d\n",error);
+            GJQueuePrintf("alSourcei AL_BUFFER ERROR: %d\n",error);
         }
         [self clean];
     }
@@ -136,7 +136,7 @@
         alSourcePause(self.outSourceID);
         error = alGetError();
         if (error != AL_NO_ERROR) {
-            GJOpenAL_DEBUG("alSourcePause outSourceID:%d,error code: %d\n",_outSourceID, error);
+            GJQueuePrintf("alSourcePause outSourceID:%d,error code: %d\n",_outSourceID, error);
         }
     }
 }
@@ -155,7 +155,7 @@
         alSourcePlay(_outSourceID);
         error = alGetError();
         if (error != AL_NO_ERROR) {
-            GJOpenAL_DEBUG("alSourcePlay outSourceID:%d,error code: %d\n",_outSourceID, error);
+            GJQueuePrintf("alSourcePlay outSourceID:%d,error code: %d\n",_outSourceID, error);
         }
     }
 }
@@ -177,7 +177,7 @@
     alSourcef(_outSourceID, AL_GAIN, _volume);
     ALenum error = alGetError();
     if (error != noErr) {
-        GJOpenAL_DEBUG("音量设置失败 outSourceID:%d,error code: %d\n",_outSourceID, error);
+        GJQueuePrintf("音量设置失败 outSourceID:%d,error code: %d\n",_outSourceID, error);
     }
 }
 
@@ -196,13 +196,13 @@
     //读取错误信息
     error = alGetError();
     if (error != AL_NO_ERROR) {
-        GJOpenAL_DEBUG("插入数据之前 outSourceID:%d,error code: %d\n",_outSourceID, error);
+        GJQueuePrintf("插入数据之前 outSourceID:%d,error code: %d\n",_outSourceID, error);
         [self reStart];
         return;
     }
     //常规安全性判断
     if (data == NULL) {
-        GJOpenAL_DEBUG("GJOpenALPlayer:插入PCM数据为空, 返回\n");
+        GJQueuePrintf("GJOpenALPlayer:插入PCM数据为空, 返回\n");
         return;
     }
     
@@ -211,7 +211,7 @@
     }
     error = alGetError();
     if (error != AL_NO_ERROR) {
-        GJOpenAL_DEBUG("updataQueueBuffer outSourceID:%d,error code: %d\n",_outSourceID, error);
+        GJQueuePrintf("updataQueueBuffer outSourceID:%d,error code: %d\n",_outSourceID, error);
     }
     
     ALuint bufferID = 0;
@@ -224,7 +224,7 @@
             alGenBuffers(1, &bufferID);
             error = alGetError();
             if (error != AL_NO_ERROR) {
-                GJOpenAL_DEBUG("alGenBuffers errorCode:%d\n",error);
+                GJQueuePrintf("alGenBuffers errorCode:%d\n",error);
                 return;
             }
         
@@ -257,14 +257,14 @@
     }
     error = alGetError();
     if (error != AL_NO_ERROR) {
-        GJOpenAL_DEBUG("alBufferData outSourceID:%d,error code: %d\n",_outSourceID, error);
+        GJQueuePrintf("alBufferData outSourceID:%d,error code: %d\n",_outSourceID, error);
     }
     //        添加到队列
     alSourceQueueBuffers(self.outSourceID, 1, &bufferID);
     
     error = alGetError();
     if (error != AL_NO_ERROR) {
-        GJOpenAL_DEBUG("alSourceQueueBuffers outSourceID:%d,error code: %d\n",_outSourceID, error);
+        GJQueuePrintf("alSourceQueueBuffers outSourceID:%d,error code: %d\n",_outSourceID, error);
     }
     alGetSourcei(self.outSourceID, AL_SOURCE_STATE, &state);
     if(state != AL_PLAYING){
@@ -290,7 +290,7 @@
     alSourcei(_outSourceID, AL_BUFFER, NULL);
     error = alGetError();
     if (error != AL_NO_ERROR) {
-        GJOpenAL_DEBUG("alSourcei AL_BUFFER ERROR: %d\n",error);
+        GJQueuePrintf("alSourcei AL_BUFFER ERROR: %d\n",error);
     }
     //删除声源
     alDeleteSources(1, &_outSourceID);
@@ -347,7 +347,7 @@
         alDeleteBuffers(1, &bufferID);
         error = alGetError();
         if (error != AL_NO_ERROR) {
-            GJOpenAL_DEBUG("deleteBuffers:%d 错误, 错误信息: %d\n",bufferID,error);
+            GJQueuePrintf("deleteBuffers:%d 错误, 错误信息: %d\n",bufferID,error);
         }
     }
 }
@@ -355,7 +355,7 @@
 - (void)dealloc
 {
     [self deleteQueueBuffers];
-    GJOpenAL_DEBUG("openal 销毁\n");
+    GJQueuePrintf("openal 销毁\n");
 }
 
 @end

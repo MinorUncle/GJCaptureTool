@@ -90,8 +90,7 @@ static void MCAudioFileStreamPacketsCallBack(void *inClientData,
     if (status != noErr)
     {
         NSError * error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-        AudioPraseStream_LOG(@"error:%@",error.localizedDescription);
-        
+        GJQueueLOG(@"error:%@",error.localizedDescription);
         if (outError != NULL) {
             *outError = error;
         }
@@ -167,7 +166,7 @@ static void MCAudioFileStreamPacketsCallBack(void *inClientData,
         return NO;
     }
     
-    AudioPraseStream_LOG(@"_discontinuous:%d",_discontinuous);
+    GJQueueLOG(@"_discontinuous:%d",_discontinuous);
     OSStatus status = AudioFileStreamParseBytes(_audioFileStreamID,(UInt32)lenth,data,_discontinuous ? kAudioFileStreamParseFlag_Discontinuity : 0);
     [self _errorForOSStatus:status error:error];
     return status == noErr;
@@ -223,7 +222,7 @@ static void MCAudioFileStreamPacketsCallBack(void *inClientData,
 - (void)handleAudioFileStreamProperty:(AudioFileStreamPropertyID)propertyID
 {
     char* property = (char*)&propertyID;
-    AudioPraseStream_LOG(@"propertyID:%c%c%c%c",property[3],property[2],property[1],property[0]);
+    GJQueueLOG(@"propertyID:%c%c%c%c",property[3],property[2],property[1],property[0]);
     switch (propertyID) {
     case kAudioFileStreamProperty_ReadyToProducePackets:
     {
@@ -295,7 +294,7 @@ static void MCAudioFileStreamPacketsCallBack(void *inClientData,
                         if (format.mFormatID == supportedFormats[j])
                         {
                             char* formatC = (char*)&(format.mFormatID);
-                            AudioPraseStream_LOG(@"formatC:%c%c%c%c",formatC[3],formatC[2],formatC[1],formatC[0]);
+                            GJQueueLOG(@"formatC:%c%c%c%c",formatC[3],formatC[2],formatC[1],formatC[0]);
                             _format = format;
                             [self calculatepPacketDuration];
                         }

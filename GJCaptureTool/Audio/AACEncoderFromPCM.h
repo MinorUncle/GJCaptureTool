@@ -9,12 +9,12 @@
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import <CoreMedia/CoreMedia.h>
-#import "GJQueue.h"
+#import "GJRetainBuffer.h"
 
 #define MAX_PCM_LENTH 2048+10
 @class AACEncoderFromPCM;
 @protocol AACEncoderFromPCMDelegate<NSObject>
--(void)AACEncoderFromPCM:(AACEncoderFromPCM*)encoder encodeCompleteBuffer:(RetainBuffer*)buffer packetDesc:(AudioStreamPacketDescription*)packet;
+-(void)AACEncoderFromPCM:(AACEncoderFromPCM*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer packetDesc:(AudioStreamPacketDescription*)packet;
 @end
 @interface AACEncoderFromPCM : NSObject
 @property(nonatomic,assign,readonly)AudioStreamBasicDescription destFormatDescription;

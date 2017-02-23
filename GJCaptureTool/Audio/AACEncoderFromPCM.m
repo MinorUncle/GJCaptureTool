@@ -7,7 +7,7 @@
 //
 #import "AACEncoderFromPCM.h"
 #import "GJDebug.h"
-
+#import "GJRetainBufferPool.h"
 
 @interface AACEncoderFromPCM ()
 {
@@ -19,6 +19,8 @@
     dispatch_queue_t _encoderQueue;
     AudioStreamPacketDescription _sourcePCMPacketDescription;
     CMBlockBufferRef _preBlockBuffer;
+    
+    GJRetainBufferPool* _bufferPool;
 }
 @end
 
@@ -50,8 +52,7 @@
     return self;
 }
 -(void)initQueue{
-    queueCreate(&_resumeRetainBlockQueue, 10,true);
-    _resumeRetainBlockQueue->autoResize = NO;
+    queueCreate(&_resumeRetainBlockQueue, 10,true,false);
 
 
     _encoderQueue = dispatch_queue_create("audioEncodeQueue", DISPATCH_QUEUE_CONCURRENT);
@@ -73,7 +74,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
             size_t lenth;
             char* point;
             CMBlockBufferGetDataPointer(bufferRef, 0, NULL, &lenth, &point);
-            
+            memset(point, 0, lenth);
             ioData->mBuffers[0].mData = point;
             ioData->mBuffers[0].mNumberChannels =encoder.sourceFormatDescription.mChannelsPerFrame;
             ioData->mBuffers[0].mDataByteSize = (UInt32)lenth;
@@ -148,6 +149,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (_destFormatDescription.mBytesPerPacket == 0) {//VCR
         UInt32 size;
        OSStatus status = AudioConverterGetProperty(_encodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
+        _destMaxOutSize += 7;//7字节aac头
         assert(!status);
     }
     if (_destFormatDescription.mFormatID == kAudioFormatMPEG4AAC) {
@@ -165,9 +167,9 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         
         // get it back and print it out
         AudioConverterGetProperty(_encodeConvert, kAudioConverterEncodeBitRate, &propSize, &outputBitRate);
-        AACEncoderFromPCM_DEBUG("AAC Encode Bitrate: %u\n", (unsigned int)outputBitRate);
+        GJQueueLOG(@"AAC Encode Bitrate: %u\n", (unsigned int)outputBitRate);
     }
-    
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize);
     _outCacheBufferList.mNumberBuffers = 1;
     _outCacheBufferList.mBuffers[0].mNumberChannels = sourceFormat->mChannelsPerFrame;
     _outCacheBufferList.mBuffers[0].mData = (void*)malloc(_destMaxOutSize);
@@ -177,7 +179,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     dispatch_async(_encoderQueue, ^{
         [self _converterStart];
     });
-    AACEncoderFromPCM_DEBUG("AudioConverterNewSpecific success");
+    GJQueueLOG(@"AudioConverterNewSpecific success");
     return YES;
 }
 -(OSStatus)_getAudioClass:(AudioClassDescription*)audioClass WithType:(UInt32)type fromManufacturer:(UInt32)manufacturer{
@@ -214,26 +216,27 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
        // assert(!status);
         if (status != noErr ) {
-            AACEncoderFromPCM_DEBUG("AudioConverterFillComplexBuffer error:%d",status);
+            GJQueueLOG(@"AudioConverterFillComplexBuffer error:%d",status);
             return;
         }
         
         
-//        NSData* data = [NSData dataWithBytes:_outCacheBufferList.mBuffers[0].mData length:_outCacheBufferList.mBuffers[0].mDataByteSize];
-//        NSLog(@"encode data:%@",data);
+        NSData* data = [NSData dataWithBytes:_outCacheBufferList.mBuffers[0].mData length:_outCacheBufferList.mBuffers[0].mDataByteSize];
+        NSLog(@"encode data:%@",data);
 //        AACEncoderFromPCM_DEBUG("datalenth:%ld",[data length]);
        
-        
+        GJRetainBuffer* audioBuffer = GJRetainBufferPoolGetData(_bufferPool);
+        audioBuffer->size = _outCacheBufferList.mBuffers[0].mDataByteSize+7;
 
-        RetainBuffer* audioBuffer = retainBufferAlloc(_outCacheBufferList.mBuffers[0].mDataByteSize+7, NULL, NULL);
         [self adtsDataForPacketLength:_outCacheBufferList.mBuffers[0].mDataByteSize+7 data:audioBuffer->data];
         memcpy((uint8_t*)audioBuffer->data+7, _outCacheBufferList.mBuffers[0].mData, _outCacheBufferList.mBuffers[0].mDataByteSize);
         packetDesc.mDataByteSize = (UInt32)_outCacheBufferList.mBuffers[0].mDataByteSize+7;
         packetDesc.mStartOffset = 7;
         packetDesc.mVariableFramesInPacket = 0;
-        if ([self.delegate respondsToSelector:@selector(AACEncoderFromPCM:encodeCompleteBuffer:packetDesc:)]) {
-            [self.delegate AACEncoderFromPCM:self  encodeCompleteBuffer:audioBuffer packetDesc:&packetDesc];
-        }
+        
+        
+        [self.delegate AACEncoderFromPCM:self  encodeCompleteBuffer:audioBuffer packetDesc:&packetDesc];
+        retainBufferUnRetain(audioBuffer);
     }
 }
 #pragma -mark =======ADTS=======

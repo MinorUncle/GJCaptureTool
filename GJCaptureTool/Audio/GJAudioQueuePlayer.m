@@ -8,7 +8,8 @@
 
 #import "GJAudioQueuePlayer.h"
 #import <pthread.h>
-
+#import "GJQueue.h"
+#import "GJRetainBuffer.h"
 const int MCAudioQueueBufferCount = 8;
 
 @interface GJAudioQueuePlayer ()
@@ -96,8 +97,7 @@ const int MCAudioQueueBufferCount = 8;
 
 -(void)_init{
     _volume = 1.0f;
-    queueCreate(&_reusableQueue, MCAudioQueueBufferCount,true);
-    _reusableQueue->autoResize = NO;
+    queueCreate(&_reusableQueue, MCAudioQueueBufferCount,true,false);
     _status = kPlayInvalidStatus;
 
 }
@@ -270,7 +270,7 @@ const int MCAudioQueueBufferCount = 8;
     return YES;
 }
 
-- (BOOL)playData:(RetainBuffer*)bufferData packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof{
+- (BOOL)playData:(GJRetainBuffer*)bufferData packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions isEof:(BOOL)isEof{
     if (_status != kPlayRunningStatus)
     {
         static int count;
@@ -378,7 +378,7 @@ const int MCAudioQueueBufferCount = 8;
 static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer)
 {
 	GJAudioQueuePlayer *player = (__bridge GJAudioQueuePlayer *)inClientData;
-    RetainBuffer* bufferData;
+    GJRetainBuffer* bufferData;
     if(queuePop(player->_reusableQueue, (void**)&bufferData, 0) && player.status == kPlayRunningStatus){
          memcpy(inBuffer->mAudioData, bufferData->data, bufferData->size);
         inBuffer->mAudioDataByteSize = bufferData->size;
@@ -403,7 +403,7 @@ static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
     static int count;
     NSLog(@"aac buffer out:%d",count++);
     GJAudioQueuePlayer *player = (__bridge GJAudioQueuePlayer *)inClientData;
-    RetainBuffer* buffer;
+    GJRetainBuffer* buffer;
     if(queuePop(player->_reusableQueue, (void**)&buffer, 0) && player.status == kPlayRunningStatus){
         memcpy(inBuffer->mAudioData, buffer->data, buffer->size);
         inBuffer->mAudioDataByteSize = buffer->size;
