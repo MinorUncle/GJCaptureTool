@@ -261,6 +261,7 @@ void find_idr_sps_pps(uint8_t* data,int size,uint8_t **idr,int* idrSize,uint8_t 
     *spsSize = *ppsSize = *idrSize = *seiSize = 0;
     *idr = *sps = *pps = *sei = NULL;
     uint8_t* preNAL = p;
+    int* preSize = NULL;
     int headSize = 4;
     while (p<data+size) {
         if (p[0] == 0 && p[1] == 0) {
@@ -272,54 +273,66 @@ void find_idr_sps_pps(uint8_t* data,int size,uint8_t **idr,int* idrSize,uint8_t 
                 p+=2;
                 continue;
             }
+            if (preSize) {
+                *preSize = p-preNAL;
+            }
             switch (p[headSize] & 0x1f) {
                 case 7:
                 {
-                    *sps = p + headSize;
-                    preNAL = *sps;
+                    preNAL = p + headSize;
+                    preSize = spsSize;
+                    if (sps) {
+                        *sps = p + headSize;
+                    }
                     break;
                 }
                 case 8:
                 {
-                    *pps = p + headSize;
-                    *spsSize = p - preNAL;
-                    preNAL = *pps;
+                    preNAL =  p + headSize;
+                    preSize = ppsSize;
+                    if (pps) {
+                        *pps = p + headSize;
+                    }
                     break;
                 }
                 case 6:
                 {
-                    *sei = p + headSize;
-                    *ppsSize = p-preNAL;
-                    preNAL = *sei;
+                    preNAL = p + headSize;
+                    preSize = seiSize;
+                    if (sei) {
+                        *sei = p + headSize;
+                    }
                     break;
                 }
                 case 5:
                 {
-                    *idr = p + headSize;
-                    if (ppsSize == 0) {//兼容有无sei
-                        *pps = p - preNAL;
-                    }else if(*sei){
-                        *seiSize = p - preNAL;
+
+                    if (idr) {  //当没有idr时，退出，避免多余的查找,
+                        *idr = p + headSize;
+                        preNAL = *idr;
+                        preSize = idrSize;
+                    }else{
+                        return;
                     }
-                    *preNAL = *idr;
                     goto end;
+                    break;
+                }
+                case 1:{   //非r帧也直接退出避免多余查找。
+                    return;
                     break;
                 }
                 default:
                     break;
             }
             p+=headSize;
+            continue;
         }
         p++;
     }
 
 end:
-    if (*idr && *idrSize == 0) {
-        *idrSize = data+size-*idr;
-    }else if(*pps && *ppsSize == 0){
-        *ppsSize = data+size-*pps;
-    }else if (*sei && *seiSize == 0){
-        *seiSize = data+size-*sei;
+    if(preSize){
+        *preSize = data+size-preNAL;
     }
 }
 

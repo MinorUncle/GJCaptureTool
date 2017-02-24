@@ -24,7 +24,7 @@
 #import "RtmpSendH264.h"
 #import "GJFormats.h"
 #import "LibRtmpSession.hpp"
-#import "rtmp/log.h"
+#import "log.h"
 #import "GJAudioQueueRecoder.h"
 #import "GJRetainBuffer.h"
 extern "C"{

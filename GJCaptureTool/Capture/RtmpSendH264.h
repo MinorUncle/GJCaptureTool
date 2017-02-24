@@ -9,9 +9,8 @@
 #import <Foundation/Foundation.h>
 #import <CoreAudio/CoreAudioTypes.h>
 #import <VideoToolbox/VideoToolbox.h>
-typedef struct _VideoFormat{
+#import "GJRetainBuffer.h"
 
-}VideoFormat;
 @interface RtmpSendH264 : NSObject
 @property(nonatomic,assign)AudioStreamBasicDescription audioStreamFormat;
 @property(nonatomic,assign)CMVideoFormatDescriptionRef videoStreamFormat;

@@ -10,6 +10,7 @@
     "1C9FDC6BD57F4F885A769CBC0880C8568DFADE4E" : 9223372036854775807,
     "8531738AFD4FE1FAF1D2FBB5BC4445ED8B189CFD" : 9223372036854775807,
     "D157E2235DB6CAA02B4866781723863E4DFFD9EA" : 9223372036854775807,
+    "77616FF66051A7C7FCD7F759AF4655FEEA08155B" : 9223372036854775807,
     "0B93145D3ABCBD6C31A0B6C6E9862005A459ADD3" : 9223372036854775807
   },
   "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "4A40DBAC-5404-444B-91AB-93552CD743F6",
@@ -20,6 +21,7 @@
     "1C9FDC6BD57F4F885A769CBC0880C8568DFADE4E" : "DarwinStreamingServerCode\/",
     "8531738AFD4FE1FAF1D2FBB5BC4445ED8B189CFD" : "GJCaptureTool\/",
     "D157E2235DB6CAA02B4866781723863E4DFFD9EA" : "GJMp4Demo\/",
+    "77616FF66051A7C7FCD7F759AF4655FEEA08155B" : "rtmpAndOpenssl\/",
     "0B93145D3ABCBD6C31A0B6C6E9862005A459ADD3" : "ffmpegCode\/"
   },
   "DVTSourceControlWorkspaceBlueprintNameKey" : "GJCaptureTool",
@@ -45,6 +47,11 @@
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/MinorUncle\/x264Code.git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "36C67C0385EBFE1DD9D872E42E2540A54C89CF0D"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/MinorUncle\/rtmpAndOpenssl.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "77616FF66051A7C7FCD7F759AF4655FEEA08155B"
     },
     {
       "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/MinorUncle\/GJCaptureTool.git",

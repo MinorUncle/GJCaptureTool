@@ -573,9 +573,6 @@ int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIs
     rtmp_pack.m_nTimeStamp = dts;
     
    
-    
-    
-    
     if(data == NULL && size<11)
     {
         return FALSE;
@@ -591,9 +588,6 @@ int LibRtmpSession::SendH264Packet(unsigned char *data,unsigned int size,int bIs
         body[i++] = 0x17;// 1:Iframe  7:AVC
         body[i++] = 0x01;// AVC NALU
         
-//        body[i++] = (val >> 16) & 0xff;// Decoder delay
-//        body[i++] = (val >> 8) & 0xff;
-//        body[i++] = (val >> 0) & 0xff;
         body[i++] = 0x00;
         body[i++] = 0x00;
         body[i++] = 0x00;
