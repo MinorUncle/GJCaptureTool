@@ -127,7 +127,7 @@
     if (_bufferPool != NULL) {
         GJRetainBufferPoolRelease(&_bufferPool);
     }
-    GJRetainBufferPoolCreate(&_bufferPool, w*h*4);///选最大size
+    GJRetainBufferPoolCreate(&_bufferPool, w*h*4,true);///选最大size
     [self _setCompressionSession];
 
     result = VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);

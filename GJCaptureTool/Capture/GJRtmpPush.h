@@ -9,8 +9,15 @@
 #import <stdlib.h>
 #include "GJRetainBuffer.h"
 #include "rtmp.h"
+#include "GJBufferPool.h"
 typedef struct _GJRtmpPush{
     RTMP* rtmp;
+    
+    const RTMPPacket* videoPacket;
+    const RTMPPacket* audioPacket;
+
+    
+    
     
 }GJRtmpPush;
 

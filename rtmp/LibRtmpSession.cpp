@@ -84,7 +84,7 @@ LibRtmpSession::LibRtmpSession(char* szRtmpUrl):_pRtmp(NULL)
     
     _pMetaData = (RTMPMetadata*)malloc(sizeof(RTMPMetadata));
     memset((void*)_pMetaData, 0, sizeof(RTMPMetadata));
-    GJBufferPoolCreate(&_videoPool);
+//    GJBufferPoolCreate(&_videoPool);
 }
 
 LibRtmpSession::~LibRtmpSession(){

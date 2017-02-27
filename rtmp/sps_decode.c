@@ -256,13 +256,16 @@ int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps
         return false;
 //#pragma clang diagnostic pop 
 }
-void find_idr_sps_pps(uint8_t* data,int size,uint8_t **idr,int* idrSize,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize){
+void find_pp_sps_pps(bool *isKey,uint8_t* data,int size,uint8_t **pp,int* ppSize,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize){
     uint8_t* p = data;
-    *spsSize = *ppsSize = *idrSize = *seiSize = 0;
-    *idr = *sps = *pps = *sei = NULL;
+    *spsSize = *ppsSize = *ppSize = *seiSize = 0;
+    *pp = *sps = *pps = *sei = NULL;
     uint8_t* preNAL = p;
     int* preSize = NULL;
     int headSize = 4;
+    if (isKey) {
+        *isKey = false;
+    }
     while (p<data+size) {
         if (p[0] == 0 && p[1] == 0) {
             if (p[2] == 0 && p[3] == 1) {
@@ -305,22 +308,24 @@ void find_idr_sps_pps(uint8_t* data,int size,uint8_t **idr,int* idrSize,uint8_t 
                     break;
                 }
                 case 5:
+                    if (isKey) {
+                        *isKey = true;
+                    }
+                case 1:
                 {
-
-                    if (idr) {  //当没有idr时，退出，避免多余的查找,
-                        *idr = p + headSize;
-                        preNAL = *idr;
-                        preSize = idrSize;
+                    if (ppSize) {  //当没有idr时，退出，避免多余的查找,
+                        preNAL = p + headSize;
+                        preSize = ppSize;
+                        if (pp) {
+                            pp = p + headSize;
+                        }
                     }else{
                         return;
                     }
                     goto end;
                     break;
                 }
-                case 1:{   //非r帧也直接退出避免多余查找。
-                    return;
-                    break;
-                }
+
                 default:
                     break;
             }

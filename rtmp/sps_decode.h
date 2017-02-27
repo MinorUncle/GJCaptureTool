@@ -18,11 +18,18 @@
 #include <string.h>
 #include <math.h>
 
+#ifndef bool
+#   define bool unsigned int
+#   define true 1
+#   define false 0
+#endif
+
 typedef  unsigned int UINT;
 typedef  unsigned char BYTE;
 typedef  unsigned long DWORD;
 
-void find_idr_sps_pps(uint8_t* data,int size,uint8_t **idr,int* idrSize,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize);
+//pp是i帧或非i帧,isKey时为i帧
+void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,int* ppSize,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize);
 int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps);
 int aac_parse_header(uint8_t *adts, int size,int* samples,int* objType,int* channel_config);
 #endif
