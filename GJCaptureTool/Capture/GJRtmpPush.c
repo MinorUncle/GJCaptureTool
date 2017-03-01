@@ -42,7 +42,7 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,double dt
     uint8_t *sps,*pps,*pp;
     bool isKey = 0;
     int spsSize,ppsSize,ppSize;
-    find_pp_sps_pps(&isKey, buffer->data, buffer->size, &pp, NULL, &sps, &spsSize, &pps, &ppsSize, NULL, NULL);
+    find_pp_sps_pps(&isKey, buffer->data, buffer->size, &pp, &sps, &spsSize, &pps, &ppsSize, NULL, NULL);
     ppsSize = (int)((uint8_t*)buffer->data + buffer->size - pp);//ppsSize最好通过计算获得，直接查找的话查找数据量比较大
     
     RTMPPacket* sendPacket = (RTMPPacket*)sender->videoPacket;

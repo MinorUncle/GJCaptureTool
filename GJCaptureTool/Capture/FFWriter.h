@@ -12,9 +12,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#import "avformat.h"
-#import "swscale.h"
-#import "avcodec.h"
+#import "libavformat/avformat.h"
+#import "libswscale/swscale.h"
+#import "libavcodec/avcodec.h"
 
 typedef struct FFWriterContext {
     

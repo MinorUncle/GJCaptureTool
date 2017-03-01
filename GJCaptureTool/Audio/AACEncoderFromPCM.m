@@ -167,9 +167,9 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         
         // get it back and print it out
         AudioConverterGetProperty(_encodeConvert, kAudioConverterEncodeBitRate, &propSize, &outputBitRate);
-        GJQueueLOG(@"AAC Encode Bitrate: %u\n", (unsigned int)outputBitRate);
+        GJLOG(@"AAC Encode Bitrate: %u\n", (unsigned int)outputBitRate);
     }
-    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize);
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true);
     _outCacheBufferList.mNumberBuffers = 1;
     _outCacheBufferList.mBuffers[0].mNumberChannels = sourceFormat->mChannelsPerFrame;
     _outCacheBufferList.mBuffers[0].mData = (void*)malloc(_destMaxOutSize);
@@ -179,7 +179,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     dispatch_async(_encoderQueue, ^{
         [self _converterStart];
     });
-    GJQueueLOG(@"AudioConverterNewSpecific success");
+    GJLOG(@"AudioConverterNewSpecific success");
     return YES;
 }
 -(OSStatus)_getAudioClass:(AudioClassDescription*)audioClass WithType:(UInt32)type fromManufacturer:(UInt32)manufacturer{
@@ -216,7 +216,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
        // assert(!status);
         if (status != noErr ) {
-            GJQueueLOG(@"AudioConverterFillComplexBuffer error:%d",status);
+            GJLOG(@"AudioConverterFillComplexBuffer error:%d",status);
             return;
         }
         

@@ -158,7 +158,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
     OSStatus status = AudioConverterNew(&_sourceFormatDescription, &_destFormatDescription, &_decodeConvert);
     assert(!status);
-    GJQueueLOG(@"AudioConverterNewSpecific success");
+    GJLOG(@"AudioConverterNewSpecific success");
 
     _destMaxOutSize = 0;
     status = AudioConverterGetProperty(_decodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
@@ -167,7 +167,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (_bufferPool) {
         GJRetainBufferPoolRelease(&_bufferPool);
     }
-    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize);
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true);
     
     AudioConverterGetProperty(_decodeConvert, kAudioConverterCurrentInputStreamDescription, &size, &_sourceFormatDescription);
     
@@ -192,7 +192,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         // assert(!status);
         if (status != noErr || status == -1) {
             char* codeChar = (char*)&status;
-            GJQueueLOG(@"AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
+            GJLOG(@"AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
             break;
         }
         

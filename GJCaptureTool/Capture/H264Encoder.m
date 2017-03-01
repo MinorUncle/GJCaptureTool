@@ -7,8 +7,8 @@
 //
 
 extern "C"{
-#import "avcodec.h"
-#import "imgutils.h"
+#import "libavcodec/avcodec.h"
+#import "libavutil/imgutils.h"
 }
 #import "H264Encoder.h"
 @interface H264Encoder()

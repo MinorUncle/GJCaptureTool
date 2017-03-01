@@ -7,8 +7,8 @@
 //
 
 
-#import "avformat.h"
-#import "swscale.h"
+#import "libavformat/avformat.h"
+#import "libswscale/swscale.h"
 
 #import "GJQueue.h"
 #import "H264Decoder.h"

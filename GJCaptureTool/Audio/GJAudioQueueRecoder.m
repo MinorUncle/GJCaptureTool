@@ -120,7 +120,7 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
         }
     }
     
-    GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize);
+    GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize,true);
     
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:AVAudioSessionInterruptionNotification object:nil];
 

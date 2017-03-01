@@ -6,9 +6,9 @@
 //  Copyright © 2016年 MinorUncle. All rights reserved.
 //
 
-#import "avformat.h"
-#import "avcodec.h"
-#import "opt.h"
+#import "libavformat/avformat.h"
+#import "libavcodec/avcodec.h"
+//#import "opt.h"
 
 #import "H264StreamToTS.h"
 

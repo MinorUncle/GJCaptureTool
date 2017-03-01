@@ -7,9 +7,7 @@
 //
 
 #include "sps_decode.h"
-#define false 0
-#define true 1
-#define bool int
+
 //无符号指数Golomb熵编码
 static UINT Ue(BYTE *pBuff, UINT nLen, UINT** nStartBit)
 {
@@ -40,7 +38,7 @@ static UINT Ue(BYTE *pBuff, UINT nLen, UINT** nStartBit)
         }
         (*tmp)++;
     }
-    return (1 << nZeroNum) - 1 + dwRet;
+    return (1 << nZeroNum) - 1 + (UINT)dwRet;
 }
 
 //有符号指数Golomb熵编码
@@ -119,8 +117,8 @@ static void de_emulation_prevention(BYTE* buf,unsigned int* buf_size)
  */
 int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps)
 {
-//#pragma clang diagnostic push
-//#pragma clang diagnostic ignored"-Wdeprecated-declarations"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored"-Wunused-variable"
     int* Width = width;
     int* Height = height;
     
@@ -254,11 +252,13 @@ int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps
     }
     else
         return false;
-//#pragma clang diagnostic pop 
+#pragma clang diagnostic pop 
 }
-void find_pp_sps_pps(bool *isKey,uint8_t* data,int size,uint8_t **pp,int* ppSize,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize){
+
+
+void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize){
     uint8_t* p = data;
-    *spsSize = *ppsSize = *ppSize = *seiSize = 0;
+    *spsSize = *ppsSize = *seiSize = 0;
     *pp = *sps = *pps = *sei = NULL;
     uint8_t* preNAL = p;
     int* preSize = NULL;
@@ -277,7 +277,7 @@ void find_pp_sps_pps(bool *isKey,uint8_t* data,int size,uint8_t **pp,int* ppSize
                 continue;
             }
             if (preSize) {
-                *preSize = p-preNAL;
+                *preSize = (int)(p-preNAL);
             }
             switch (p[headSize] & 0x1f) {
                 case 7:
@@ -313,17 +313,11 @@ void find_pp_sps_pps(bool *isKey,uint8_t* data,int size,uint8_t **pp,int* ppSize
                     }
                 case 1:
                 {
-                    if (ppSize) {  //当没有idr时，退出，避免多余的查找,
-                        preNAL = p + headSize;
-                        preSize = ppSize;
-                        if (pp) {
-                            pp = p + headSize;
-                        }
-                    }else{
-                        return;
+                    if (pp) {  //当没有idr时，退出，避免多余的查找,
+//                        preNAL = p + headSize;
+                        *pp = p + headSize;
                     }
-                    goto end;
-                    break;
+                    return;
                 }
 
                 default:
@@ -335,10 +329,6 @@ void find_pp_sps_pps(bool *isKey,uint8_t* data,int size,uint8_t **pp,int* ppSize
         p++;
     }
 
-end:
-    if(preSize){
-        *preSize = data+size-preNAL;
-    }
 }
 
 static const int mpeg4audio_sample_rates[16] = {
@@ -387,6 +377,8 @@ static const int mpeg4audio_sample_rates[16] = {
 
 int aac_parse_header(uint8_t *adts, int size,int* sampling_frequency_index,int* objType,int* channel_config)
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored"-Wunused-variable"
     UINT StartBit=0;
     UINT* pStartBit = &StartBit;
     int syncword=u(12,adts,&pStartBit);
@@ -419,6 +411,7 @@ int aac_parse_header(uint8_t *adts, int size,int* sampling_frequency_index,int* 
     *channel_config = channel_configuration;
     
     return size;
+#pragma clang diagnostic pop
 }
 
 

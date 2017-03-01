@@ -28,8 +28,8 @@ typedef  unsigned int UINT;
 typedef  unsigned char BYTE;
 typedef  unsigned long DWORD;
 
-//pp是i帧或非i帧,isKey时为i帧
-void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,int* ppSize,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize);
+//pp是i帧或非i帧,isKey时为i帧,,参数太多，不查找ppSize，耗费时间，请直接相减计算
+void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize);
 int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps);
 int aac_parse_header(uint8_t *adts, int size,int* samples,int* objType,int* channel_config);
 #endif

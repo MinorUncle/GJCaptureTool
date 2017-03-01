@@ -20,7 +20,7 @@ void mp4WriterAddVideo(Mp4WriterContext* context, uint8_t* data,size_t size,doub
 
     if (data[0] == 0 && data[1] == 0 && data[2] == 0 && data[3] == 1 && (data[4] & 0x1f) == 7) {
         uint8_t* sps,*pps,*idr,*sei;int spsSize,ppsSize,idrSize,seiSize;
-        find_idr_sps_pps(data, (int)size, &idr, &idrSize, &sps, &spsSize, &pps, &ppsSize, &sei, &seiSize);
+        find_pp_sps_pps(NULL,data, (int)size, &idr, &sps, &spsSize, &pps, &ppsSize, &sei, &seiSize);
         if (spsSize==0) {
             printf("find SPS error");
             return;
@@ -40,6 +40,7 @@ void mp4WriterAddVideo(Mp4WriterContext* context, uint8_t* data,size_t size,doub
         }
 
         if (idr) {
+            idrSize =(int)( data+size - idr);
             data = idr-4;
             size = idrSize + 4;
         }else{

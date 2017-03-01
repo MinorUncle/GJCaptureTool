@@ -9,11 +9,11 @@
 #import "RtmpSendH264.h"
 #import <CoreMedia/CMFormatDescription.h>
 
-#import "avcodec.h"
-#import "swscale.h"
-#import "imgutils.h"
-#import "avio.h"
-#import "avformat.h"
+#import "libavcodec/avcodec.h"
+#import "libswscale/swscale.h"
+#import "libavutil/imgutils.h"
+#import "libavformat/avio.h"
+#import "libavformat/avformat.h"
 
 @interface RtmpSendH264()
 @property(nonatomic,assign,readonly)AVPacket* videoPacket;

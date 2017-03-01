@@ -111,7 +111,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     _captureMovieFileOutput = [[AVCaptureMovieFileOutput alloc]init];
     if ([_captureSession canAddOutput:_captureMovieFileOutput]) {
         [_captureSession addOutput:_captureMovieFileOutput];
-        GJQueueLOG(@"添加视频文件输出成功");
+        GJLOG(@"添加视频文件输出成功");
     }else{
         return NO;
     }
@@ -123,9 +123,9 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     _captureImageOutput = [[AVCaptureStillImageOutput alloc]init];
     if ([_captureSession canAddOutput:_captureImageOutput]) {
         [_captureSession addOutput:_captureImageOutput];
-        GJQueueLOG(@"添加图片输出成功");
+        GJLOG(@"添加图片输出成功");
     }else{
-        GJQueueLOG(@"添加图片输出失败");
+        GJLOG(@"添加图片输出失败");
         return NO;
     }
     NSDictionary * imageOutputSettings = @{AVVideoCodecKey:AVVideoCodecJPEG};
@@ -146,7 +146,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     //获得输入设备
     self.captureDevice=[self getCameraDeviceWithPosition:AVCaptureDevicePositionBack];//取得后置摄像头
     if (!self.captureDevice){
-        GJQueueLOG(@"获取后置摄像头失败");
+        GJLOG(@"获取后置摄像头失败");
         return NO;
     }
     NSError* error;
@@ -159,7 +159,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     //将设备输入添加到会话中
     if ([_captureSession canAddInput:_videoCaptureDeviceInput]) {
         [_captureSession addInput:_videoCaptureDeviceInput];
-        GJQueueLOG(@"添加视频输入成功");
+        GJLOG(@"添加视频输入成功");
     }
     [self.captureVideoPreviewLayer setSession:self.captureSession];
     self.captureVideoPreviewLayer.videoGravity = AVLayerVideoGravityResizeAspect;//填充模式
@@ -175,7 +175,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     _captureDataOutput = [[AVCaptureVideoDataOutput alloc] init];
     if ([_captureSession canAddOutput:_captureDataOutput]) {
         [_captureSession addOutput:_captureDataOutput];
-        GJQueueLOG(@"添加视频数据输出成功");
+        GJLOG(@"添加视频数据输出成功");
     }
     _videoConnect = [_captureDataOutput connectionWithMediaType:AVMediaTypeVideo];
     self.captureDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange)};
@@ -187,7 +187,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         self.captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, _fps);
         [self.captureDevice unlockForConfiguration];
     }else{
-        GJQueueLOG(@"error:%s", error.localizedDescription.UTF8String);
+        GJLOG(@"error:%s", error.localizedDescription.UTF8String);
         return NO;
     }
     _videoStreamQueue = dispatch_queue_create("_videoStreamQueue", DISPATCH_QUEUE_CONCURRENT);
@@ -202,25 +202,25 @@ FAILURE:
     //添加一个音频输入设备
     _audioCaptureDevice=[[AVCaptureDevice devicesWithMediaType:AVMediaTypeAudio] firstObject];
     if (!_audioCaptureDevice) {
-        GJQueueLOG(@"取得设备音频对象时出错");
+        GJLOG(@"取得设备音频对象时出错");
         return NO;
     }
     _audioCaptureDeviceInput=[[AVCaptureDeviceInput alloc]initWithDevice:_audioCaptureDevice error:&error];
     if (error) {
-        GJQueueLOG(@"取得设备输入对象时出错，错误原因：%s",error.localizedDescription.UTF8String);
+        GJLOG(@"取得设备输入对象时出错，错误原因：%s",error.localizedDescription.UTF8String);
         return NO;
     }
     //添加一个音频输出设备
     _captureAudioOutput = [[AVCaptureAudioDataOutput alloc]init];
     if ([_captureSession canAddOutput:_captureAudioOutput]) {
         [_captureSession addOutput:_captureAudioOutput];
-        GJQueueLOG(@"添加音频输出成功");
+        GJLOG(@"添加音频输出成功");
     }
     if ([_captureSession canAddInput:_audioCaptureDeviceInput]) {
         [_captureSession addInput:_audioCaptureDeviceInput];
-        GJQueueLOG(@"添加音频输入成功");
+        GJLOG(@"添加音频输入成功");
     }else{
-        GJQueueLOG(@"无法添加音频输入");
+        GJLOG(@"无法添加音频输入");
     }
     _audioConnect = [_captureAudioOutput connectionWithMediaType:AVMediaTypeAudio];
     return YES;
@@ -236,7 +236,7 @@ faile:
  *  @param notification 通知对象
  */
 -(void)deviceConnected:(NSNotification *)notification{
-    GJQueueLOG(@"设备已连接...");
+    GJLOG(@"设备已连接...");
 }
 /**
  *  设备连接断开
@@ -416,7 +416,7 @@ faile:
         self.captureDevice.activeVideoMaxFrameDuration = CMTimeMake(1, _fps);
         [self.captureDevice unlockForConfiguration];
     }else{
-        GJQueueLOG(@"error:%s",error.localizedDescription.UTF8String);
+        GJLOG(@"error:%s",error.localizedDescription.UTF8String);
         return;
     }
     
@@ -436,7 +436,7 @@ faile:
         propertyChange(captureDevice);
         [captureDevice unlockForConfiguration];
     }else{
-        GJQueueLOG(@"设置设备属性过程发生错误，错误信息：%s",error.localizedDescription.UTF8String);
+        GJLOG(@"设置设备属性过程发生错误，错误信息：%s",error.localizedDescription.UTF8String);
     }
 }
 
@@ -597,7 +597,7 @@ faile:
 
 -(void)echoError:(NSError*)error appendStr:(NSString*)str{
     if (error) {
-        GJQueueLOG(@"%s失败，error:%s",str.UTF8String,error.localizedDescription.UTF8String);
+        GJLOG(@"%s失败，error:%s",str.UTF8String,error.localizedDescription.UTF8String);
     }
 }
 
