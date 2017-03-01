@@ -26,7 +26,7 @@ typedef enum EntropyMode{
 #define VIDEO_TIMESCALE 1000
 
 #if __COREFOUNDATION_CFBASE__
-static CFStringRef  getCFStrByLevel(ProfileLevel level){
+CFStringRef  getCFStrByLevel(ProfileLevel level){
     CFStringRef ref;
     switch (level) {
         case profileLevelBase:
@@ -43,7 +43,7 @@ static CFStringRef  getCFStrByLevel(ProfileLevel level){
     }
     return ref;
 }
-static CFStringRef getCFStrByEntropyMode(EntropyMode model){
+CFStringRef getCFStrByEntropyMode(EntropyMode model){
     CFStringRef ref;
     switch (model) {
         case EntropyMode_CABAC:

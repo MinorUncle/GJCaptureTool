@@ -258,8 +258,7 @@ int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps
 
 void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize){
     uint8_t* p = data;
-    *spsSize = *ppsSize = *seiSize = 0;
-    *pp = *sps = *pps = *sei = NULL;
+   
     uint8_t* preNAL = p;
     int* preSize = NULL;
     int headSize = 4;

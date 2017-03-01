@@ -14,28 +14,32 @@
 
 @class GJH264Encoder;
 @protocol GJH264EncoderDelegate <NSObject>
-//-(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(uint8_t*)buffer withLenth:(long)totalLenth keyFrame:(BOOL)keyFrame dts:(double)dts;
--(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(double)dts;
+@required
+-(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(CMTime)dts;
 @end
 @interface GJH264Encoder : NSObject
 @property(nonatomic,weak)id<GJH264EncoderDelegate> deleagte;
-//@property(nonatomic,readonly,retain)NSData* parameterSet;
-//@property(assign,nonatomic) int32_t currentWidth;
-//@property(assign,nonatomic) int32_t currentHeight;
-//@property(assign,nonatomic) int32_t bitRate;
-//@property(assign,nonatomic) int32_t maxKeyFrameInterval;//gop_size
-@property(assign,nonatomic) float quality;//
-//@property(assign,nonatomic) CFStringRef profileLevel;//
-//@property(assign,nonatomic) CFStringRef entropyMode;//
-//@property(assign,nonatomic) BOOL allowBFrame;//
-//@property(assign,nonatomic) BOOL allowPFrame;//
-
 @property(assign,nonatomic)H264Format destFormat;
 
-@property(assign,nonatomic) int expectedFrameRate;//
+/**
+ 已经编码的数量
+ */
+@property(assign,nonatomic)NSInteger frameCount;
 
--(instancetype)initWithFps:(uint)fps;
--(void)encodeSampleBuffer:(CMSampleBufferRef)sampleBuffer fourceKey:(BOOL)fourceKey;
+/**
+ //允许的最大码率和最小码率。用于动态码率，期望正常码率在destformat中设置。
+ */
+@property(assign,nonatomic) int allowMinBitRate,allowMaxBitRate;
+
+
+/**
+ 自定义输出格式，如果直接走init()则配置默认格式.输出图像像素大小等于输入图像大小。
+
+ @param format 格式
+ @return return value description
+ */
+-(instancetype)initWithFormat:(H264Format)format;
+-(void)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(CMTime)pts fourceKey:(BOOL)fourceKey;
 
 @end
 

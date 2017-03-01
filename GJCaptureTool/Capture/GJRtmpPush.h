@@ -10,20 +10,19 @@
 #include "GJRetainBuffer.h"
 #include "rtmp.h"
 #include "GJBufferPool.h"
+
+
 typedef struct _GJRtmpPush{
     RTMP* rtmp;
     
     const RTMPPacket* videoPacket;
     const RTMPPacket* audioPacket;
 
-    
-    
-    
 }GJRtmpPush;
 
 void GJRtmpPush_Create(GJRtmpPush** sender);
 void GJRtmpPush_Release(GJRtmpPush** sender);
 void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* data,double dts);
 void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* data,double dts);
-void GJRtmpPush_StopConnect(GJRtmpPush* sender);
-int  GJRtmpPush_StartConnect(GJRtmpPush* sender,char* sendUrl);
+void GJRtmpPush_Close(GJRtmpPush* sender);
+bool GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl);

@@ -7,7 +7,8 @@
 //
 
 #import "AppDelegate.h"
-
+#import "ViewController.h"
+#import "GJLivePushViewController.h"
 @interface AppDelegate ()
 
 @end
@@ -17,6 +18,10 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
+    self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
+    GJLivePushViewController* controller = [[GJLivePushViewController alloc]init];
+    self.window.rootViewController = controller;
+    [self.window makeKeyAndVisible];
     return YES;
 }
 

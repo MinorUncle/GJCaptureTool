@@ -108,7 +108,7 @@ BOOL _recodeState;
     _viewContainer.backgroundColor = [UIColor redColor];
     _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeVideoStream) fps:fps layer:_viewContainer.layer];
     _captureTool.delegate = self;
-    _gjEncoder = [[GJH264Encoder alloc]initWithFps:fps];
+    _gjEncoder = [[GJH264Encoder alloc]init];
     
     _gjDecoder = [[GJH264Decoder alloc]init];
     _audioEncoder = [[AACEncoderFromPCM alloc]init];

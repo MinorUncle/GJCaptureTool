@@ -74,7 +74,6 @@
 		C591E85E1DC6ECED00BCC938 /* parseurl.c in Sources */ = {isa = PBXBuildFile; fileRef = C591E8571DC6ECED00BCC938 /* parseurl.c */; };
 		C591E85F1DC6ECED00BCC938 /* rtmp.c in Sources */ = {isa = PBXBuildFile; fileRef = C591E8591DC6ECED00BCC938 /* rtmp.c */; };
 		C591E8601DC6ED5900BCC938 /* librtmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C591E8441DC6ECAC00BCC938 /* librtmp.a */; };
-		C591E8C01DC6FF8B00BCC938 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = C561AC941D51D3DC00113453 /* ViewController.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1455,7 +1454,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C591E8C01DC6FF8B00BCC938 /* ViewController.mm in Sources */,
 				041702851E5FC3D100D5B5D9 /* GJLivePushViewController.m in Sources */,
 				C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */,
 				C561ACB51D51D3DC00113453 /* main.m in Sources */,

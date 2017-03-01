@@ -12,8 +12,6 @@
 #define RTMP_RECEIVE_TIMEOUT    3
 
 
-void enlargePreSize(GJRetainBuffer* buffer,int preSize);
-
 
 void GJRtmpPush_Create(GJRtmpPush** sender){
     GJRtmpPush* push = NULL;
@@ -39,9 +37,9 @@ void GJRtmpPush_Release(GJRtmpPush** sender){
 }
 
 void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,double dts){
-    uint8_t *sps,*pps,*pp;
+    uint8_t *sps = NULL,*pps = NULL,*pp = NULL;
     bool isKey = 0;
-    int spsSize,ppsSize,ppSize;
+    int spsSize = 0,ppsSize = 0,ppSize = 0;
     find_pp_sps_pps(&isKey, buffer->data, buffer->size, &pp, &sps, &spsSize, &pps, &ppsSize, NULL, NULL);
     ppsSize = (int)((uint8_t*)buffer->data + buffer->size - pp);//ppsSize最好通过计算获得，直接查找的话查找数据量比较大
     
@@ -60,7 +58,7 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,double dt
         body = NULL;
         RTMPPacket_Reset(sendPacket);
         if (buffer->frontSize < preSize) {//申请内存控制得当的话不会进入此条件、
-            enlargePreSize(buffer, preSize);
+            retainBufferSetFrontSize(buffer, preSize);
         }
         sendPacket->m_body = (char*)sps-spsStartSize-16;
         sendPacket->m_nBytesRead = 0;
@@ -122,7 +120,7 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,double dt
         body = NULL;
         RTMPPacket_Reset(sendPacket);
         if (buffer->frontSize < preSize) {//申请内存控制得当的话不会进入此条件、
-            enlargePreSize(buffer, preSize);
+            retainBufferSetFrontSize(buffer, preSize);
         }
         
         sendPacket->m_body = (char*)pp - ppStartSize - 9;
@@ -164,30 +162,6 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,double dt
     }
 }
 
-/**
- 扩展buffer前置内存
-
- @param buffer 需要扩展的buffer
- @param preSize 需要扩展的大小
- */
-inline void enlargePreSize(GJRetainBuffer* buffer,int preSize){
-    GJAssert(preSize > 0, "扩展前置内存大小不能为<=0");
-    int canOffset = buffer->capacity - buffer->size +buffer->frontSize;
-    if (canOffset >= preSize) {//可以移动则直接移动
-        memmove(buffer->data - buffer->frontSize + preSize, buffer->data, buffer->size);
-        buffer->data -= preSize -  buffer->frontSize;
-        buffer->capacity -= preSize -  buffer->frontSize;
-        buffer->frontSize = preSize;
-    }else{//否则直接申请内存
-        int8_t* temData = (int8_t*)malloc(buffer->capacity+buffer->frontSize+preSize-canOffset);
-//        frontMem也复制过去。
-        memcpy(temData+preSize-buffer->frontSize, buffer->data-buffer->frontSize, buffer->capacity+buffer->frontSize);
-        free(buffer->data-buffer->frontSize);
-        buffer->data = temData+preSize;
-        buffer->frontSize = preSize;
-    }
-}
-
 void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* buffer,double dts){
 
     unsigned char * body;
@@ -195,7 +169,7 @@ void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* buffer,double dts
     RTMPPacket* sendPacket = (RTMPPacket*)sender->audioPacket;
     RTMPPacket_Reset(sendPacket);
     if (buffer->frontSize < preSize) {//申请内存控制得当的话不会进入此条件、
-        enlargePreSize(buffer, preSize);
+        retainBufferSetFrontSize(buffer, preSize);
     }
 
     sendPacket->m_body = (char*)buffer->data - 2;
@@ -222,10 +196,10 @@ void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* buffer,double dts
 }
 
 
-int  GJRtmpPush_StartConnect(GJRtmpPush* sender,char* sendUrl){
-    int ret = RTMP_SetupURL(sender->rtmp, sendUrl);
+bool  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
+    int ret = RTMP_SetupURL(sender->rtmp, (char*)sendUrl);
     if (!ret) {
-        return ret;
+        return false;
     }
     RTMP_EnableWrite(sender->rtmp);
     
@@ -233,15 +207,15 @@ int  GJRtmpPush_StartConnect(GJRtmpPush* sender,char* sendUrl){
 
     ret = RTMP_Connect(sender->rtmp, NULL);
     if (!ret) {
-        return ret;
+        return false;
     }
     ret = RTMP_ConnectStream(sender->rtmp, 0);
     if (!ret) {
-        return ret;
+        return false;
     }
-    return 0;
+    return true;
 }
-void GJRtmpPush_StopConnect(GJRtmpPush* sender){
+void GJRtmpPush_Close(GJRtmpPush* sender){
     RTMP_Close(sender->rtmp);
 }
 

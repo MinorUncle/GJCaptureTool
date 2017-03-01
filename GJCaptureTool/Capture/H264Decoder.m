@@ -36,6 +36,7 @@
         _width = width;
         _height = height;
     }
+    
     return self;
 }
 -(void)_createDecode{

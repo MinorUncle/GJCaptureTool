@@ -8,22 +8,28 @@
 
 #import "GJLivePush.h"
 #import "GJImageFilters.h"
-#import "RtmpSendH264.h"
-@interface GJLivePush()
+#import "GJRtmpPush.h"
+#import "GJDebug.h"
+#import "GJH264Encoder.h"
+@interface GJLivePush()<GJH264EncoderDelegate>
 {
     GPUImageVideoCamera* _videoCamera;
     NSString* _sessionPreset;
     CGSize _captureSize;
     GJImageView* _showView;
     GPUImageOutput* _lastFilter;
-    GPUImageFilter* _videoStreamFilter;
+    
     GPUImageCropFilter* _cropFilter;
 }
+@property(strong,nonatomic)GJH264Encoder* videoEncoder;
+@property(copy,nonatomic)NSString* pushUrl;
+@property(strong,nonatomic)GPUImageFilter* videoStreamFilter; //可能公用_cropFilter
+@property(assign,nonatomic)GJRtmpPush* videoSender;
+
+
 @end
 @implementation GJLivePush
 @synthesize previewView = _previewView;
-
-
 
 - (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition{
     _caputreSizeType = sizeType;
@@ -55,6 +61,8 @@
     if (_videoCamera == nil) {
         return false;
     }
+    _videoCamera.frameRate = (int)_captureFps;
+    _videoCamera.outputImageOrientation = UIInterfaceOrientationPortrait;
     [_videoCamera startCameraCapture];
     _lastFilter = _videoCamera;
     return true;
@@ -76,16 +84,23 @@
 }
 
 - (bool)startStreamPushWithConfig:(GJPushConfig)config{
-    
-    if (_videoStreamFilter == nil) {
-        _videoStreamFilter = [[GPUImageFilter alloc]init];
+    if (_cropFilter) {
+        if (_cropFilter == _videoStreamFilter) {
+            _videoStreamFilter = nil;
+        }
+        [_lastFilter removeTarget:_cropFilter];
+        _cropFilter = nil;
     }
+    if (_videoStreamFilter) {
+        [_lastFilter removeTarget:_videoStreamFilter];
+        _videoStreamFilter = nil;
+    }
+  
     if (!CGSizeEqualToSize(config.pushSize, _captureSize)) {
         float scaleX = config.pushSize.width / _captureSize.width;
         float scaleY = config.pushSize.height / _captureSize.height;
         if (scaleY - scaleX < -0.00001 || scaleY - scaleX > 0.00001) {//比例不相同，先裁剪，裁剪之后显示，避免与收流端不同画面
             float scale = MIN(scaleX, scaleY);
-
             CGSize scaleSize = CGSizeMake(_captureSize.width * scale, _captureSize.height * scale);
             CGRect region =CGRectZero;
             if (scaleX > scaleY) {
@@ -95,28 +110,65 @@
                 region.origin.y = 0;
                 region.origin.x = (scaleSize.width - config.pushSize.width)*0.5;
             }
+
             _cropFilter = [[GPUImageCropFilter alloc]initWithCropRegion:region];
             [_lastFilter addTarget:_cropFilter];
-        }
-        if (_videoStreamFilter == nil) {
+            _videoStreamFilter = _cropFilter;
+        }else{
             _videoStreamFilter = [[GPUImageFilter alloc]init];
+            [_lastFilter addTarget:_videoStreamFilter];
         }
-        [_videoStreamFilter forceProcessingAtSize:config.pushSize];
-        [_lastFilter addTarget:_videoStreamFilter];
+    }else{
+     
+        _videoStreamFilter = [[GPUImageFilter alloc]init];
     }
     
+    if (_videoEncoder == nil) {
+        _videoEncoder = [[GJH264Encoder alloc]init];
+        _videoEncoder.deleagte = self;
+    }
+    _pushUrl = [NSString stringWithUTF8String:config.pushUrl];
+    if (_videoSender == nil) {
+        GJRtmpPush_Create(&_videoSender);
+    }
+    [_videoStreamFilter forceProcessingAtSize:config.pushSize];
+    _videoStreamFilter.frameProcessingCompletionBlock = nil;
+    __weak GJLivePush* wkSelf = self;
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        bool result = GJRtmpPush_StartConnect(wkSelf.videoSender, wkSelf.pushUrl.UTF8String);
+        if (result) {
+            GJLOG(@"连接成功");
+            [wkSelf.delegate livePush:wkSelf infoType:kLivePushInfoPushSuccess infoDesc:nil];
+        }else{
+            GJLOG(@"连接失败");
+            [wkSelf.delegate livePush:wkSelf errorType:kLivePushConnentError errorDesc:@"rtmp连接失败"];
+        }
+        wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
+            CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
+            
+        [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:CMTimeMake(wkSelf.videoEncoder.frameCount, (int32_t)wkSelf.captureFps) fourceKey:false];
+        };
+    });
     return true;
 }
 
 - (void)stopStreamPush{
     [_lastFilter removeTarget:_videoStreamFilter];
+    GJRtmpPush_Close(_videoSender);
 }
 
 -(UIView *)getPreviewView{
     if (_previewView == nil) {
         _previewView = [[GJImageView alloc]init];
-        [_previewView addObserver:self forKeyPath:@"frame" options:NSKeyValueObservingOptionNew context:nil];
     }
     return _previewView;
+}
+
+
+
+#pragma mark delegate
+
+-(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(CMTime)dts{
+    GJRtmpPush_SendH264Data(_videoSender, buffer, dts.value);
 }
 @end
