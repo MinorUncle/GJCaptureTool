@@ -121,10 +121,14 @@
     }else{
      
         _videoStreamFilter = [[GPUImageFilter alloc]init];
+        [_lastFilter addTarget:_videoStreamFilter];
     }
     
     if (_videoEncoder == nil) {
-        _videoEncoder = [[GJH264Encoder alloc]init];
+        H264Format format = [GJH264Encoder defaultFormat];
+        format.baseFormat.bitRate = config.videoBitRate;
+        _videoEncoder = [[GJH264Encoder alloc]initWithFormat:format];
+        _videoEncoder.allowMinBitRate = format.baseFormat.bitRate * 0.6;
         _videoEncoder.deleagte = self;
     }
     _pushUrl = [NSString stringWithUTF8String:config.pushUrl];
@@ -196,7 +200,9 @@ static void rtmpCallback(GJRTMPMessageType messageType,void* rtmpPushParm,void* 
     GJRtmpPush_SendH264Data(_videoSender, buffer, dts.value);
     return GJRtmpPush_GetBufferRate(_videoSender);
 }
+-(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
 
+}
 -(void)dealloc{
     if (_videoSender) {
         GJRtmpPush_Release(_videoSender);

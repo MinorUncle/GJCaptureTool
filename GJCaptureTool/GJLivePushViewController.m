@@ -30,7 +30,7 @@
     CGRect rect = self.view.bounds;
     rect.size.height *= 0.45;
     self.topView = _livePush.previewView;//[[UIView alloc]initWithFrame:rect];
-    self.topView.contentMode = UIViewContentModeScaleToFill;
+    self.topView.contentMode = UIViewContentModeScaleAspectFill;
     self.topView.frame = rect;
     self.topView.backgroundColor = [UIColor blackColor];
     [self.view addSubview:self.topView];
@@ -67,7 +67,7 @@
     _bottomView.backgroundColor = [UIColor redColor];
     [self.view addSubview:_bottomView];
     
-    [_livePush startCaptureWithSizeType:kCaptureSize640_480 fps:15 position:AVCaptureDevicePositionBack];
+    [_livePush startCaptureWithSizeType:kCaptureSize1280_720 fps:15 position:AVCaptureDevicePositionBack];
     
     [_livePush startPreview];
     // Do any additional setup after loading the view.
@@ -78,8 +78,8 @@
         GJPushConfig config;
         config.channel = 1;
         config.audioSampleRate = 44100;
-        config.pushSize = CGSizeMake(360, 480);
-        config.videoBitRate = 400*1000;
+        config.pushSize = CGSizeMake(720, 1280);
+        config.videoBitRate = 8*200*1024;
         config.pushUrl = "rtmp://10.0.1.13:1935/live/room";
         [_livePush startStreamPushWithConfig:config];
     }else{

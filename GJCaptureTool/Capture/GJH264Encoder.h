@@ -66,7 +66,7 @@ typedef enum _GJEncodeQuality{
  */
 -(instancetype)initWithFormat:(H264Format)format;
 -(void)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(CMTime)pts fourceKey:(BOOL)fourceKey;
-
++(H264Format)defaultFormat;
 @end
 
 void praseVideoParamet(uint8_t* inparameterSet,uint8_t** inoutSetArry,int* inoutArryCount){

@@ -14,8 +14,6 @@
 #define DEFAULT_MAX_DROP_STEP 4
 @interface GJH264Encoder()
 {
-    GJRetainBufferPool* _bufferPool;
-    
     int _dropStep;//格多少帧丢一帧
     int _needDropCount;//当前需要丢多少帧;
     
@@ -36,6 +34,7 @@
         _destFormat = format;
         if (format.baseFormat.bitRate>0) {
             _currentBitRate = format.baseFormat.bitRate;
+            _allowMinBitRate = _currentBitRate;
         }
     }
     return self;
@@ -117,7 +116,7 @@
     if (_bufferPool != NULL) {
         GJRetainBufferPoolRelease(&_bufferPool);
     }
-    GJRetainBufferPoolCreate(&_bufferPool, w*h*4,true);///选最大size
+    GJRetainBufferPoolCreate(&_bufferPool, w*h,true);///选最大size
     [self _setCompressionSession];
 
     VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
@@ -184,6 +183,7 @@
 
 -(void)setCurrentBitRate:(int32_t)currentBitRate{
     if (currentBitRate>0 && _enCodeSession) {
+        _currentBitRate = currentBitRate;
         CFNumberRef bitRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &(_currentBitRate));
         OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, bitRate);
         CFRelease(bitRate);
@@ -278,14 +278,17 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
  
     CMTime dt = CMSampleBufferGetDecodeTimeStamp(sample);
     retainBuffer->size = (int)bufferOffset;//size初始是最大值，一定要设置当前值
+    assert(encoder.bufferPool->bufferSize > retainBuffer->size);
     float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:retainBuffer keyFrame:keyframe dts:dt];
     retainBufferUnRetain(retainBuffer);
 
-    if (encoder.currentDelayCount>0) {
+    if (encoder.currentDelayCount==0) {
         if (bufferRate > 0.3) {
             [encoder reduceQuality];
+            encoder.currentDelayCount = DEFAULT_DELAY;
         }else if(bufferRate - 0.0 <0.001){
             [encoder appendQuality];
+            encoder.currentDelayCount = DEFAULT_DELAY;
         }
     }else{
         encoder.currentDelayCount--;

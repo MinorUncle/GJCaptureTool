@@ -21,9 +21,11 @@ typedef struct _GJRTMP_Packet {
 
 static void* sendRunloop(void* parm){
     GJRtmpPush* push = parm;
-    
+    GJRTMPMessageType errType = GJRTMPMessageType_connectError;
+    void* errParm = NULL;
     int ret = RTMP_SetupURL(push->rtmp, push->pushUrl);
     if (!ret && push->messageCallback) {
+        errType = GJRTMPMessageType_urlPraseError;
         push->messageCallback(GJRTMPMessageType_urlPraseError,push->rtmpPushParm,NULL);
         goto ERROR;
     }
@@ -33,12 +35,12 @@ static void* sendRunloop(void* parm){
     
     ret = RTMP_Connect(push->rtmp, NULL);
     if (!ret && push->messageCallback) {
-        push->messageCallback(GJRTMPMessageType_connectError,push->rtmpPushParm,NULL);
+        errType = GJRTMPMessageType_connectError;
         goto ERROR;
     }
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret && push->messageCallback) {
-        push->messageCallback(GJRTMPMessageType_connectError,push->rtmpPushParm,NULL);
+        errType = GJRTMPMessageType_connectError;
         goto ERROR;
     }else{
         push->messageCallback(GJRTMPMessageType_connectSuccess,push->rtmpPushParm,NULL);
@@ -65,6 +67,7 @@ static void* sendRunloop(void* parm){
     return NULL;
 ERROR:
     push->sendThread = NULL;
+    push->messageCallback(errType,push->rtmpPushParm,errParm);
     return NULL;
 }
 void GJRtmpPush_Create(GJRtmpPush** sender,void(*callback)(GJRTMPMessageType,void*,void*),void* rtmpPushParm){
@@ -81,6 +84,7 @@ void GJRtmpPush_Create(GJRtmpPush** sender,void(*callback)(GJRTMPMessageType,voi
     queueCreate(&push->sendBufferQueue, BUFFER_CACHE_SIZE, true, false);
     push->messageCallback = callback;
     push->rtmpPushParm = rtmpPushParm;
+    push->stopRequest = false;
     *sender = push;
 }
 void GJRtmpPush_Release(GJRtmpPush* push){    
@@ -120,7 +124,7 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,double dt
         ppSize = (int)((uint8_t*)buffer->data + buffer->size - pp);
     }
     RTMPPacket_Reset(sendPacket);
-    if (buffer->frontSize < preSize) {//申请内存控制得当的话不会进入此条件、
+    if (buffer->frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
         retainBufferSetFrontSize(buffer, preSize+RTMP_MAX_HEADER_SIZE);
     }
     sendPacket->m_body = (char*)buffer->data - preSize;
@@ -234,9 +238,7 @@ void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* buffer,double dts
 
 void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
     size_t length = strlen(sendUrl);
-    if (length > MAX_URL_LENGTH-1) {
-        printf("sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
-    }
+    GJAssert(length <= MAX_URL_LENGTH-1, "sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
     memcpy(sender->pushUrl, sendUrl, length+1);
     pthread_create(&sender->sendThread, NULL, sendRunloop, sender);
 }
