@@ -281,28 +281,28 @@ void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **
             switch (p[headSize] & 0x1f) {
                 case 7:
                 {
-                    preNAL = p + headSize;
+                    preNAL = p;
                     preSize = spsSize;
                     if (sps) {
-                        *sps = p + headSize;
+                        *sps = p;
                     }
                     break;
                 }
                 case 8:
                 {
-                    preNAL =  p + headSize;
+                    preNAL =  p;
                     preSize = ppsSize;
                     if (pps) {
-                        *pps = p + headSize;
+                        *pps = p;
                     }
                     break;
                 }
                 case 6:
                 {
-                    preNAL = p + headSize;
+                    preNAL = p;
                     preSize = seiSize;
                     if (sei) {
-                        *sei = p + headSize;
+                        *sei = p;
                     }
                     break;
                 }
@@ -314,7 +314,7 @@ void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **
                 {
                     if (pp) {  //当没有idr时，退出，避免多余的查找,
 //                        preNAL = p + headSize;
-                        *pp = p + headSize;
+                        *pp = p;
                     }
                     return;
                 }
@@ -327,7 +327,6 @@ void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **
         }
         p++;
     }
-
 }
 
 static const int mpeg4audio_sample_rates[16] = {

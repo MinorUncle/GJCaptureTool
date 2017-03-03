@@ -12,10 +12,36 @@
 #import "GJRetainBuffer.h"
 #import "GJBufferPool.h"
 
+
+typedef enum _GJEncodeQuality{
+    GJEncodeQualityExcellent=0,
+    GJEncodeQualityGood,
+    GJEncodeQualitybad,
+    GJEncodeQualityTerrible,
+}GJEncodeQuality;
+
 @class GJH264Encoder;
 @protocol GJH264EncoderDelegate <NSObject>
 @required
--(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(CMTime)dts;
+
+/**
+ 数据压缩完成时回调。
+
+ @param encoder encoder description
+ @param buffer 引用用数据
+ @param keyFrame 是否关键帧
+ @param dts dts description
+ @return 可以理解为下一级数据缓存的比例，用于动态编码。
+ */
+-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(CMTime)dts;
+
+/**
+ 编码质量回调
+
+ @param encoder encoder description
+ @param quality 0优。1，一般，码率降低。2，差，码率降低且丢帧，3，非常差，码率为允许最小，且丢一半帧以上。
+ */
+-(void)GJH264Encoder:(GJH264Encoder*)encoder qualityQarning:(GJEncodeQuality)quality;
 @end
 @interface GJH264Encoder : NSObject
 @property(nonatomic,weak)id<GJH264EncoderDelegate> deleagte;
@@ -27,9 +53,9 @@
 @property(assign,nonatomic)NSInteger frameCount;
 
 /**
- //允许的最大码率和最小码率。用于动态码率，期望正常码率在destformat中设置。
+ //不丢帧情况下允许的最小码率。用于动态码率，期望正常码率在destformat中设置。
  */
-@property(assign,nonatomic) int allowMinBitRate,allowMaxBitRate;
+@property(assign,nonatomic) int allowMinBitRate;
 
 
 /**

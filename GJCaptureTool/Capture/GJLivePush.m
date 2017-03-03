@@ -129,27 +129,23 @@
     }
     _pushUrl = [NSString stringWithUTF8String:config.pushUrl];
     if (_videoSender == nil) {
-        GJRtmpPush_Create(&_videoSender);
+        GJRtmpPush_Create(&_videoSender, rtmpCallback, (__bridge void *)(self));
     }
     [_videoStreamFilter forceProcessingAtSize:config.pushSize];
     _videoStreamFilter.frameProcessingCompletionBlock = nil;
+    GJRtmpPush_StartConnect(self.videoSender, self.pushUrl.UTF8String);
+    return true;
+}
+
+-(void)pushRun{
     __weak GJLivePush* wkSelf = self;
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        bool result = GJRtmpPush_StartConnect(wkSelf.videoSender, wkSelf.pushUrl.UTF8String);
-        if (result) {
-            GJLOG(@"连接成功");
-            [wkSelf.delegate livePush:wkSelf infoType:kLivePushInfoPushSuccess infoDesc:nil];
-        }else{
-            GJLOG(@"连接失败");
-            [wkSelf.delegate livePush:wkSelf errorType:kLivePushConnentError errorDesc:@"rtmp连接失败"];
-        }
         wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
             CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
             
-        [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:CMTimeMake(wkSelf.videoEncoder.frameCount, (int32_t)wkSelf.captureFps) fourceKey:false];
+            [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:CMTimeMake(wkSelf.videoEncoder.frameCount, (int32_t)wkSelf.captureFps) fourceKey:false];
         };
     });
-    return true;
 }
 
 - (void)stopStreamPush{
@@ -165,10 +161,45 @@
 }
 
 
-
+#pragma mark rtmp callback
+static void rtmpCallback(GJRTMPMessageType messageType,void* rtmpPushParm,void* messageParm){
+    GJLivePush* livePush = (__bridge GJLivePush *)(rtmpPushParm);
+    switch (messageType) {
+        case GJRTMPMessageType_connectSuccess:
+            GJLOG(@"连接成功\n");
+            [livePush.delegate livePush:livePush infoType:kLivePushInfoPushSuccess infoDesc:nil];
+            [livePush pushRun];
+            break;
+        case GJRTMPMessageType_closeComplete:
+            
+            break;
+        case GJRTMPMessageType_connectError:
+            GJLOG(@"连接失败\n");
+            [livePush.delegate livePush:livePush errorType:kLivePushConnentError errorDesc:@"rtmp连接失败"];
+            GJRtmpPush_Release(livePush.videoSender);
+            livePush.videoSender = NULL;
+            break;
+        case GJRTMPMessageType_urlPraseError:
+            
+            break;
+        case GJRTMPMessageType_sendPacketError:
+            
+            break;
+            
+        default:
+            break;
+    }
+}
 #pragma mark delegate
 
--(void)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(CMTime)dts{
+-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(CMTime)dts{
     GJRtmpPush_SendH264Data(_videoSender, buffer, dts.value);
+    return GJRtmpPush_GetBufferRate(_videoSender);
+}
+
+-(void)dealloc{
+    if (_videoSender) {
+        GJRtmpPush_Release(_videoSender);
+    }
 }
 @end

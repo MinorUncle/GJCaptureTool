@@ -19,16 +19,19 @@
 #include <math.h>
 
 #ifndef bool
-#   define bool unsigned int
-#   define true 1
-#   define false 0
+#define bool unsigned int
 #endif
-
+#ifndef true
+#define true 1
+#endif
+#ifndef false
+#define false 0
+#endif
 typedef  unsigned int UINT;
 typedef  unsigned char BYTE;
 typedef  unsigned long DWORD;
 
-//pp是i帧或非i帧,isKey时为i帧,,参数太多，不查找ppSize，耗费时间，请直接相减计算
+//pp是i帧或非i帧,isKey时为i帧,,参数太多，不查找ppSize，耗费时间，请直接相减计算,size包括分隔符
 void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize);
 int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps);
 int aac_parse_header(uint8_t *adts, int size,int* samples,int* objType,int* channel_config);

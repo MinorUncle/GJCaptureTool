@@ -9,12 +9,21 @@
 #import "GJH264Encoder.h"
 #import "GJRetainBufferPool.h"
 #import "GJDebug.h"
+
+#define DEFAULT_DELAY  5
+#define DEFAULT_MAX_DROP_STEP 4
 @interface GJH264Encoder()
 {
     GJRetainBufferPool* _bufferPool;
+    
+    int _dropStep;//格多少帧丢一帧
+    int _needDropCount;//当前需要丢多少帧;
+    
 }
 @property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
 @property(nonatomic,assign)GJRetainBufferPool* bufferPool;
+@property(nonatomic,assign)int32_t currentBitRate;//当前码率
+@property(nonatomic,assign)int currentDelayCount;//调整之后要过几帧才能反应，所以要延迟几帧再做检测调整；
 
 
 @end
@@ -25,6 +34,9 @@
     self = [super init];
     if(self){
         _destFormat = format;
+        if (format.baseFormat.bitRate>0) {
+            _currentBitRate = format.baseFormat.bitRate;
+        }
     }
     return self;
 }
@@ -39,7 +51,7 @@
     format.level=profileLevelMain;
     format.allowBframe=true;//false时解码dts一直为0
     format.allowPframe=true;
-    format.baseFormat.bitRate=300*1024*8;//bit/s
+    format.baseFormat.bitRate=60*1024*8;//bit/s
     format.gopSize=10;
     return format;
 }
@@ -50,6 +62,7 @@
 //编码
 -(void)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(CMTime)pts fourceKey:(BOOL)fourceKey
 {
+    
     
     
     int32_t h = (int32_t)CVPixelBufferGetHeight(imageBuffer);
@@ -107,7 +120,7 @@
     GJRetainBufferPoolCreate(&_bufferPool, w*h*4,true);///选最大size
     [self _setCompressionSession];
 
-    result = VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
+    VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
  
 }
 
@@ -137,7 +150,7 @@
         NSLog(@"kVTCompressionPropertyKey_H264EntropyMode set error");
     }
     
-    CFNumberRef bitRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &(_destFormat.baseFormat.bitRate));
+    CFNumberRef bitRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &(_currentBitRate));
     result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, bitRate);
     CFRelease(bitRate);
     if (result != 0) {
@@ -169,7 +182,14 @@
 
 }
 
-
+-(void)setCurrentBitRate:(int32_t)currentBitRate{
+    if (currentBitRate>0 && _enCodeSession) {
+        CFNumberRef bitRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &(_currentBitRate));
+        OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, bitRate);
+        CFRelease(bitRate);
+        GJAssert(result == 0, "kVTCompressionPropertyKey_AverageBitRate set error:%d",result);
+    }
+}
 
 void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon,OSStatus statu,VTEncodeInfoFlags infoFlags,
                           CMSampleBufferRef sample ){
@@ -258,8 +278,53 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
  
     CMTime dt = CMSampleBufferGetDecodeTimeStamp(sample);
     retainBuffer->size = (int)bufferOffset;//size初始是最大值，一定要设置当前值
-    [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:retainBuffer keyFrame:keyframe dts:dt];
+    float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:retainBuffer keyFrame:keyframe dts:dt];
     retainBufferUnRetain(retainBuffer);
+
+    if (encoder.currentDelayCount>0) {
+        if (bufferRate > 0.3) {
+            [encoder reduceQuality];
+        }else if(bufferRate - 0.0 <0.001){
+            [encoder appendQuality];
+        }
+    }else{
+        encoder.currentDelayCount--;
+    }
+}
+//快降慢升
+-(void)appendQuality{
+    if (_dropStep > 0) {
+        if (++_dropStep > DEFAULT_MAX_DROP_STEP) {
+            _dropStep = 0;
+            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
+        }else{
+            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
+        }
+    }else{
+        if (_currentBitRate < _destFormat.baseFormat.bitRate) {
+            self.currentBitRate += (_destFormat.baseFormat.bitRate - _currentBitRate)*0.1;
+            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
+        }else{
+            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityExcellent];
+        }
+    }
+}
+-(void)reduceQuality{
+    if (_currentBitRate > _allowMinBitRate) {
+        int32_t bitrate =_currentBitRate - (_currentBitRate - _allowMinBitRate)*0.4;
+        if (bitrate < _allowMinBitRate) {
+            bitrate = _allowMinBitRate;
+        }
+        self.currentBitRate = bitrate;
+        [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
+    }else{
+        if (_dropStep > 1) {
+            _dropStep--;
+            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
+        }else{
+            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityTerrible];
+        }
+    }
 }
 
 -(void)stop{
