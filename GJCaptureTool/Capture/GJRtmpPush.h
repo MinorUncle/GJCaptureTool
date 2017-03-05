@@ -11,16 +11,19 @@
 #include "rtmp.h"
 #include "GJBufferPool.h"
 #include "GJQueue.h"
+#import <Foundation/Foundation.h>
 
-typedef enum _GJRTMPMessageType{
-    GJRTMPMessageType_connectSuccess,
-    GJRTMPMessageType_closeComplete,
+typedef enum _GJRTMPPushMessageType{
+    GJRTMPPushMessageType_connectSuccess,
+    GJRTMPPushMessageType_closeComplete,
 
     
-    GJRTMPMessageType_connectError,
-    GJRTMPMessageType_urlPraseError,
-    GJRTMPMessageType_sendPacketError,
-}GJRTMPMessageType;
+    GJRTMPPushMessageType_connectError,
+    GJRTMPPushMessageType_urlPraseError,
+    GJRTMPPushMessageType_sendPacketError,
+}GJRTMPPushMessageType;
+
+typedef void(*PullMessageCallback)(GJRTMPPushMessageType messageType,void* rtmpPullParm,void* messageParm);
 
 #define MAX_URL_LENGTH 100
 typedef struct _GJRtmpPush{
@@ -33,16 +36,14 @@ typedef struct _GJRtmpPush{
     int                 sendPacketCount;
     int                 dropPacketCount;
     int                 sendByte;
-    void                (*messageCallback)(GJRTMPMessageType messageType,void* rtmpPushParm,void* messageParm);
+    PullMessageCallback messageCallback;
     void*               rtmpPushParm;
-    
     int                 stopRequest;
 }GJRtmpPush;
 
-void GJRtmpPush_Create(GJRtmpPush** sender,void(*callback)(GJRTMPMessageType,void*,void*),void* rtmpPushParm);
-void GJRtmpPush_Release(GJRtmpPush* sender);
-void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* data,double dts);
-void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* data,double dts);
-void GJRtmpPush_Close(GJRtmpPush* sender);
-void GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl);
-float GJRtmpPush_GetBufferRate(GJRtmpPush* sender);
+void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmpPushParm);
+void GJRtmpPush_SendH264Data(GJRtmpPush* push,GJRetainBuffer* data,uint32_t dts);
+void GJRtmpPush_SendAACData(GJRtmpPush* push,GJRetainBuffer* data,uint32_t dts);
+void GJRtmpPush_CloseAndRelease(GJRtmpPush* push);
+void GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);
+float GJRtmpPush_GetBufferRate(GJRtmpPush* push);

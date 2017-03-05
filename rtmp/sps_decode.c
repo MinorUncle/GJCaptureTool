@@ -248,22 +248,22 @@ int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps
                 }
             }
         }
-        return true;
+        return 1;
     }
     else
-        return false;
+        return 0;
 #pragma clang diagnostic pop 
 }
 
 
-void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize){
+void find_pp_sps_pps(int *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **sps,int *spsSize,uint8_t** pps,int *ppsSize,uint8_t** sei,int *seiSize){
     uint8_t* p = data;
    
     uint8_t* preNAL = p;
     int* preSize = NULL;
     int headSize = 4;
     if (isKey) {
-        *isKey = false;
+        *isKey = 0;
     }
     while (p<data+size) {
         if (p[0] == 0 && p[1] == 0) {
@@ -308,7 +308,7 @@ void find_pp_sps_pps(bool *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **
                 }
                 case 5:
                     if (isKey) {
-                        *isKey = true;
+                        *isKey = 1;
                     }
                 case 1:
                 {

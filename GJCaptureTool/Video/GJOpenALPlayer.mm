@@ -278,7 +278,7 @@
 + (void)setPlayBackToSpeaker
 {
     
-    NSError * error;
+//    NSError * error;
     //    AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     //    [audioSession overrideOutputAudioPort:kAudioSessionOverrideAudioRoute_Speaker error:&error];
     //    [audioSession setActive:YES error:&error];

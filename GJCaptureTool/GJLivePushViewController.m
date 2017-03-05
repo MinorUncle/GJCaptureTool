@@ -9,7 +9,7 @@
 #import "GJLivePushViewController.h"
 #import "GJLivePush.h"
 #import <AVFoundation/AVFoundation.h>
-@interface GJLivePushViewController ()
+@interface GJLivePushViewController ()<GJLivePushDelegate>
 {
     GJLivePush* _livePush;
 }
@@ -26,7 +26,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     _livePush = [[GJLivePush alloc]init];
-
+    _livePush.delegate = self;
     CGRect rect = self.view.bounds;
     rect.size.height *= 0.45;
     self.topView = _livePush.previewView;//[[UIView alloc]initWithFrame:rect];
@@ -67,7 +67,14 @@
     _bottomView.backgroundColor = [UIColor redColor];
     [self.view addSubview:_bottomView];
     
-    [_livePush startCaptureWithSizeType:kCaptureSize1280_720 fps:15 position:AVCaptureDevicePositionBack];
+    rect.origin = CGPointMake(10, 20);
+    rect.size = CGSizeMake(200, 50);
+    _stateLab = [[UILabel alloc]initWithFrame:rect];
+    _stateLab.text = @"未连接";
+    [self.view addSubview:_stateLab];
+    _stateLab.textColor = [UIColor redColor];
+    
+    [_livePush startCaptureWithSizeType:kCaptureSize352_288 fps:10 position:AVCaptureDevicePositionBack];
     
     [_livePush startPreview];
     // Do any additional setup after loading the view.
@@ -78,9 +85,9 @@
         GJPushConfig config;
         config.channel = 1;
         config.audioSampleRate = 44100;
-        config.pushSize = CGSizeMake(720, 1280);
+        config.pushSize = CGSizeMake(288, 352);
         config.videoBitRate = 8*200*1024;
-        config.pushUrl = "rtmp://10.0.1.13:1935/live/room";
+        config.pushUrl = "rtmp://192.168.18.21:1935/live/room";
         [_livePush startStreamPushWithConfig:config];
     }else{
         [_livePush stopStreamPush];
@@ -91,6 +98,34 @@
     // Dispose of any resources that can be recreated.
 }
 
+
+-(void)livePush:(GJLivePush *)livePush infoType:(LivePushInfoType)type infoDesc:(id)infoDesc{
+    switch (type) {
+        case kLivePushInfoConnectSuccess:
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+               _stateLab.text =@"连接成功";
+            });
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+-(void)livePush:(GJLivePush *)livePush errorType:(LivePushErrorType)type errorDesc:(NSString *)errorDesc{
+    switch (type) {
+        case kLivePushConnentError:{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                _stateLab.text =@"连接失败";
+            });
+            break;
+        }
+        default:
+            break;
+    }
+
+}
 /*
 #pragma mark - Navigation
 

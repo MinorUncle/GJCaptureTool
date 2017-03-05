@@ -8,25 +8,29 @@
 
 #include "GJRtmpPush.h"
 #include "GJDebug.h"
+
+//extern "C"{
 #include "sps_decode.h"
+//}
 #include <pthread.h>
+
 #define RTMP_RECEIVE_TIMEOUT    3
 
-#define BUFFER_CACHE_SIZE 50
+#define BUFFER_CACHE_SIZE 40
 
 typedef struct _GJRTMP_Packet {
     RTMPPacket packet;
     GJRetainBuffer* retainBuffer;
 }GJRTMP_Packet;
-
+void GJRtmpPush_Release(GJRtmpPush* push);
 static void* sendRunloop(void* parm){
-    GJRtmpPush* push = parm;
-    GJRTMPMessageType errType = GJRTMPMessageType_connectError;
+    GJRtmpPush* push = (GJRtmpPush*)parm;
+    GJRTMPPushMessageType errType = GJRTMPPushMessageType_connectError;
     void* errParm = NULL;
     int ret = RTMP_SetupURL(push->rtmp, push->pushUrl);
     if (!ret && push->messageCallback) {
-        errType = GJRTMPMessageType_urlPraseError;
-        push->messageCallback(GJRTMPMessageType_urlPraseError,push->rtmpPushParm,NULL);
+        errType = GJRTMPPushMessageType_urlPraseError;
+        push->messageCallback(GJRTMPPushMessageType_urlPraseError,push->rtmpPushParm,NULL);
         goto ERROR;
     }
     RTMP_EnableWrite(push->rtmp);
@@ -35,19 +39,22 @@ static void* sendRunloop(void* parm){
     
     ret = RTMP_Connect(push->rtmp, NULL);
     if (!ret && push->messageCallback) {
-        errType = GJRTMPMessageType_connectError;
+        RTMP_Close(push->rtmp);
+        errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret && push->messageCallback) {
-        errType = GJRTMPMessageType_connectError;
+        RTMP_Close(push->rtmp);
+
+        errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }else{
-        push->messageCallback(GJRTMPMessageType_connectSuccess,push->rtmpPushParm,NULL);
+        push->messageCallback(GJRTMPPushMessageType_connectSuccess,push->rtmpPushParm,NULL);
     }
     
     GJRTMP_Packet* packet;
-    while (!push->stopRequest && queuePop(push->sendBufferQueue, (void**)&packet, 1000000)) {
+    while (queuePop(push->sendBufferQueue, (void**)&packet, 1000000)) {
         int iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
         if (iRet) {
             push->sendByte += packet->retainBuffer->size;
@@ -59,24 +66,31 @@ static void* sendRunloop(void* parm){
         GJBufferPoolSetData(push->memoryCachePool, packet);
     }
     
+    queueEnablePop(push->sendBufferQueue, true);
     RTMP_Close(push->rtmp);
     if (push->messageCallback) {
-        push->messageCallback(GJRTMPMessageType_closeComplete,push->rtmpPushParm,NULL);
+        push->messageCallback(GJRTMPPushMessageType_closeComplete,push->rtmpPushParm,NULL);
     }
     push->sendThread = NULL;
+    
     return NULL;
 ERROR:
     push->sendThread = NULL;
     push->messageCallback(errType,push->rtmpPushParm,errParm);
+    if (push->stopRequest) {
+        GJRtmpPush_Release(push);
+    }
     return NULL;
 }
-void GJRtmpPush_Create(GJRtmpPush** sender,void(*callback)(GJRTMPMessageType,void*,void*),void* rtmpPushParm){
+
+void GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,void* rtmpPushParm){
     GJRtmpPush* push = NULL;
     if (*sender == NULL) {
         push = (GJRtmpPush*)malloc(sizeof(GJRtmpPush));
     }else{
         push = *sender;
     }
+    memset(push, 0, sizeof(GJRtmpPush));
     push->rtmp = RTMP_Alloc();
     RTMP_Init(push->rtmp);
     
@@ -87,7 +101,7 @@ void GJRtmpPush_Create(GJRtmpPush** sender,void(*callback)(GJRTMPMessageType,voi
     push->stopRequest = false;
     *sender = push;
 }
-void GJRtmpPush_Release(GJRtmpPush* push){    
+void GJRtmpPush_Release(GJRtmpPush* push){
     GJAssert(!(push->sendThread && !push->stopRequest),"请在stopconnect函数 或者GJRTMPMessageType_closeComplete回调 后调用\n");
     RTMP_Free(push->rtmp);
     GJRTMP_Packet* packet;
@@ -98,14 +112,14 @@ void GJRtmpPush_Release(GJRtmpPush* push){
     GJBufferPoolRelease(&push->memoryCachePool);
 }
 
-void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,double dts){
+void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t dts){
     if (sender->stopRequest) {
         return;
     }
     uint8_t *sps = NULL,*pps = NULL,*pp = NULL;
-    bool isKey = 0;
+    int isKey = 0;
     int spsSize = 0,ppsSize = 0,ppSize = 0;
-    find_pp_sps_pps(&isKey, buffer->data, buffer->size, &pp, &sps, &spsSize, &pps, &ppsSize, NULL, NULL);
+    find_pp_sps_pps(&isKey, (uint8_t*)buffer->data, buffer->size, &pp, &sps, &spsSize, &pps, &ppsSize, NULL, NULL);
     ppsSize = (int)((uint8_t*)buffer->data + buffer->size - pp);//ppsSize最好通过计算获得，直接查找的话查找数据量比较大
     
     GJRTMP_Packet* packet = (GJRTMP_Packet*)GJBufferPoolGetData(sender->memoryCachePool, sizeof(GJRTMP_Packet));
@@ -166,6 +180,7 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,double dt
         memmove(&body[iIndex], pps, ppsSize);
         iIndex +=  ppsSize;
     }
+    
     if (pp) {
 
         if(isKey)
@@ -189,6 +204,9 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,double dt
 //        memcpy(&body[iIndex],pp,ppSize);   //不需要移动
     }
     retainBufferRetain(buffer);
+//    static int c = 0;
+//    NSData* data = [NSData dataWithBytes:sendPacket->m_body length:sendPacket->m_nBodySize];
+//    NSLog(@"GJRtmpPush_SendH264Data%d:%@",c++,data);
     if(sender->stopRequest || !queuePush(sender->sendBufferQueue, packet, 0)){
         retainBufferUnRetain(buffer);
         GJBufferPoolSetData(sender->memoryCachePool, packet);
@@ -196,7 +214,7 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,double dt
     };
 }
 
-void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* buffer,double dts){
+void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t dts){
     if (sender->stopRequest) {
         return;
     }
@@ -226,26 +244,28 @@ void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* buffer,double dts
     sendPacket->m_hasAbsTimestamp = 0;
     sendPacket->m_headerType = RTMP_PACKET_SIZE_LARGE;
     sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
-    
     retainBufferRetain(buffer);
-    if(sender->stopRequest || !queuePush(sender->sendBufferQueue, packet, 0)){
+    if(!queuePush(sender->sendBufferQueue, packet, 0)){
         retainBufferUnRetain(buffer);
         GJBufferPoolSetData(sender->memoryCachePool, packet);
         sender->dropPacketCount++;
     };
 }
 
-
 void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
     size_t length = strlen(sendUrl);
     GJAssert(length <= MAX_URL_LENGTH-1, "sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
     memcpy(sender->pushUrl, sendUrl, length+1);
+    sender->stopRequest = false;
     pthread_create(&sender->sendThread, NULL, sendRunloop, sender);
 }
-void GJRtmpPush_Close(GJRtmpPush* sender){
+
+void GJRtmpPush_CloseAndRelease(GJRtmpPush* sender){
     sender->stopRequest = true;
+    queueEnablePop(sender->sendBufferQueue, false);//防止临界情况
     queueBroadcastPop(sender->sendBufferQueue);
 }
+
 float GJRtmpPush_GetBufferRate(GJRtmpPush* sender){
     long length = queueGetLength(sender->sendBufferQueue);
     float size = sender->sendBufferQueue->allocSize * 1.0;

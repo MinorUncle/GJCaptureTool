@@ -1036,6 +1036,8 @@ RTMP_Connect0(RTMP *r, struct sockaddr * service)
     r->m_sb.sb_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (r->m_sb.sb_socket != -1)
     {
+        fcntl(socket, F_SETFL, fcntl(socket, F_GETFL) | ~O_NONBLOCK);
+
         if (connect(r->m_sb.sb_socket, service, sizeof(struct sockaddr)) < 0)
         {
             int err = GetSockError();
@@ -1282,7 +1284,6 @@ RTMP_ConnectStream(RTMP *r, int seekTime)
                 RTMPPacket_Free(&packet);
                 continue;
             }
-            
             RTMP_ClientPacket(r, &packet);
             RTMPPacket_Free(&packet);
         }

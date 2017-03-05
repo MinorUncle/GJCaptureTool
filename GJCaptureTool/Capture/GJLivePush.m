@@ -18,16 +18,14 @@
     CGSize _captureSize;
     GJImageView* _showView;
     GPUImageOutput* _lastFilter;
-    
     GPUImageCropFilter* _cropFilter;
 }
 @property(strong,nonatomic)GJH264Encoder* videoEncoder;
 @property(copy,nonatomic)NSString* pushUrl;
 @property(strong,nonatomic)GPUImageFilter* videoStreamFilter; //可能公用_cropFilter
 @property(assign,nonatomic)GJRtmpPush* videoSender;
-
-
 @end
+
 @implementation GJLivePush
 @synthesize previewView = _previewView;
 
@@ -91,6 +89,7 @@
         [_lastFilter removeTarget:_cropFilter];
         _cropFilter = nil;
     }
+    
     if (_videoStreamFilter) {
         [_lastFilter removeTarget:_videoStreamFilter];
         _videoStreamFilter = nil;
@@ -119,7 +118,6 @@
             [_lastFilter addTarget:_videoStreamFilter];
         }
     }else{
-     
         _videoStreamFilter = [[GPUImageFilter alloc]init];
         [_lastFilter addTarget:_videoStreamFilter];
     }
@@ -154,7 +152,8 @@
 
 - (void)stopStreamPush{
     [_lastFilter removeTarget:_videoStreamFilter];
-    GJRtmpPush_Close(_videoSender);
+    GJRtmpPush_CloseAndRelease(_videoSender);
+    _videoSender = nil;
 }
 
 -(UIView *)getPreviewView{
@@ -164,39 +163,39 @@
     return _previewView;
 }
 
-
 #pragma mark rtmp callback
-static void rtmpCallback(GJRTMPMessageType messageType,void* rtmpPushParm,void* messageParm){
+static void rtmpCallback(GJRTMPPushMessageType messageType,void* rtmpPushParm,void* messageParm){
     GJLivePush* livePush = (__bridge GJLivePush *)(rtmpPushParm);
     switch (messageType) {
-        case GJRTMPMessageType_connectSuccess:
+        case GJRTMPPushMessageType_connectSuccess:
             GJLOG(@"连接成功\n");
-            [livePush.delegate livePush:livePush infoType:kLivePushInfoPushSuccess infoDesc:nil];
+            [livePush.delegate livePush:livePush infoType:kLivePushInfoConnectSuccess infoDesc:nil];
             [livePush pushRun];
             break;
-        case GJRTMPMessageType_closeComplete:
+        case GJRTMPPushMessageType_closeComplete:
             
             break;
-        case GJRTMPMessageType_connectError:
+        case GJRTMPPushMessageType_connectError:
             GJLOG(@"连接失败\n");
             [livePush.delegate livePush:livePush errorType:kLivePushConnentError errorDesc:@"rtmp连接失败"];
-            GJRtmpPush_Release(livePush.videoSender);
+            GJRtmpPush_CloseAndRelease(livePush.videoSender);
             livePush.videoSender = NULL;
             break;
-        case GJRTMPMessageType_urlPraseError:
+        case GJRTMPPushMessageType_urlPraseError:
             
             break;
-        case GJRTMPMessageType_sendPacketError:
-            
+        case GJRTMPPushMessageType_sendPacketError:
             break;
-            
         default:
             break;
     }
 }
-#pragma mark delegate
 
+#pragma mark delegate
 -(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(CMTime)dts{
+//    static int c = 0;
+//    NSData* data = [NSData dataWithBytes:buffer->data length:buffer->size];
+//    NSLog(@"GJH264EncoderData%d:%@",c++,data);
     GJRtmpPush_SendH264Data(_videoSender, buffer, dts.value);
     return GJRtmpPush_GetBufferRate(_videoSender);
 }
@@ -205,7 +204,7 @@ static void rtmpCallback(GJRTMPMessageType messageType,void* rtmpPushParm,void* 
 }
 -(void)dealloc{
     if (_videoSender) {
-        GJRtmpPush_Release(_videoSender);
+        GJRtmpPush_CloseAndRelease(_videoSender);
     }
 }
 @end

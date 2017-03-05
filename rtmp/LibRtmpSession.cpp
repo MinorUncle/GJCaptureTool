@@ -147,7 +147,6 @@ int LibRtmpSession::Connect(int iFlag){
     }
     
     _pRtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
-    
     //LOGI("RTMP_Connect...");
     if (RTMP_ConnectEx(_pRtmp, NULL, RTMP_CONNECTION_TIMEOUT) == FALSE)
     {
