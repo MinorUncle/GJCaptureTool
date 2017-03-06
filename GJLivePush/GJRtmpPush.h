@@ -23,7 +23,8 @@ typedef enum _GJRTMPPushMessageType{
     GJRTMPPushMessageType_sendPacketError,
 }GJRTMPPushMessageType;
 
-typedef void(*PullMessageCallback)(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType,void* rtmpPullParm,void* messageParm);
+struct _GJRtmpPush;
+typedef void(*PullMessageCallback)(struct _GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType,void* rtmpPullParm,void* messageParm);
 
 #define MAX_URL_LENGTH 100
 typedef struct _GJRtmpPush{

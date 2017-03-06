@@ -279,6 +279,10 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     CMTime dt = CMSampleBufferGetDecodeTimeStamp(sample);
     retainBuffer->size = (int)bufferOffset;//size初始是最大值，一定要设置当前值
     assert(encoder.bufferPool->bufferSize > retainBuffer->size);
+    
+#ifdef DEBUG
+    
+#endif
     float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:retainBuffer keyFrame:keyframe dts:dt];
     retainBufferUnRetain(retainBuffer);
 

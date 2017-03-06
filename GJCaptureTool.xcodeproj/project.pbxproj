@@ -38,7 +38,6 @@
 		044018CB1E6CF13F00DEBF98 /* GJLivePush+advanced.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440189C1E6CF13F00DEBF98 /* GJLivePush+advanced.m */; };
 		044018CC1E6CF14000DEBF98 /* GJLivePush.h in Headers */ = {isa = PBXBuildFile; fileRef = 0440189D1E6CF13F00DEBF98 /* GJLivePush.h */; };
 		044018CD1E6CF14000DEBF98 /* GJLivePush.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440189E1E6CF13F00DEBF98 /* GJLivePush.m */; };
-		044018CE1E6CF14000DEBF98 /* GJRtmpPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 0440189F1E6CF13F00DEBF98 /* GJRtmpPull.c */; };
 		044018CF1E6CF14000DEBF98 /* GJRtmpPull.h in Headers */ = {isa = PBXBuildFile; fileRef = 044018A01E6CF13F00DEBF98 /* GJRtmpPull.h */; };
 		044018D01E6CF14000DEBF98 /* GJRtmpPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 044018A11E6CF13F00DEBF98 /* GJRtmpPush.h */; };
 		044018D11E6CF14000DEBF98 /* GJRtmpPush.m in Sources */ = {isa = PBXBuildFile; fileRef = 044018A21E6CF13F00DEBF98 /* GJRtmpPush.m */; };
@@ -68,6 +67,8 @@
 		045E4E601E34A9C900289523 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 045E4E581E34A9C900289523 /* libavutil.a */; };
 		045E4E611E34A9C900289523 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 045E4E591E34A9C900289523 /* libswresample.a */; };
 		045E4E621E34A9C900289523 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 045E4E5A1E34A9C900289523 /* libswscale.a */; };
+		046EDBE31E6D51EB00D9D8FC /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */; };
+		046EDBE41E6D597D00D9D8FC /* libGJLivePull.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 044018E91E6CF4E400DEBF98 /* libGJLivePull.a */; };
 		046F59871E2DBA39007901EB /* sps_decode.c in Sources */ = {isa = PBXBuildFile; fileRef = 046F59861E2DBA39007901EB /* sps_decode.c */; };
 		046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
 		046F7E421E306C8E00712A2B /* libx264_back.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F7E411E306C8E00712A2B /* libx264_back.a */; };
@@ -410,7 +411,7 @@
 		0440189C1E6CF13F00DEBF98 /* GJLivePush+advanced.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GJLivePush+advanced.m"; sourceTree = "<group>"; };
 		0440189D1E6CF13F00DEBF98 /* GJLivePush.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePush.h; sourceTree = "<group>"; };
 		0440189E1E6CF13F00DEBF98 /* GJLivePush.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJLivePush.m; sourceTree = "<group>"; };
-		0440189F1E6CF13F00DEBF98 /* GJRtmpPull.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GJRtmpPull.c; path = ../GJLivePush/GJRtmpPull.c; sourceTree = "<group>"; };
+		0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GJRtmpPull.m; path = ../GJLivePush/GJRtmpPull.m; sourceTree = "<group>"; };
 		044018A01E6CF13F00DEBF98 /* GJRtmpPull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJRtmpPull.h; path = ../GJLivePush/GJRtmpPull.h; sourceTree = "<group>"; };
 		044018A11E6CF13F00DEBF98 /* GJRtmpPush.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJRtmpPush.h; sourceTree = "<group>"; };
 		044018A21E6CF13F00DEBF98 /* GJRtmpPush.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJRtmpPush.m; sourceTree = "<group>"; };
@@ -596,6 +597,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				046EDBE41E6D597D00D9D8FC /* libGJLivePull.a in Frameworks */,
 				0417FEEB1E5ECBAA00D5B5D9 /* libGJImageFilters.a in Frameworks */,
 				045E4E1D1E343FB700289523 /* liblibQueue.a in Frameworks */,
 				046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */,
@@ -930,7 +932,7 @@
 				044018EB1E6CF4E400DEBF98 /* GJLivePull.h */,
 				044018EC1E6CF4E400DEBF98 /* GJLivePull.m */,
 				044018A01E6CF13F00DEBF98 /* GJRtmpPull.h */,
-				0440189F1E6CF13F00DEBF98 /* GJRtmpPull.c */,
+				0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */,
 				044018F21E6CF6B400DEBF98 /* GJLivePullDefine.h */,
 			);
 			path = GJLivePull;
@@ -1513,6 +1515,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				046EDBE31E6D51EB00D9D8FC /* GJRtmpPull.m in Sources */,
 				044018ED1E6CF4E400DEBF98 /* GJLivePull.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1530,7 +1533,6 @@
 				044018B61E6CF13F00DEBF98 /* AudioPraseStream.m in Sources */,
 				044018E01E6CF14000DEBF98 /* RtmpSendH264.m in Sources */,
 				044018C01E6CF13F00DEBF98 /* GJOpenALPlayer.mm in Sources */,
-				044018CE1E6CF14000DEBF98 /* GJRtmpPull.c in Sources */,
 				044018DD1E6CF14000DEBF98 /* Mp4Writer.c in Sources */,
 				044018B41E6CF13F00DEBF98 /* AACEncoderFromPCM.m in Sources */,
 				044018D81E6CF14000DEBF98 /* H264Decoder.m in Sources */,

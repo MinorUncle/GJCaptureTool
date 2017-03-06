@@ -15,14 +15,6 @@ enum AVCaptureDevicePosition;
 
 @protocol GJLivePushDelegate <NSObject>
 @required
-/**
- 推流停止错误回调
- 
- @param type 错误类型
- @param errorDesc 描述
- */
--(void)livePush:(GJLivePush*)livePush errorType:(LivePushErrorType)type errorDesc:(NSString*)errorDesc;
-
 
 
 /**
@@ -32,7 +24,7 @@ enum AVCaptureDevicePosition;
  @param type 信息type，
  @param infoDesc 信息值，具体类型见LivePushInfoType
  */
--(void)livePush:(GJLivePush*)livePush infoType:(LivePushInfoType)type infoDesc:(id)infoDesc;
+-(void)livePush:(GJLivePush*)livePush messageType:(LivePushMessageType)type infoDesc:(id)infoDesc;
 
 @optional
 

@@ -63,8 +63,6 @@ void decodeOutputCallback(
     if (status != 0) {
         NSLog(@"解码error:%d",(int)status);
         return;
-    }else{
-        NSLog(@"解码成功");
     }
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
     if ([decoder.delegate respondsToSelector:@selector(GJH264Decoder:decodeCompleteImageData:pts:)]) {
@@ -95,8 +93,6 @@ void decodeOutputCallback(
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     
-    retainBufferRetain(buffer);
-    dispatch_async(_decodeQueue, ^{
     OSStatus status;
     uint8_t *data = NULL;
     uint8_t *pps = NULL;
@@ -147,17 +143,15 @@ void decodeOutputCallback(
                     }
 #endif
                     
-                    if (_formatDesc != nil) {
-                        CGRect rect = CMVideoFormatDescriptionGetCleanAperture(_formatDesc, YES);
-                        CGRect rect1 = CMVideoFormatDescriptionGetCleanAperture(desc, YES);
-                        if (!CGRectEqualToRect(rect, rect1)) {
-                            shouldReCreate = YES;
+                    if (!CMFormatDescriptionEqual(_formatDesc, desc)) {
+                        shouldReCreate = YES;
+                        if (_formatDesc) {
+                            CFRelease(_formatDesc);
                         }
-                        CFRelease(_formatDesc);
+                        _formatDesc = desc;
+                    }else{
+                        CFRelease(desc);
                     }
-                    //        CGRect rect1 = CMVideoFormatDescriptionGetCleanAperture(desc, YES);
-                    
-                    _formatDesc = desc;
                     if((status == noErr) && (_decompressionSession == NULL || shouldReCreate))
                     {
                         [self createDecompSession];
@@ -219,12 +213,8 @@ void decodeOutputCallback(
         secondPoint = [self startCodeIndex:fristPoint + fristCodeSize size:frame + frameSize - fristPoint - fristCodeSize codeSize:&secondCodeSize];
     }
     
-    retainBufferUnRetain(buffer);
-    return;
 ERROR:
-    retainBufferUnRetain(buffer);
     return;
-    });
 
 }
 

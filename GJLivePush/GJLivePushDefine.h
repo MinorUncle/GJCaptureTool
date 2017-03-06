@@ -36,23 +36,20 @@ typedef NS_ENUM(NSInteger,GJLiveStreamFlipDirection) {
     LiveStreamFlipDirection_Vertical = 0x1 << 2
 };
 
-//错误类型
-typedef enum _LivePushErrorType{
-    kLivePushUnknownError = 0,
-    kLivePushConnentError,//推流失败
-    kLivePushStopPushError,//停止推流失败
-    kLivePushConnectError,//连接失败
-    kLivePushConnectTimeOutError,//连接超时
-    kLivePushInfoRecodeError,  //视频录制失败
-}LivePushErrorType;
-
 //消息类型
-typedef enum _LivePushInfoType{
-    kLivePushInfoPushUnknown,
-    kLivePushInfoConnectSuccess , //推流成功，其他类型为nil,对KKPUSH_PROTOCOL_ZEGO， info:为NSDictionary类型,包含推流地址 ----重要
-    kLivePushInfoPushUpdataFps,         //视频fps更新                                info：@(float)
-    kLivePushInfoPushUpdataBitrate,     //视频推送码率更新                             info：@(float)  Byte/s
-    kLivePushInfoPushUpdataQuality,     //视频推送质量更新， 0 ~ 3 分别对应优良中差        info：@(int)
-    kLivePushInfoRecodeCompletedSuccess, //视频录制完成，                              info：nil
-}LivePushInfoType;
+typedef enum _LivePushMessageType{
+    kLivePushUnknownMessage = 0,
+    
+    kLivePushConnentError,//推流失败                    info:nsstring or nil
+    kLivePushStopPushError,//停止推流失败                     同上
+    kLivePushConnectError,//连接失败                        同上
+    kLivePushConnectTimeOutError,//连接超时                     同上
+    kLivePushRecodeError,  //视频录制失败                     同上
+    
+    kLivePushConnectSuccess , //推流成功，其他类型为nil,对KKPUSH_PROTOCOL_ZEGO， info:为NSDictionary类型,包含推流地址 ----重要
+    kLivePushUpdataFps,         //视频fps更新                                info：@(float)
+    kLivePushUpdataBitrate,     //视频推送码率更新                             info：@(float)  Byte/s
+    kLivePushUpdataQuality,     //视频推送质量更新， 0 ~ 3 分别对应优良中差        info：@(int)
+    kLivePushRecodeCompletedSuccess, //视频录制完成，                              info：nil
+}LivePushMessageType;
 #endif /* GJLiveDefine_h */

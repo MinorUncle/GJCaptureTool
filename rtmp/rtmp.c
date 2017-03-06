@@ -1694,7 +1694,7 @@ WriteN(RTMP *r, const char *buffer, int n)
             RTMP_Log(RTMP_LOGERROR, "%s, RTMP send error %d (%d bytes)", __FUNCTION__,
                      sockerr, n);
             
-            if (sockerr == EINTR && !RTMP_ctrlC)
+            if ((sockerr == EINTR ||EAGAIN) && !RTMP_ctrlC)
                 continue;
             
             RTMP_Close(r);

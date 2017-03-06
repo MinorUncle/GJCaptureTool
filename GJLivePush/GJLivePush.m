@@ -135,7 +135,7 @@
     }
     [_videoStreamFilter forceProcessingAtSize:config.pushSize];
     _videoStreamFilter.frameProcessingCompletionBlock = nil;
-    GJRtmpPush_StartConnect(self.videoSender, self.pushUrl.UTF8String);
+    GJRtmpPush_StartConnect(self.videoPush, self.pushUrl.UTF8String);
     return true;
 }
 
@@ -164,12 +164,12 @@
 }
 
 #pragma mark rtmp callback
-static void rtmpCallback(GJRTMPPushMessageType messageType,void* rtmpPushParm,void* messageParm){
+static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType,void* rtmpPushParm,void* messageParm){
     GJLivePush* livePush = (__bridge GJLivePush *)(rtmpPushParm);
     switch (messageType) {
         case GJRTMPPushMessageType_connectSuccess:
             GJLOG(@"连接成功\n");
-            [livePush.delegate livePush:livePush infoType:kLivePushInfoConnectSuccess infoDesc:nil];
+            [livePush.delegate livePush:livePush messageType:kLivePushConnectSuccess infoDesc:nil];
             [livePush pushRun];
             break;
         case GJRTMPPushMessageType_closeComplete:
@@ -177,9 +177,9 @@ static void rtmpCallback(GJRTMPPushMessageType messageType,void* rtmpPushParm,vo
             break;
         case GJRTMPPushMessageType_connectError:
             GJLOG(@"连接失败\n");
-            [livePush.delegate livePush:livePush errorType:kLivePushConnentError errorDesc:@"rtmp连接失败"];
-            GJRtmpPush_CloseAndRelease(livePush.videoSender);
-            livePush.videoSender = NULL;
+            [livePush.delegate livePush:livePush messageType:kLivePushConnentError infoDesc:@"rtmp连接失败"];
+            GJRtmpPush_CloseAndRelease(livePush.videoPush);
+            livePush.videoPush = NULL;
             break;
         case GJRTMPPushMessageType_urlPraseError:
             
@@ -196,7 +196,7 @@ static void rtmpCallback(GJRTMPPushMessageType messageType,void* rtmpPushParm,vo
 //    static int c = 0;
 //    NSData* data = [NSData dataWithBytes:buffer->data length:buffer->size];
 //    NSLog(@"GJH264EncoderData%d:%@",c++,data);
-    GJRtmpPush_SendH264Data(_videoPush, buffer, dts.value);
+    GJRtmpPush_SendH264Data(_videoPush, buffer, (int)dts.value);
     return GJRtmpPush_GetBufferRate(_videoPush);
 }
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{

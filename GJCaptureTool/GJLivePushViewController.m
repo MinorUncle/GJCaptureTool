@@ -9,16 +9,20 @@
 #import "GJLivePushViewController.h"
 #import "GJLivePush.h"
 #import <AVFoundation/AVFoundation.h>
-@interface GJLivePushViewController ()<GJLivePushDelegate>
+#import "GJLivePull.h"
+@interface GJLivePushViewController ()<GJLivePushDelegate,GJLivePullDelegate>
 {
     GJLivePush* _livePush;
+    GJLivePull* _livePull;
 }
 @property (strong, nonatomic) UIView *topView;
 @property (strong, nonatomic) UIView *bottomView;
 @property (strong, nonatomic) UIButton *takeButton;//拍照按钮
 @property (strong, nonatomic) UILabel *fpsLab;
 @property (strong, nonatomic) UILabel *btsLab;
-@property (strong, nonatomic) UILabel *stateLab;
+@property (strong, nonatomic) UILabel *pushStateLab;
+@property (strong, nonatomic) UILabel *pullStateLab;
+
 @end
 
 @implementation GJLivePushViewController
@@ -27,6 +31,9 @@
     [super viewDidLoad];
     _livePush = [[GJLivePush alloc]init];
     _livePush.delegate = self;
+    _livePull = [[GJLivePull alloc]init];
+    _livePull.delegate = self;
+    
     CGRect rect = self.view.bounds;
     rect.size.height *= 0.45;
     self.topView = _livePush.previewView;//[[UIView alloc]initWithFrame:rect];
@@ -63,18 +70,25 @@
     rect.origin.y = CGRectGetMaxY(rect);
     rect.size.height = self.view.bounds.size.height * 0.45;
     rect.size.width = self.view.bounds.size.width;
-    self.bottomView = [[UIView alloc]initWithFrame:rect];
+    self.bottomView = [_livePull getPreviewView];
+    _bottomView.frame = rect;
     _bottomView.backgroundColor = [UIColor redColor];
     [self.view addSubview:_bottomView];
     
     rect.origin = CGPointMake(10, 20);
     rect.size = CGSizeMake(200, 50);
-    _stateLab = [[UILabel alloc]initWithFrame:rect];
-    _stateLab.text = @"未连接";
-    [self.view addSubview:_stateLab];
-    _stateLab.textColor = [UIColor redColor];
+    _pushStateLab = [[UILabel alloc]initWithFrame:rect];
+    _pushStateLab.text = @"推流未连接";
+    _pushStateLab.textColor = [UIColor redColor];
+    [self.view addSubview:_pushStateLab];
+
+    rect.origin = CGPointMake(self.view.bounds.size.width - rect.size.width - 10, 20);
+    _pullStateLab = [[UILabel alloc]initWithFrame:rect];
+    _pullStateLab.text = @"拉流未连接";
+    _pullStateLab.textColor = [UIColor redColor];
+    [self.view addSubview:_pullStateLab];
     
-    [_livePush startCaptureWithSizeType:kCaptureSize352_288 fps:10 position:AVCaptureDevicePositionBack];
+    [_livePush startCaptureWithSizeType:kCaptureSize352_288 fps:15 position:AVCaptureDevicePositionBack];
     
     [_livePush startPreview];
     // Do any additional setup after loading the view.
@@ -87,10 +101,13 @@
         config.audioSampleRate = 44100;
         config.pushSize = CGSizeMake(288, 352);
         config.videoBitRate = 8*200*1024;
-        config.pushUrl = "rtmp://192.168.18.21:1935/live/room";
+        config.pushUrl = "rtmp://10.0.1.13:1935/live/room";
         [_livePush startStreamPushWithConfig:config];
+        
+        [_livePull startStreamPullWithUrl:config.pushUrl];
     }else{
         [_livePush stopStreamPush];
+        [_livePull stopStreamPull];
     }
 }
 - (void)didReceiveMemoryWarning {
@@ -98,34 +115,47 @@
     // Dispose of any resources that can be recreated.
 }
 
-
--(void)livePush:(GJLivePush *)livePush infoType:(LivePushInfoType)type infoDesc:(id)infoDesc{
+-(void)livePush:(GJLivePush *)livePush messageType:(LivePushMessageType)type infoDesc:(id)infoDesc{
     switch (type) {
-        case kLivePushInfoConnectSuccess:
+        case kLivePushConnectSuccess:
         {
             dispatch_async(dispatch_get_main_queue(), ^{
-               _stateLab.text =@"连接成功";
+                _pushStateLab.text =@"推流连接成功";
             });
         }
             break;
-            
-        default:
-            break;
-    }
-}
--(void)livePush:(GJLivePush *)livePush errorType:(LivePushErrorType)type errorDesc:(NSString *)errorDesc{
-    switch (type) {
         case kLivePushConnentError:{
             dispatch_async(dispatch_get_main_queue(), ^{
-                _stateLab.text =@"连接失败";
+                _pushStateLab.text =@"推流连接失败";
             });
             break;
         }
         default:
             break;
     }
-
 }
+
+-(void)livePull:(GJLivePull *)livePull messageType:(LivePullMessageType)type infoDesc:(NSString *)infoDesc{
+
+    switch (type) {
+        case kLivePullConnectSuccess:
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                _pullStateLab.text =@"拉流连接成功";
+            });
+        }
+            break;
+        case kLivePullConnectError:{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                _pullStateLab.text =@"拉流连接失败";
+            });
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 /*
 #pragma mark - Navigation
 
