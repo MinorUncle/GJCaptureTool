@@ -70,6 +70,7 @@ void decodeOutputCallback(
     if ([decoder.delegate respondsToSelector:@selector(GJH264Decoder:decodeCompleteImageData:pts:)]) {
         [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:(uint)presentationTimeStamp.value*VIDEO_TIMESCALE/presentationTimeStamp.timescale];
     }
+    
 }
 
 -(uint8_t*)startCodeIndex:(uint8_t*)sour size:(long)size codeSize:(uint8_t*)codeSize{

@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "GJLiveDefine.h"
+#import "GJLivePushDefine.h"
 
 enum AVCaptureDevicePosition;
 @class UIView;

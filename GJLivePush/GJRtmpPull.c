@@ -54,7 +54,6 @@ static void* pullRunloop(void* parm){
         pull->messageCallback(GJRTMPPullMessageType_urlPraseError,pull->rtmpPullParm,NULL);
         goto ERROR;
     }
-    
     pull->rtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
     pthread_create(&pull->callbackThread, NULL, callbackLoop, pull);
 
@@ -71,11 +70,14 @@ static void* pullRunloop(void* parm){
         }
     }
     pthread_join(pull->callbackThread, NULL);
+    pull->callbackThread = NULL;
 ERROR:
-    pull->pullThread = NULL;
     pull->messageCallback(errType,pull->rtmpPullParm,errParm);
+    GJRtmpPull_Release(pull);
     if (pull->stopRequest) {
-        GJRtmpPull_Release(pull);
+        free(pull);
+    }else{
+        pull->pullThread = NULL;
     }
     return NULL;
 }
@@ -98,13 +100,16 @@ void GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,void* rtm
     *pullP = pull;
 }
 void GJRtmpPull_CloseAndRelease(GJRtmpPull* pull){
-    pull->stopRequest = true;
-    queueEnablePop(pull->pullBufferQueue, false);//防止临界情况
-    queueBroadcastPop(pull->pullBufferQueue);
-
+    if (pull->pullThread == NULL) {
+        free(pull);
+    }else{
+        pull->stopRequest = true;
+        queueEnablePop(pull->pullBufferQueue, false);//防止临界情况
+        queueBroadcastPop(pull->pullBufferQueue);
+    }
 }
 
-void GJRtmpPush_Release(GJRtmpPull* push){
+void GJRtmpPull_Release(GJRtmpPull* push){
     GJAssert(!(push->pullThread && !push->stopRequest),"请在stopconnect函数 或者GJRTMPMessageType_closeComplete回调 后调用\n");
     RTMP_Free(push->rtmp);
     GJRetainBuffer* buffer;
@@ -112,7 +117,6 @@ void GJRtmpPush_Release(GJRtmpPull* push){
         retainBufferUnRetain(buffer);
     }
     queueRelease(&push->pullBufferQueue);
-    free(push);
 }
 
 void GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,const char* pullUrl){
@@ -122,5 +126,4 @@ void GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,cons
     pull->stopRequest = false;
     pull->dataCallback = dataCallback;
     pthread_create(&pull->pullThread, NULL, pullRunloop, pull);
-
 }

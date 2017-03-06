@@ -6,10 +6,8 @@
 //  Copyright © 2016年 MinorUncle. All rights reserved.
 //
 
-extern "C"{
 #import "libavcodec/avcodec.h"
 #import "libavutil/imgutils.h"
-}
 #import "H264Encoder.h"
 @interface H264Encoder()
 {

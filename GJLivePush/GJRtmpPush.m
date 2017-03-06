@@ -69,16 +69,18 @@ static void* sendRunloop(void* parm){
     queueEnablePop(push->sendBufferQueue, true);
     RTMP_Close(push->rtmp);
     if (push->messageCallback) {
-        push->messageCallback(GJRTMPPushMessageType_closeComplete,push->rtmpPushParm,NULL);
+        push->messageCallback(push, GJRTMPPushMessageType_closeComplete,push->rtmpPushParm,NULL);
     }
     push->sendThread = NULL;
     
     return NULL;
 ERROR:
-    push->sendThread = NULL;
-    push->messageCallback(errType,push->rtmpPushParm,errParm);
+    push->messageCallback(push, errType,push->rtmpPushParm,errParm);
+    GJRtmpPush_Release(push);
     if (push->stopRequest) {
-        GJRtmpPush_Release(push);
+        free(push);
+    }else{
+        push->sendThread = NULL;
     }
     return NULL;
 }
@@ -104,12 +106,14 @@ void GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,void* rt
 void GJRtmpPush_Release(GJRtmpPush* push){
     GJAssert(!(push->sendThread && !push->stopRequest),"请在stopconnect函数 或者GJRTMPMessageType_closeComplete回调 后调用\n");
     RTMP_Free(push->rtmp);
+    
     GJRTMP_Packet* packet;
     while (queuePop(push->sendBufferQueue, (void**)&packet, 0)) {
         retainBufferUnRetain(packet->retainBuffer);
         GJBufferPoolSetData(push->memoryCachePool, packet);
     }
     GJBufferPoolRelease(&push->memoryCachePool);
+    queueRelease(&push->sendBufferQueue);
 }
 
 void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t dts){
@@ -261,9 +265,13 @@ void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
 }
 
 void GJRtmpPush_CloseAndRelease(GJRtmpPush* sender){
-    sender->stopRequest = true;
-    queueEnablePop(sender->sendBufferQueue, false);//防止临界情况
-    queueBroadcastPop(sender->sendBufferQueue);
+    if (sender->sendThread == NULL) {
+        free(sender);//线程已经退出
+    }else{
+        sender->stopRequest = true;
+        queueEnablePop(sender->sendBufferQueue, false);//防止临界情况
+        queueBroadcastPop(sender->sendBufferQueue);
+    }
 }
 
 float GJRtmpPush_GetBufferRate(GJRtmpPush* sender){

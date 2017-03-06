@@ -31,8 +31,10 @@ typedef enum _GJRTMPDataType{
     GJRTMPAudioData,
 }GJRTMPDataType;
 
-typedef void(*PullMessageCallback)(GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm);
-typedef void(*PullDataCallback)(GJRTMPDataType dataType,GJRetainBuffer* buffer,uint32_t dts);
+struct _GJRtmpPull;
+
+typedef void(*PullMessageCallback)(struct _GJRtmpPull* rtmpPull, GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm);
+typedef void(*PullDataCallback)(struct _GJRtmpPull* rtmpPull,GJRTMPDataType dataType,GJRetainBuffer* buffer,uint32_t dts);
 
 #define MAX_URL_LENGTH 100
 typedef struct _GJRtmpPull{

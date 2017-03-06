@@ -23,7 +23,7 @@
 @property(strong,nonatomic)GJH264Encoder* videoEncoder;
 @property(copy,nonatomic)NSString* pushUrl;
 @property(strong,nonatomic)GPUImageFilter* videoStreamFilter; //可能公用_cropFilter
-@property(assign,nonatomic)GJRtmpPush* videoSender;
+@property(assign,nonatomic)GJRtmpPush* videoPush;
 @end
 
 @implementation GJLivePush
@@ -130,8 +130,8 @@
         _videoEncoder.deleagte = self;
     }
     _pushUrl = [NSString stringWithUTF8String:config.pushUrl];
-    if (_videoSender == nil) {
-        GJRtmpPush_Create(&_videoSender, rtmpCallback, (__bridge void *)(self));
+    if (_videoPush == nil) {
+        GJRtmpPush_Create(&_videoPush, rtmpCallback, (__bridge void *)(self));
     }
     [_videoStreamFilter forceProcessingAtSize:config.pushSize];
     _videoStreamFilter.frameProcessingCompletionBlock = nil;
@@ -152,8 +152,8 @@
 
 - (void)stopStreamPush{
     [_lastFilter removeTarget:_videoStreamFilter];
-    GJRtmpPush_CloseAndRelease(_videoSender);
-    _videoSender = nil;
+    GJRtmpPush_CloseAndRelease(_videoPush);
+    _videoPush = nil;
 }
 
 -(UIView *)getPreviewView{
@@ -196,15 +196,15 @@ static void rtmpCallback(GJRTMPPushMessageType messageType,void* rtmpPushParm,vo
 //    static int c = 0;
 //    NSData* data = [NSData dataWithBytes:buffer->data length:buffer->size];
 //    NSLog(@"GJH264EncoderData%d:%@",c++,data);
-    GJRtmpPush_SendH264Data(_videoSender, buffer, dts.value);
-    return GJRtmpPush_GetBufferRate(_videoSender);
+    GJRtmpPush_SendH264Data(_videoPush, buffer, dts.value);
+    return GJRtmpPush_GetBufferRate(_videoPush);
 }
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
 
 }
 -(void)dealloc{
-    if (_videoSender) {
-        GJRtmpPush_CloseAndRelease(_videoSender);
+    if (_videoPush) {
+        GJRtmpPush_CloseAndRelease(_videoPush);
     }
 }
 @end
