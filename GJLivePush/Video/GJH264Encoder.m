@@ -15,7 +15,6 @@
 @interface GJH264Encoder()
 {
     int _dropStep;//格多少帧丢一帧
-    int _needDropCount;//当前需要丢多少帧;
     
 }
 @property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
@@ -48,7 +47,7 @@
     memset(&format, 0, sizeof(H264Format));
     format.model=EntropyMode_CABAC;
     format.level=profileLevelMain;
-    format.allowBframe=true;//false时解码dts一直为0
+    format.allowBframe=false;//false时解码dts一直为0
     format.allowPframe=true;
     format.baseFormat.bitRate=60*1024*8;//bit/s
     format.gopSize=10;
@@ -59,9 +58,12 @@
 }
 
 //编码
--(void)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(CMTime)pts fourceKey:(BOOL)fourceKey
+-(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(CMTime)pts fourceKey:(BOOL)fourceKey
 {
-    
+    _frameCount++;
+    if (_dropStep > 0 && _frameCount%_dropStep == 0) {
+        return NO;
+    }
     
     
     int32_t h = (int32_t)CVPixelBufferGetHeight(imageBuffer);
@@ -80,15 +82,18 @@
     OSStatus status = VTCompressionSessionEncodeFrame(
                                                       _enCodeSession,
                                                       imageBuffer,
-                                                      pts,
-                                                      kCMTimeInvalid, // may be kCMTimeInvalid
+                                                      pts,  //pts能得到dts和pts
+                                                      kCMTimeInvalid,// may be kCMTimeInvalid ,dts只能得到dts
                                                        (__bridge CFDictionaryRef)properties,
                                                       NULL,
                                                       NULL );
-    _frameCount++;
-    if (status != 0) {
-        NSLog(@"encodeSampleBuffer error:%d",(int)status);
-        return;
+    
+    if (status == 0) {
+        _encodeframeCount++;
+        return YES;
+    }else{
+        printf("编码失败：%d",status);
+        return NO;
     }
 }
 
@@ -156,28 +161,13 @@
         NSLog(@"kVTCompressionPropertyKey_AverageBitRate set error");
     }
     
-//    CFNumberRef  qualityRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloatType,&_quality);
-//    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_Quality,qualityRef);
-//    CFRelease(qualityRef);
-//    if (result != 0) {
-//        NSLog(@"kVTCompressionPropertyKey_Quality set error");
-//    }
+
     CFNumberRef  frameIntervalRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &(_destFormat.gopSize));
     result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_MaxKeyFrameInterval,frameIntervalRef);
     CFRelease(frameIntervalRef);
     if (result != 0) {
         NSLog(@"kVTCompressionPropertyKey_MaxKeyFrameInterval set error");
     }
-
-    
-//    CFNumberRef frameRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &_expectedFrameRate);
-//    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ExpectedFrameRate,frameRate);
-//    CFRelease(frameRate);
-//    if (result != 0) {
-//        NSLog(@"kVTCompressionPropertyKey_ExpectedFrameRate set error");
-//    }
-//    
-//    result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_CleanAperture,frameRate);
 
 }
 
@@ -276,14 +266,20 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     
     GJAssert(bufferOffset == totalLength, "数据出错\n");
  
-    CMTime dt = CMSampleBufferGetDecodeTimeStamp(sample);
     retainBuffer->size = (int)bufferOffset;//size初始是最大值，一定要设置当前值
-    assert(encoder.bufferPool->bufferSize > retainBuffer->size);
+    assert(encoder.bufferPool->bufferSize >= retainBuffer->size);
     
-#ifdef DEBUG
-    
+    CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
+
+#if 0
+    CMTime ptd = CMSampleBufferGetDuration(sample);
+    CMTime opts = CMSampleBufferGetOutputPresentationTimeStamp(sample);
+    CMTime odts = CMSampleBufferGetOutputDecodeTimeStamp(sample);
+    CMTime optd = CMSampleBufferGetOutputDuration(sample);
+    CMTime dts = CMSampleBufferGetDecodeTimeStamp(sample);
+    GJPrintf("encode dts:%f pts:%f\n",dts.value*1.0 / dts.timescale,pts.value*1.0/pts.timescale);
 #endif
-    float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:retainBuffer keyFrame:keyframe dts:dt];
+    float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:retainBuffer keyFrame:keyframe pts:pts];
     retainBufferUnRetain(retainBuffer);
 
     if (encoder.currentDelayCount==0) {
@@ -325,7 +321,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         self.currentBitRate = bitrate;
         [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
     }else{
-        if (_dropStep > 1) {
+        if (_dropStep > 2) {//最多到1，丢一半
             _dropStep--;
             [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
         }else{
@@ -333,14 +329,15 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         }
     }
 }
-
--(void)stop{
+-(void)flush{
+    if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
     _enCodeSession = nil;
-}
--(void)dealloc{
-    VTCompressionSessionInvalidate(_enCodeSession);
 
-    
+}
+
+
+-(void)dealloc{
+    if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);    
 }
 //-(void)restart{
 //

@@ -13,11 +13,11 @@
 #import "GJRetainBuffer.h"
 @class GJH264Decoder;
 @protocol GJH264DecoderDelegate <NSObject>
--(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(uint)pts;
+-(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(CMTime)pts;
 @end
 
 @interface GJH264Decoder : NSObject
 
 @property(nonatomic,weak)id<GJH264DecoderDelegate> delegate;
--(void)decodeBuffer:(GJRetainBuffer*)buffer;
+-(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(CMTime)pts;
 @end

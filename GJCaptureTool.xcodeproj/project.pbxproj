@@ -69,9 +69,11 @@
 		045E4E621E34A9C900289523 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 045E4E5A1E34A9C900289523 /* libswscale.a */; };
 		046EDBE31E6D51EB00D9D8FC /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */; };
 		046EDBE41E6D597D00D9D8FC /* libGJLivePull.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 044018E91E6CF4E400DEBF98 /* libGJLivePull.a */; };
+		046EDC1C1E6E745A00D9D8FC /* GJPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 046EDC1B1E6E745A00D9D8FC /* GJPlayer.m */; };
 		046F59871E2DBA39007901EB /* sps_decode.c in Sources */ = {isa = PBXBuildFile; fileRef = 046F59861E2DBA39007901EB /* sps_decode.c */; };
 		046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
 		046F7E421E306C8E00712A2B /* libx264_back.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F7E411E306C8E00712A2B /* libx264_back.a */; };
+		04A0814F1E6E9A32000E2B64 /* GJImageYUVDataInput.h in Headers */ = {isa = PBXBuildFile; fileRef = 04A0814E1E6E9A32000E2B64 /* GJImageYUVDataInput.h */; };
 		04C5C50C1E666DC1009DE4A0 /* GJLivePush.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04C5C5051E666DC0009DE4A0 /* GJLivePush.framework */; };
 		04C5C50D1E666DC1009DE4A0 /* GJLivePush.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 04C5C5051E666DC0009DE4A0 /* GJLivePush.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */; };
@@ -458,11 +460,14 @@
 		0460FD9E1E2862C700F5A308 /* PlayMediaSDK.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlayMediaSDK.cpp; sourceTree = "<group>"; };
 		0460FD9F1E2862C700F5A308 /* PlayMediaSDK.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayMediaSDK.h; sourceTree = "<group>"; };
 		0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = DarwinStreamCode.xcodeproj; path = ../DarwinStreamingServerCode/DarwinStreamCode/DarwinStreamCode.xcodeproj; sourceTree = "<group>"; };
+		046EDC1A1E6E745A00D9D8FC /* GJPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPlayer.h; sourceTree = "<group>"; };
+		046EDC1B1E6E745A00D9D8FC /* GJPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJPlayer.m; sourceTree = "<group>"; };
 		046F59861E2DBA39007901EB /* sps_decode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sps_decode.c; sourceTree = "<group>"; };
 		046F599D1E2E1C38007901EB /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
 		046F5B321E305714007901EB /* x264_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264_config.h; path = ../../../../x264Code/x264/include/x264_config.h; sourceTree = "<group>"; };
 		046F5B331E305714007901EB /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264.h; path = ../../../../x264Code/x264/include/x264.h; sourceTree = "<group>"; };
 		046F7E411E306C8E00712A2B /* libx264_back.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264_back.a; sourceTree = "<group>"; };
+		04A0814E1E6E9A32000E2B64 /* GJImageYUVDataInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImageYUVDataInput.h; sourceTree = "<group>"; };
 		04C5C5051E666DC0009DE4A0 /* GJLivePush.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GJLivePush.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AEEA477A1DC3AB770075EE63 /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		AEEA477B1DC3AB770075EE63 /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
@@ -656,6 +661,7 @@
 				041701D21E5EE2DF00D5B5D9 /* GJImageFilters.h */,
 				041701D31E5EE2DF00D5B5D9 /* GJImageView.h */,
 				041701D41E5EE2DF00D5B5D9 /* GLProgram.h */,
+				04A0814E1E6E9A32000E2B64 /* GJImageYUVDataInput.h */,
 				041701D51E5EE2DF00D5B5D9 /* GPUImage.h */,
 				041701D61E5EE2DF00D5B5D9 /* GPUImage3x3ConvolutionFilter.h */,
 				041701D71E5EE2DF00D5B5D9 /* GPUImage3x3TextureSamplingFilter.h */,
@@ -931,6 +937,8 @@
 			children = (
 				044018EB1E6CF4E400DEBF98 /* GJLivePull.h */,
 				044018EC1E6CF4E400DEBF98 /* GJLivePull.m */,
+				046EDC1A1E6E745A00D9D8FC /* GJPlayer.h */,
+				046EDC1B1E6E745A00D9D8FC /* GJPlayer.m */,
 				044018A01E6CF13F00DEBF98 /* GJRtmpPull.h */,
 				0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */,
 				044018F21E6CF6B400DEBF98 /* GJLivePullDefine.h */,
@@ -1251,6 +1259,7 @@
 			files = (
 				044018B31E6CF13F00DEBF98 /* AACEncoderFromPCM.h in Headers */,
 				044018DE1E6CF14000DEBF98 /* Mp4Writer.h in Headers */,
+				04A0814F1E6E9A32000E2B64 /* GJImageYUVDataInput.h in Headers */,
 				044018C41E6CF13F00DEBF98 /* FFWriter.h in Headers */,
 				044018DB1E6CF14000DEBF98 /* H264StreamToTS.h in Headers */,
 				044018BD1E6CF13F00DEBF98 /* GJAudioQueueRecoderFile.h in Headers */,
@@ -1515,6 +1524,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				046EDC1C1E6E745A00D9D8FC /* GJPlayer.m in Sources */,
 				046EDBE31E6D51EB00D9D8FC /* GJRtmpPull.m in Sources */,
 				044018ED1E6CF4E400DEBF98 /* GJLivePull.m in Sources */,
 			);

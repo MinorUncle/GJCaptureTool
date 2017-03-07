@@ -56,11 +56,13 @@ static void* sendRunloop(void* parm){
     GJRTMP_Packet* packet;
     while (queuePop(push->sendBufferQueue, (void**)&packet, 1000000)) {
         int iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
+        static int i = 0;
+        GJPrintf("sendcount:%d,pts:%d\n",i++,packet->packet.m_nTimeStamp);
         if (iRet) {
             push->sendByte += packet->retainBuffer->size;
             push->sendPacketCount ++;
         }else{
-            GJAssert(iRet, "error send video FRAME");
+            GJAssert(iRet, "error send video FRAME\n");
         };
         retainBufferUnRetain(packet->retainBuffer);
         GJBufferPoolSetData(push->memoryCachePool, packet);
@@ -116,7 +118,7 @@ void GJRtmpPush_Release(GJRtmpPush* push){
     queueRelease(&push->sendBufferQueue);
 }
 
-void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t dts){
+void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t pts){
     if (sender->stopRequest) {
        
         return;
@@ -153,7 +155,7 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t 
     sendPacket->m_hasAbsTimestamp = 0;
     sendPacket->m_headerType = RTMP_PACKET_SIZE_LARGE;
     sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
-    sendPacket->m_nTimeStamp = dts;
+    sendPacket->m_nTimeStamp = pts;
     sendPacket->m_nBodySize = preSize + buffer->size;
   
     if (sps && pps) {

@@ -7,6 +7,8 @@
 //
 
 #import "GJH264Decoder.h"
+#import "sps_decode.h"
+#import "GJDebug.h"
 @interface GJH264Decoder()
 {
     dispatch_queue_t _decodeQueue;//解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
@@ -36,7 +38,7 @@
     callBackRecord.decompressionOutputRefCon = (__bridge void *)self;
     
     
-    NSDictionary *destinationImageBufferAttributes = @{(id)kCVPixelBufferOpenGLESCompatibilityKey:@YES};
+    NSDictionary *destinationImageBufferAttributes = @{(id)kCVPixelBufferOpenGLESCompatibilityKey:@YES,(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange)};
     //使用UIImageView播放时可以设置这个
     //    NSDictionary *destinationImageBufferAttributes =[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:NO],(id)kCVPixelBufferOpenGLESCompatibilityKey,[NSNumber numberWithInt:kCVPixelFormatType_32BGRA],(id)kCVPixelBufferPixelFormatTypeKey,nil];
     
@@ -61,12 +63,13 @@ void decodeOutputCallback(
 //    NSLog(@"decodeOutputCallback:%@",[NSThread currentThread]);
     
     if (status != 0) {
-        NSLog(@"解码error:%d",(int)status);
+        GJPrintf("解码error:%d",(int)status);
         return;
     }
+    GJPrintf("pts:%f   ,ptd:%f\n",presentationTimeStamp.value*1.0 / presentationTimeStamp.timescale,presentationDuration.value*1.0/presentationDuration.timescale);
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
     if ([decoder.delegate respondsToSelector:@selector(GJH264Decoder:decodeCompleteImageData:pts:)]) {
-        [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:(uint)presentationTimeStamp.value*VIDEO_TIMESCALE/presentationTimeStamp.timescale];
+        [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:presentationTimeStamp];
     }
     
 }
@@ -89,7 +92,7 @@ void decodeOutputCallback(
     return codeIndex;
 }
 
--(void)decodeBuffer:(GJRetainBuffer *)buffer
+-(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(CMTime)pts
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     
@@ -116,6 +119,9 @@ void decodeOutputCallback(
             case 7:
                 _spsSize = (int)(secondPoint - fristPoint) - fristCodeSize;
                 sps = fristPoint+fristCodeSize;
+                int w,h,fps;
+                w = h = fps = 0;
+                h264_decode_sps(sps, _spsSize, &w, &h, &fps);
                 break;
             case 8:{
                 _ppsSize = (int)(secondPoint - fristPoint) - fristCodeSize;
@@ -129,12 +135,16 @@ void decodeOutputCallback(
                                                                                  (const uint8_t *const*)parameterSetPointers,
                                                                                  parameterSetSizes, 4,
                                                                                  &desc);
+                    
                     BOOL shouldReCreate = NO;
-                    FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
+                    
+                
                     //        CMVideoDimensions fordesc = CMVideoFormatDescriptionGetDimensions(desc);
-#if DEBUG
+#if 0
+                    FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
+
                     char* code = (char*)&re;
-                    NSLog(@"code:%c %c %c %c ",code[3],code[2],code[1],code[0]);
+                    NSLog(@"code:%c %c %c %c \n",code[3],code[2],code[1],code[0]);
                     CFArrayRef arr = CMVideoFormatDescriptionGetExtensionKeysCommonWithImageBuffers();
                     signed long count = CFArrayGetCount(arr);
                     for (int i = 0; i<count; i++) {
@@ -178,30 +188,34 @@ void decodeOutputCallback(
                 if(status == noErr)
                 {
                     const size_t sampleSize = blockLength;
+                    CMSampleTimingInfo timingInfo ;
+                    timingInfo.decodeTimeStamp = kCMTimeInvalid;
+                    timingInfo.duration = kCMTimeInvalid;
+                    timingInfo.presentationTimeStamp = pts;
                     status = CMSampleBufferCreate(kCFAllocatorDefault,
                                                   blockBuffer, true, NULL, NULL,
-                                                  _formatDesc, 1, 0, NULL, 1,
+                                                  _formatDesc, 1, 1, &timingInfo, 1,
                                                   &sampleSize, &sampleBuffer);
                     
                     
                     if (status != 0) {
-                        NSLog(@"\t\t SampleBufferCreate: \t %@", (status == noErr) ? @"successful!" : @"failed...");
+                        GJPrintf("\t\t SampleBufferCreate: \t %d\n", status);
+                        goto ERROR;
                     }
                 }else{
                     goto ERROR;
                 }
-                if(status == noErr)
-                {
-                    CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
-                    CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
-                    CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
-                    
-                    [self render:sampleBuffer];
-                    CFRelease(sampleBuffer);
-                }else{
-                    goto ERROR;
-                }
+
+
+                CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
+                CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
+                CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
                 
+//                status = CMSampleBufferSetOutputPresentationTimeStamp(sampleBuffer, pts);
+//                
+//                assert(status == 0);
+                [self render:sampleBuffer];
+                CFRelease(sampleBuffer);
                 CFRelease(blockBuffer);
             }
                 
@@ -225,7 +239,7 @@ ERROR:
     VTDecodeInfoFlags flagOut;
     OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
     if (status < 0) {
-        NSLog(@"解码错误error:%d",status);
+        GJPrintf("解码错误error:%d\n",status);
     }
 }
 NSString * const naluTypesStrings[] =

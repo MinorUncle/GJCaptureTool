@@ -1036,7 +1036,7 @@ RTMP_Connect0(RTMP *r, struct sockaddr * service)
     r->m_sb.sb_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (r->m_sb.sb_socket != -1)
     {
-        fcntl(socket, F_SETFL, fcntl(socket, F_GETFL) | ~O_NONBLOCK);
+        fcntl(socket, F_SETFL, fcntl(socket, F_GETFL) & ~O_NONBLOCK);
 
         if (connect(r->m_sb.sb_socket, service, sizeof(struct sockaddr)) < 0)
         {
@@ -1694,8 +1694,14 @@ WriteN(RTMP *r, const char *buffer, int n)
             RTMP_Log(RTMP_LOGERROR, "%s, RTMP send error %d (%d bytes)", __FUNCTION__,
                      sockerr, n);
             
-            if ((sockerr == EINTR ||EAGAIN) && !RTMP_ctrlC)
-                continue;
+            if ((sockerr == EINTR ||EAGAIN) && !RTMP_ctrlC){
+               int cs =   fcntl(socket, F_GETFL);
+                if(cs < 0){
+                    printf("cstatus:%d\n",cs);
+                }else{
+                    continue;
+                }
+            }
             
             RTMP_Close(r);
             n = 1;

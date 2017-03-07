@@ -43,7 +43,15 @@ typedef struct _GJRtmpPush{
 }GJRtmpPush;
 
 void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmpPushParm);
-void GJRtmpPush_SendH264Data(GJRtmpPush* push,GJRetainBuffer* data,uint32_t dts);
+
+/**
+ 发送h264
+
+ @param push push description
+ @param data data description
+ @param pts pts description，以ms为单位
+ */
+void GJRtmpPush_SendH264Data(GJRtmpPush* push,GJRetainBuffer* data,uint32_t pts);
 void GJRtmpPush_SendAACData(GJRtmpPush* push,GJRetainBuffer* data,uint32_t dts);
 void GJRtmpPush_CloseAndRelease(GJRtmpPush* push);
 void GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);

@@ -152,6 +152,7 @@
 
 - (void)stopStreamPush{
     [_lastFilter removeTarget:_videoStreamFilter];
+    [_videoEncoder flush];
     GJRtmpPush_CloseAndRelease(_videoPush);
     _videoPush = nil;
 }
@@ -192,11 +193,11 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 }
 
 #pragma mark delegate
--(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(CMTime)dts{
+-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(CMTime)pts{
 //    static int c = 0;
 //    NSData* data = [NSData dataWithBytes:buffer->data length:buffer->size];
 //    NSLog(@"GJH264EncoderData%d:%@",c++,data);
-    GJRtmpPush_SendH264Data(_videoPush, buffer, (int)dts.value);
+    GJRtmpPush_SendH264Data(_videoPush, buffer, (int)pts.value*1000/pts.timescale);
     return GJRtmpPush_GetBufferRate(_videoPush);
 }
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{

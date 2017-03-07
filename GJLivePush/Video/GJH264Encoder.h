@@ -30,10 +30,10 @@ typedef enum _GJEncodeQuality{
  @param encoder encoder description
  @param buffer 引用用数据
  @param keyFrame 是否关键帧
- @param dts dts description
+ @param pts pts description
  @return 可以理解为下一级数据缓存的比例，用于动态编码。
  */
--(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame dts:(CMTime)dts;
+-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(CMTime)pts;
 
 /**
  编码质量回调
@@ -48,7 +48,13 @@ typedef enum _GJEncodeQuality{
 @property(assign,nonatomic)H264Format destFormat;
 
 /**
- 已经编码的数量
+ 已经编码的数量,不包括丢帧的数量
+ */
+@property(assign,nonatomic)NSInteger encodeframeCount;
+
+
+/**
+ 总共的数量，包括丢帧的数量
  */
 @property(assign,nonatomic)NSInteger frameCount;
 
@@ -65,7 +71,21 @@ typedef enum _GJEncodeQuality{
  @return return value description
  */
 -(instancetype)initWithFormat:(H264Format)format;
--(void)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(CMTime)pts fourceKey:(BOOL)fourceKey;
+
+/**
+ 编码
+
+ @param imageBuffer imageBuffer description
+ @param pts pts
+ @param fourceKey fourceKey description
+ @return 是否失败。可能主动丢帧，也可能编码失败
+ */
+-(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(CMTime)pts fourceKey:(BOOL)fourceKey;
+
+/**
+ 刷新编码器，之前的编码不会回调。
+ */
+-(void)flush;
 +(H264Format)defaultFormat;
 @end
 

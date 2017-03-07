@@ -64,6 +64,8 @@ static void* callbackLoop(void* parm){
 
         GJRetainBuffer* retainBuffer;
         retainBufferPack(&retainBuffer, outPoint, outSize, retainBufferRelease, packet);
+        static int count = 0;
+        printf("pull count:%d  pts:%d\n",count++,packet->m_nTimeStamp);
         pull->dataCallback(pull,dataType,retainBuffer,pull->dataCallbackParm,packet->m_nTimeStamp);
     }
     queueEnablePop(pull->pullBufferQueue, true);
@@ -104,6 +106,7 @@ static void* pullRunloop(void* parm){
         RTMPPacket* packet = (RTMPPacket*)malloc(sizeof(RTMPPacket));
         memset(packet, 0, sizeof(RTMPPacket));
         while (RTMP_ReadPacket(pull->rtmp, packet)) {
+            
             if (!RTMPPacket_IsReady(packet) || !packet->m_nBodySize)
             {
  
@@ -119,7 +122,7 @@ static void* pullRunloop(void* parm){
         if (packet) {
             RTMPPacket_Free(packet);
             free(packet);
-            GJAssert(0, "读取数据错误");
+//            GJAssert(0, "读取数据错误\n");
         }
     }
     pthread_join(pull->callbackThread, NULL);
