@@ -140,7 +140,7 @@ void decodeOutputCallback(
                     BOOL shouldReCreate = NO;
                     
                 
-                    //        CMVideoDimensions fordesc = CMVideoFormatDescriptionGetDimensions(desc);
+                    
 #if 0
                     FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
 
@@ -153,16 +153,29 @@ void decodeOutputCallback(
                         NSLog(@"key:%@,%@",CFArrayGetValueAtIndex(arr, i),list);
                     }
 #endif
-                    
-                    if (!CMFormatDescriptionEqual(_formatDesc, desc)) {
-                        shouldReCreate = YES;
-                        if (_formatDesc) {
-                            CFRelease(_formatDesc);
-                        }
+                    CMVideoDimensions currentDimens = CMVideoFormatDescriptionGetDimensions(desc);
+                    if (_formatDesc == NULL) {
                         _formatDesc = desc;
                     }else{
-                        CFRelease(desc);
+                        CMVideoDimensions preDimens = CMVideoFormatDescriptionGetDimensions(_formatDesc);
+                        if (currentDimens.width != preDimens.width || currentDimens.height != preDimens.height) {
+                            CFRelease(_formatDesc);
+                            _formatDesc = desc;
+                            shouldReCreate = YES;
+                        }else{
+                            CFRelease(desc);
+                        }
                     }
+                    
+//                    if (!CMFormatDescriptionEqual(_formatDesc, desc)) {
+//                        shouldReCreate = false;
+//                        if (_formatDesc) {
+//                            CFRelease(_formatDesc);
+//                        }
+//                        _formatDesc = desc;
+//                    }else{
+//                        CFRelease(desc);
+//                    }
                     if((status == noErr) && (_decompressionSession == NULL || shouldReCreate))
                     {
                         [self createDecompSession];

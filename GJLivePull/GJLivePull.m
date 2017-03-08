@@ -116,56 +116,6 @@ GPUImageFramebuffer* fram;
     
     [_YUVInput updateDataWithImageBuffer:imageBuffer timestamp:pts];
     return;
-//    GJImageBuffer* buffer = malloc(sizeof(buffer));
-//    buffer->image = imageBuffer;
-//    buffer->pts = pts;
-//    if (queuePush(_imageQueue, buffer, 0)) {
-//        CVPixelBufferRetain(imageBuffer);
-////        CVBufferRetain(imageBuffer);
-//    }
-    
-    OSType re = CVPixelBufferGetPixelFormatType(imageBuffer);
-    char* code = (char*)&re;
-    NSLog(@"code:%c %c %c %c \n",code[3],code[2],code[1],code[0]);
-    CGSize size = CVImageBufferGetEncodedSize(imageBuffer);
-//    CVPixelBufferLockBaseAddress(imageBuffer, 0);
-//    uint8_t* base = CVPixelBufferGetBaseAddress(imageBuffer);
-//    uint8_t* Y = CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 0);
-//    uint8_t* u = CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 1);
-//    int c = CVPixelBufferGetPlaneCount(imageBuffer);
-//    
-//    CVPlanarPixelBufferInfo_YCbCrBiPlanar* bufferInfo = (CVPlanarPixelBufferInfo_YCbCrBiPlanar*)base;
-//    NSUInteger yOffset = ntohl(bufferInfo->componentInfoY.offset);
-//    NSUInteger yPitch = ntohl(bufferInfo->componentInfoY.rowBytes);
-//    
-//    NSUInteger cbCrOffset = ntohl(bufferInfo->componentInfoCbCr.offset);
-//    NSUInteger cbCrPitch = ntohl(bufferInfo->componentInfoCbCr.rowBytes);
-//    memset(base+cbCrOffset, 0, cbCrPitch*size.height*0.5);
-//    
-//    CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
-    CVOpenGLESTextureCacheRef coreVideoTextureCache = [[GPUImageContext sharedImageProcessingContext] coreVideoTextureCache];
-
-    CVOpenGLESTextureRef texture;
-    CVReturn err = CVOpenGLESTextureCacheCreateTextureFromImage (kCFAllocatorDefault, coreVideoTextureCache, imageBuffer,
-                                                        NULL, // texture attributes
-                                                        GL_TEXTURE_2D,
-                                                        GL_RED_EXT, // opengl format
-                                                        (int)size.width,
-                                                        (int)size.height,
-                                                        GL_RED_EXT, // native iOS format
-                                                        GL_UNSIGNED_BYTE,
-                                                        0,
-                                                        &texture);
-    GPUImageFramebuffer* frameBuffer = [[GPUImageFramebuffer alloc]initWithSize:size overriddenTexture:CVOpenGLESTextureGetName(texture)];
-    fram = frameBuffer;
-    NSInteger textureIndex = [self.displayView nextAvailableTextureIndex];
-    [self.displayView setInputFramebuffer:frameBuffer atIndex: textureIndex];
-    [self.displayView setInputSize:size atIndex:textureIndex];
-    [self.displayView newFrameReadyAtTime:pts atIndex:textureIndex];
-
-//    [self.YUVInput updateDataWithY:Y U:u V:u+(long)(size.width*size.height/4) Timestamp:pts];
-
-    return;
     
 }
 
