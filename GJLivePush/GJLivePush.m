@@ -174,7 +174,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
             [livePush pushRun];
             break;
         case GJRTMPPushMessageType_closeComplete:
-            
+            [livePush.delegate livePush:livePush messageType:kLivePushCloseSuccess infoDesc:nil];
             break;
         case GJRTMPPushMessageType_connectError:
             GJLOG(@"连接失败\n");

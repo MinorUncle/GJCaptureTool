@@ -22,6 +22,7 @@ typedef enum _LivePullMessageType{
     kLivePullConnectError,//连接失败
     kLivePullRecodeError,  //视频录制失败
     
+    kLivePullCloseSuccess,
     kLivePullConnectSuccess , //推流成功，其他类型为nil,对KKPull_PROTOCOL_ZEGO， info:为NSDictionary类型,包含推流地址 ----重要
     kLivePullPullUpdataFps,         //视频fps更新                                info：@(float)
     kLivePullPullUpdataBitrate,     //视频推送码率更新                             info：@(float)  Byte/s

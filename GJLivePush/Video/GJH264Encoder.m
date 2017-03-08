@@ -119,7 +119,7 @@
     _destFormat.baseFormat.width = w;
     _destFormat.baseFormat.height = h;
     if (_bufferPool != NULL) {
-        GJRetainBufferPoolRelease(&_bufferPool);
+        GJRetainBufferPoolCleanAndFree(&_bufferPool);
     }
     GJRetainBufferPoolCreate(&_bufferPool, w*h,true);///选最大size
     [self _setCompressionSession];

@@ -165,7 +165,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     assert(!status);
     _destMaxOutSize *= _outputDataPacketCount;
     if (_bufferPool) {
-        GJRetainBufferPoolRelease(&_bufferPool);
+        GJRetainBufferPoolCleanAndFree(&_bufferPool);
     }
     GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true);
     

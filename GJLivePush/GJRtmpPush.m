@@ -56,16 +56,21 @@ static void* sendRunloop(void* parm){
     GJRTMP_Packet* packet;
     while (queuePop(push->sendBufferQueue, (void**)&packet, 1000000)) {
         int iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
-        static int i = 0;
-        GJPrintf("sendcount:%d,pts:%d\n",i++,packet->packet.m_nTimeStamp);
+//        static int i = 0;
+//        GJPrintf("sendcount:%d,pts:%d\n",i++,packet->packet.m_nTimeStamp);
         if (iRet) {
             push->sendByte += packet->retainBuffer->size;
             push->sendPacketCount ++;
+            retainBufferUnRetain(packet->retainBuffer);
+            GJBufferPoolSetData(push->memoryCachePool, packet);
         }else{
             GJAssert(iRet, "error send video FRAME\n");
+            errType = GJRTMPPushMessageType_sendPacketError;
+            retainBufferUnRetain(packet->retainBuffer);
+            GJBufferPoolSetData(push->memoryCachePool, packet);
+            goto ERROR;
         };
-        retainBufferUnRetain(packet->retainBuffer);
-        GJBufferPoolSetData(push->memoryCachePool, packet);
+
     }
     
     queueEnablePop(push->sendBufferQueue, true);
@@ -74,8 +79,8 @@ static void* sendRunloop(void* parm){
         push->messageCallback(push, GJRTMPPushMessageType_closeComplete,push->rtmpPushParm,NULL);
     }
     push->sendThread = NULL;
-    
-    return NULL;
+
+    errType = GJRTMPPushMessageType_closeComplete;
 ERROR:
     push->messageCallback(push, errType,push->rtmpPushParm,errParm);
     GJRtmpPush_Release(push);
@@ -114,8 +119,8 @@ void GJRtmpPush_Release(GJRtmpPush* push){
         retainBufferUnRetain(packet->retainBuffer);
         GJBufferPoolSetData(push->memoryCachePool, packet);
     }
-    GJBufferPoolRelease(&push->memoryCachePool);
-    queueRelease(&push->sendBufferQueue);
+    GJBufferPoolCleanAndFree(&push->memoryCachePool);
+    queueCleanAndFree(&push->sendBufferQueue);
 }
 
 void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t pts){

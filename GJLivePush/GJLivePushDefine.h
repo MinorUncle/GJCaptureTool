@@ -46,6 +46,7 @@ typedef enum _LivePushMessageType{
     kLivePushConnectTimeOutError,//连接超时                     同上
     kLivePushRecodeError,  //视频录制失败                     同上
     
+    kLivePushCloseSuccess,
     kLivePushConnectSuccess , //推流成功，其他类型为nil,对KKPUSH_PROTOCOL_ZEGO， info:为NSDictionary类型,包含推流地址 ----重要
     kLivePushUpdataFps,         //视频fps更新                                info：@(float)
     kLivePushUpdataBitrate,     //视频推送码率更新                             info：@(float)  Byte/s

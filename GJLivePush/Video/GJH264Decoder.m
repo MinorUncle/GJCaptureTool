@@ -24,6 +24,7 @@
     self = [super init];
     if (self) {
         _decodeQueue = dispatch_queue_create("GJDecodeQueue", DISPATCH_QUEUE_SERIAL);
+        _outPutImageFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
     }
     return self;
 }
@@ -38,7 +39,7 @@
     callBackRecord.decompressionOutputRefCon = (__bridge void *)self;
     
     
-    NSDictionary *destinationImageBufferAttributes = @{(id)kCVPixelBufferOpenGLESCompatibilityKey:@YES,(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange)};
+    NSDictionary *destinationImageBufferAttributes = @{(id)kCVPixelBufferOpenGLESCompatibilityKey:@YES,(id)kCVPixelBufferPixelFormatTypeKey:@(_outPutImageFormat)};
     //使用UIImageView播放时可以设置这个
     //    NSDictionary *destinationImageBufferAttributes =[NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithBool:NO],(id)kCVPixelBufferOpenGLESCompatibilityKey,[NSNumber numberWithInt:kCVPixelFormatType_32BGRA],(id)kCVPixelBufferPixelFormatTypeKey,nil];
     
@@ -66,7 +67,7 @@ void decodeOutputCallback(
         GJPrintf("解码error:%d",(int)status);
         return;
     }
-    GJPrintf("pts:%f   ,ptd:%f\n",presentationTimeStamp.value*1.0 / presentationTimeStamp.timescale,presentationDuration.value*1.0/presentationDuration.timescale);
+//    GJPrintf("pts:%f   ,ptd:%f\n",presentationTimeStamp.value*1.0 / presentationTimeStamp.timescale,presentationDuration.value*1.0/presentationDuration.timescale);
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
     if ([decoder.delegate respondsToSelector:@selector(GJH264Decoder:decodeCompleteImageData:pts:)]) {
         [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:presentationTimeStamp];

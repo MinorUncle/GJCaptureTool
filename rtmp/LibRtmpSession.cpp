@@ -103,7 +103,7 @@ LibRtmpSession::~LibRtmpSession(){
             free(_pMetaData);
         }
     }
-    GJBufferPoolRelease(&_videoPool);
+    GJBufferPoolCleanAndFree(&_videoPool);
 }
 
 int LibRtmpSession::Connect(int iFlag){

@@ -19,5 +19,7 @@
 @interface GJH264Decoder : NSObject
 
 @property(nonatomic,weak)id<GJH264DecoderDelegate> delegate;
+//default kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+@property(nonatomic,assign)OSType outPutImageFormat;
 -(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(CMTime)pts;
 @end

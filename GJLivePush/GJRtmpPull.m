@@ -20,7 +20,7 @@ static bool retainBufferRelease(GJRetainBuffer* buffer){
     RTMPPacket* packet = buffer->parm;
     RTMPPacket_Free(packet);
     free(packet);
-    return true;
+    return false;
 }
 static void* callbackLoop(void* parm){
     GJRtmpPull* pull = (GJRtmpPull*)parm;
@@ -54,6 +54,9 @@ static void* callbackLoop(void* parm){
                 NSData* data = [NSData dataWithBytes:packet->m_body length:packet->m_nBodySize];
                 NSLog(@"data:%@",data);
                 GJAssert(0, "数据有误\n");
+                RTMPPacket_Free(packet);
+                free(packet);
+                continue;
             }
         }else{
             GJPrintf("not media Packet:%p type:%d \n",packet,packet->m_packetType);
@@ -62,11 +65,12 @@ static void* callbackLoop(void* parm){
             continue;
         }
 
-        GJRetainBuffer* retainBuffer;
+        GJRetainBuffer* retainBuffer = NULL;
         retainBufferPack(&retainBuffer, outPoint, outSize, retainBufferRelease, packet);
-        static int count = 0;
-        printf("pull count:%d  pts:%d\n",count++,packet->m_nTimeStamp);
+//        static int count = 0;
+//        printf("pull count:%d  pts:%d\n",count++,packet->m_nTimeStamp);
         pull->dataCallback(pull,dataType,retainBuffer,pull->dataCallbackParm,packet->m_nTimeStamp);
+        retainBufferUnRetain(retainBuffer);
     }
     queueEnablePop(pull->pullBufferQueue, true);
     return NULL;
@@ -109,7 +113,6 @@ static void* pullRunloop(void* parm){
             
             if (!RTMPPacket_IsReady(packet) || !packet->m_nBodySize)
             {
- 
                 continue;
             }
             
@@ -127,6 +130,7 @@ static void* pullRunloop(void* parm){
     }
     pthread_join(pull->callbackThread, NULL);
     pull->callbackThread = NULL;
+    errType = GJRTMPPullMessageType_closeComplete;
 ERROR:
     pull->messageCallback(pull, errType,pull->messageCallbackParm,errParm);
     GJRtmpPull_Release(pull);
@@ -160,19 +164,22 @@ void GJRtmpPull_CloseAndRelease(GJRtmpPull* pull){
         free(pull);
     }else{
         pull->stopRequest = true;
+//        RTMP_Close(pull->rtmp);
         queueEnablePop(pull->pullBufferQueue, false);//防止临界情况
         queueBroadcastPop(pull->pullBufferQueue);
     }
 }
 
-void GJRtmpPull_Release(GJRtmpPull* push){
-    GJAssert(!(push->pullThread && !push->stopRequest),"请在stopconnect函数 或者GJRTMPMessageType_closeComplete回调 后调用\n");
-    RTMP_Free(push->rtmp);
-    GJRetainBuffer* buffer;
-    while (queuePop(push->pullBufferQueue, (void**)&buffer, 0)) {
-        retainBufferUnRetain(buffer);
+void GJRtmpPull_Release(GJRtmpPull* pull){
+    GJAssert(!(pull->pullThread && !pull->stopRequest),"请在stopconnect函数 或者GJRTMPMessageType_closeComplete回调 后调用\n");
+    RTMP_Free(pull->rtmp);
+    RTMPPacket* packet;
+    while (queuePop(pull->pullBufferQueue, (void**)&packet, 0)) {
+        RTMPPacket_Free(packet);
+        free(packet);
     }
-    queueRelease(&push->pullBufferQueue);
+    queueCleanAndFree(&pull->pullBufferQueue);
+
 }
 
 void GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,void* callbackParm,const char* pullUrl){

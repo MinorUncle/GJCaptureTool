@@ -20,7 +20,7 @@ typedef enum _GJRTMPPushMessageType{
     
     GJRTMPPushMessageType_connectError,
     GJRTMPPushMessageType_urlPraseError,
-    GJRTMPPushMessageType_sendPacketError,
+    GJRTMPPushMessageType_sendPacketError,//网络错误，发送失败
 }GJRTMPPushMessageType;
 
 struct _GJRtmpPush;

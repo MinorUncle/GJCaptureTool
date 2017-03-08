@@ -130,6 +130,12 @@
             });
             break;
         }
+        case kLivePushCloseSuccess:{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                _pullStateLab.text =@"推流结束";
+            });
+            break;
+        }
         default:
             break;
     }
@@ -148,6 +154,12 @@
         case kLivePullConnectError:{
             dispatch_async(dispatch_get_main_queue(), ^{
                 _pullStateLab.text =@"拉流连接失败";
+            });
+            break;
+        }
+        case kLivePullCloseSuccess:{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                _pullStateLab.text =@"拉流结束";
             });
             break;
         }

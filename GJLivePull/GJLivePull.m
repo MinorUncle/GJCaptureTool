@@ -63,6 +63,9 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         case GJRTMPPullMessageType_connectSuccess:
             message = kLivePullConnectSuccess;
             break;
+        case GJRTMPPullMessageType_closeComplete:
+            message = kLivePullCloseSuccess;
+            break;
         default:
             break;
     }
@@ -96,13 +99,23 @@ static void* playLoop(void* parm);
     }
     return _displayView;
 }
+
 -(void)setEnablePreview:(BOOL)enablePreview{
     _enablePreview = enablePreview;
     
 }
 GPUImageFramebuffer* fram;
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(CMTime)pts{
-    NSLog(@"playpts:%lld",pts.value);
+    if (_YUVInput == nil) {
+        OSType type = CVPixelBufferGetPixelFormatType(imageBuffer);
+        if (type == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange || type == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
+            _YUVInput = [[GJImageYUVDataInput alloc]initPixelFormat:GJPixelFormatNV12];
+            [_YUVInput addTarget:_displayView];
+        }
+    }
+    
+    [_YUVInput updateDataWithImageBuffer:imageBuffer timestamp:pts];
+    return;
 //    GJImageBuffer* buffer = malloc(sizeof(buffer));
 //    buffer->image = imageBuffer;
 //    buffer->pts = pts;
@@ -172,47 +185,47 @@ static void* playLoop(void* parm){
 //        UIImage* image = [UIImage imageWithCIImage:cimage];
 //    ((UIImageView*)pull.displayView).image = image;
 
-    CGSize size = CVImageBufferGetEncodedSize(preImage->image);
-    CVPixelBufferLockBaseAddress(preImage->image, 0);
-    uint8_t* Y = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 0);
-    uint8_t* u = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 1);
-    int c = CVPixelBufferGetPlaneCount(preImage->image);
-    CVPixelBufferUnlockBaseAddress(preImage->image, 0);
-    pull.YUVInput = [[GJImageYUVDataInput alloc]initWithImageSize:size pixelFormat:GJYUVixelFormat420P type:GJPixelTypeUByte];
-    [pull.YUVInput updateDataWithY:Y U:u V:u+(long)(size.width*size.height/4) Timestamp:preImage->pts];
-    CVPixelBufferRelease(preImage->image);
-    GJImageBuffer* currentImage;
-
-    while (!pull.stopRequest) {
-        
-     
-        if( queuePop(pull.imageQueue, (void**)&currentImage, INT_MAX)){
-            float pastTime = currentImage->pts.value*1000.0/currentImage->pts.timescale- preImage->pts.value*1000.0/currentImage->pts.timescale;
-            clock_t end = clock();
-            float needWait = (end - begin)*1000.0/CLOCKS_PER_SEC - pastTime;
-            if (needWait > 1) {
-                usleep(needWait*1000);
-            }
-            //play
-            free(preImage);
-            preImage = currentImage;
-          
-            CVPixelBufferLockBaseAddress(preImage->image, 0);
-            uint8_t* Y = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 0);
-            uint8_t* u = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 1);
-            int c = CVPixelBufferGetPlaneCount(preImage->image);
-            CVPixelBufferUnlockBaseAddress(preImage->image, 0);
-            [pull.YUVInput updateDataWithY:Y U:u V:u+(long)(size.width*size.height/4) Timestamp:preImage->pts];
-            CVPixelBufferRelease(preImage->image);
-
-            begin = clock();
-            
-        };
-    }
-    
-    if (preImage) {
-        free(preImage);
-    }
+//    CGSize size = CVImageBufferGetEncodedSize(preImage->image);
+//    CVPixelBufferLockBaseAddress(preImage->image, 0);
+//    uint8_t* Y = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 0);
+//    uint8_t* u = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 1);
+//    int c = CVPixelBufferGetPlaneCount(preImage->image);
+//    CVPixelBufferUnlockBaseAddress(preImage->image, 0);
+//    pull.YUVInput = [[GJImageYUVDataInput alloc]initWithImageSize:size pixelFormat:GJYUVixelFormat420P type:GJPixelTypeUByte];
+//    [pull.YUVInput updateDataWithY:Y U:u V:u+(long)(size.width*size.height/4) Timestamp:preImage->pts];
+//    CVPixelBufferRelease(preImage->image);
+//    GJImageBuffer* currentImage;
+//
+//    while (!pull.stopRequest) {
+//        
+//     
+//        if( queuePop(pull.imageQueue, (void**)&currentImage, INT_MAX)){
+//            float pastTime = currentImage->pts.value*1000.0/currentImage->pts.timescale- preImage->pts.value*1000.0/currentImage->pts.timescale;
+//            clock_t end = clock();
+//            float needWait = (end - begin)*1000.0/CLOCKS_PER_SEC - pastTime;
+//            if (needWait > 1) {
+//                usleep(needWait*1000);
+//            }
+//            //play
+//            free(preImage);
+//            preImage = currentImage;
+//          
+//            CVPixelBufferLockBaseAddress(preImage->image, 0);
+//            uint8_t* Y = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 0);
+//            uint8_t* u = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 1);
+//            int c = CVPixelBufferGetPlaneCount(preImage->image);
+//            CVPixelBufferUnlockBaseAddress(preImage->image, 0);
+//            [pull.YUVInput updateDataWithY:Y U:u V:u+(long)(size.width*size.height/4) Timestamp:preImage->pts];
+//            CVPixelBufferRelease(preImage->image);
+//
+//            begin = clock();
+//            
+//        };
+//    }
+//    
+//    if (preImage) {
+//        free(preImage);
+//    }
     
     
     

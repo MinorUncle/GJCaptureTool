@@ -453,7 +453,7 @@ static void MCAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
 
 - (void)dealloc
 {
-    queueRelease(&_reusableQueue);
+    queueCleanAndFree(&_reusableQueue);
     [self _disposeAudioOutputQueue];
 }
 @end
