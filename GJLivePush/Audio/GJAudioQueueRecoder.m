@@ -28,18 +28,95 @@
 
 @end;
 
+static const int mpeg4audio_sample_rates[16] = {
+    96000, 88200, 64000, 48000, 44100, 32000,
+    24000, 22050, 16000, 12000, 11025, 8000, 7350
+};
+int get_f_index(unsigned int sampling_frequency)
+{
+    switch (sampling_frequency)
+    {
+        case 96000: return 0;
+        case 88200: return 1;
+        case 64000: return 2;
+        case 48000: return 3;
+        case 44100: return 4;
+        case 32000: return 5;
+        case 24000: return 6;
+        case 22050: return 7;
+        case 16000: return 8;
+        case 12000: return 9;
+        case 11025: return 10;
+        case 8000:  return 11;
+        case 7350:  return 12;
+        default:    return 0;
+    }
+}
+static void adtsDataForPacketLength(int packetLength, char*packet,int sampleRate, int channel)
+{
+    /*=======adts=======
+     7字节
+     {
+     syncword -------12 bit
+     ID              -------  1 bit
+     layer         -------  2 bit
+     protection_absent - 1 bit
+     profile       -------  2 bit
+     sampling_frequency_index ------- 4 bit
+     private_bit ------- 1 bit
+     channel_configuration ------- 3bit
+     original_copy -------1bit
+     home ------- 1bit
+     }
+     
+     */
+    int adtsLength = 7;
+    //profile：表示使用哪个级别的AAC，有些芯片只支持AAC LC 。在MPEG-2 AAC中定义了3种：
+    /*
+     0-------Main profile
+     1-------LC
+     2-------SSR
+     3-------保留
+     */
+    int profile = 0;
+ 
+    int freqIdx = get_f_index(sampleRate);//11
+    /*
+     channel_configuration: 表示声道数
+     0: Defined in AOT Specifc Config
+     1: 1 channel: front-center
+     2: 2 channels: front-left, front-right
+     3: 3 channels: front-center, front-left, front-right
+     4: 4 channels: front-center, front-left, front-right, back-center
+     5: 5 channels: front-center, front-left, front-right, back-left, back-right
+     6: 6 channels: front-center, front-left, front-right, back-left, back-right, LFE-channel
+     7: 8 channels: front-center, front-left, front-right, side-left, side-right, back-left, back-right, LFE-channel
+     8-15: Reserved
+     */
+    int chanCfg = channel;
+    NSUInteger fullLength = adtsLength + packetLength;
+    packet[0] = (char)0xFF;	// 11111111  	= syncword
+    packet[1] = (char)0xF1;	   // 1111 0 00 1 = syncword+id(MPEG-4) + Layer + absent
 
-
+    packet[2] = (char)(((profile)<<6) + (freqIdx<<2) +(chanCfg>>2));// profile(2)+sampling(4)+privatebit(1)+channel_config(1)
+    packet[3] = (char)(((chanCfg&3)<<6) + (fullLength>>11));
+    packet[4] = (char)((fullLength&0x7FF) >> 3);
+    packet[5] = (char)(((fullLength&7)<<5) + 0x1F);
+    packet[6] = (char)0xFC;
+}
 static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer,const AudioTimeStamp *inStartTime,UInt32 inNumPackets, const AudioStreamPacketDescription  *inPacketDesc){
     GJAudioQueueRecoder* tempSelf = (__bridge GJAudioQueueRecoder*)aqData;
    
     if (tempSelf.status == kRecoderRunningStatus){
         GJRetainBuffer* buffer = GJRetainBufferPoolGetData(tempSelf.bufferPool);
-        memcpy(buffer->data, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
-        NSData* data = [NSData dataWithBytes:buffer->data length:buffer->size];
-        static int times = 0;
-        NSLog(@"times:%d,lenth:%ld,data:%@",times++,data.length,data);
-        [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:buffer packetDescriptions:inPacketDesc];
+        int offset = 0;
+        if (tempSelf.format.mFormatID == kAudioFormatMPEG4AAC) {
+            offset = 7;
+            adtsDataForPacketLength(inBuffer->mAudioDataByteSize, buffer->data,tempSelf.format.mSampleRate,tempSelf.format.mChannelsPerFrame);
+        }
+        memcpy(buffer->data+offset, inBuffer->mAudioData, inBuffer->mAudioDataByteSize+offset);
+        buffer->size = inBuffer->mAudioDataByteSize+offset;
+        [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:buffer packetDescriptions:inPacketDesc pts:CMTimeMake(inStartTime->mSampleTime, tempSelf.format.mSampleRate)];
         retainBufferUnRetain(buffer);
         AudioQueueEnqueueBuffer (tempSelf.mAudioQueue,inBuffer,0,NULL);
     }else{
@@ -52,7 +129,13 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
 - (instancetype)initWithStreamWithSampleRate:(Float64)sampleRate channel:(UInt32)channel formatID:(UInt32)formatID{
     self = [super init];
     if (self) {
-        [self _initWithSampleRate:sampleRate channel:channel formatID:formatID];
+        if (![[NSThread currentThread]isMainThread]) {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                [self _initWithSampleRate:sampleRate channel:channel formatID:formatID];
+            });
+        }else{
+            [self _initWithSampleRate:sampleRate channel:channel formatID:formatID];
+        }
     }
     
     return self;
@@ -61,7 +144,13 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
 {
     self = [super init];
     if (self) {
-        [self _initWithSampleRate:44100 channel:2 formatID:kAudioFormatLinearPCM];
+        if (![[NSThread currentThread]isMainThread]) {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                [self _initWithSampleRate:44100 channel:2 formatID:kAudioFormatLinearPCM];
+            });
+        }else{
+            [self _initWithSampleRate:44100 channel:2 formatID:kAudioFormatLinearPCM];
+        }
     }
     return self;
 }
@@ -116,7 +205,7 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
         if (status < 0) {
             maxPacketSize = _format.mChannelsPerFrame*_format.mFramesPerPacket*2;
         }else{
-            maxPacketSize = maxPacketSize*1.0/_format.mFramesPerPacket*_format.mSampleRate*0.5;
+            maxPacketSize = maxPacketSize*1.0/_format.mFramesPerPacket*_format.mSampleRate*0.5+7;
         }
     }
     

@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreAudio/CoreAudioTypes.h>
+#import <CoreMedia/CMTime.h>
 #import "GJRetainBuffer.h"
 @class GJAudioQueueRecoder;
 
@@ -20,7 +21,7 @@ typedef enum _RecoderStatus{
 @protocol GJAudioQueueRecoderDelegate <NSObject>
 @optional
 
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamData:(GJRetainBuffer*)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions;
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamData:(GJRetainBuffer*)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions pts:(CMTime)pts;
 
 @end
 @interface GJAudioQueueRecoder : NSObject

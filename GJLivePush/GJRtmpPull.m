@@ -31,8 +31,8 @@ static void* callbackLoop(void* parm){
         int outSize;
         if (packet->m_packetType == RTMP_PACKET_TYPE_AUDIO) {
             dataType = GJRTMPAudioData;
-            outPoint = packet->m_body;
-            outSize = packet->m_nBodySize;
+            outPoint = packet->m_body+2;
+            outSize = packet->m_nBodySize-2;
         }else if (packet->m_packetType == RTMP_PACKET_TYPE_VIDEO){
             dataType = GJRTMPVideoData;
             uint8_t *sps = NULL,*pps = NULL,*pp = NULL;

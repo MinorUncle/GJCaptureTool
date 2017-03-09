@@ -309,7 +309,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     //                    0001
     //==============
     //      1001 0000
-    packet[2] = (char)(((profile)<<6) + (freqIdx<<2) +(chanCfg>>2));// profile(2)+sampling(4)+privatebit(1)+channel_config(1)
+    packet[2] = (char)(((profile)<<6) + (freqIdx<<4) +(chanCfg>>2));// profile(2)+sampling(4)+privatebit(1)+channel_config(1)
     packet[3] = (char)(((chanCfg&3)<<6) + (fullLength>>11));
     packet[4] = (char)((fullLength&0x7FF) >> 3);
     packet[5] = (char)(((fullLength&7)<<5) + 0x1F);

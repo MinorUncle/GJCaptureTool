@@ -42,6 +42,13 @@ enum AVCaptureDevicePosition;
 
 @property(nonatomic,weak)id<GJLivePushDelegate> delegate;
 
+//push status,
+#define kLIVEPUSH_CONNECT 1<<0
+#define kLIVEPUSH_PREVIEW 1<<1
+#define kLIVEPUSH_CAPTURE 1<<2
+
+@property(nonatomic,assign,readonly)int status;
+
 
 - (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
 

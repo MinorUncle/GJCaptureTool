@@ -1,27 +1,32 @@
 //
-//  MCAudioOutputQueue
-//  MCAudioQueue
+//  GJAudioQueueDrivePlayer.h
+//  GJCaptureTool
 //
-//  Created by Chengyin on 14-7-27.
-//  Copyright (c) 2014年 Chengyin. All rights reserved.
+//  Created by mac on 17/3/9.
+//  Copyright © 2017年 MinorUncle. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
-#import <AudioToolbox/AudioToolbox.h>
-#import "GJRetainBuffer.h"
-typedef enum _PlayStatus{
-    kPlayInvalidStatus = 0,
-    kPlayStopStatus,
-    kPlayRunningStatus,
-    kPlayPauseStatus,
-}PlayStatus;
-@interface GJAudioQueuePlayer : NSObject
+#import "GJAudioQueuePlayer.h"
 
+@class GJAudioQueueDrivePlayer;
+/**
+ 类似GJAudioQueuePlayer，不过这个是主动通过代理函数拉数据，可以做同步基准作用
+ */
+
+@protocol GJAudioQueueDrivePlayerDelegate <NSObject>
+@required
+-(BOOL)GJAudioQueueDrivePlayer:(GJAudioQueueDrivePlayer*)player outAudioData:(void**)data outSize:(int*)size;
+
+@end
+
+@interface GJAudioQueueDrivePlayer : NSObject
 @property (nonatomic,assign,readonly) BOOL available;
 @property (nonatomic,assign,readonly) AudioStreamBasicDescription format;
 @property (nonatomic,assign) float volume;
 @property (nonatomic,assign) UInt32 maxBufferSize;
 @property (nonatomic,assign,readonly) PlayStatus status;
+@property (nonatomic,weak) id<GJAudioQueueDrivePlayerDelegate> delegate;
 
 /**
  *  return playedTime of audioqueue, return invalidPlayedTime when error occurs.
@@ -32,26 +37,17 @@ typedef enum _PlayStatus{
 
 /**
  must on main thread
-
+ 
  @param format format description
  @param maxBufferSize bufferSize description
  @param macgicCookie macgicCookie description
  @return return value description
  */
 - (instancetype)initWithFormat:(AudioStreamBasicDescription)format maxBufferSize:(UInt32)maxBufferSize macgicCookie:(NSData *)macgicCookie;
+
+
 - (instancetype)initWithSampleRate:(Float64)sampleRate channel:(UInt32)channel formatID:(UInt32)formatID;
 
-/**
- *  Play audio data, data length must be less than bufferSize.
- *  Will block current thread until the buffer is consumed.
- *
- *  @param bufferData               data
- *  @param packetDescriptions        packet count
- *
- *  @return whether successfully played
- */
-
-- (BOOL)playData:(GJRetainBuffer*)bufferData packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions;
 
 /**
  *  pause & resume
@@ -89,9 +85,4 @@ typedef enum _PlayStatus{
 - (BOOL)flush;
 
 -(BOOL)start;
-
-- (BOOL)setProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32)dataSize data:(const void *)data error:(NSError **)outError;
-- (BOOL)getProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32 *)dataSize data:(void *)data error:(NSError **)outError;
-- (BOOL)setParameter:(AudioQueueParameterID)parameterId value:(AudioQueueParameterValue)value error:(NSError **)outError;
-- (BOOL)getParameter:(AudioQueueParameterID)parameterId value:(AudioQueueParameterValue *)value error:(NSError **)outError;
 @end

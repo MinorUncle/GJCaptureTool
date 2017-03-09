@@ -11,7 +11,8 @@
 #import "GJRtmpPush.h"
 #import "GJDebug.h"
 #import "GJH264Encoder.h"
-@interface GJLivePush()<GJH264EncoderDelegate>
+#import "GJAudioQueueRecoder.h"
+@interface GJLivePush()<GJH264EncoderDelegate,GJAudioQueueRecoderDelegate>
 {
     GPUImageVideoCamera* _videoCamera;
     NSString* _sessionPreset;
@@ -19,6 +20,7 @@
     GJImageView* _showView;
     GPUImageOutput* _lastFilter;
     GPUImageCropFilter* _cropFilter;
+    GJAudioQueueRecoder* _audioRecoder;
 }
 @property(strong,nonatomic)GJH264Encoder* videoEncoder;
 @property(copy,nonatomic)NSString* pushUrl;
@@ -74,11 +76,14 @@
     if (_showView == nil) {
         _showView = (GJImageView*)self.previewView;
     }
+    _status |= kLIVEPUSH_PREVIEW;
     [_lastFilter addTarget:_showView];
 }
 
 - (void)stopPreview{
     [_lastFilter removeTarget:_showView];
+    _status &= !kLIVEPUSH_PREVIEW;
+
 }
 
 - (bool)startStreamPushWithConfig:(GJPushConfig)config{
@@ -136,10 +141,18 @@
     [_videoStreamFilter forceProcessingAtSize:config.pushSize];
     _videoStreamFilter.frameProcessingCompletionBlock = nil;
     GJRtmpPush_StartConnect(self.videoPush, self.pushUrl.UTF8String);
+    
+
+
     return true;
 }
 
 -(void)pushRun{
+    if (_audioRecoder == nil) {
+        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:2 formatID:kAudioFormatMPEG4AAC];
+        _audioRecoder.delegate = self;
+    }
+    [_audioRecoder startRecodeAudio];
     __weak GJLivePush* wkSelf = self;
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
@@ -152,8 +165,11 @@
 
 - (void)stopStreamPush{
     [_lastFilter removeTarget:_videoStreamFilter];
+    [_audioRecoder stop];
     [_videoEncoder flush];
-    GJRtmpPush_CloseAndRelease(_videoPush);
+    if(_videoPush){
+        GJRtmpPush_CloseAndRelease(_videoPush);
+    }
     _videoPush = nil;
 }
 
@@ -171,6 +187,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
         case GJRTMPPushMessageType_connectSuccess:
             GJLOG(@"连接成功\n");
             [livePush.delegate livePush:livePush messageType:kLivePushConnectSuccess infoDesc:nil];
+            
             [livePush pushRun];
             break;
         case GJRTMPPushMessageType_closeComplete:
@@ -194,14 +211,19 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 
 #pragma mark delegate
 -(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(CMTime)pts{
-//    static int c = 0;
-//    NSData* data = [NSData dataWithBytes:buffer->data length:buffer->size];
-//    NSLog(@"GJH264EncoderData%d:%@",c++,data);
+//    printf("video Pts:%d\n",(int)pts.value*1000/pts.timescale);
     GJRtmpPush_SendH264Data(_videoPush, buffer, (int)pts.value*1000/pts.timescale);
     return GJRtmpPush_GetBufferRate(_videoPush);
 }
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
 
+}
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamData:(GJRetainBuffer*)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions pts:(CMTime)pts{
+//    printf("audio Pts:%d\n",(int)pts.value*1000/pts.timescale);
+//    static int times =0;
+//    NSData* audio = [NSData dataWithBytes:dataBuffer->data length:dataBuffer->size];
+//    NSLog(@"audio times:%d ,%@",times++,audio);
+    GJRtmpPush_SendAACData(_videoPush, dataBuffer, (int)pts.value*1000/pts.timescale);
 }
 -(void)dealloc{
     if (_videoPush) {

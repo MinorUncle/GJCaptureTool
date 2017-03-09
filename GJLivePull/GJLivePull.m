@@ -9,28 +9,23 @@
 #import "GJLivePull.h"
 #import "GJRtmpPull.h"
 #import "GJH264Decoder.h"
-#import "GJImageView.h"
-#import "GJImageYUVDataInput.h"
-#import "GPUImageContext.h"
+#import "GJPlayer.h"
+#import "GJDebug.h"
 #import <CoreImage/CoreImage.h>
-typedef struct _GJImageBuffer{
-    CVImageBufferRef image;
-    CMTime           pts;
-}GJImageBuffer;
+
 
 @interface GJLivePull()<GJH264DecoderDelegate>
 {
     GJRtmpPull* _videoPull;
-    pthread_t  _playThread;
+    NSThread*  _playThread;
+    
+    BOOL    _pulling;
     
 
 }
-@property(strong,nonatomic)GJImageYUVDataInput* YUVInput;
-@property(strong,nonatomic)GPUImageView* displayView;
 @property(strong,nonatomic)GJH264Decoder* decoder;
-@property(assign,nonatomic)GJQueue* imageQueue;
-@property(assign,nonatomic)GJQueue* audioQueue;
-@property(assign,nonatomic)BOOL stopRequest;
+@property(strong,nonatomic)GJPlayer* player;
+
 
 @end
 @implementation GJLivePull
@@ -38,11 +33,11 @@ typedef struct _GJImageBuffer{
 {
     self = [super init];
     if (self) {
+        _player = [[GJPlayer alloc]init];
         _decoder = [[GJH264Decoder alloc]init];
         _decoder.delegate = self;
         _enablePreview = YES;
-        queueCreate(&_imageQueue, 30, true, false);
-        queueCreate(&_audioQueue, 80, true, false);
+
     }
     return self;
 }
@@ -54,10 +49,10 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         case GJRTMPPullMessageType_connectError:
         case GJRTMPPullMessageType_urlPraseError:
             message = kLivePullConnectError;
-            GJRtmpPull_CloseAndRelease(pull);
+            [livePull stopStreamPull];
             break;
         case GJRTMPPullMessageType_sendPacketError:
-            GJRtmpPull_CloseAndRelease(pull);
+            [livePull stopStreamPull];
             break;
             
         case GJRTMPPullMessageType_connectSuccess:
@@ -71,118 +66,47 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     }
     [livePull.delegate livePull:livePull messageType:message infoDesc:nil];
 }
-static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBuffer* buffer,void* parm,uint32_t pts){
-    GJLivePull* livePull = (__bridge GJLivePull *)(parm);
-    if (dataType == GJRTMPVideoData) {
-        [livePull.decoder decodeBuffer:buffer pts:CMTimeMake(pts, 1000)];
-    }
-}
 
-static void* playLoop(void* parm);
+
 
 - (BOOL)startStreamPullWithUrl:(char*)url{
     
-
+    GJAssert(_videoPull == NULL, "请先关闭上一个流\n");
+    _pulling = true;
     GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
     GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
-//    pthread_create(&_playThread, NULL, playLoop, (__bridge void *)(self));
+
+    [_player start];
     return YES;
 }
 
 - (void)stopStreamPull{
+    GJAssert(_videoPull != NULL, "重复关闭流\n");
+    [_player stop];
     GJRtmpPull_CloseAndRelease(_videoPull);
+    _videoPull = NULL;
+    _pulling = NO;
 }
 
 -(UIView *)getPreviewView{
-    if (_displayView == nil) {
-        _displayView = [[GJImageView alloc]init];
-    }
-    return _displayView;
+    return _player.displayView;
 }
 
 -(void)setEnablePreview:(BOOL)enablePreview{
     _enablePreview = enablePreview;
     
 }
-GPUImageFramebuffer* fram;
+static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBuffer* buffer,void* parm,uint32_t pts){
+    GJLivePull* livePull = (__bridge GJLivePull *)(parm);
+    if (dataType == GJRTMPAudioData) {
+        [livePull.player addAudioDataWith:buffer pts:CMTimeMake(pts, 1000)];
+    }else if (dataType == GJRTMPVideoData) {
+        [livePull.decoder decodeBuffer:buffer pts:CMTimeMake(pts, 1000)];
+    }
+}
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(CMTime)pts{
-    if (_YUVInput == nil) {
-        OSType type = CVPixelBufferGetPixelFormatType(imageBuffer);
-        if (type == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange || type == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
-            _YUVInput = [[GJImageYUVDataInput alloc]initPixelFormat:GJPixelFormatNV12];
-            [_YUVInput addTarget:_displayView];
-        }
-    }
-    
-    [_YUVInput updateDataWithImageBuffer:imageBuffer timestamp:pts];
-    return;
-    
+    [_player addVideoDataWith:imageBuffer pts:pts];
+    return;    
 }
-
-static void* playLoop(void* parm){
-    GJLivePull* pull = (__bridge GJLivePull *)(parm);
-    GJImageBuffer* preImage;
-    if (!queuePop(pull.imageQueue, (void**)&preImage, INT_MAX)) {
-        return NULL;
-    }
-    
-    clock_t begin = 0;
-    
-    //play
-    
-//     Update the display with the captured image for DEBUG purposes
-//        CIImage* cimage = [CIImage imageWithCVPixelBuffer:preImage->image];
-//        UIImage* image = [UIImage imageWithCIImage:cimage];
-//    ((UIImageView*)pull.displayView).image = image;
-
-//    CGSize size = CVImageBufferGetEncodedSize(preImage->image);
-//    CVPixelBufferLockBaseAddress(preImage->image, 0);
-//    uint8_t* Y = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 0);
-//    uint8_t* u = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 1);
-//    int c = CVPixelBufferGetPlaneCount(preImage->image);
-//    CVPixelBufferUnlockBaseAddress(preImage->image, 0);
-//    pull.YUVInput = [[GJImageYUVDataInput alloc]initWithImageSize:size pixelFormat:GJYUVixelFormat420P type:GJPixelTypeUByte];
-//    [pull.YUVInput updateDataWithY:Y U:u V:u+(long)(size.width*size.height/4) Timestamp:preImage->pts];
-//    CVPixelBufferRelease(preImage->image);
-//    GJImageBuffer* currentImage;
-//
-//    while (!pull.stopRequest) {
-//        
-//     
-//        if( queuePop(pull.imageQueue, (void**)&currentImage, INT_MAX)){
-//            float pastTime = currentImage->pts.value*1000.0/currentImage->pts.timescale- preImage->pts.value*1000.0/currentImage->pts.timescale;
-//            clock_t end = clock();
-//            float needWait = (end - begin)*1000.0/CLOCKS_PER_SEC - pastTime;
-//            if (needWait > 1) {
-//                usleep(needWait*1000);
-//            }
-//            //play
-//            free(preImage);
-//            preImage = currentImage;
-//          
-//            CVPixelBufferLockBaseAddress(preImage->image, 0);
-//            uint8_t* Y = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 0);
-//            uint8_t* u = CVPixelBufferGetBaseAddressOfPlane(preImage->image, 1);
-//            int c = CVPixelBufferGetPlaneCount(preImage->image);
-//            CVPixelBufferUnlockBaseAddress(preImage->image, 0);
-//            [pull.YUVInput updateDataWithY:Y U:u V:u+(long)(size.width*size.height/4) Timestamp:preImage->pts];
-//            CVPixelBufferRelease(preImage->image);
-//
-//            begin = clock();
-//            
-//        };
-//    }
-//    
-//    if (preImage) {
-//        free(preImage);
-//    }
-    
-    
-    
-    return NULL;
-ERROR:
-    return NULL;
-}
-
 
 @end
