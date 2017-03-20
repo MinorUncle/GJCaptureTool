@@ -11,13 +11,18 @@
 #import <CoreVideo/CVImageBuffer.h>
 #import "GJRetainBuffer.h"
 @class UIView;
-
+typedef enum _GJPlayStatus{
+    kPlayStatusStop,
+    kPlayStatusRunning,
+    kPlayStatusPause,
+    kPlayStatusBuffering,
+}GJPlayStatus;
 @interface GJPlayer : NSObject
 @property(readonly,nonatomic)UIView* displayView;
 
 -(void)start;
 -(void)stop;
--(void)addVideoDataWith:(CVImageBufferRef)imageData pts:(CMTime)pts;
--(void)addAudioDataWith:(GJRetainBuffer*)audioData pts:(CMTime)pts;
+-(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(CMTime)pts;
+-(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(CMTime)pts;
 @end
  

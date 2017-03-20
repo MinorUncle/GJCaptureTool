@@ -11,6 +11,7 @@
 #import "GJH264Decoder.h"
 #import "GJPlayer.h"
 #import "GJDebug.h"
+#import "PCMDecodeFromAAC.h"
 #import <CoreImage/CoreImage.h>
 
 
@@ -23,7 +24,7 @@
     
 
 }
-@property(strong,nonatomic)GJH264Decoder* decoder;
+@property(strong,nonatomic)GJH264Decoder* videoDecoder;
 @property(strong,nonatomic)GJPlayer* player;
 
 
@@ -34,8 +35,8 @@
     self = [super init];
     if (self) {
         _player = [[GJPlayer alloc]init];
-        _decoder = [[GJH264Decoder alloc]init];
-        _decoder.delegate = self;
+        _videoDecoder = [[GJH264Decoder alloc]init];
+        _videoDecoder.delegate = self;
         _enablePreview = YES;
 
     }
@@ -101,7 +102,7 @@ static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBu
     if (dataType == GJRTMPAudioData) {
         [livePull.player addAudioDataWith:buffer pts:CMTimeMake(pts, 1000)];
     }else if (dataType == GJRTMPVideoData) {
-        [livePull.decoder decodeBuffer:buffer pts:CMTimeMake(pts, 1000)];
+        [livePull.videoDecoder decodeBuffer:buffer pts:CMTimeMake(pts, 1000)];
     }
 }
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(CMTime)pts{

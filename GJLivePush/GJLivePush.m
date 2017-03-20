@@ -103,7 +103,7 @@
     if (!CGSizeEqualToSize(config.pushSize, _captureSize)) {
         float scaleX = config.pushSize.width / _captureSize.width;
         float scaleY = config.pushSize.height / _captureSize.height;
-        if (scaleY - scaleX < -0.00001 || scaleY - scaleX > 0.00001) {//比例不相同，先裁剪，裁剪之后显示，避免与收流端不同画面
+        if (scaleY - scaleX < -0.00001 || scaleY - scaleX > 0.00001) {//比例不相同，先裁剪，
             float scale = MIN(scaleX, scaleY);
             CGSize scaleSize = CGSizeMake(_captureSize.width * scale, _captureSize.height * scale);
             CGRect region =CGRectZero;
@@ -154,13 +154,11 @@
     }
     [_audioRecoder startRecodeAudio];
     __weak GJLivePush* wkSelf = self;
-    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
-            CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
-            
-            [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:CMTimeMake(wkSelf.videoEncoder.frameCount, (int32_t)wkSelf.captureFps) fourceKey:false];
-        };
-    });
+    wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
+        CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
+        
+        [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:CMTimeMake(wkSelf.videoEncoder.frameCount, (int32_t)wkSelf.captureFps) fourceKey:false];
+    };
 }
 
 - (void)stopStreamPush{

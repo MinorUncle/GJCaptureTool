@@ -98,7 +98,7 @@ static const int MCAudioQueueBufferCount = 8;
 -(void)_init{
     _volume = 1.0f;
     queueCreate(&_reusableQueue, MCAudioQueueBufferCount,true,false);
-    _status = kPlayInvalidStatus;
+    _status = kPlayAInvalidStatus;
 
 }
 
@@ -162,7 +162,7 @@ static const int MCAudioQueueBufferCount = 8;
         NSLog(@"kAudioQueueProperty_MagicCookie status:%d",status);
     }
         
-    _status = kPlayStopStatus;
+    _status = kPlayAStopStatus;
     self.volume = 1.0;
 }
 
@@ -207,7 +207,7 @@ static const int MCAudioQueueBufferCount = 8;
     UInt32 size = sizeof(isRunning);
     AudioQueueGetProperty(_audioQueue, kAudioQueueProperty_IsRunning, &isRunning, &size);
     
-    _status = kPlayRunningStatus;
+    _status = kPlayARunningStatus;
 //    assert(!status);
     return YES;
 }
@@ -219,7 +219,7 @@ static const int MCAudioQueueBufferCount = 8;
 
 - (BOOL)pause
 {
-    _status = kPlayPauseStatus;
+    _status = kPlayAPauseStatus;
     OSStatus status = AudioQueuePause(_audioQueue);
     if (status != noErr) {
         NSLog(@"pause error:%d",status);
@@ -251,7 +251,7 @@ static const int MCAudioQueueBufferCount = 8;
 - (BOOL)stop:(BOOL)immediately
 {
     PlayStatus pre = _status; //防止监听部分重启
-    _status = kPlayStopStatus;
+    _status = kPlayAStopStatus;
     OSStatus status = AudioQueueStop(_audioQueue, immediately);
     if (status != noErr) {
         NSLog(@"AudioQueueStop error:%d",status);
@@ -263,7 +263,7 @@ static const int MCAudioQueueBufferCount = 8;
 }
 
 - (BOOL)playData:(GJRetainBuffer*)bufferData packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions{
-    if (_status != kPlayRunningStatus)
+    if (_status != kPlayARunningStatus)
     {
         static int count;
         NSLog(@"play innnnnnnnnnnnnnn error count:%d",count++);
@@ -338,13 +338,13 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
 {
 	GJAudioQueuePlayer *player = (__bridge GJAudioQueuePlayer *)inClientData;
     GJRetainBuffer* bufferData;
-    if(queuePop(player->_reusableQueue, (void**)&bufferData, 0) && player.status == kPlayRunningStatus){
+    if(queuePop(player->_reusableQueue, (void**)&bufferData, 0) && player.status == kPlayARunningStatus){
          memcpy(inBuffer->mAudioData, bufferData->data, bufferData->size);
         inBuffer->mAudioDataByteSize = bufferData->size;
         retainBufferUnRetain(bufferData);
         
     }else{
-        if (player.status != kPlayRunningStatus) {
+        if (player.status != kPlayARunningStatus) {
             AudioQueueFreeBuffer(inAQ, inBuffer);
             return;
         }
@@ -363,13 +363,13 @@ static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
     NSLog(@"aac buffer out:%d",count++);
     GJAudioQueuePlayer *player = (__bridge GJAudioQueuePlayer *)inClientData;
     GJRetainBuffer* buffer;
-    if(queuePop(player->_reusableQueue, (void**)&buffer, 0) && player.status == kPlayRunningStatus){
+    if(queuePop(player->_reusableQueue, (void**)&buffer, 0) && player.status == kPlayARunningStatus){
         memcpy(inBuffer->mAudioData, buffer->data, buffer->size);
         inBuffer->mAudioDataByteSize = buffer->size;
         retainBufferUnRetain(buffer);
     }else{
         
-        if (player.status != kPlayRunningStatus) {
+        if (player.status != kPlayARunningStatus) {
             AudioQueueFreeBuffer(inAQ, inBuffer);
             return;
         }
@@ -392,7 +392,7 @@ static void MCAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
         UInt32 isRunning = 0;
         UInt32 size = sizeof(isRunning);
         AudioQueueGetProperty(inAQ, inID, &isRunning, &size);
-        if (player.status == kPlayRunningStatus && !isRunning) {
+        if (player.status == kPlayARunningStatus && !isRunning) {
             [player start];
             NSLog(@"warnning ...... auto start");
         }

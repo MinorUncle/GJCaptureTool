@@ -91,6 +91,8 @@
     [_livePush startCaptureWithSizeType:kCaptureSize352_288 fps:15 position:AVCaptureDevicePositionBack];
     
     [_livePush startPreview];
+    
+
     // Do any additional setup after loading the view.
 }
 -(void)takeSelect:(UIButton*)btn{
