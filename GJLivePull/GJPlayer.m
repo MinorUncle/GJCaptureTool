@@ -13,6 +13,7 @@
 #import "GJQueue.h"
 #import <pthread.h>
 #import "GJLog.h"
+#import <sys/time.h>
 
 #define VIDEO_PTS_PRECISION   0.4
 #define AUDIO_PTS_PRECISION   0.1
@@ -42,22 +43,32 @@ typedef struct _GJAudioBuffer{
 @property(strong,nonatomic)GJImageYUVDataInput* YUVInput;
 @property(assign,nonatomic)GJQueue*             imageQueue;
 @property(assign,nonatomic)GJQueue*             audioQueue;
-@property(assign,nonatomic)CMTime*              clockLine;
+@property(assign,nonatomic)long                 startPts;
 @property(assign,nonatomic)CMTime               aClock;
 @property(assign,nonatomic)CMTime               vClock;
+@property(assign,nonatomic)long                startTime;
+@property(assign,nonatomic)long                 pauseTime;
+
+@property(assign,nonatomic)long                 lastPauseFlag;
 
 @end
 @implementation GJPlayer
+
+long long getTime(){
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (int64_t)tv.tv_sec * 1000000 + tv.tv_usec;
+}
 -(void) playRunLoop{
     pthread_setname_np("GJPlayRunLoop");
     
-    GJImageBuffer* cImageBuf,*nImageBuf;
+    GJImageBuffer* cImageBuf;
     if (queuePop(_imageQueue, (void**)&cImageBuf, INT_MAX) && (_status == kPlayStatusRunning || _status == kPlayStatusPause)) {
         OSType type = CVPixelBufferGetPixelFormatType(cImageBuf->image);
         if (type == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange || type == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
             _YUVInput = [[GJImageYUVDataInput alloc]initPixelFormat:GJPixelFormatNV12];
             [_YUVInput addTarget:_displayView];
-            _clockLine = &_vClock;
+            _startPts = cImageBuf->pts.value*1000.0/cImageBuf->pts.timescale;
         }else{
             NSAssert(0, @"视频格式不支持");
             goto ERROR;
@@ -66,8 +77,9 @@ typedef struct _GJAudioBuffer{
         goto ERROR;
     }
     GJAudioBuffer* audioBuffer;
-    queueSetMixCacheSize(_audioQueue, 8);
-    if (queuePeekTopOutValue(_audioQueue, (void**)&audioBuffer, INT_MAX) && (_status == kPlayStatusRunning || _status == kPlayStatusPause)) {
+    queueSetMixCacheSize(_audioQueue, 5);
+    if (queuePeekWaitValue(_audioQueue, queueGetMixCacheSize(_audioQueue), (void**)&audioBuffer,INT_MAX)
+        && (_status == kPlayStatusRunning || _status == kPlayStatusPause)) {
         queueSetMixCacheSize(_audioQueue, 0);
         
         uint8_t* adts = audioBuffer->audioData->data;
@@ -78,59 +90,57 @@ typedef struct _GJAudioBuffer{
         channel += (adts[3] & 0xb0)>>6;
         _audioPlayer = [[GJAudioQueueDrivePlayer alloc]initWithSampleRate:sampleRate channel:channel formatID:kAudioFormatMPEG4AAC];
         _audioPlayer.delegate = self;
-        _clockLine = &_aClock;
+        _startPts = MIN(_startPts, audioBuffer->pts.value*1000.0/audioBuffer->pts.timescale);
         [_audioPlayer start];
     }else{
         goto ERROR;
     }
+    _startTime = getTime() / 1000;
     [_YUVInput updateDataWithImageBuffer:cImageBuf->image timestamp:cImageBuf->pts];
+    CVPixelBufferRelease(cImageBuf->image);
     _vClock = cImageBuf->pts;
     free(cImageBuf);
     cImageBuf = NULL;
 
-    long cTime = 0;
-    cTime = clock() * 1000 / CLOCKS_PER_SEC;
+//    long cTime = 0;
+//    cTime = clock() * 1000 / CLOCKS_PER_SEC;
     while ((_status != kPlayStatusStop)) {
-        if (queuePeekTopOutValue(_imageQueue, (void**)&nImageBuf,_status == kPlayStatusRunning?0:INT_MAX)) {
-            if (_status == kPlayStatusPause) {
-                queueWaitPop(_imageQueue, INT_MAX);
-            }else if (_status == kPlayStatusBuffering){
+        if (queuePop(_imageQueue, (void**)&cImageBuf,_status == kPlayStatusRunning?0:INT_MAX)) {
+           if (_status == kPlayStatusBuffering){
                 [self resume];
-            }
+           }
         }else{
             if (_status == kPlayStatusStop) {
                 break;
-            }else{
+            }else if (_status == kPlayStatusRunning){
                 [self buffering];
-                continue;
             }
-        }
-        
-        long time = clock() * 1000 / CLOCKS_PER_SEC;
-        float timeDiff = time - cTime;
-        float delay = nImageBuf->pts.value*1000.0/nImageBuf->pts.timescale - _vClock.value*1000.0/_vClock.timescale - timeDiff;
-        
-        float clockDiff = _clockLine->value*1000.0/_clockLine->timescale - _vClock.value*1000.0/_vClock.timescale - timeDiff;
-        delay -= clockDiff;
-        
-        if (delay > VIDEO_PTS_PRECISION*1000) {
-            GJLOG(GJ_LOGWARNING, "视频需要等待时间过长");
-            usleep(delay*1000);
-            nImageBuf = NULL;
             continue;
         }
-        if(queuePop(_imageQueue, (void**)&cImageBuf, 0)){
-            if (delay < -VIDEO_PTS_PRECISION*1000){
-                GJLOG(GJ_LOGWARNING, "视频落后严重，需要丢帧");
-            }else{
-                usleep(delay * 1000);
-                [_YUVInput updateDataWithImageBuffer:cImageBuf->image timestamp:cImageBuf->pts];
-                _vClock = cImageBuf->pts;
-            }
-            free(nImageBuf);
-            cImageBuf = NULL;
-            nImageBuf = NULL;
-        };
+        
+        long time = getTime() / 1000;
+        float timeDiff = time - _startTime;
+        float delay = cImageBuf->pts.value*1000.0/cImageBuf->pts.timescale - (timeDiff + _startPts-_pauseTime);
+        printf("delay:%f ，diff:%f\n",delay,timeDiff);
+        while (delay > VIDEO_PTS_PRECISION*1000 && _status != kPlayStatusStop) {
+            GJLOG(GJ_LOGWARNING, "视频需要等待时间过长");
+            usleep(VIDEO_PTS_PRECISION*1000000);
+            delay -= VIDEO_PTS_PRECISION*1000;
+        }
+
+        
+        if (delay < -VIDEO_PTS_PRECISION*1000){
+            GJLOG(GJ_LOGWARNING, "视频落后严重，需要丢帧");
+        }else{
+            usleep(delay * 1000);
+            [_YUVInput updateDataWithImageBuffer:cImageBuf->image timestamp:cImageBuf->pts];
+            CVPixelBufferRelease(cImageBuf->image);
+            _vClock = cImageBuf->pts;
+            
+        }
+        free(cImageBuf);
+        cImageBuf = NULL;
+    
     }
     
     
@@ -145,8 +155,8 @@ ERROR:
         _status = kPlayStatusStop;
         _videoBufferStep = 10;
         _displayView = [[GJImageView alloc]init];
-        queueCreate(&_imageQueue, 150, true, false);//150为暂停时视频最大缓冲
-        queueCreate(&_audioQueue, 400, true, false);
+        queueCreate(&_imageQueue, 300, true, false);//150为暂停时视频最大缓冲
+        queueCreate(&_audioQueue, 600, true, false);
     }
     return self;
 }
@@ -165,17 +175,32 @@ ERROR:
 }
 -(void)pause{
     _status = kPlayStatusPause;
+    _lastPauseFlag = getTime() / 1000;
+    
     queueSetMixCacheSize(_imageQueue, 1000);
     [_audioPlayer pause];
+    queueLockPop(_imageQueue);
+    queueWaitPop(_imageQueue, INT_MAX);
+    queueUnLockPop(_imageQueue);
 }
 -(void)resume{
     _status = kPlayStatusRunning;
+    printf("buffer total:%d\n",_pauseTime);
     queueSetMixCacheSize(_imageQueue,0);
+    if (_lastPauseFlag != 0) {
+        _pauseTime += getTime() / 1000 - _lastPauseFlag;
+        _lastPauseFlag = 0;
+    }else{
+        GJ_Log(GJ_LOGWARNING, "暂停管理出现问题");
+    }
     [_audioPlayer resume];
+
 }
 -(void)buffering{
     _status = kPlayStatusBuffering;
+    
     queueSetMixCacheSize(_imageQueue, queueGetLength(_imageQueue)+_videoBufferStep);
+    _lastPauseFlag = getTime() / 1000;
     [_audioPlayer pause];
 }
 -(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(CMTime)pts{

@@ -7,7 +7,7 @@
 //
 
 #import "GJAudioQueueDrivePlayer.h"
-static const int MCAudioQueueBufferCount = 8;
+#define DEFALUT_BUFFER_COUNT 5
 
 @interface GJAudioQueueDrivePlayer()
 {
@@ -27,6 +27,7 @@ static const int MCAudioQueueBufferCount = 8;
     self = [super init];
     if (self)
     {
+        _cacheBufferCount = DEFALUT_BUFFER_COUNT;
         _format = format;
         _maxBufferSize = maxBufferSize;
         [self _init];
@@ -159,7 +160,7 @@ static const int MCAudioQueueBufferCount = 8;
 - (BOOL)start
 {
     if (_format.mFormatID == kAudioFormatLinearPCM) {
-        for (int i = 0; i < MCAudioQueueBufferCount-1; ++i)
+        for (int i = 0; i < _cacheBufferCount-1; ++i)
         {
             AudioQueueBufferRef buffer;
             OSStatus status = AudioQueueAllocateBuffer(_audioQueue, _maxBufferSize, &buffer);
@@ -176,7 +177,7 @@ static const int MCAudioQueueBufferCount = 8;
             }
         }
     }else{
-        for (int i = 0; i < MCAudioQueueBufferCount-1; ++i)
+        for (int i = 0; i < _cacheBufferCount-1; ++i)
         {
             AudioQueueBufferRef buffer;
             OSStatus status = AudioQueueAllocateBuffer(_audioQueue, _maxBufferSize, &buffer);

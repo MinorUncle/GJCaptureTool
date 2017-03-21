@@ -194,8 +194,10 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
         case GJRTMPPushMessageType_connectError:
             GJLOG(@"连接失败\n");
             [livePush.delegate livePush:livePush messageType:kLivePushConnentError infoDesc:@"rtmp连接失败"];
-            GJRtmpPush_CloseAndRelease(livePush.videoPush);
-            livePush.videoPush = NULL;
+            if (livePush.videoPush) {
+                [livePush stopStreamPush];
+            }
+            
             break;
         case GJRTMPPushMessageType_urlPraseError:
             

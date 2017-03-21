@@ -129,6 +129,8 @@
         case kLivePushConnentError:{
             dispatch_async(dispatch_get_main_queue(), ^{
                 _pushStateLab.text =@"推流连接失败";
+                [_livePush stopStreamPush];
+                _takeButton.selected = false;
             });
             break;
         }
@@ -156,6 +158,7 @@
         case kLivePullConnectError:{
             dispatch_async(dispatch_get_main_queue(), ^{
                 _pullStateLab.text =@"拉流连接失败";
+                [_livePull stopStreamPull];
             });
             break;
         }

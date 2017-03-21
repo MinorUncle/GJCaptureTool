@@ -82,9 +82,10 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
 }
 
 - (void)stopStreamPull{
-    GJAssert(_videoPull != NULL, "重复关闭流\n");
     [_player stop];
-    GJRtmpPull_CloseAndRelease(_videoPull);
+    if (_videoPull) {
+        GJRtmpPull_CloseAndRelease(_videoPull);
+    }
     _videoPull = NULL;
     _pulling = NO;
 }

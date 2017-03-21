@@ -80,18 +80,31 @@ extern "C" {
     
     //小于该大小不能出栈。可用于缓冲
     void queueSetMixCacheSize(GJQueue* q,unsigned int cacheSize);
+    unsigned int queueGetMixCacheSize(GJQueue* q);
     
-    //根据index获得vause,当超过inPointer和outPointer范围则失败，用于遍历数组，不会产生压出队列作用
-    bool queuePeekValue(GJQueue* q,const long index,void** value);
     
     /**
-     获得出栈位置的值，没有数据则最多等待ms 时长
+     根据index获得vause,当超过inPointer和outPointer范围则失败，用于遍历数组，不会产生压出队列作用
+     
      @param q q description
+     @param index 栈中第几个值，出栈位置为0，递增
+     @param value value description
+     @return return value description
+     */
+    bool queuePeekValue(GJQueue* q,const long index,void** value);
+    
+    
+    /**
+     与上一个函数类似，当是会等待
+     
+     @param q q description
+     @param index index description
      @param value value description
      @param ms ms description
      @return return value description
      */
-    bool queuePeekTopOutValue(GJQueue* q,void** value,unsigned int ms QUEUE_DEFAULT(500));
+    bool queuePeekWaitValue(GJQueue* q,const long index,void** value,unsigned int ms QUEUE_DEFAULT(500));
+    
     
     bool queueUnLockPop(GJQueue* q);
     bool queueLockPush(GJQueue* q);
@@ -101,8 +114,6 @@ extern "C" {
     bool queueBroadcastPush(GJQueue* queue);
     bool queueWaitPush(GJQueue* queue,unsigned int ms);
     bool queueWaitPop(GJQueue* queue,unsigned int ms);
-    
-    
 #ifdef __cplusplus
 }
 #endif
