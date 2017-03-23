@@ -43,7 +43,7 @@
 @synthesize previewView = _previewView;
 
 - (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition{
-    _gaterFrequency = 5.0;
+    _gaterFrequency = 2.0;
     _caputreSizeType = sizeType;
     _cameraPosition = cameraPosition;
     _captureFps = fps;

@@ -19,6 +19,7 @@ typedef enum _GJPlayStatus{
 }GJPlayStatus;
 @interface GJPlayer : NSObject
 @property(readonly,nonatomic)UIView* displayView;
+@property(readonly,nonatomic)long cacheTime;
 
 -(void)start;
 -(void)stop;

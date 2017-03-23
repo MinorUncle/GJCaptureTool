@@ -41,7 +41,7 @@
         _videoDecoder = [[GJH264Decoder alloc]init];
         _videoDecoder.delegate = self;
         _enablePreview = YES;
-        _gaterFrequency = 5.0;
+        _gaterFrequency = 2.0;
     }
     return self;
 }
@@ -81,7 +81,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
     [_player start];
     _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
-        [self.delegate livePull:self bitrate:_unitByte/_gaterFrequency];
+        [self.delegate livePull:self bitrate:_unitByte/_gaterFrequency cacheTime:_player.cacheTime];
         _unitByte=0;
     }];
     

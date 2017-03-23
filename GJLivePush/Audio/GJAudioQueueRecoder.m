@@ -52,7 +52,7 @@ int get_f_index(unsigned int sampling_frequency)
         default:    return 0;
     }
 }
-static void adtsDataForPacketLength(int packetLength, char*packet,int sampleRate, int channel)
+static void adtsDataForPacketLength(int packetLength, uint8_t*packet,int sampleRate, int channel)
 {
     /*=======adts=======
      7字节
@@ -116,6 +116,9 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
         }
         memcpy(buffer->data+offset, inBuffer->mAudioData, inBuffer->mAudioDataByteSize+offset);
         buffer->size = inBuffer->mAudioDataByteSize+offset;
+        
+//        static int count ;
+//        NSLog(@"send num:%d:%@",count++,[NSData dataWithBytes:buffer->data+7 length:buffer->size-7]);
         [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:buffer packetDescriptions:inPacketDesc pts:CMTimeMake(inStartTime->mSampleTime, tempSelf.format.mSampleRate)];
         retainBufferUnRetain(buffer);
         AudioQueueEnqueueBuffer (tempSelf.mAudioQueue,inBuffer,0,NULL);

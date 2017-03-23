@@ -25,7 +25,7 @@ typedef struct _GJRetainBuffer{
     int size;      //data之后的实际使用内存大小，剩下之后的一定没有使用
     int frontSize; //data之前的内存,所以外部释放时一定要注意free((char*)data-frontSize);
     int retainCount;
-    void* data;
+    uint8_t* data;
     bool (*retainReleaseCallBack)(struct _GJRetainBuffer* data);
     void *parm;
 }GJRetainBuffer;

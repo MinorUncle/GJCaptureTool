@@ -25,6 +25,8 @@
 @property (strong, nonatomic) UILabel *pushStateLab;
 @property (strong, nonatomic) UILabel *pullStateLab;
 @property (strong, nonatomic) UILabel *delayLab;
+@property (strong, nonatomic) UILabel *cacheLab;
+
 
 
 @end
@@ -85,6 +87,12 @@
     _delayLab.textColor = [UIColor redColor];
     _delayLab.text = @"发送阻塞延时0.0 ms";
     [self.view addSubview:_delayLab];
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _cacheLab = [[UILabel alloc]initWithFrame:rect];
+    _cacheLab.textColor = [UIColor redColor];
+    _cacheLab.text = @"播放缓存时长0.0 ms";
+    [self.view addSubview:_cacheLab];
     
     int count = 1;
     rect.origin.y = CGRectGetMaxY(self.topView.frame);
@@ -198,8 +206,9 @@
     }
 }
 
--(void)livePull:(GJLivePull *)livePull bitrate:(long)bitrate{
+-(void)livePull:(GJLivePull *)livePull bitrate:(long)bitrate cacheTime:(long)cacheTime{
     _pullRateLab.text = [NSString stringWithFormat:@"接收码率:%0.2f KB/s",bitrate/1024.0];
+    _cacheLab.text = [NSString stringWithFormat:@"播放缓存时长%ld ms",cacheTime];
 }
 -(void)livePush:(GJLivePush *)livePush frameRate:(long)frameRate bitrate:(long)bitrate quality:(long)quality delay:(long)delay{
     _sendRateLab.text = [NSString stringWithFormat:@"发送码率:%0.2f KB/s",bitrate/1024.0];

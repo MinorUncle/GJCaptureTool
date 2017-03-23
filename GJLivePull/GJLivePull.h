@@ -23,7 +23,7 @@
  */
 -(void)livePull:(GJLivePull*)livePull messageType:(LivePullMessageType)type infoDesc:(NSString*)infoDesc;
 
--(void)livePull:(GJLivePull*)livePull bitrate:(long)bitrate;
+-(void)livePull:(GJLivePull*)livePull bitrate:(long)bitrate cacheTime:(long)cacheTime;
 
 @optional
 @end

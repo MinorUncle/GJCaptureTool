@@ -63,6 +63,10 @@ typedef struct _GJAudioBuffer{
 @implementation GJPlayer
 
 long long getTime(){
+#ifdef USE_CLOCK
+    static clockd =  CLOCKS_PER_SEC /1000000 ;
+    return clock() / clockd;
+#endif
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return (int64_t)tv.tv_sec * 1000000 + tv.tv_usec;
@@ -72,7 +76,6 @@ long long getTime(){
     if (0) {
         return _aClock;
     }else{
-
         long time = getTime() / 1000;
         if (_speed > 1.0) {
             _bufferTime -= (_speed - 1.0)*(time-_showTime);
@@ -100,15 +103,15 @@ long long getTime(){
         goto ERROR;
     }
     GJAudioBuffer* audioBuffer;
-    queueSetMixCacheSize(_audioQueue, 5);
+    queueSetMixCacheSize(_audioQueue, 12);
     if (queuePeekWaitValue(_audioQueue, queueGetMixCacheSize(_audioQueue), (void**)&audioBuffer,INT_MAX)
         && (_status == kPlayStatusRunning || _status == kPlayStatusPause)) {
         queueSetMixCacheSize(_audioQueue, 0);
         
         uint8_t* adts = audioBuffer->audioData->data;
-        uint8_t sampleRate = adts[2] << 2;
-        sampleRate = sampleRate>>4;
-        sampleRate = mpeg4audio_sample_rates[sampleRate];
+        uint8_t sampleIndex = adts[2] << 2;
+        sampleIndex = sampleIndex>>4;
+        int sampleRate = mpeg4audio_sample_rates[sampleIndex];
         uint8_t channel = adts[2] & 0x1 <<2;
         channel += (adts[3] & 0xb0)>>6;
         _audioPlayer = [[GJAudioQueueDrivePlayer alloc]initWithSampleRate:sampleRate channel:channel formatID:kAudioFormatMPEG4AAC];
@@ -153,7 +156,7 @@ long long getTime(){
         long timeStandards = [self getClockLine];
 
         float delay = cImageBuf->pts.value*1000.0/cImageBuf->pts.timescale - timeStandards;
-        printf("delay:%f ，\n",delay);
+//        printf("delay:%f ，\n",delay);
         while (delay > VIDEO_PTS_PRECISION*1000 && _status != kPlayStatusStop) {
             GJLOG(GJ_LOGWARNING, "视频需要等待时间过长");
             usleep(VIDEO_PTS_PRECISION*1000000);
@@ -213,8 +216,10 @@ ERROR:
 -(void)stop{
     [_oLock lock];
     if(_status != kPlayStatusStop){
-    _status = kPlayStatusStop;
-    [_audioPlayer stop:false];
+        _status = kPlayStatusStop;
+        [_audioPlayer stop:false];
+        queueCleanAndFree(_imageQueue);
+        queueCleanAndFree(_audioQueue);
     }else{
         GJLOG(GJ_LOGWARNING, "重复停止");
     }
@@ -295,6 +300,22 @@ ERROR:
     _audioPlayer.speed = _speed;
     [_oLock unlock];
 }
+
+-(long)cacheTime{
+    GJImageBuffer* packet;
+    long newPts = 0;
+    if(queuePeekValue(_imageQueue, queueGetLength(_imageQueue)-1, (void**)&packet)){
+        newPts = packet->pts.value*1000.0/packet->pts.timescale;
+        if (queuePeekValue(_imageQueue, 0, (void**)&packet)) {
+            return packet->pts.value*1000.0/packet->pts.timescale - newPts;
+        }else{
+            return 0;
+        }
+    }else{
+        return 0;
+    }
+
+}
 -(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(CMTime)pts{
     GJImageBuffer* imageBuffer  = (GJImageBuffer*)malloc(sizeof(GJImageBuffer));
     imageBuffer->image = imageData;
@@ -331,11 +352,14 @@ static const int mpeg4audio_sample_rates[16] = {
 
 
 
--(BOOL)GJAudioQueueDrivePlayer:(GJAudioQueueDrivePlayer *)player outAudioData:(void **)data outSize:(int *)size{
+-(BOOL)GJAudioQueueDrivePlayer:(GJAudioQueueDrivePlayer *)player outAudioData:(void *)data outSize:(int *)size{
     GJAudioBuffer* audioBuffer;
     if (queuePop(_audioQueue, (void**)&audioBuffer, 0)) {
-        *data = audioBuffer->audioData->data+7;
         *size = audioBuffer->audioData->size-7;
+        memcpy(data, audioBuffer->audioData->data+7, *size);
+
+//        static int count;
+//        NSLog(@"rece num:%d:%@",count++,[NSData dataWithBytes:*data length:*size]);
         retainBufferUnRetain(audioBuffer->audioData);
         _aClock = audioBuffer->pts.value * 1000.0 / audioBuffer->pts.timescale;
         free(audioBuffer);
