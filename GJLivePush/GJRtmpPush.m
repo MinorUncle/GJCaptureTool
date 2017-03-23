@@ -54,7 +54,7 @@ static void* sendRunloop(void* parm){
     }
     
     GJRTMP_Packet* packet;
-    while (queuePop(push->sendBufferQueue, (void**)&packet, 1000000)) {
+    while (queuePop(push->sendBufferQueue, (void**)&packet, INT_MAX)) {
         int iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
 //        static int i = 0;
 //        GJPrintf("sendcount:%d,pts:%d\n",i++,packet->packet.m_nTimeStamp);
@@ -285,3 +285,20 @@ float GJRtmpPush_GetBufferRate(GJRtmpPush* sender){
 //    GJPrintf("BufferRate length:%ld ,size:%f   rate:%f\n",length,size,length/size);
     return length / size;
 };
+long GJRtmpPush_GetBufferCacheTime(GJRtmpPush* sender){
+    GJRTMP_Packet* packet;
+    long newPts = 0;
+    if(queuePeekValue(sender->sendBufferQueue, queueGetLength(sender->sendBufferQueue), (void**)&packet)){
+        newPts = packet->packet.m_nTimeStamp;
+        if (queuePeekValue(sender->sendBufferQueue, 0, (void**)&packet)) {
+            return packet->packet.m_nTimeStamp - newPts;
+        }else{
+            return 0;
+        }
+    }else{
+        return 0;
+    }
+    
+}
+
+

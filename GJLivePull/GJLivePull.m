@@ -22,11 +22,14 @@
     
     BOOL    _pulling;
     
-
+    NSTimer * _timer;
 }
 @property(strong,nonatomic)GJH264Decoder* videoDecoder;
 @property(strong,nonatomic)GJPlayer* player;
+@property(assign,nonatomic)long sendByte;
+@property(assign,nonatomic)long unitByte;
 
+@property(assign,nonatomic)int gaterFrequency;
 
 @end
 @implementation GJLivePull
@@ -38,7 +41,7 @@
         _videoDecoder = [[GJH264Decoder alloc]init];
         _videoDecoder.delegate = self;
         _enablePreview = YES;
-
+        _gaterFrequency = 5.0;
     }
     return self;
 }
@@ -76,18 +79,22 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     _pulling = true;
     GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
     GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
-
     [_player start];
+    _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
+        [self.delegate livePull:self bitrate:_unitByte/_gaterFrequency];
+        _unitByte=0;
+    }];
+    
     return YES;
 }
 
 - (void)stopStreamPull{
-    [_player stop];
     if (_videoPull) {
+        [_player stop];
         GJRtmpPull_CloseAndRelease(_videoPull);
+        _videoPull = NULL;
+        _pulling = NO;
     }
-    _videoPull = NULL;
-    _pulling = NO;
 }
 
 -(UIView *)getPreviewView{
@@ -100,6 +107,9 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
 }
 static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBuffer* buffer,void* parm,uint32_t pts){
     GJLivePull* livePull = (__bridge GJLivePull *)(parm);
+    
+    livePull.sendByte = livePull.sendByte + buffer->size;
+    livePull.unitByte = livePull.unitByte + buffer->size;
     if (dataType == GJRTMPAudioData) {
         [livePull.player addAudioDataWith:buffer pts:CMTimeMake(pts, 1000)];
     }else if (dataType == GJRTMPVideoData) {

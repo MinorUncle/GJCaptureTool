@@ -10,7 +10,7 @@
 #import "GJRetainBufferPool.h"
 #import "GJDebug.h"
 
-#define DEFAULT_DELAY  5
+#define DEFAULT_DELAY  10
 #define DEFAULT_MAX_DROP_STEP 4
 @interface GJH264Encoder()
 {
@@ -283,7 +283,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     retainBufferUnRetain(retainBuffer);
 
     if (encoder.currentDelayCount==0) {
-        if (bufferRate > 0.3) {
+        if (bufferRate > 0.5) {
             [encoder reduceQuality];
             encoder.currentDelayCount = DEFAULT_DELAY;
         }else if(bufferRate - 0.0 <0.001){
@@ -299,13 +299,15 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     if (_dropStep > 0) {
         if (++_dropStep > DEFAULT_MAX_DROP_STEP) {
             _dropStep = 0;
+            self.currentBitRate = _allowMinBitRate;
             [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
         }else{
+            self.currentBitRate = _allowMinBitRate*(1-1.0/_dropStep);
             [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
         }
     }else{
         if (_currentBitRate < _destFormat.baseFormat.bitRate) {
-            self.currentBitRate += (_destFormat.baseFormat.bitRate - _currentBitRate)*0.1;
+            self.currentBitRate += (_destFormat.baseFormat.bitRate - _currentBitRate)*0.2;
             [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
         }else{
             [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityExcellent];
@@ -323,6 +325,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     }else{
         if (_dropStep > 2) {//最多到1，丢一半
             _dropStep--;
+            self.currentBitRate = _allowMinBitRate*(1-1.0/_dropStep);
             [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
         }else{
             [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityTerrible];

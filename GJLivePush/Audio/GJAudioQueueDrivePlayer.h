@@ -24,6 +24,8 @@
 @property (nonatomic,assign,readonly) BOOL available;
 @property (nonatomic,assign,readonly) AudioStreamBasicDescription format;
 @property (nonatomic,assign) float volume;
+@property (nonatomic,assign) float speed;
+
 @property (nonatomic,assign) UInt32 maxBufferSize;
 @property (nonatomic,assign,readonly) PlayStatus status;
 @property (nonatomic,weak) id<GJAudioQueueDrivePlayerDelegate> delegate;

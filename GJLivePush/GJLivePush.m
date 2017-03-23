@@ -21,17 +21,29 @@
     GPUImageOutput* _lastFilter;
     GPUImageCropFilter* _cropFilter;
     GJAudioQueueRecoder* _audioRecoder;
+    NSTimer*        _timer;
+    
+    long            _sendByte;
+    long            _unitByte;
+    
+    long             _sendFrame;
+    long            _unitFrame;
+    NSLock*          _pushLock;
 }
 @property(strong,nonatomic)GJH264Encoder* videoEncoder;
 @property(copy,nonatomic)NSString* pushUrl;
 @property(strong,nonatomic)GPUImageFilter* videoStreamFilter; //可能公用_cropFilter
 @property(assign,nonatomic)GJRtmpPush* videoPush;
+
+@property(assign,nonatomic)int gaterFrequency;
+
 @end
 
 @implementation GJLivePush
 @synthesize previewView = _previewView;
 
 - (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition{
+    _gaterFrequency = 5.0;
     _caputreSizeType = sizeType;
     _cameraPosition = cameraPosition;
     _captureFps = fps;
@@ -142,7 +154,15 @@
     _videoStreamFilter.frameProcessingCompletionBlock = nil;
     GJRtmpPush_StartConnect(self.videoPush, self.pushUrl.UTF8String);
     
-
+    _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
+        long frameRate = _unitFrame / _gaterFrequency;
+        long bitrate = _unitByte / _gaterFrequency;
+        _unitByte = 0;
+        _unitFrame = 0;
+        long delay = GJRtmpPush_GetBufferCacheTime(_videoPush);
+        [self.delegate livePush:self frameRate:frameRate bitrate:bitrate quality:0 delay:delay];
+        
+    }];
 
     return true;
 }
@@ -162,13 +182,15 @@
 }
 
 - (void)stopStreamPush{
-    [_lastFilter removeTarget:_videoStreamFilter];
-    [_audioRecoder stop];
-    [_videoEncoder flush];
-    if(_videoPush){
+    if (_videoPush) {
+        [_lastFilter removeTarget:_videoStreamFilter];
+        [_audioRecoder stop];
+        [_videoEncoder flush];
         GJRtmpPush_CloseAndRelease(_videoPush);
+        _videoPush = nil;
+        [_timer invalidate];
     }
-    _videoPush = nil;
+
 }
 
 -(UIView *)getPreviewView{
@@ -194,9 +216,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
         case GJRTMPPushMessageType_connectError:
             GJLOG(@"连接失败\n");
             [livePush.delegate livePush:livePush messageType:kLivePushConnentError infoDesc:@"rtmp连接失败"];
-            if (livePush.videoPush) {
-                [livePush stopStreamPush];
-            }
+            [livePush stopStreamPush];
             
             break;
         case GJRTMPPushMessageType_urlPraseError:
@@ -213,6 +233,10 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 -(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(CMTime)pts{
 //    printf("video Pts:%d\n",(int)pts.value*1000/pts.timescale);
     GJRtmpPush_SendH264Data(_videoPush, buffer, (int)pts.value*1000/pts.timescale);
+    _unitFrame++;
+    _sendFrame++;
+    _sendByte += buffer->size;
+    _unitByte += buffer->size;
     return GJRtmpPush_GetBufferRate(_videoPush);
 }
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
@@ -223,6 +247,8 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 //    static int times =0;
 //    NSData* audio = [NSData dataWithBytes:dataBuffer->data length:dataBuffer->size];
 //    NSLog(@"audio times:%d ,%@",times++,audio);
+    _sendByte += dataBuffer->size;
+    _unitByte += dataBuffer->size;
     GJRtmpPush_SendAACData(_videoPush, dataBuffer, (int)pts.value*1000/pts.timescale);
 }
 -(void)dealloc{

@@ -7,6 +7,7 @@
 //
 
 #import "GJAudioQueueDrivePlayer.h"
+#import "GJLog.h"
 #define DEFALUT_BUFFER_COUNT 5
 
 @interface GJAudioQueueDrivePlayer()
@@ -30,6 +31,7 @@
         _cacheBufferCount = DEFALUT_BUFFER_COUNT;
         _format = format;
         _maxBufferSize = maxBufferSize;
+        _speed = 1.0;
         [self _init];
         if (![[NSThread currentThread]isMainThread]) {
             dispatch_sync(dispatch_get_main_queue(), ^{
@@ -324,6 +326,20 @@
     _volume = volume;
     [self setParameter:kAudioQueueParam_Volume value:_volume error:NULL];
     
+}
+-(void)setSpeed:(float)speed{
+    if (speed > 2.0) {
+        speed = 2.0;
+    }else if (speed < 0.5){
+        speed = 0.5;
+    }
+    NSError* error;
+    [self setParameter:kAudioQueueParam_PlayRate value:speed error:&error];
+    if (error) {
+        GJLOG(GJ_LOGERROR, "audio speed set error:%s",error.localizedDescription);
+    }else{
+        _speed = speed;
+    }
 }
 
 
