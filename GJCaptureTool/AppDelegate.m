@@ -19,7 +19,8 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
-    GJLivePushViewController* controller = [[GJLivePushViewController alloc]init];
+//    GJLivePushViewController* controller = [[GJLivePushViewController alloc]init];
+    ViewController * controller = [[ViewController alloc]init];
     self.window.rootViewController = controller;
     [self.window makeKeyAndVisible];
     return YES;

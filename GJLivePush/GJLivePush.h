@@ -33,6 +33,7 @@ enum AVCaptureDevicePosition;
 
 @end
 
+#import "GJPlayer.h"
 
 @interface GJLivePush : NSObject
 @property(nonatomic,assign)enum AVCaptureDevicePosition cameraPosition;
@@ -44,6 +45,8 @@ enum AVCaptureDevicePosition;
 @property(nonatomic,assign,readonly)NSInteger captureFps;
 
 @property(nonatomic,weak)id<GJLivePushDelegate> delegate;
+
+@property(strong,nonatomic)GJPlayer* player;
 
 //push status,
 #define kLIVEPUSH_CONNECT 1<<0

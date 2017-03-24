@@ -135,7 +135,7 @@
         config.audioSampleRate = 44100;
         config.pushSize = CGSizeMake(288, 352);
         config.videoBitRate = 8*200*1024;
-        config.pushUrl = "rtmp://10.0.1.243:1935/live/room";
+        config.pushUrl = "rtmp://192.168.31.131/live/room";
         [_livePush startStreamPushWithConfig:config];
         
         [_livePull startStreamPullWithUrl:config.pushUrl];

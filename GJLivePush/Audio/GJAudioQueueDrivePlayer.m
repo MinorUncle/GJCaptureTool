@@ -8,13 +8,15 @@
 
 #import "GJAudioQueueDrivePlayer.h"
 #import "GJLog.h"
+#import "GJQueue.h"
 #define DEFALUT_BUFFER_COUNT 8
 
 @interface GJAudioQueueDrivePlayer()
 {
     AudioQueueRef _audioQueue;
-
+    
 }
+@property(assign,nonatomic)GJQueue* bufferCache;
 @end
 @implementation GJAudioQueueDrivePlayer
 @synthesize format = _format;
@@ -32,6 +34,7 @@
         _format = format;
         _maxBufferSize = maxBufferSize;
         _speed = 1.0;
+        queueCreate(&_bufferCache, DEFALUT_BUFFER_COUNT, true, false);
         [self _init];
         if (![[NSThread currentThread]isMainThread]) {
             dispatch_sync(dispatch_get_main_queue(), ^{
@@ -146,8 +149,16 @@
         GJLOG(GJ_LOGINFO,"kAudioQueueProperty_MagicCookie status:%d",status);
     }
     
+//    UInt32 propValue = 1;
+//    AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_EnableTimePitch, &propValue, sizeof(propValue));
+//    propValue = 1;
+//    AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_TimePitchBypass, &propValue, sizeof(propValue));
+//    propValue = kAudioQueueTimePitchAlgorithm_Spectral;
+//    AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_TimePitchAlgorithm, &propValue, sizeof(propValue));
+    
     _status = kPlayAStopStatus;
     self.volume = 1.0;
+    self.speed = 1.0;
 }
 
 - (void)_disposeAudioOutputQueue
@@ -195,7 +206,12 @@
                     _status = kPlayAStopStatus;
                     GJLOG(GJ_LOGERROR,"audio player get aac faile");
                 };
-                status = AudioQueueEnqueueBuffer(_audioQueue, buffer, 0, NULL);
+                AudioStreamPacketDescription packet = {0};
+                packet.mDataByteSize = buffer->mAudioDataByteSize;
+                packet.mStartOffset = 0;
+                packet.mVariableFramesInPacket = 0;
+                
+                status = AudioQueueEnqueueBuffer(_audioQueue, buffer, 1, &packet);
                 if (status != noErr)
                 {
                     _status = kPlayAStopStatus;
@@ -227,23 +243,40 @@
 
 - (BOOL)resume
 {
-    OSStatus status = AudioQueueStart(_audioQueue, NULL);
-    if (status != 0) {
-        char* codeChar = (char*)&status;
-        GJLOG(GJ_LOGERROR,"AudioQueueStartError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
-        return NO;
+    if (_status == kPlayAPauseStatus) {
+        _status = kPlayARunningStatus;
+        AudioQueueBufferRef bufferRef;
+        int size = 0;
+        while (queuePop(_bufferCache, (void**)&bufferRef, 0)) {
+            [self.delegate GJAudioQueueDrivePlayer:self outAudioData:bufferRef->mAudioData outSize:&size];
+
+            AudioStreamPacketDescription packet = {0};
+            packet.mDataByteSize = size;
+            packet.mStartOffset = 0;
+            packet.mVariableFramesInPacket = 0;
+            AudioQueueEnqueueBuffer(_audioQueue, bufferRef, 1, &packet);
+        }
+        
+        OSStatus status = AudioQueueStart(_audioQueue, NULL);
+        if (status != 0) {
+            char* codeChar = (char*)&status;
+            GJLOG(GJ_LOGERROR,"AudioQueueStartError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
+            _status = kPlayAPauseStatus;
+            return NO;
+        }
     }
-    _status = kPlayARunningStatus;
     return YES;
 }
 
 - (BOOL)pause
 {
-    _status = kPlayAPauseStatus;
-    OSStatus status = AudioQueuePause(_audioQueue);
-    if (status != noErr) {
-        GJLOG(GJ_LOGERROR,"pause error:%d",status);
-        return NO;
+    if (_status != kPlayAPauseStatus) {
+        _status = kPlayAPauseStatus;
+        OSStatus status = AudioQueuePause(_audioQueue);
+        if (status != noErr) {
+            GJLOG(GJ_LOGERROR,"pause error:%d",status);
+            return NO;
+        }
     }
     return YES;
 }
@@ -328,15 +361,24 @@
     
 }
 -(void)setSpeed:(float)speed{
+    return;
     if (speed > 2.0) {
         speed = 2.0;
     }else if (speed < 0.5){
         speed = 0.5;
     }
-    NSError* error;
-    [self setParameter:kAudioQueueParam_PlayRate value:speed error:&error];
-    if (error) {
-        GJLOG(GJ_LOGERROR, "audio speed set error:%d",error.code);
+    OSStatus error;
+    if (fabsf(speed - 1.0f) <= 0.000001) {
+        UInt32 propValue = 1;
+        error = AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_TimePitchBypass, &propValue, sizeof(propValue));
+        error = AudioQueueSetParameter(_audioQueue, kAudioQueueParam_PlayRate, 1.0f);
+    } else {
+        UInt32 propValue = 0;
+        error = AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_TimePitchBypass, &propValue, sizeof(propValue));
+        error = AudioQueueSetParameter(_audioQueue, kAudioQueueParam_PlayRate, speed);
+    }
+    if (error != noErr) {
+        GJLOG(GJ_LOGERROR, "audio speed set error:%d",error);
     }else{
         _speed = speed;
     }
@@ -353,7 +395,7 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
        && player.status == kPlayARunningStatus){
         inBuffer->mAudioDataByteSize = dataSize;
     }else{
-        if (player.status != kPlayARunningStatus) {
+        if (player.status == kPlayAStopStatus) {
             AudioQueueFreeBuffer(inAQ, inBuffer);
             return;
         }
@@ -369,16 +411,18 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
 }
 static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer){
     static int count;
-    NSLog(@"aac buffer out:%d",count++);
     GJAudioQueueDrivePlayer *player = (__bridge GJAudioQueueDrivePlayer *)inClientData;
-    int dataSize;
-    if([player.delegate GJAudioQueueDrivePlayer:player outAudioData:inBuffer->mAudioData outSize:&dataSize]
-       && player.status == kPlayARunningStatus){
+    
+    
+    NSLog(@"aac buffer out:%d  status:%d",count++,player.status);
+
+    int dataSize = 0;
+    if(player.status == kPlayARunningStatus && [player.delegate GJAudioQueueDrivePlayer:player outAudioData:inBuffer->mAudioData outSize:&dataSize]){
         inBuffer->mAudioDataByteSize = dataSize;
 
     }else{
         
-        if (player.status != kPlayARunningStatus) {
+        if (player.status == kPlayAStopStatus) {
             
 #ifdef DEBUG
             static int freeCount;
@@ -387,14 +431,19 @@ static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
 #endif
             AudioQueueFreeBuffer(inAQ, inBuffer);
             return;
+        }else{
+            queuePush(player.bufferCache, inBuffer, 0);
         }
     }
-    OSStatus status = AudioQueueEnqueueBuffer(inAQ, inBuffer, 0, NULL);
+    AudioStreamPacketDescription packet = {0};
+    packet.mDataByteSize = inBuffer->mAudioDataByteSize;
+    packet.mStartOffset = 0;
+    packet.mVariableFramesInPacket = 0;
+    OSStatus status = AudioQueueEnqueueBuffer(inAQ, inBuffer, 1, &packet);
     if (status < 0) {
         AudioQueueFreeBuffer(inAQ, inBuffer);
         GJLOG(GJ_LOGERROR,"AudioQueueEnqueueBuffer error:%d",(int)status);
     }
-    
 }
 
 static void MCAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, AudioQueuePropertyID inID)

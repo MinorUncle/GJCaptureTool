@@ -13,20 +13,22 @@
 
 @class PCMDecodeFromAAC;
 @protocol PCMDecodeFromAACDelegate <NSObject>
--(void)pcmDecode:(PCMDecodeFromAAC*)decoder completeBuffer:(GJRetainBuffer*)buffer packetDesc:(AudioStreamPacketDescription*)packetDesc;
+-(void)pcmDecode:(PCMDecodeFromAAC*)decoder completeBuffer:(GJRetainBuffer*)buffer pts:(int)pts;
 @end
 @interface PCMDecodeFromAAC : NSObject
-@property (nonatomic,assign,readonly) UInt32 destMaxOutSize;
 @property (nonatomic,assign,readonly) AudioStreamBasicDescription sourceFormatDescription;
 @property (nonatomic,assign,readonly)AudioStreamBasicDescription destFormatDescription;
 
 
 @property (nonatomic,assign,readonly) UInt32 bitRate;
 @property (nonatomic,weak) id<PCMDecodeFromAACDelegate>delegate;
+@property (nonatomic,assign,readonly) UInt32 destMaxOutSize;
+
+-(void)start;
+-(void)stop;
+
+-(void)decodeBuffer:(GJRetainBuffer*)buffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins pts:(int)pts;
 
 
--(void)decodeBuffer:(GJRetainBuffer*)buffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins;
-
-
-- (instancetype)initWithDestDescription:(AudioStreamBasicDescription*)description SourceDescription:(AudioStreamBasicDescription*)sourceDescription sourceMaxBufferLenth:(int)maxLenth;
+- (instancetype)initWithDestDescription:(AudioStreamBasicDescription*)description SourceDescription:(AudioStreamBasicDescription*)sourceDescription;
 @end

@@ -242,14 +242,14 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
 
 }
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamData:(GJRetainBuffer*)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions pts:(CMTime)pts{
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamData:(GJRetainBuffer*)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions pts:(int)pts{
 //    printf("audio Pts:%d\n",(int)pts.value*1000/pts.timescale);
 //    static int times =0;
 //    NSData* audio = [NSData dataWithBytes:dataBuffer->data length:dataBuffer->size];
 //    NSLog(@"audio times:%d ,%@",times++,audio);
     _sendByte += dataBuffer->size;
     _unitByte += dataBuffer->size;
-    GJRtmpPush_SendAACData(_videoPush, dataBuffer, (int)pts.value*1000/pts.timescale);
+    GJRtmpPush_SendAACData(_videoPush, dataBuffer, pts);
 }
 -(void)dealloc{
     if (_videoPush) {

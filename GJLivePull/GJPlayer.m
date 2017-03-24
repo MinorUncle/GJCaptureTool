@@ -73,7 +73,7 @@ long long getTime(){
 }
 
 -(long) getClockLine{
-    if (0) {
+    if (_aClock > 0) {
         return _aClock;
     }else{
         long time = getTime() / 1000;
@@ -279,7 +279,6 @@ ERROR:
         }else{
             GJLOG(GJ_LOGWARNING, "暂停管理出现问题");
         }
-        [_audioPlayer flush];
         [_audioPlayer resume];
     }else{
         GJLOG(GJ_LOGDEBUG, "stopBuffering when status not buffering");
@@ -304,17 +303,21 @@ ERROR:
 -(long)cacheTime{
     GJImageBuffer* packet;
     long newPts = 0;
+    long value = 0;
+    queueLockPop(_imageQueue);
     if(queuePeekValue(_imageQueue, queueGetLength(_imageQueue)-1, (void**)&packet)){
         newPts = packet->pts.value*1000.0/packet->pts.timescale;
         if (queuePeekValue(_imageQueue, 0, (void**)&packet)) {
-            return packet->pts.value*1000.0/packet->pts.timescale - newPts;
+            value = newPts - packet->pts.value*1000.0/packet->pts.timescale;
         }else{
-            return 0;
+            value = 0;
         }
     }else{
-        return 0;
+        value = 0;
     }
+    queueUnLockPop(_imageQueue);
 
+    return value;
 }
 -(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(CMTime)pts{
     GJImageBuffer* imageBuffer  = (GJImageBuffer*)malloc(sizeof(GJImageBuffer));

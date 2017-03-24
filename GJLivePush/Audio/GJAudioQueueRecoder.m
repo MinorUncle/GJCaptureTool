@@ -14,7 +14,7 @@
 #define NUMBER_BUFFERS 8
 
 #define DEFAULT_MAX_SIZE 2048
-#define DEFAULT_DELAY 0.05
+#define DEFAULT_DELAY 0.1
 
 
 
@@ -113,13 +113,16 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
         if (tempSelf.format.mFormatID == kAudioFormatMPEG4AAC) {
             offset = 7;
             adtsDataForPacketLength(inBuffer->mAudioDataByteSize, buffer->data,tempSelf.format.mSampleRate,tempSelf.format.mChannelsPerFrame);
+
         }
         memcpy(buffer->data+offset, inBuffer->mAudioData, inBuffer->mAudioDataByteSize+offset);
         buffer->size = inBuffer->mAudioDataByteSize+offset;
-        
+        int pts = inStartTime->mSampleTime*1000/ tempSelf.format.mSampleRate;
 //        static int count ;
 //        NSLog(@"send num:%d:%@",count++,[NSData dataWithBytes:buffer->data+7 length:buffer->size-7]);
-        [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:buffer packetDescriptions:inPacketDesc pts:CMTimeMake(inStartTime->mSampleTime, tempSelf.format.mSampleRate)];
+        NSLog(@"audio size:%d",inBuffer->mAudioDataByteSize);
+        AudioStreamPacketDescription desc = (AudioStreamPacketDescription){7,0,inBuffer->mAudioDataByteSize+7};
+        [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:buffer packetDescriptions:&desc pts:pts];
         retainBufferUnRetain(buffer);
         AudioQueueEnqueueBuffer (tempSelf.mAudioQueue,inBuffer,0,NULL);
     }else{

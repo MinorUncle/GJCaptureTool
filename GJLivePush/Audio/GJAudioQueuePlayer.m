@@ -10,7 +10,7 @@
 #import <pthread.h>
 #import "GJQueue.h"
 #import "GJRetainBuffer.h"
-static const int MCAudioQueueBufferCount = 8;
+static const int MCAudioQueueBufferCount = 4;
 
 @interface GJAudioQueuePlayer ()
 {
@@ -53,6 +53,7 @@ static const int MCAudioQueueBufferCount = 8;
     self = [super init];
     if (self)
     {
+        [self _init];
         AudioStreamBasicDescription format = {0};
         format.mFormatID         = formatID;
         switch (formatID) {
@@ -65,6 +66,8 @@ static const int MCAudioQueueBufferCount = 8;
                 format.mBytesPerFrame   = format.mChannelsPerFrame * format.mBitsPerChannel/8;
                 format.mFramesPerPacket = format.mBytesPerFrame * format.mFramesPerPacket ;
                 format.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
+                _maxBufferSize =format.mBytesPerFrame * format.mChannelsPerFrame*sampleRate * 0.2;
+
                 break;
             }
             case kAudioFormatMPEG4AAC:
@@ -73,6 +76,7 @@ static const int MCAudioQueueBufferCount = 8;
                 format.mFormatID         = kAudioFormatMPEG4AAC; // 2
                 format.mChannelsPerFrame = channel;                     // 4
                 format.mFramesPerPacket  = 1024;
+                _maxBufferSize = format.mFramesPerPacket * format.mChannelsPerFrame *2;
                 break;
             }
             default:
@@ -83,7 +87,6 @@ static const int MCAudioQueueBufferCount = 8;
         _format = format;
         _volume = 1.0f;
 #define BYTE_PER_CHANNEL 3
-        _maxBufferSize = _format.mFramesPerPacket*format.mChannelsPerFrame*BYTE_PER_CHANNEL;
         if (![[NSThread currentThread]isMainThread]) {
             dispatch_sync(dispatch_get_main_queue(), ^{
                 [self _createAudioOutputQueue:NULL];
@@ -179,11 +182,15 @@ static const int MCAudioQueueBufferCount = 8;
 {
     for (int i = 0; i < MCAudioQueueBufferCount-1; ++i)
     {
-        AudioQueueBufferRef buffer;
-        OSStatus status = AudioQueueAllocateBuffer(_audioQueue, _maxBufferSize, &buffer);
-        buffer->mAudioDataByteSize = _maxBufferSize;
-        memset(buffer->mAudioData, 0, buffer->mAudioDataByteSize);
-        status = AudioQueueEnqueueBuffer(_audioQueue, buffer, 0, NULL);
+        AudioQueueBufferRef inBuffer;
+        OSStatus status = AudioQueueAllocateBufferWithPacketDescriptions(_audioQueue, _maxBufferSize, 1, &inBuffer);
+        inBuffer->mAudioDataByteSize = _maxBufferSize;
+        memset(inBuffer->mAudioData, 0, inBuffer->mAudioDataByteSize);
+        inBuffer->mPacketDescriptionCount = 1;
+        inBuffer->mPacketDescriptions[0].mDataByteSize = inBuffer->mAudioDataByteSize;
+        inBuffer->mPacketDescriptions[0].mStartOffset  = 0;
+        inBuffer->mPacketDescriptions[0].mVariableFramesInPacket = 0;
+        status = AudioQueueEnqueueBuffer(_audioQueue, inBuffer, 0, NULL);
         if (status != noErr)
         {
             AudioQueueDispose(_audioQueue, YES);
@@ -351,6 +358,10 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
         memset(inBuffer->mAudioData, 0, inBuffer->mAudioDataByteSize);
     }
 
+    inBuffer->mPacketDescriptionCount = 1;
+    inBuffer->mPacketDescriptions[0].mDataByteSize = inBuffer->mAudioDataByteSize;
+    inBuffer->mPacketDescriptions[0].mStartOffset  = 0;
+    inBuffer->mPacketDescriptions[0].mVariableFramesInPacket = 0;
     OSStatus status = AudioQueueEnqueueBuffer(inAQ, inBuffer, 0, NULL);
 #ifdef DEBUG
     if (status < 0) {
@@ -369,13 +380,15 @@ static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
         retainBufferUnRetain(buffer);
     }else{
         
-        if (player.status != kPlayARunningStatus) {
+        if (player.status == kPlayAStopStatus) {
             AudioQueueFreeBuffer(inAQ, inBuffer);
             return;
         }
-        memset(inBuffer->mAudioData, 0, inBuffer->mAudioDataByteSize);
-        NSLog(@"play out00000000000000:%d",count);
     }
+    inBuffer->mPacketDescriptionCount = 1;
+    inBuffer->mPacketDescriptions[0].mDataByteSize = inBuffer->mAudioDataByteSize;
+    inBuffer->mPacketDescriptions[0].mStartOffset  = 0;
+    inBuffer->mPacketDescriptions[0].mVariableFramesInPacket = 0;
     OSStatus status = AudioQueueEnqueueBuffer(inAQ, inBuffer, 0, NULL);
     if (status < 0) {
         AudioQueueFreeBuffer(inAQ, inBuffer);

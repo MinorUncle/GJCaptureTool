@@ -288,17 +288,20 @@ float GJRtmpPush_GetBufferRate(GJRtmpPush* sender){
 long GJRtmpPush_GetBufferCacheTime(GJRtmpPush* sender){
     GJRTMP_Packet* packet;
     long newPts = 0;
+    long value = 0;
+    queueLockPop(sender->sendBufferQueue);
     if(queuePeekValue(sender->sendBufferQueue, queueGetLength(sender->sendBufferQueue), (void**)&packet)){
         newPts = packet->packet.m_nTimeStamp;
         if (queuePeekValue(sender->sendBufferQueue, 0, (void**)&packet)) {
-            return packet->packet.m_nTimeStamp - newPts;
+            value = newPts - packet->packet.m_nTimeStamp;
         }else{
-            return 0;
+            value = 0;
         }
     }else{
-        return 0;
+        value = 0;
     }
-    
+    queueUnLockPop(sender->sendBufferQueue);
+    return value;
 }
 
 

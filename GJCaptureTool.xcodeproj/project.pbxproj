@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		041702851E5FC3D100D5B5D9 /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		0417FEEB1E5ECBAA00D5B5D9 /* libGJImageFilters.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0417FEE21E5ECB8D00D5B5D9 /* libGJImageFilters.a */; };
 		0432266B1DDEF38F0012A0C0 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 043226691DDEF38F0012A0C0 /* libcrypto.a */; };
 		0432266C1DDEF38F0012A0C0 /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0432266A1DDEF38F0012A0C0 /* libopenssl.a */; };
@@ -70,14 +69,15 @@
 		046EDBE31E6D51EB00D9D8FC /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */; };
 		046EDBE41E6D597D00D9D8FC /* libGJLivePull.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 044018E91E6CF4E400DEBF98 /* libGJLivePull.a */; };
 		046EDC1C1E6E745A00D9D8FC /* GJPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 046EDC1B1E6E745A00D9D8FC /* GJPlayer.m */; };
-		046F59871E2DBA39007901EB /* sps_decode.c in Sources */ = {isa = PBXBuildFile; fileRef = 046F59861E2DBA39007901EB /* sps_decode.c */; };
 		046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
-		046F7E421E306C8E00712A2B /* libx264_back.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F7E411E306C8E00712A2B /* libx264_back.a */; };
 		04A081731E70E63A000E2B64 /* GJAudioQueueDrivePlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 04A081711E70E63A000E2B64 /* GJAudioQueueDrivePlayer.h */; };
 		04A081741E70E63A000E2B64 /* GJAudioQueueDrivePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 04A081721E70E63A000E2B64 /* GJAudioQueueDrivePlayer.m */; };
 		04C5C50C1E666DC1009DE4A0 /* GJLivePush.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 04C5C5051E666DC0009DE4A0 /* GJLivePush.framework */; };
 		04C5C50D1E666DC1009DE4A0 /* GJLivePush.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 04C5C5051E666DC0009DE4A0 /* GJLivePush.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		04D15F971E7FB615005F6DDD /* GJLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 04D15F961E7FB615005F6DDD /* GJLog.h */; };
+		6A0E86EB1E84BE8A002A2A2D /* sps_decode.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A0E86E91E84BE8A002A2A2D /* sps_decode.c */; };
+		6A0E86EC1E84BED7002A2A2D /* librtmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E21E84BE3F002A2A2D /* librtmp.a */; };
+		6A0E87051E84F413002A2A2D /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = C561AC941D51D3DC00113453 /* ViewController.mm */; };
 		AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */; };
 		C54FA8C91D2103AA00A0D3C3 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C54FA8C81D2103AA00A0D3C3 /* OpenAL.framework */; };
 		C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C561ABEB1D51D3DC00113453 /* AppDelegate.m */; };
@@ -90,14 +90,7 @@
 		C573F1721D4B416E002607B6 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F1711D4B416E002607B6 /* libiconv.tbd */; };
 		C573F1741D4B4175002607B6 /* libbz2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F1731D4B4175002607B6 /* libbz2.tbd */; };
 		C573F1761D4B417B002607B6 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F1751D4B417B002607B6 /* VideoToolbox.framework */; };
-		C59106021DC894BC00BCC938 /* LibRtmpSession.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C59106001DC894BC00BCC938 /* LibRtmpSession.cpp */; };
 		C59106041DC899DC00BCC938 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C59106031DC899DC00BCC938 /* MediaPlayer.framework */; };
-		C591E85B1DC6ECED00BCC938 /* amf.c in Sources */ = {isa = PBXBuildFile; fileRef = C591E84D1DC6ECED00BCC938 /* amf.c */; };
-		C591E85C1DC6ECED00BCC938 /* hashswf.c in Sources */ = {isa = PBXBuildFile; fileRef = C591E8531DC6ECED00BCC938 /* hashswf.c */; };
-		C591E85D1DC6ECED00BCC938 /* log.c in Sources */ = {isa = PBXBuildFile; fileRef = C591E8551DC6ECED00BCC938 /* log.c */; };
-		C591E85E1DC6ECED00BCC938 /* parseurl.c in Sources */ = {isa = PBXBuildFile; fileRef = C591E8571DC6ECED00BCC938 /* parseurl.c */; };
-		C591E85F1DC6ECED00BCC938 /* rtmp.c in Sources */ = {isa = PBXBuildFile; fileRef = C591E8591DC6ECED00BCC938 /* rtmp.c */; };
-		C591E8601DC6ED5900BCC938 /* librtmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C591E8441DC6ECAC00BCC938 /* librtmp.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -164,6 +157,41 @@
 			remoteGlobalIDString = 04C5C5041E666DC0009DE4A0;
 			remoteInfo = GJLivePush;
 		};
+		6A0E86DF1E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = AE5D85D31DBA0D680092D2A8;
+			remoteInfo = RtmpCode;
+		};
+		6A0E86E11E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = AE5D85F11DBA0D900092D2A8;
+			remoteInfo = rtmp;
+		};
+		6A0E86E31E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = AE5D86171DBA0E3A0092D2A8;
+			remoteInfo = openssl;
+		};
+		6A0E86E51E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = AE973AC51DBB614400B5907F;
+			remoteInfo = crypto;
+		};
+		6A0E86E71E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = C591E8AE1DC6FF6600BCC938;
+			remoteInfo = RtmpServer;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -186,15 +214,6 @@
 				04C5C50D1E666DC1009DE4A0 /* GJLivePush.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C591E8421DC6ECAC00BCC938 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "include/$(PRODUCT_NAME)";
-			dstSubfolderSpec = 16;
-			files = (
-			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -282,7 +301,6 @@
 		0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = DarwinStreamCode.xcodeproj; path = ../DarwinStreamingServerCode/DarwinStreamCode/DarwinStreamCode.xcodeproj; sourceTree = "<group>"; };
 		046EDC1A1E6E745A00D9D8FC /* GJPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPlayer.h; sourceTree = "<group>"; };
 		046EDC1B1E6E745A00D9D8FC /* GJPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJPlayer.m; sourceTree = "<group>"; };
-		046F59861E2DBA39007901EB /* sps_decode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sps_decode.c; sourceTree = "<group>"; };
 		046F599D1E2E1C38007901EB /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
 		046F5B321E305714007901EB /* x264_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264_config.h; path = ../../../../x264Code/x264/include/x264_config.h; sourceTree = "<group>"; };
 		046F5B331E305714007901EB /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264.h; path = ../../../../x264Code/x264/include/x264.h; sourceTree = "<group>"; };
@@ -474,6 +492,17 @@
 		04D15F801E7E69CA005F6DDD /* GJRetainBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJRetainBuffer.h; sourceTree = "<group>"; };
 		04D15F811E7E69CA005F6DDD /* GJRetainBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJRetainBufferPool.h; sourceTree = "<group>"; };
 		04D15F961E7FB615005F6DDD /* GJLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLog.h; sourceTree = "<group>"; };
+		6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RtmpCode.xcodeproj; path = ../rtmpAndOpenssl/RtmpCode.xcodeproj; sourceTree = "<group>"; };
+		6A0E86E91E84BE8A002A2A2D /* sps_decode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sps_decode.c; sourceTree = "<group>"; };
+		6A0E86EA1E84BE8A002A2A2D /* sps_decode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sps_decode.h; sourceTree = "<group>"; };
+		6A0E86F61E84E881002A2A2D /* amf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = amf.h; sourceTree = "<group>"; };
+		6A0E86F71E84E881002A2A2D /* dh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dh.h; sourceTree = "<group>"; };
+		6A0E86F81E84E881002A2A2D /* dhgroups.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dhgroups.h; sourceTree = "<group>"; };
+		6A0E86F91E84E881002A2A2D /* handshake.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = handshake.h; sourceTree = "<group>"; };
+		6A0E86FA1E84E881002A2A2D /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = http.h; sourceTree = "<group>"; };
+		6A0E86FB1E84E881002A2A2D /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
+		6A0E86FC1E84E881002A2A2D /* rtmp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtmp.h; sourceTree = "<group>"; };
+		6A0E86FD1E84E881002A2A2D /* rtmp_sys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtmp_sys.h; sourceTree = "<group>"; };
 		AEEA477A1DC3AB770075EE63 /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		AEEA477B1DC3AB770075EE63 /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
 		AEEA477C1DC3AB770075EE63 /* asn1_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
@@ -567,25 +596,7 @@
 		C573F1711D4B416E002607B6 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		C573F1731D4B4175002607B6 /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = usr/lib/libbz2.tbd; sourceTree = SDKROOT; };
 		C573F1751D4B417B002607B6 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
-		C59106001DC894BC00BCC938 /* LibRtmpSession.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = LibRtmpSession.cpp; sourceTree = "<group>"; };
-		C59106011DC894BC00BCC938 /* LibRtmpSession.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = LibRtmpSession.hpp; sourceTree = "<group>"; };
 		C59106031DC899DC00BCC938 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
-		C59106051DC89C0F00BCC938 /* sps_decode.h */ = {isa = PBXFileReference; fileEncoding = 2147484705; lastKnownFileType = sourcecode.c.h; path = sps_decode.h; sourceTree = "<group>"; };
-		C591E8441DC6ECAC00BCC938 /* librtmp.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = librtmp.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		C591E84D1DC6ECED00BCC938 /* amf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = amf.c; sourceTree = "<group>"; };
-		C591E84E1DC6ECED00BCC938 /* amf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = amf.h; sourceTree = "<group>"; };
-		C591E84F1DC6ECED00BCC938 /* bytes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bytes.h; sourceTree = "<group>"; };
-		C591E8501DC6ECED00BCC938 /* dh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dh.h; sourceTree = "<group>"; };
-		C591E8511DC6ECED00BCC938 /* dhgroups.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dhgroups.h; sourceTree = "<group>"; };
-		C591E8521DC6ECED00BCC938 /* handshake.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = handshake.h; sourceTree = "<group>"; };
-		C591E8531DC6ECED00BCC938 /* hashswf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hashswf.c; sourceTree = "<group>"; };
-		C591E8541DC6ECED00BCC938 /* http.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = http.h; sourceTree = "<group>"; };
-		C591E8551DC6ECED00BCC938 /* log.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = log.c; sourceTree = "<group>"; };
-		C591E8561DC6ECED00BCC938 /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
-		C591E8571DC6ECED00BCC938 /* parseurl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = parseurl.c; sourceTree = "<group>"; };
-		C591E8581DC6ECED00BCC938 /* rtmp_sys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtmp_sys.h; sourceTree = "<group>"; };
-		C591E8591DC6ECED00BCC938 /* rtmp.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rtmp.c; sourceTree = "<group>"; };
-		C591E85A1DC6ECED00BCC938 /* rtmp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtmp.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -600,6 +611,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6A0E86EC1E84BED7002A2A2D /* librtmp.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -615,7 +627,6 @@
 				045E4E5B1E34A9C900289523 /* libavcodec.a in Frameworks */,
 				045C61B31E1CE4430047E673 /* libMp4v2Code.a in Frameworks */,
 				C59106041DC899DC00BCC938 /* MediaPlayer.framework in Frameworks */,
-				C591E8601DC6ED5900BCC938 /* librtmp.a in Frameworks */,
 				AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */,
 				C573F1761D4B417B002607B6 /* VideoToolbox.framework in Frameworks */,
 				045E4E5F1E34A9C900289523 /* libavresample.a in Frameworks */,
@@ -627,18 +638,10 @@
 				C573F1721D4B416E002607B6 /* libiconv.tbd in Frameworks */,
 				04C5C50C1E666DC1009DE4A0 /* GJLivePush.framework in Frameworks */,
 				C573F1701D4B4146002607B6 /* libz.tbd in Frameworks */,
-				046F7E421E306C8E00712A2B /* libx264_back.a in Frameworks */,
 				045E4E5E1E34A9C900289523 /* libavformat.a in Frameworks */,
 				C54FA8C91D2103AA00A0D3C3 /* OpenAL.framework in Frameworks */,
 				045E4E611E34A9C900289523 /* libswresample.a in Frameworks */,
 				045E4E5D1E34A9C900289523 /* libavfilter.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C591E8411DC6ECAC00BCC938 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -735,6 +738,8 @@
 		044018EA1E6CF4E400DEBF98 /* GJLivePull */ = {
 			isa = PBXGroup;
 			children = (
+				6A0E86E91E84BE8A002A2A2D /* sps_decode.c */,
+				6A0E86EA1E84BE8A002A2A2D /* sps_decode.h */,
 				044018EB1E6CF4E400DEBF98 /* GJLivePull.h */,
 				044018EC1E6CF4E400DEBF98 /* GJLivePull.m */,
 				046EDC1A1E6E745A00D9D8FC /* GJPlayer.h */,
@@ -811,6 +816,7 @@
 		04D15EC71E7E69C9005F6DDD /* include */ = {
 			isa = PBXGroup;
 			children = (
+				6A0E86F51E84E881002A2A2D /* rtmp */,
 				04D15EC81E7E69C9005F6DDD /* GJImageFilters */,
 				04D15ECD1E7E69C9005F6DDD /* GPUImage */,
 				04D15F7A1E7E69CA005F6DDD /* libQueue */,
@@ -1023,6 +1029,33 @@
 			path = libQueue;
 			sourceTree = "<group>";
 		};
+		6A0E86D01E84BE3E002A2A2D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6A0E86E01E84BE3F002A2A2D /* RtmpCode.app */,
+				6A0E86E21E84BE3F002A2A2D /* librtmp.a */,
+				6A0E86E41E84BE3F002A2A2D /* libopenssl.a */,
+				6A0E86E61E84BE3F002A2A2D /* libcrypto.a */,
+				6A0E86E81E84BE3F002A2A2D /* RtmpServer */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6A0E86F51E84E881002A2A2D /* rtmp */ = {
+			isa = PBXGroup;
+			children = (
+				6A0E86F61E84E881002A2A2D /* amf.h */,
+				6A0E86F71E84E881002A2A2D /* dh.h */,
+				6A0E86F81E84E881002A2A2D /* dhgroups.h */,
+				6A0E86F91E84E881002A2A2D /* handshake.h */,
+				6A0E86FA1E84E881002A2A2D /* http.h */,
+				6A0E86FB1E84E881002A2A2D /* log.h */,
+				6A0E86FC1E84E881002A2A2D /* rtmp.h */,
+				6A0E86FD1E84E881002A2A2D /* rtmp_sys.h */,
+			);
+			path = rtmp;
+			sourceTree = "<group>";
+		};
 		AE10F8DF1D7F1E4B008BAE29 /* lib */ = {
 			isa = PBXGroup;
 			children = (
@@ -1164,6 +1197,7 @@
 		C54FA89F1D21006000A0D3C3 = {
 			isa = PBXGroup;
 			children = (
+				6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */,
 				0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */,
 				045E4E121E343F3A00289523 /* GJQueue.xcodeproj */,
 				0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */,
@@ -1171,7 +1205,6 @@
 				C561ABE91D51D3DC00113453 /* GJCaptureTool */,
 				044018821E6CF13F00DEBF98 /* GJLivePush */,
 				044018EA1E6CF4E400DEBF98 /* GJLivePull */,
-				C591E8451DC6ECAC00BCC938 /* rtmp */,
 				C54FA8A91D21006000A0D3C3 /* Products */,
 				AEFEF2291DB3B9A80004CF39 /* Frameworks */,
 			);
@@ -1181,7 +1214,6 @@
 			isa = PBXGroup;
 			children = (
 				C54FA8A81D21006000A0D3C3 /* GJCaptureTool.app */,
-				C591E8441DC6ECAC00BCC938 /* librtmp.a */,
 				04C5C5051E666DC0009DE4A0 /* GJLivePush.framework */,
 				044018E91E6CF4E400DEBF98 /* libGJLivePull.a */,
 			);
@@ -1238,31 +1270,6 @@
 				046F5B331E305714007901EB /* x264.h */,
 			);
 			path = include;
-			sourceTree = "<group>";
-		};
-		C591E8451DC6ECAC00BCC938 /* rtmp */ = {
-			isa = PBXGroup;
-			children = (
-				C59106051DC89C0F00BCC938 /* sps_decode.h */,
-				046F59861E2DBA39007901EB /* sps_decode.c */,
-				C59106001DC894BC00BCC938 /* LibRtmpSession.cpp */,
-				C59106011DC894BC00BCC938 /* LibRtmpSession.hpp */,
-				C591E84D1DC6ECED00BCC938 /* amf.c */,
-				C591E84E1DC6ECED00BCC938 /* amf.h */,
-				C591E84F1DC6ECED00BCC938 /* bytes.h */,
-				C591E8501DC6ECED00BCC938 /* dh.h */,
-				C591E8511DC6ECED00BCC938 /* dhgroups.h */,
-				C591E8521DC6ECED00BCC938 /* handshake.h */,
-				C591E8531DC6ECED00BCC938 /* hashswf.c */,
-				C591E8541DC6ECED00BCC938 /* http.h */,
-				C591E8551DC6ECED00BCC938 /* log.c */,
-				C591E8561DC6ECED00BCC938 /* log.h */,
-				C591E8571DC6ECED00BCC938 /* parseurl.c */,
-				C591E8581DC6ECED00BCC938 /* rtmp_sys.h */,
-				C591E8591DC6ECED00BCC938 /* rtmp.c */,
-				C591E85A1DC6ECED00BCC938 /* rtmp.h */,
-			);
-			path = rtmp;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1358,23 +1365,6 @@
 			productReference = C54FA8A81D21006000A0D3C3 /* GJCaptureTool.app */;
 			productType = "com.apple.product-type.application";
 		};
-		C591E8431DC6ECAC00BCC938 /* rtmp */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = C591E84A1DC6ECAC00BCC938 /* Build configuration list for PBXNativeTarget "rtmp" */;
-			buildPhases = (
-				C591E8401DC6ECAC00BCC938 /* Sources */,
-				C591E8411DC6ECAC00BCC938 /* Frameworks */,
-				C591E8421DC6ECAC00BCC938 /* CopyFiles */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = rtmp;
-			productName = rtmp;
-			productReference = C591E8441DC6ECAC00BCC938 /* librtmp.a */;
-			productType = "com.apple.product-type.library.static";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -1410,10 +1400,6 @@
 							};
 						};
 					};
-					C591E8431DC6ECAC00BCC938 = {
-						CreatedOnToolsVersion = 8.0;
-						ProvisioningStyle = Automatic;
-					};
 				};
 			};
 			buildConfigurationList = C54FA8A31D21006000A0D3C3 /* Build configuration list for PBXProject "GJCaptureTool" */;
@@ -1444,11 +1430,14 @@
 					ProductGroup = 045C61A01E1CE4380047E673 /* Products */;
 					ProjectRef = 045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */;
 				},
+				{
+					ProductGroup = 6A0E86D01E84BE3E002A2A2D /* Products */;
+					ProjectRef = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
+				},
 			);
 			projectRoot = "";
 			targets = (
 				C54FA8A71D21006000A0D3C3 /* GJCaptureTool */,
-				C591E8431DC6ECAC00BCC938 /* rtmp */,
 				04C5C5041E666DC0009DE4A0 /* GJLivePush */,
 				044018E81E6CF4E400DEBF98 /* GJLivePull */,
 			);
@@ -1512,6 +1501,41 @@
 			remoteRef = 0460FDBC1E28680E00F5A308 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		6A0E86E01E84BE3F002A2A2D /* RtmpCode.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = RtmpCode.app;
+			remoteRef = 6A0E86DF1E84BE3F002A2A2D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A0E86E21E84BE3F002A2A2D /* librtmp.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = librtmp.a;
+			remoteRef = 6A0E86E11E84BE3F002A2A2D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A0E86E41E84BE3F002A2A2D /* libopenssl.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libopenssl.a;
+			remoteRef = 6A0E86E31E84BE3F002A2A2D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A0E86E61E84BE3F002A2A2D /* libcrypto.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libcrypto.a;
+			remoteRef = 6A0E86E51E84BE3F002A2A2D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A0E86E81E84BE3F002A2A2D /* RtmpServer */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = RtmpServer;
+			remoteRef = 6A0E86E71E84BE3F002A2A2D /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -1542,6 +1566,7 @@
 			files = (
 				046EDC1C1E6E745A00D9D8FC /* GJPlayer.m in Sources */,
 				046EDBE31E6D51EB00D9D8FC /* GJRtmpPull.m in Sources */,
+				6A0E86EB1E84BE8A002A2A2D /* sps_decode.c in Sources */,
 				044018ED1E6CF4E400DEBF98 /* GJLivePull.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1577,24 +1602,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				041702851E5FC3D100D5B5D9 /* GJLivePushViewController.m in Sources */,
+				6A0E87051E84F413002A2A2D /* ViewController.mm in Sources */,
 				C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */,
 				C561ACB51D51D3DC00113453 /* main.m in Sources */,
 				C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C591E8401DC6ECAC00BCC938 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				C591E85F1DC6ECED00BCC938 /* rtmp.c in Sources */,
-				C59106021DC894BC00BCC938 /* LibRtmpSession.cpp in Sources */,
-				C591E85D1DC6ECED00BCC938 /* log.c in Sources */,
-				046F59871E2DBA39007901EB /* sps_decode.c in Sources */,
-				C591E85E1DC6ECED00BCC938 /* parseurl.c in Sources */,
-				C591E85C1DC6ECED00BCC938 /* hashswf.c in Sources */,
-				C591E85B1DC6ECED00BCC938 /* amf.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1854,42 +1865,6 @@
 			};
 			name = Release;
 		};
-		C591E84B1DC6ECAC00BCC938 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/rtmpdump/include\"";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
-				);
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-			};
-			name = Debug;
-		};
-		C591E84C1DC6ECAC00BCC938 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CLANG_WARN_INFINITE_RECURSION = YES;
-				CLANG_WARN_SUSPICIOUS_MOVES = YES;
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/rtmpdump/include\"";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
-				);
-				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SKIP_INSTALL = YES;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1925,15 +1900,6 @@
 			buildConfigurations = (
 				C54FA8C01D21006100A0D3C3 /* Debug */,
 				C54FA8C11D21006100A0D3C3 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		C591E84A1DC6ECAC00BCC938 /* Build configuration list for PBXNativeTarget "rtmp" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				C591E84B1DC6ECAC00BCC938 /* Debug */,
-				C591E84C1DC6ECAC00BCC938 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
