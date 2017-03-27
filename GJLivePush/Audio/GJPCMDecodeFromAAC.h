@@ -1,5 +1,5 @@
 //
-//  PCMDecodeFromAAC.h
+//  GJPCMDecodeFromAAC.h
 //  视频录制
 //
 //  Created by tongguan on 16/1/8.
@@ -11,11 +11,11 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import "GJRetainBuffer.h"
 
-@class PCMDecodeFromAAC;
+@class GJPCMDecodeFromAAC;
 @protocol PCMDecodeFromAACDelegate <NSObject>
--(void)pcmDecode:(PCMDecodeFromAAC*)decoder completeBuffer:(GJRetainBuffer*)buffer pts:(int)pts;
+-(void)pcmDecode:(GJPCMDecodeFromAAC*)decoder completeBuffer:(GJRetainBuffer*)buffer pts:(int)pts;
 @end
-@interface PCMDecodeFromAAC : NSObject
+@interface GJPCMDecodeFromAAC : NSObject
 @property (nonatomic,assign,readonly) AudioStreamBasicDescription sourceFormatDescription;
 @property (nonatomic,assign,readonly)AudioStreamBasicDescription destFormatDescription;
 

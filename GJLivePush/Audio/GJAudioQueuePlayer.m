@@ -10,7 +10,7 @@
 #import <pthread.h>
 #import "GJQueue.h"
 #import "GJRetainBuffer.h"
-static const int MCAudioQueueBufferCount = 4;
+static const int MCAudioQueueBufferCount = 3;
 
 @interface GJAudioQueuePlayer ()
 {
@@ -278,14 +278,6 @@ static const int MCAudioQueueBufferCount = 4;
         return NO;
     }
     
-    UInt32 isRunning = 0;
-    UInt32 size = sizeof(isRunning);
-    AudioQueueGetProperty(_audioQueue, kAudioQueueProperty_IsRunning, &isRunning, &size);
-
-    
-    static long total = 0;
-    total += bufferData->size;
-    NSLog(@"play innnnnnnnnnnnnnn:%ld",total);
     retainBufferRetain(bufferData);
     if (!queuePush(_reusableQueue, bufferData, 1000)) {
         retainBufferUnRetain(bufferData);
@@ -358,10 +350,7 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
         memset(inBuffer->mAudioData, 0, inBuffer->mAudioDataByteSize);
     }
 
-    inBuffer->mPacketDescriptionCount = 1;
-    inBuffer->mPacketDescriptions[0].mDataByteSize = inBuffer->mAudioDataByteSize;
-    inBuffer->mPacketDescriptions[0].mStartOffset  = 0;
-    inBuffer->mPacketDescriptions[0].mVariableFramesInPacket = 0;
+
     OSStatus status = AudioQueueEnqueueBuffer(inAQ, inBuffer, 0, NULL);
 #ifdef DEBUG
     if (status < 0) {

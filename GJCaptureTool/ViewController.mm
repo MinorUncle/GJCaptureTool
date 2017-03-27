@@ -13,7 +13,7 @@
 #import "GJH264Decoder.h"
 #import "GJH264Encoder.h"
 #import <MediaPlayer/MPMoviePlayerViewController.h>
-#import "PCMDecodeFromAAC.h"
+#import "GJPCMDecodeFromAAC.h"
 #import "AACEncoderFromPCM.h"
 #import "AudioPraseStream.h"
 #import "AudioUnitCapture.h"
@@ -70,7 +70,7 @@ BOOL _recodeState;
 @property(nonatomic,strong)GJH264Decoder* gjDecoder;
 @property(nonatomic,strong)GJH264Encoder* gjEncoder;
 
-@property(nonatomic,strong)PCMDecodeFromAAC* audioDecoder;
+@property(nonatomic,strong)GJPCMDecodeFromAAC* audioDecoder;
 @property(nonatomic,strong)AACEncoderFromPCM* audioEncoder;
 
 @property(nonatomic,strong)AudioUnitCapture* audioUnitCapture;
@@ -238,7 +238,7 @@ BOOL _recodeState;
     
     
     AudioStreamBasicDescription sour = _audioRecoder.format;
-    _audioDecoder = [[PCMDecodeFromAAC alloc]initWithDestDescription:&destFormat SourceDescription:&sour];
+    _audioDecoder = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&destFormat SourceDescription:&sour];
     _audioDecoder.delegate = self;
 #endif
 }
@@ -258,7 +258,7 @@ BOOL _recodeState;
     [_audioDecoder decodeBuffer:dataBuffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions pts:pts];
 }
 
--(void)pcmDecode:(PCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer pts:(int)pts{
+-(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer pts:(int)pts{
     if (_audioPlayer == nil) {
         _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:decoder.destFormatDescription maxBufferSize:decoder.destMaxOutSize macgicCookie:nil];
         [_audioPlayer start];
@@ -843,12 +843,12 @@ BOOL _recodeState;
 
     }
 }
--(void)pcmDecode:(PCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer packetDesc:(AudioStreamPacketDescription *)packetDesc{
+-(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer packetDesc:(AudioStreamPacketDescription *)packetDesc{
     if (_audioPlayer == nil) {
         _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:decoder.destFormatDescription maxBufferSize:decoder.destMaxOutSize macgicCookie:nil];
         [_audioPlayer start];
     }
-    NSLog(@"PCMDecodeFromAAC:%d",buffer->size);
+    NSLog(@"GJPCMDecodeFromAAC:%d",buffer->size);
     [_audioPlayer playData:buffer packetDescriptions:packetDesc];
 }
 static int aacFramePerS;
@@ -876,7 +876,7 @@ static int aacIndex;
 //    if (_audioPlayer == nil) {
 //        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:encoder.destFormatDescription bufferSize:encoder.destMaxOutSize macgicCookie:[encoder fetchMagicCookie]];
 //    }
-////    NSLog(@"PCMDecodeFromAAC:%d",lenth);
+////    NSLog(@"GJPCMDecodeFromAAC:%d",lenth);
 //        [_audioPlayer playData:buffer lenth:(UInt32)totalLenth packetCount:count packetDescriptions:packets isEof:NO];
 
 //    [_praseStream parseData:buffer lenth:(int)totalLenth error:nil];

@@ -11,7 +11,7 @@
 #import "GJH264Decoder.h"
 #import "GJPlayer.h"
 #import "GJDebug.h"
-#import "PCMDecodeFromAAC.h"
+#import "GJPCMDecodeFromAAC.h"
 #import <CoreImage/CoreImage.h>
 
 

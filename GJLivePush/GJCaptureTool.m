@@ -16,7 +16,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 @interface GJCaptureTool()<AVCaptureFileOutputRecordingDelegate,AVCaptureVideoDataOutputSampleBufferDelegate,AVCaptureAudioDataOutputSampleBufferDelegate>
 {
 //    AACEncoderFromPCM* _audioEncoder;
-//    PCMDecodeFromAAC* _audioDecoder;
+//    GJPCMDecodeFromAAC* _audioDecoder;
 //    AudioEncoder* _RWAudioEncoder;
 //    AACDecoder* _RWAudioDecoder;
 }

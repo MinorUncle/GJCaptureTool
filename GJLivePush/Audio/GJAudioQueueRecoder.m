@@ -11,10 +11,10 @@
 #import <AVFoundation/AVFoundation.h>
 #import "GJRetainBufferPool.h"
 
-#define NUMBER_BUFFERS 8
+#define NUMBER_BUFFERS 4
 
 #define DEFAULT_MAX_SIZE 2048
-#define DEFAULT_DELAY 0.1
+#define DEFAULT_DELAY 0.2
 
 
 
@@ -28,10 +28,7 @@
 
 @end;
 
-static const int mpeg4audio_sample_rates[16] = {
-    96000, 88200, 64000, 48000, 44100, 32000,
-    24000, 22050, 16000, 12000, 11025, 8000, 7350
-};
+
 int get_f_index(unsigned int sampling_frequency)
 {
     switch (sampling_frequency)
