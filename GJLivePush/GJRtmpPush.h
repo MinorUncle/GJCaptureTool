@@ -11,7 +11,7 @@
 #include "rtmp.h"
 #include "GJBufferPool.h"
 #include "GJQueue.h"
-#import <Foundation/Foundation.h>
+#import "GJLivePushDefine.h"
 
 typedef enum _GJRTMPPushMessageType{
     GJRTMPPushMessageType_connectSuccess,
@@ -56,4 +56,4 @@ void GJRtmpPush_SendAACData(GJRtmpPush* push,GJRetainBuffer* data,uint32_t dts);
 void GJRtmpPush_CloseAndRelease(GJRtmpPush* push);
 void GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);
 float GJRtmpPush_GetBufferRate(GJRtmpPush* push);
-long GJRtmpPush_GetBufferCacheTime(GJRtmpPush* push);
+GJCacheInfo GJRtmpPush_GetBufferCacheInfo(GJRtmpPush* push);

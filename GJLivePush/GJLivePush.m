@@ -161,8 +161,8 @@
         long bitrate = _unitByte / _gaterFrequency;
         _unitByte = 0;
         _unitFrame = 0;
-        long delay = GJRtmpPush_GetBufferCacheTime(_videoPush);
-        [self.delegate livePush:self frameRate:frameRate bitrate:bitrate quality:0 delay:delay];
+        GJCacheInfo info = GJRtmpPush_GetBufferCacheInfo(_videoPush);
+        [self.delegate livePush:self frameRate:frameRate bitrate:bitrate quality:0 delayTime:info.cacheTime delayCount:info.cacheCount];
         
     }];
 
@@ -179,7 +179,7 @@
     __weak GJLivePush* wkSelf = self;
     wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
         CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
-        CMTime pts = CMTimeMake([[NSDate date]timeIntervalSinceDate:wkSelf.startDate]*1000, 1000);
+        uint64_t pts = [[NSDate date]timeIntervalSinceDate:wkSelf.startDate]*1000;
         [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:pts fourceKey:false];
     };
 }
@@ -232,9 +232,9 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 }
 
 #pragma mark delegate
--(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(CMTime)pts{
+-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(int64_t)pts{
 //    printf("video Pts:%d\n",(int)pts.value*1000/pts.timescale);
-    GJRtmpPush_SendH264Data(_videoPush, buffer, (int)pts.value*1000/pts.timescale);
+    GJRtmpPush_SendH264Data(_videoPush, buffer, (int)pts);
     _unitFrame++;
     _sendFrame++;
     _sendByte += buffer->size;

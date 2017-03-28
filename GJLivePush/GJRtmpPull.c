@@ -7,7 +7,7 @@
 //
 
 #include "GJRtmpPull.h"
-#include "GJDebug.h"
+#include "GJLog.h"
 #include "sps_decode.h"
 #include <string.h>
 #define BUFFER_CACHE_SIZE 40
@@ -51,15 +51,14 @@ static void* callbackLoop(void* parm){
                 outPoint = pp;
                 outSize = ppSize;
             }else{
-                NSData* data = [NSData dataWithBytes:packet->m_body length:packet->m_nBodySize];
-                NSLog(@"data:%@",data);
+             
                 GJAssert(0, "数据有误\n");
                 RTMPPacket_Free(packet);
                 free(packet);
                 continue;
             }
         }else{
-            GJPrintf("not media Packet:%p type:%d \n",packet,packet->m_packetType);
+            GJLOG(GJ_LOGWARNING,"not media Packet:%p type:%d \n",packet,packet->m_packetType);
             RTMPPacket_Free(packet);
             free(packet);
             continue;

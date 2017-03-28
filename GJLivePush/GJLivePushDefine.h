@@ -15,8 +15,8 @@ typedef struct GJPushConfig {
     CGFloat     videoBitRate;
     
     //  audio
-    NSInteger   channel;
-    NSInteger   audioSampleRate;
+    int   channel;
+    int   audioSampleRate;
     
     char       *pushUrl;
 }GJPushConfig;
@@ -30,11 +30,11 @@ typedef enum _CaptureSizeType
 }CaptureSizeType;
 
 //视频流的翻转角度
-typedef NS_ENUM(NSInteger,GJLiveStreamFlipDirection) {
+typedef enum LiveStreamFlipDirection {
     LiveStreamFlipDirection_Default = 0x1 << 0,  //恢复默认状态
     LiveStreamFlipDirection_Horizontal = 0x1 << 1,
     LiveStreamFlipDirection_Vertical = 0x1 << 2
-};
+}GJLiveStreamFlipDirection;
 
 //消息类型
 typedef enum _LivePushMessageType{
@@ -53,4 +53,10 @@ typedef enum _LivePushMessageType{
     kLivePushUpdataQuality,     //视频推送质量更新， 0 ~ 3 分别对应优良中差        info：@(int)
     kLivePushRecodeCompletedSuccess, //视频录制完成，                              info：nil
 }LivePushMessageType;
+
+
+typedef struct CacheInfo{
+    int cacheTime;//ms
+    int cacheCount;
+}GJCacheInfo;
 #endif /* GJLiveDefine_h */

@@ -10,6 +10,7 @@
 #import "GJLivePush.h"
 #import <AVFoundation/AVFoundation.h>
 #import "GJLivePull.h"
+#import "GJLog.h"
 @interface GJLivePushViewController ()<GJLivePushDelegate,GJLivePullDelegate>
 {
     GJLivePush* _livePush;
@@ -39,6 +40,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    GJ_LogSetLevel(GJ_LOGINFO);
     _livePush = [[GJLivePush alloc]init];
     _livePush.delegate = self;
     _livePull = [[GJLivePull alloc]init];
@@ -89,13 +91,13 @@
     rect.origin.y = CGRectGetMaxY(rect);
     _delayLab = [[UILabel alloc]initWithFrame:rect];
     _delayLab.textColor = [UIColor redColor];
-    _delayLab.text = @"发送阻塞延时0.0 ms";
+    _delayLab.text = @"发送阻塞延时0.0 ms 帧数：0";
     [self.view addSubview:_delayLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
     _cacheLab = [[UILabel alloc]initWithFrame:rect];
     _cacheLab.textColor = [UIColor redColor];
-    _cacheLab.text = @"播放缓存时长0.0 ms";
+    _cacheLab.text = @"播放缓存时长0.0 ms 帧数：0";
     [self.view addSubview:_cacheLab];
     
     int count = 3;
@@ -166,7 +168,7 @@
             config.channel = 1;
             config.audioSampleRate = 44100;
             config.pushSize = CGSizeMake(288, 352);
-            config.videoBitRate = 8*200*1024;
+            config.videoBitRate = 8*80*1024;
             config.pushUrl = url;
             [_livePush startStreamPushWithConfig:config];
         }else{
@@ -255,16 +257,16 @@
     }
 }
 
--(void)livePull:(GJLivePull *)livePull bitrate:(long)bitrate cacheTime:(long)cacheTime cacheFrame:(int)count{
+-(void)livePull:(GJLivePull *)livePull bitrate:(long)bitrate cacheTime:(long)cacheTime cacheFrame:(int)cacheCount{
     if (_livePull == livePull) {
         _pullRateLab.text = [NSString stringWithFormat:@"接收码率:%0.2f KB/s",bitrate/1024.0];
-        _cacheLab.text = [NSString stringWithFormat:@"播放缓存时长%ld ms 帧数：%d",cacheTime,count];
+        _cacheLab.text = [NSString stringWithFormat:@"播放缓存时长%ld ms 帧数：%d",cacheTime,cacheCount];
     }
 }
--(void)livePush:(GJLivePush *)livePush frameRate:(long)frameRate bitrate:(long)bitrate quality:(long)quality delay:(long)delay{
+-(void)livePush:(GJLivePush *)livePush frameRate:(long)frameRate bitrate:(long)bitrate quality:(long)quality delayTime:(long)delay delayCount:(int)count{
     _sendRateLab.text = [NSString stringWithFormat:@"发送码率:%0.2f KB/s",bitrate/1024.0];
     _fpsLab.text = [NSString stringWithFormat:@"发送帧率%ld",frameRate];
-    _delayLab.text = [NSString stringWithFormat:@"发送阻塞延时%ld ms",delay];
+    _delayLab.text = [NSString stringWithFormat:@"发送阻塞延时%ld ms 帧数：%d",delay,count];
 }
 /*
 #pragma mark - Navigation

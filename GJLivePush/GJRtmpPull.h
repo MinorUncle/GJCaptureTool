@@ -15,7 +15,6 @@
 #include "rtmp.h"
 #include "GJRetainBufferPool.h"
 #include "GJQueue.h"
-#include <Foundation/Foundation.h>
 
 typedef enum _GJRTMPPullMessageType{
     GJRTMPPullMessageType_connectSuccess,
@@ -35,7 +34,7 @@ typedef enum _GJRTMPDataType{
 struct _GJRtmpPull;
 
 typedef void(*PullMessageCallback)(struct _GJRtmpPull* rtmpPull, GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm);
-typedef void(*PullDataCallback)(struct _GJRtmpPull* rtmpPull,GJRTMPDataType dataType,GJRetainBuffer* buffer,void* rtmpPullParm,uint32_t pts);
+typedef void(*PullDataCallback)(struct _GJRtmpPull* rtmpPull,GJRTMPDataType dataType,GJRetainBuffer* buffer,void* rtmpPullParm,int64_t pts);
 
 #define MAX_URL_LENGTH 100
 typedef struct _GJRtmpPull{

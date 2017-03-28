@@ -33,7 +33,7 @@ typedef enum _GJEncodeQuality{
  @param pts pts description
  @return 可以理解为下一级数据缓存的比例，用于动态编码。
  */
--(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(CMTime)pts;
+-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(int64_t)pts;
 
 /**
  编码质量回调
@@ -76,11 +76,11 @@ typedef enum _GJEncodeQuality{
  编码
 
  @param imageBuffer imageBuffer description
- @param pts pts
+ @param pts pts in ms
  @param fourceKey fourceKey description
  @return 是否失败。可能主动丢帧，也可能编码失败
  */
--(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(CMTime)pts fourceKey:(BOOL)fourceKey;
+-(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts fourceKey:(BOOL)fourceKey;
 
 /**
  刷新编码器，之前的编码不会回调。

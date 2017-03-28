@@ -13,7 +13,7 @@
 
 typedef struct _DecodeAudioFrame{
     GJRetainBuffer* audioBuffer;
-    int pts;
+    int64_t pts;
     AudioStreamPacketDescription packetDesc;
 }GJDecodeAudioFrame;
 
@@ -31,7 +31,7 @@ typedef struct _DecodeAudioFrame{
     GJDecodeAudioFrame* _preFrame;
 }
 
-@property (nonatomic,assign) int currentPts;
+@property (nonatomic,assign) int64_t currentPts;
 @property (nonatomic,assign) BOOL running;
 
 @end
@@ -139,7 +139,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     return noErr;
 }
 
--(void)decodeBuffer:(GJRetainBuffer*)audioBuffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins pts:(int)pts{
+-(void)decodeBuffer:(GJRetainBuffer*)audioBuffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins pts:(int64_t)pts{
     
     retainBufferRetain(audioBuffer);
     GJDecodeAudioFrame *frame = (GJDecodeAudioFrame*)malloc(sizeof(GJDecodeAudioFrame));
@@ -251,7 +251,7 @@ static const int mpeg4audio_sample_rates[16] = {
         }
         
         buffer->size = _destFormat.mBytesPerPacket*numPackets;
-        int pts = _currentPts;
+        int64_t pts = _currentPts;
         _currentPts = -1;
         [self.delegate pcmDecode:self completeBuffer:buffer pts:pts];
         retainBufferUnRetain(buffer);

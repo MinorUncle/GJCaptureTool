@@ -16,7 +16,7 @@
 
 @protocol GJAudioQueueDrivePlayerDelegate <NSObject>
 @required
--(BOOL)GJAudioQueueDrivePlayer:(GJAudioQueueDrivePlayer*)player outAudioData:(void**)data outSize:(int*)size;
+-(BOOL)GJAudioQueueDrivePlayer:(GJAudioQueueDrivePlayer*)player outAudioData:(void*)data outSize:(int*)size;
 
 @end
 

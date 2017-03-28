@@ -91,7 +91,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
     [_audioDecoder start];
     _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
-        CacheInfo info = _player.cache;
+        GJCacheInfo info = _player.cache;
         [self.delegate livePull:self bitrate:_unitByte/_gaterFrequency cacheTime:info.cacheTime cacheFrame:info.cacheCount];
         _unitByte=0;
     }];
@@ -122,7 +122,7 @@ static const int mpeg4audio_sample_rates[16] = {
     96000, 88200, 64000, 48000, 44100, 32000,
     24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
-static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBuffer* buffer,void* parm,uint64_t pts){
+static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBuffer* buffer,void* parm,int64_t pts){
     GJLivePull* livePull = (__bridge GJLivePull *)(parm);
     
     livePull.sendByte = livePull.sendByte + buffer->size;
@@ -167,12 +167,12 @@ static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBu
         [livePull.videoDecoder decodeBuffer:buffer pts:pts];
     }
 }
--(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(uint64_t)pts{
+-(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts{
     [_player addVideoDataWith:imageBuffer pts:pts];
     return;    
 }
 
--(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer pts:(int)pts{
+-(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer pts:(int64_t)pts{
     [_player addAudioDataWith:buffer pts:pts];
 }
 

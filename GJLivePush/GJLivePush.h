@@ -27,7 +27,7 @@ enum AVCaptureDevicePosition;
 -(void)livePush:(GJLivePush*)livePush messageType:(LivePushMessageType)type infoDesc:(id)infoDesc;
 
 
--(void)livePush:(GJLivePush*)livePush frameRate:(long)frameRate bitrate:(long)bitrate quality:(long)quality delay:(long)delay;
+-(void)livePush:(GJLivePush*)livePush frameRate:(long)frameRate bitrate:(long)bitrate quality:(long)quality delayTime:(long)delay delayCount:(int)count;
 
 @optional
 

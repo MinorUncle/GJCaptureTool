@@ -69,8 +69,7 @@ extern "C" {
      */
     bool queueCreate(GJQueue** outQ,unsigned int capacity,bool atomic QUEUE_DEFAULT(true),bool autoResize QUEUE_DEFAULT(false));
     bool queueCleanAndFree(GJQueue** inQ);
-    bool queueClean(GJQueue* inQ);
-
+    void queueClean(GJQueue* q);
     bool queuePop(GJQueue* q,void** temBuffer,unsigned int ms QUEUE_DEFAULT(500));
     bool queuePush(GJQueue* q,void* temBuffer,unsigned int ms QUEUE_DEFAULT(500));
     long queueGetLength(GJQueue* q);
@@ -80,8 +79,8 @@ extern "C" {
     void queueEnablePush(GJQueue* q,bool enable);
     
     //小于该大小不能出栈。可用于缓冲
-    void queueSetMixCacheSize(GJQueue* q,unsigned int cacheSize);
-    unsigned int queueGetMixCacheSize(GJQueue* q);
+    void queueSetMinCacheSize(GJQueue* q,unsigned int cacheSize);
+    unsigned int queueGetMinCacheSize(GJQueue* q);
     
     
     /**

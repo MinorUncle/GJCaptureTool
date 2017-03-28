@@ -95,7 +95,7 @@ void decodeOutputCallback(
     return codeIndex;
 }
 
--(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(uint64_t)pts
+-(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(int64_t)pts
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     

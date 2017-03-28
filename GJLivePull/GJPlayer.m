@@ -20,16 +20,16 @@
 #define VIDEO_PTS_PRECISION   0.4
 #define AUDIO_PTS_PRECISION   0.1
 
-#define VIDEO_MAX_CACHE_COUNT 300
-#define AUDIO_MAX_CACHE_COUNT 750
+#define VIDEO_MAX_CACHE_COUNT 150
+#define AUDIO_MAX_CACHE_COUNT 450
 
 typedef struct _GJImageBuffer{
     CVImageBufferRef image;
-    uint64_t           pts;
+    int64_t           pts;
 }GJImageBuffer;
 typedef struct _GJAudioBuffer{
     GJRetainBuffer* audioData;
-    uint64_t           pts;
+    int64_t           pts;
 }GJAudioBuffer;
 
 
@@ -47,8 +47,10 @@ typedef enum _TimeSYNCType{
     float                       _playNeedterval;
     GJPlayStatus                _status;
     NSThread*                   _playThread;
-    int                         _lowWaterFlag;
-    int                         _highWaterFlag;
+    int                         _lowAudioWaterFlag;
+    int                         _highAudioWaterFlag;
+    int                         _lowVideoWaterFlag;
+    int                         _highVideoWaterFlag;
     NSRecursiveLock*            _oLock;
 
     
@@ -119,11 +121,11 @@ long long getTime(){
         goto ERROR;
     }
     GJAudioBuffer* audioBuffer;
-    queueSetMixCacheSize(_audioQueue, 12);
-    if (queuePeekWaitValue(_audioQueue, queueGetMixCacheSize(_audioQueue), (void**)&audioBuffer,INT_MAX)) {
+    queueSetMinCacheSize(_audioQueue, 12);
+    if (queuePeekWaitValue(_audioQueue, queueGetMinCacheSize(_audioQueue), (void**)&audioBuffer,INT_MAX)) {
         if (_status == kPlayStatusRunning || _status == kPlayStatusPause) {
             if (_audioFormat.mFormatID <=0) {
-                queueSetMixCacheSize(_audioQueue, 0);
+                queueSetMinCacheSize(_audioQueue, 0);
                 if (((uint64_t*)audioBuffer->audioData) && 0xFFF0 != 0xFFF0) {
                     NSAssert(0, @"音频格式不支持");
                     goto ERROR;
@@ -175,7 +177,7 @@ long long getTime(){
                cImageBuf = NULL;
                break;
            }
-            if (_speed > 1.0 && queueGetLength(_imageQueue)<_lowWaterFlag) {
+            if (_speed > 1.0 && queueGetLength(_imageQueue)<_lowVideoWaterFlag) {
                 [self stopDewatering];
             }
         }else{
@@ -183,8 +185,11 @@ long long getTime(){
                 break;
             }else if (_status == kPlayStatusRunning){
                 GJLOG(GJ_LOGDEBUG, "video play queue empty");
-                usleep(10*1000);
-//                [self buffering];
+                if(_syncType != kTimeSYNCAudio){
+                    [self buffering];
+                }else{
+                    usleep(10*1000);
+                }
             }
             continue;
         }
@@ -212,13 +217,13 @@ long long getTime(){
         }
     DISPLAY:
         if (delay > 10) {
-            usleep(delay * 1000);
+            usleep((unsigned int)delay * 1000);
         }
         _showTime = getTime() / 1000;
         [_YUVInput updateDataWithImageBuffer:cImageBuf->image timestamp: CMTimeMake(cImageBuf->pts, 1000)];
         CVPixelBufferRelease(cImageBuf->image);
         _vClock = cImageBuf->pts;
-        NSLog(@"video pts:%ld",_vClock);
+        GJLOG(GJ_LOGALL,"video pts:%ld",_vClock);
     DROP:
         free(cImageBuf);
         cImageBuf = NULL;
@@ -234,10 +239,12 @@ ERROR:
     if (self) {
         memset(&_audioFormat, 0, sizeof(_audioFormat));
         _speed = 1.0;
-        _oLock= [[NSLock alloc]init];
+        _oLock= [[NSRecursiveLock alloc]init];
         _status = kPlayStatusStop;
-        _lowWaterFlag = 10;
-        _highWaterFlag = 40;
+        _lowVideoWaterFlag = 15;
+        _lowAudioWaterFlag = 43;
+        _highVideoWaterFlag = 60;
+        _highAudioWaterFlag = 172;
         _displayView = [[GJImageView alloc]init];
         queueCreate(&_imageQueue, VIDEO_MAX_CACHE_COUNT, true, false);//150为暂停时视频最大缓冲
         queueCreate(&_audioQueue, AUDIO_MAX_CACHE_COUNT, true, false);
@@ -309,9 +316,9 @@ ERROR:
     if(_status == kPlayStatusRunning){
         _status = kPlayStatusBuffering;
         GJLOG(GJ_LOGDEBUG, "start buffing");
-
-        queueSetMixCacheSize(_imageQueue, queueGetLength(_imageQueue)+_lowWaterFlag);
         _lastPauseFlag = getTime() / 1000;
+        queueSetMinCacheSize(_imageQueue, (uint)(queueGetLength(_imageQueue)+_lowAudioWaterFlag));
+        queueSetMinCacheSize(_audioQueue, (uint)(queueGetLength(_imageQueue)+_lowVideoWaterFlag));
         [_audioPlayer pause];
     }else{
         GJLOG(GJ_LOGDEBUG, "buffer when status not in running");
@@ -323,7 +330,8 @@ ERROR:
     if (_status == kPlayStatusBuffering) {
         _status = kPlayStatusRunning;
         GJLOG(GJ_LOGDEBUG,"buffer total:%d\n",_bufferTime);
-        queueSetMixCacheSize(_imageQueue,0);
+        queueSetMinCacheSize(_imageQueue, 0);
+        queueSetMinCacheSize(_audioQueue, 0);
         if (_lastPauseFlag != 0) {
             _bufferTime += getTime() / 1000 - _lastPauseFlag;
             _lastPauseFlag = 0;
@@ -351,16 +359,16 @@ ERROR:
     [_oLock unlock];
 }
 
--(CacheInfo)cache{
+-(GJCacheInfo)cache{
     GJImageBuffer* packet;
     long newPts = 0;
-    CacheInfo value = {0};
+    GJCacheInfo value = {0};
     queueLockPop(_imageQueue);
-    value.cacheCount = queueGetLength(_imageQueue);
+    value.cacheCount = (int)queueGetLength(_imageQueue);
     if(queuePeekValue(_imageQueue,value.cacheCount -1, (void**)&packet)){
         newPts = packet->pts;
         if (queuePeekValue(_imageQueue, 0, (void**)&packet)) {
-            value.cacheTime = newPts - packet->pts;
+            value.cacheTime = (int)( newPts - packet->pts);
         }else{
             value.cacheTime = 0;
         }
@@ -371,13 +379,13 @@ ERROR:
 
     return value;
 }
--(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(uint64_t)pts{
+-(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(int64_t)pts{
     GJImageBuffer* imageBuffer  = (GJImageBuffer*)malloc(sizeof(GJImageBuffer));
     imageBuffer->image = imageData;
     imageBuffer->pts = pts;
     if (_imageQueue && queuePush(_imageQueue, imageBuffer, 0)) {
         CVPixelBufferRetain(imageData);
-        if (queueGetLength(_imageQueue)> _highWaterFlag) {
+        if (_syncType != kTimeSYNCAudio && queueGetLength(_imageQueue)> _highVideoWaterFlag) {
             [self dewatering];
         }
         return YES;
@@ -408,7 +416,7 @@ static const int mpeg4audio_sample_rates[16] = {
     96000, 88200, 64000, 48000, 44100, 32000,
     24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
--(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(uint64_t)pts{
+-(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(int64_t)pts{
 
     
     GJAudioBuffer* audioBuffer = (GJAudioBuffer*)malloc(sizeof(GJAudioBuffer));
@@ -416,6 +424,14 @@ static const int mpeg4audio_sample_rates[16] = {
     audioBuffer->pts = pts;
     if(queuePush(_audioQueue, audioBuffer, 0)){
         retainBufferRetain(audioData);
+        if (_syncType == kTimeSYNCAudio) {
+            long length = queueGetLength(_audioQueue);
+            if (length > _highVideoWaterFlag) {
+                [self dewatering];
+            }else if (length < _lowAudioWaterFlag){
+                [self buffering];
+            }
+        }
         return YES;
     }else{
         GJLOG(GJ_LOGWARNING, "audio player queue full,update oldest frame");
@@ -449,12 +465,14 @@ static const int mpeg4audio_sample_rates[16] = {
 
         retainBufferUnRetain(audioBuffer->audioData);
         _aClock = audioBuffer->pts;
-        NSLog(@"audio pts:%d",_aClock);
+        GJLOG(GJ_LOGALL,"audio play pts:%d",_aClock);
         free(audioBuffer);
         return YES;
     }else{
         GJLOG(GJ_LOGDEBUG, "audio player queue empty");
-        [self buffering];
+        if (_syncType == kTimeSYNCAudio) {
+            [self buffering];
+        }
         return NO;
     }
 }

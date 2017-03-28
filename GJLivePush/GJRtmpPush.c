@@ -24,6 +24,7 @@ typedef struct _GJRTMP_Packet {
 }GJRTMP_Packet;
 void GJRtmpPush_Release(GJRtmpPush* push);
 static void* sendRunloop(void* parm){
+    pthread_setname_np("rtmpPushRunloop");
     GJRtmpPush* push = (GJRtmpPush*)parm;
     GJRTMPPushMessageType errType = GJRTMPPushMessageType_connectError;
     void* errParm = NULL;
@@ -54,7 +55,7 @@ static void* sendRunloop(void* parm){
     }
     
     GJRTMP_Packet* packet;
-    while (queuePop(push->sendBufferQueue, (void**)&packet, INT_MAX)) {
+    while (queuePop(push->sendBufferQueue, (void**)&packet, INT32_MAX)) {
         int iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
 //        static int i = 0;
 //        GJPrintf("sendcount:%d,pts:%d\n",i++,packet->packet.m_nTimeStamp);
@@ -285,20 +286,17 @@ float GJRtmpPush_GetBufferRate(GJRtmpPush* sender){
 //    GJPrintf("BufferRate length:%ld ,size:%f   rate:%f\n",length,size,length/size);
     return length / size;
 };
-long GJRtmpPush_GetBufferCacheTime(GJRtmpPush* sender){
+GJCacheInfo GJRtmpPush_GetBufferCacheInfo(GJRtmpPush* sender){
     GJRTMP_Packet* packet;
     long newPts = 0;
-    long value = 0;
+    GJCacheInfo value = {0};
     queueLockPop(sender->sendBufferQueue);
-    if(queuePeekValue(sender->sendBufferQueue, queueGetLength(sender->sendBufferQueue), (void**)&packet)){
+    value.cacheCount = (int)queueGetLength(sender->sendBufferQueue);
+    if(queuePeekValue(sender->sendBufferQueue, value.cacheCount, (void**)&packet)){
         newPts = packet->packet.m_nTimeStamp;
         if (queuePeekValue(sender->sendBufferQueue, 0, (void**)&packet)) {
-            value = newPts - packet->packet.m_nTimeStamp;
-        }else{
-            value = 0;
+            value.cacheTime = (int)(newPts - packet->packet.m_nTimeStamp);
         }
-    }else{
-        value = 0;
     }
     queueUnLockPop(sender->sendBufferQueue);
     return value;

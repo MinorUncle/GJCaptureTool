@@ -13,7 +13,7 @@
 
 @class GJPCMDecodeFromAAC;
 @protocol GJPCMDecodeFromAACDelegate <NSObject>
--(void)pcmDecode:(GJPCMDecodeFromAAC*)decoder completeBuffer:(GJRetainBuffer*)buffer pts:(int)pts;
+-(void)pcmDecode:(GJPCMDecodeFromAAC*)decoder completeBuffer:(GJRetainBuffer*)buffer pts:(int64_t)pts;
 @end
 @interface GJPCMDecodeFromAAC : NSObject
 @property (nonatomic,assign,readonly) AudioStreamBasicDescription sourceFormat;
@@ -27,7 +27,7 @@
 -(void)start;
 -(void)stop;
 
--(void)decodeBuffer:(GJRetainBuffer*)buffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins pts:(int)pts;
+-(void)decodeBuffer:(GJRetainBuffer*)buffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins pts:(int64_t)pts;
 
 
 - (instancetype)initWithDestDescription:(AudioStreamBasicDescription*)description SourceDescription:(AudioStreamBasicDescription*)sourceDescription;
