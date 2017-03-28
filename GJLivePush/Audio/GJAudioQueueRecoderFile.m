@@ -22,7 +22,7 @@
         _pAqData = malloc(sizeof(AQRecorderState));
 
         [self _createAudioQueueWithFormat:format];
-        _deriveBufferSize(_pAqData->mQueue, _destFormatDescription, 0.02, &_pAqData->bufferByteSize);
+        _deriveBufferSize(_pAqData->mQueue, _destFormat, 0.02, &_pAqData->bufferByteSize);
         _destMaxOutSize = _pAqData->bufferByteSize;
         [self _PrepareAudioQueueBuffers];
     }
@@ -37,7 +37,7 @@
 
         [self initDefaultFormat];
         [self _createAudioQueueWithFormat:NULL];
-        _deriveBufferSize(_pAqData->mQueue, _destFormatDescription, 0.02, &_pAqData->bufferByteSize);
+        _deriveBufferSize(_pAqData->mQueue, _destFormat, 0.02, &_pAqData->bufferByteSize);
         _destMaxOutSize = _pAqData->bufferByteSize;
 
         [self _PrepareAudioQueueBuffers];
@@ -49,21 +49,21 @@
 }
 -(void)initDefaultFormat{  //pcm
     //pcm format
-        memset(&_destFormatDescription, 0, sizeof(_destFormatDescription));
+        memset(&_destFormat, 0, sizeof(_destFormat));
     
-        _destFormatDescription.mFormatID         = kAudioFormatLinearPCM; // 2
-        _destFormatDescription.mSampleRate       = 44100.0;               // 3
-        _destFormatDescription.mChannelsPerFrame = 2;                     // 4
-        _destFormatDescription.mBitsPerChannel   = 16;                    // 5
-        _destFormatDescription.mBytesPerPacket   =                        // 6
-        _destFormatDescription.mBytesPerFrame =
-        _destFormatDescription.mChannelsPerFrame * sizeof (SInt16) * 16;
-        _destFormatDescription.mFramesPerPacket  = 1;                     // 7
+        _destFormat.mFormatID         = kAudioFormatLinearPCM; // 2
+        _destFormat.mSampleRate       = 44100.0;               // 3
+        _destFormat.mChannelsPerFrame = 2;                     // 4
+        _destFormat.mBitsPerChannel   = 16;                    // 5
+        _destFormat.mBytesPerPacket   =                        // 6
+        _destFormat.mBytesPerFrame =
+        _destFormat.mChannelsPerFrame * sizeof (SInt16) * 16;
+        _destFormat.mFramesPerPacket  = 1;                     // 7
     
-        _destFormatDescription.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
+        _destFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
     
         UInt32 size = sizeof(AudioStreamBasicDescription);
-        AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormatDescription);
+        AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormat);
 
 }
 
@@ -90,25 +90,25 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
     if (format == NULL) {
         [self initDefaultFormat];
     }else{
-        _destFormatDescription = *format;
+        _destFormat = *format;
     }
   
     UInt32 size = sizeof(AudioStreamBasicDescription);
-    OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormatDescription);
+    OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormat);
     assert(!status);
 
-    status = AudioQueueNewInput ( &_destFormatDescription, handleInputBuffer, (__bridge void * _Nullable)(self),  NULL, kCFRunLoopCommonModes, 0, &_pAqData->mQueue );
+    status = AudioQueueNewInput ( &_destFormat, handleInputBuffer, (__bridge void * _Nullable)(self),  NULL, kCFRunLoopCommonModes, 0, &_pAqData->mQueue );
     assert(!status);
     
     size = sizeof(AudioStreamBasicDescription);
-    status = AudioQueueGetProperty(_pAqData->mQueue, kAudioQueueProperty_StreamDescription, &_destFormatDescription, &size);
+    status = AudioQueueGetProperty(_pAqData->mQueue, kAudioQueueProperty_StreamDescription, &_destFormat, &size);
     assert(!status);
     return YES;
 }
 -(BOOL)_createAudioQueueFileWithFilePath:(NSString* )filePath fileType:(AudioFileTypeID)fileType{
     CFURLRef audioFileURL = CFURLCreateFromFileSystemRepresentation ( NULL,(UInt8*)[filePath UTF8String], filePath.length, false);
     
-   OSStatus status = AudioFileCreateWithURL (audioFileURL, fileType, &_destFormatDescription,kAudioFileFlags_EraseFile,&_pAqData->mAudioFile);
+   OSStatus status = AudioFileCreateWithURL (audioFileURL, fileType, &_destFormat,kAudioFileFlags_EraseFile,&_pAqData->mAudioFile);
     assert(!status);
     return YES;
 }

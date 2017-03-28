@@ -69,7 +69,8 @@ extern "C" {
      */
     bool queueCreate(GJQueue** outQ,unsigned int capacity,bool atomic QUEUE_DEFAULT(true),bool autoResize QUEUE_DEFAULT(false));
     bool queueCleanAndFree(GJQueue** inQ);
-    
+    bool queueClean(GJQueue* inQ);
+
     bool queuePop(GJQueue* q,void** temBuffer,unsigned int ms QUEUE_DEFAULT(500));
     bool queuePush(GJQueue* q,void* temBuffer,unsigned int ms QUEUE_DEFAULT(500));
     long queueGetLength(GJQueue* q);

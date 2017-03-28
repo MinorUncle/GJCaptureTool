@@ -15,6 +15,7 @@
 }
 @property(nonatomic)VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
+@property (nonatomic, assign) BOOL shouldRestart;
 
 @end
 @implementation GJH264Decoder
@@ -33,6 +34,7 @@
     if (_decompressionSession != nil) {
         VTDecompressionSessionInvalidate(_decompressionSession);
     }
+    _shouldRestart = NO;
     VTDecompressionOutputCallbackRecord callBackRecord;
     callBackRecord.decompressionOutputCallback = decodeOutputCallback;
     
@@ -70,7 +72,7 @@ void decodeOutputCallback(
 //    GJPrintf("pts:%f   ,ptd:%f\n",presentationTimeStamp.value*1.0 / presentationTimeStamp.timescale,presentationDuration.value*1.0/presentationDuration.timescale);
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
     if ([decoder.delegate respondsToSelector:@selector(GJH264Decoder:decodeCompleteImageData:pts:)]) {
-        [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:presentationTimeStamp];
+        [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:presentationTimeStamp.value*1000/presentationTimeStamp.timescale];
     }
     
 }
@@ -93,7 +95,7 @@ void decodeOutputCallback(
     return codeIndex;
 }
 
--(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(CMTime)pts
+-(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(uint64_t)pts
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     
@@ -176,9 +178,12 @@ void decodeOutputCallback(
 //                    }else{
 //                        CFRelease(desc);
 //                    }
-                    if((status == noErr) && (_decompressionSession == NULL || shouldReCreate))
+                    if(status == noErr)
                     {
-                        [self createDecompSession];
+                        if (_decompressionSession == NULL || shouldReCreate || _shouldRestart) {
+                            [self createDecompSession];
+
+                        }
                     }
                 }
             }
@@ -205,7 +210,7 @@ void decodeOutputCallback(
                     CMSampleTimingInfo timingInfo ;
                     timingInfo.decodeTimeStamp = kCMTimeInvalid;
                     timingInfo.duration = kCMTimeInvalid;
-                    timingInfo.presentationTimeStamp = pts;
+                    timingInfo.presentationTimeStamp = CMTimeMake(pts, 1000);
                     status = CMSampleBufferCreate(kCFAllocatorDefault,
                                                   blockBuffer, true, NULL, NULL,
                                                   _formatDesc, 1, 1, &timingInfo, 1,
@@ -254,6 +259,7 @@ ERROR:
     OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
     if (status < 0) {
         GJPrintf("解码错误error:%d\n",status);
+        _shouldRestart = YES;
     }
 }
 NSString * const naluTypesStrings[] =

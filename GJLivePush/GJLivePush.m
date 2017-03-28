@@ -29,7 +29,9 @@
     long             _sendFrame;
     long            _unitFrame;
     NSLock*          _pushLock;
+    
 }
+@property(strong,nonatomic)NSDate*            startDate;
 @property(strong,nonatomic)GJH264Encoder* videoEncoder;
 @property(copy,nonatomic)NSString* pushUrl;
 @property(strong,nonatomic)GPUImageFilter* videoStreamFilter; //可能公用_cropFilter
@@ -168,6 +170,7 @@
 }
 
 -(void)pushRun{
+    _startDate = [NSDate date];
     if (_audioRecoder == nil) {
         _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:2 formatID:kAudioFormatMPEG4AAC];
         _audioRecoder.delegate = self;
@@ -176,8 +179,8 @@
     __weak GJLivePush* wkSelf = self;
     wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
         CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
-        
-        [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:CMTimeMake(wkSelf.videoEncoder.frameCount, (int32_t)wkSelf.captureFps) fourceKey:false];
+        CMTime pts = CMTimeMake([[NSDate date]timeIntervalSinceDate:wkSelf.startDate]*1000, 1000);
+        [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:pts fourceKey:false];
     };
 }
 
@@ -190,7 +193,6 @@
         _videoPush = nil;
         [_timer invalidate];
     }
-
 }
 
 -(UIView *)getPreviewView{
@@ -249,7 +251,9 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 //    NSLog(@"audio times:%d ,%@",times++,audio);
     _sendByte += dataBuffer->size;
     _unitByte += dataBuffer->size;
-    GJRtmpPush_SendAACData(_videoPush, dataBuffer, pts);
+    int cpts = [[NSDate date]timeIntervalSinceDate:_startDate]*1000;
+
+    GJRtmpPush_SendAACData(_videoPush, dataBuffer, cpts);
 }
 -(void)dealloc{
     if (_videoPush) {

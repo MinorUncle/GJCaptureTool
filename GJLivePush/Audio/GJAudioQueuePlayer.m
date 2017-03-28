@@ -66,7 +66,7 @@ static const int MCAudioQueueBufferCount = 3;
                 format.mBytesPerFrame   = format.mChannelsPerFrame * format.mBitsPerChannel/8;
                 format.mFramesPerPacket = format.mBytesPerFrame * format.mFramesPerPacket ;
                 format.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
-                _maxBufferSize =format.mBytesPerFrame * format.mChannelsPerFrame*sampleRate * 0.2;
+                _maxBufferSize =format.mBytesPerFrame * format.mChannelsPerFrame*sampleRate * 0.4;
 
                 break;
             }

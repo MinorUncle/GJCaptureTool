@@ -14,10 +14,14 @@
 {
     GJLivePush* _livePush;
     GJLivePull* _livePull;
+    GJLivePull* _livePull2;
 }
 @property (strong, nonatomic) UIView *topView;
 @property (strong, nonatomic) UIView *bottomView;
-@property (strong, nonatomic) UIButton *takeButton;//拍照按钮
+@property (strong, nonatomic) UIButton *pushButton;
+@property (strong, nonatomic) UIButton *pullButton;
+@property (strong, nonatomic) UIButton *pull2Button;
+
 @property (strong, nonatomic) UILabel *fpsLab;
 @property (strong, nonatomic) UILabel *sendRateLab;
 @property (strong, nonatomic) UILabel *pullRateLab;
@@ -51,7 +55,7 @@
     
     
     rect.origin = CGPointMake(10, 20);
-    rect.size = CGSizeMake(200, 30);
+    rect.size = CGSizeMake(300, 30);
     _pushStateLab = [[UILabel alloc]initWithFrame:rect];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
@@ -94,55 +98,96 @@
     _cacheLab.text = @"播放缓存时长0.0 ms";
     [self.view addSubview:_cacheLab];
     
-    int count = 1;
+    int count = 3;
     rect.origin.y = CGRectGetMaxY(self.topView.frame);
     rect.origin.x = 0;
     rect.size.width = self.topView.frame.size.width * 1.0/count;
     rect.size.height = self.view.bounds.size.height* 0.1;
-    _takeButton = [[UIButton alloc]initWithFrame:rect];
-    [_takeButton setTitle:@"开始" forState:UIControlStateNormal];
-    [_takeButton setTitle:@"结束" forState:UIControlStateSelected];
-    [_takeButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    [_takeButton setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
-    [_takeButton setShowsTouchWhenHighlighted:YES];
-    [_takeButton addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _takeButton.backgroundColor = [UIColor whiteColor];
-    [self.view addSubview:_takeButton];
-
+    _pushButton = [[UIButton alloc]initWithFrame:rect];
+    [_pushButton setTitle:@"推流开始" forState:UIControlStateNormal];
+    [_pushButton setTitle:@"推流结束" forState:UIControlStateSelected];
+    [_pushButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_pushButton setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_pushButton setShowsTouchWhenHighlighted:YES];
+    [_pushButton addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _pushButton.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:_pushButton];
+    
+    rect.origin.x = CGRectGetMaxX(rect);
+    _pullButton = [[UIButton alloc]initWithFrame:rect];
+    [_pullButton setTitle:@"拉流1开始" forState:UIControlStateNormal];
+    [_pullButton setTitle:@"拉流1结束" forState:UIControlStateSelected];
+    [_pullButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_pullButton setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_pullButton setShowsTouchWhenHighlighted:YES];
+    [_pullButton addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _pullButton.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:_pullButton];
+    rect.origin.x = CGRectGetMaxX(rect);
+    _pull2Button = [[UIButton alloc]initWithFrame:rect];
+    [_pull2Button setTitle:@"拉流2开始" forState:UIControlStateNormal];
+    [_pull2Button setTitle:@"拉流2结束" forState:UIControlStateSelected];
+    [_pull2Button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_pull2Button setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_pull2Button setShowsTouchWhenHighlighted:YES];
+    [_pull2Button addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _pull2Button.backgroundColor = [UIColor whiteColor];
+    [self.view addSubview:_pull2Button];
     
     rect.origin.x = 0;
     rect.origin.y = CGRectGetMaxY(rect);
     rect.size.height = self.view.bounds.size.height * 0.45;
-    rect.size.width = self.view.bounds.size.width;
+    rect.size.width = self.view.bounds.size.width*0.5;
     self.bottomView = [_livePull getPreviewView];
     _bottomView.frame = rect;
     _bottomView.backgroundColor = [UIColor redColor];
     [self.view addSubview:_bottomView];
     
+    _livePull2 = [[GJLivePull alloc]init];
+    UIView* show2 = [_livePull2 getPreviewView];
+    show2.backgroundColor = [UIColor yellowColor];
+    rect.origin.x = CGRectGetMaxX(rect);
+    show2.frame = rect;
+    [self.view addSubview:show2];
+
     
     [_livePush startCaptureWithSizeType:kCaptureSize352_288 fps:15 position:AVCaptureDevicePositionBack];
     
     [_livePush startPreview];
     
-
-    // Do any additional setup after loading the view.
+       // Do any additional setup after loading the view.
 }
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;
-    if (btn.selected) {
-        GJPushConfig config;
-        config.channel = 1;
-        config.audioSampleRate = 44100;
-        config.pushSize = CGSizeMake(288, 352);
-        config.videoBitRate = 8*200*1024;
-        config.pushUrl = "rtmp://192.168.31.131/live/room";
-        [_livePush startStreamPushWithConfig:config];
-        
-        [_livePull startStreamPullWithUrl:config.pushUrl];
-    }else{
-        [_livePush stopStreamPush];
-        [_livePull stopStreamPull];
+    char* url = "rtmp://10.0.1.243/live/room";
+    if (btn == _pushButton) {
+        if (btn.selected) {
+            GJPushConfig config;
+            config.channel = 1;
+            config.audioSampleRate = 44100;
+            config.pushSize = CGSizeMake(288, 352);
+            config.videoBitRate = 8*200*1024;
+            config.pushUrl = url;
+            [_livePush startStreamPushWithConfig:config];
+        }else{
+             [_livePush stopStreamPush];
+        }
+      
+    }else if(btn == _pullButton){
+        if (btn.selected) {
+            [_livePull startStreamPullWithUrl:url];
+        }else{
+            [_livePull stopStreamPull];
+        }
+
+    }else if(btn == _pull2Button){
+        if (btn.selected) {
+            [_livePull2 startStreamPullWithUrl:url];
+        }else{
+            [_livePull2 stopStreamPull];
+        }
     }
+
 }
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -162,7 +207,7 @@
             dispatch_async(dispatch_get_main_queue(), ^{
                 _pushStateLab.text =@"推流连接失败";
                 [_livePush stopStreamPush];
-                _takeButton.selected = false;
+                _pushButton.selected = false;
             });
             break;
         }
@@ -190,8 +235,12 @@
         case kLivePullConnectError:{
             dispatch_async(dispatch_get_main_queue(), ^{
                 _pullStateLab.text =@"拉流连接失败";
-                [_livePull stopStreamPull];
-                _takeButton.selected = false;
+                [livePull stopStreamPull];
+                if (livePull == _livePull) {
+                    _pullButton.selected = false;
+                }else{
+                    _pull2Button.selected = false;
+                }
             });
             break;
         }
@@ -206,9 +255,11 @@
     }
 }
 
--(void)livePull:(GJLivePull *)livePull bitrate:(long)bitrate cacheTime:(long)cacheTime{
-    _pullRateLab.text = [NSString stringWithFormat:@"接收码率:%0.2f KB/s",bitrate/1024.0];
-    _cacheLab.text = [NSString stringWithFormat:@"播放缓存时长%ld ms",cacheTime];
+-(void)livePull:(GJLivePull *)livePull bitrate:(long)bitrate cacheTime:(long)cacheTime cacheFrame:(int)count{
+    if (_livePull == livePull) {
+        _pullRateLab.text = [NSString stringWithFormat:@"接收码率:%0.2f KB/s",bitrate/1024.0];
+        _cacheLab.text = [NSString stringWithFormat:@"播放缓存时长%ld ms 帧数：%d",cacheTime,count];
+    }
 }
 -(void)livePush:(GJLivePush *)livePush frameRate:(long)frameRate bitrate:(long)bitrate quality:(long)quality delay:(long)delay{
     _sendRateLab.text = [NSString stringWithFormat:@"发送码率:%0.2f KB/s",bitrate/1024.0];
@@ -224,5 +275,7 @@
     // Pass the selected object to the new view controller.
 }
 */
+
+
 
 @end

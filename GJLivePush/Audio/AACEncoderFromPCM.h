@@ -17,8 +17,8 @@
 -(void)AACEncoderFromPCM:(AACEncoderFromPCM*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer packetDesc:(AudioStreamPacketDescription*)packet;
 @end
 @interface AACEncoderFromPCM : NSObject
-@property(nonatomic,assign,readonly)AudioStreamBasicDescription destFormatDescription;
-@property(nonatomic,assign,readonly)AudioStreamBasicDescription sourceFormatDescription;
+@property(nonatomic,assign,readonly)AudioStreamBasicDescription destFormat;
+@property(nonatomic,assign,readonly)AudioStreamBasicDescription sourceFormat;
 
 @property(nonatomic,assign,readonly)int destMaxOutSize;
 

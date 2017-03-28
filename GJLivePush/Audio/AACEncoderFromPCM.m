@@ -29,7 +29,7 @@
 {
     self = [super init];
     if (self) {
-        _destFormatDescription = description;
+        _destFormat = description;
         [self initQueue];
     }
     return self;
@@ -40,11 +40,11 @@
     self = [super init];
     if (self) {
         
-        memset(&_destFormatDescription, 0, sizeof(_destFormatDescription));
-        _destFormatDescription.mChannelsPerFrame = 1;
-        _destFormatDescription.mFramesPerPacket = 1024;
-        _destFormatDescription.mSampleRate = 44100;
-        _destFormatDescription.mFormatID = kAudioFormatMPEG4AAC;  //aac
+        memset(&_destFormat, 0, sizeof(_destFormat));
+        _destFormat.mChannelsPerFrame = 1;
+        _destFormat.mFramesPerPacket = 1024;
+        _destFormat.mSampleRate = 44100;
+        _destFormat.mFormatID = kAudioFormatMPEG4AAC;  //aac
 
         [self initQueue];
 
@@ -76,9 +76,9 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
             CMBlockBufferGetDataPointer(bufferRef, 0, NULL, &lenth, &point);
             memset(point, 0, lenth);
             ioData->mBuffers[0].mData = point;
-            ioData->mBuffers[0].mNumberChannels =encoder.sourceFormatDescription.mChannelsPerFrame;
+            ioData->mBuffers[0].mNumberChannels =encoder.sourceFormat.mChannelsPerFrame;
             ioData->mBuffers[0].mDataByteSize = (UInt32)lenth;
-            AudioStreamBasicDescription* baseDescription = &(encoder->_sourceFormatDescription);
+            AudioStreamBasicDescription* baseDescription = &(encoder->_sourceFormat);
             *ioNumberDataPackets = ioData->mBuffers[0].mDataByteSize / baseDescription->mBytesPerPacket;
             encoder->_preBlockBuffer = bufferRef;
             return noErr;
@@ -126,39 +126,39 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     const AudioStreamBasicDescription* sourceFormat = CMAudioFormatDescriptionGetStreamBasicDescription(CMSampleBufferGetFormatDescription(sampleBuffer));
     assert(sourceFormat);
     if (sourceFormat != NULL) {
-        _sourceFormatDescription = *sourceFormat;
+        _sourceFormat = *sourceFormat;
     }else{
         return false;
     }
 
     UInt32 size = sizeof(AudioStreamBasicDescription);
-    AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormatDescription);
-    AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_sourceFormatDescription);
+    AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormat);
+    AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_sourceFormat);
 
     
     AudioClassDescription audioClass;
-   OSStatus status = [self _getAudioClass:&audioClass WithType:_destFormatDescription.mFormatID fromManufacturer:kAppleSoftwareAudioCodecManufacturer];
+   OSStatus status = [self _getAudioClass:&audioClass WithType:_destFormat.mFormatID fromManufacturer:kAppleSoftwareAudioCodecManufacturer];
     assert(!status);
-    status = AudioConverterNewSpecific(&_sourceFormatDescription, &_destFormatDescription, 1, &audioClass, &_encodeConvert);
+    status = AudioConverterNewSpecific(&_sourceFormat, &_destFormat, 1, &audioClass, &_encodeConvert);
     assert(!status);
     
-    AudioConverterGetProperty(_encodeConvert, kAudioConverterCurrentInputStreamDescription, &size, &_sourceFormatDescription);
+    AudioConverterGetProperty(_encodeConvert, kAudioConverterCurrentInputStreamDescription, &size, &_sourceFormat);
     
-    AudioConverterGetProperty(_encodeConvert, kAudioConverterCurrentOutputStreamDescription, &size, &_destFormatDescription);
+    AudioConverterGetProperty(_encodeConvert, kAudioConverterCurrentOutputStreamDescription, &size, &_destFormat);
     
-    if (_destFormatDescription.mBytesPerPacket == 0) {//VCR
+    if (_destFormat.mBytesPerPacket == 0) {//VCR
         UInt32 size;
        OSStatus status = AudioConverterGetProperty(_encodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
         _destMaxOutSize += 7;//7字节aac头
         assert(!status);
     }
-    if (_destFormatDescription.mFormatID == kAudioFormatMPEG4AAC) {
+    if (_destFormat.mFormatID == kAudioFormatMPEG4AAC) {
         UInt32 outputBitRate = 64000; // 64kbs
         UInt32 propSize = sizeof(outputBitRate);
         
-        if (_destFormatDescription.mSampleRate >= 44100) {
+        if (_destFormat.mSampleRate >= 44100) {
             outputBitRate = 192000; // 192kbs
-        } else if (_destFormatDescription.mSampleRate < 22000) {
+        } else if (_destFormat.mSampleRate < 22000) {
             outputBitRate = 32000; // 32kbs
         }
         
@@ -287,7 +287,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
      14: Reserved
      15: frequency is written explictly
      */
-    int freqIdx = get_f_index(_destFormatDescription.mSampleRate);//11
+    int freqIdx = get_f_index(_destFormat.mSampleRate);//11
     /*
      channel_configuration: 表示声道数
      0: Defined in AOT Specifc Config

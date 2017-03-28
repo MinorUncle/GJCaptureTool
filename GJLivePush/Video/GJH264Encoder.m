@@ -21,6 +21,7 @@
 @property(nonatomic,assign)GJRetainBufferPool* bufferPool;
 @property(nonatomic,assign)int32_t currentBitRate;//当前码率
 @property(nonatomic,assign)int currentDelayCount;//调整之后要过几帧才能反应，所以要延迟几帧再做检测调整；
+@property(nonatomic,assign)BOOL shouldRestart;
 
 
 @end
@@ -68,7 +69,7 @@
     
     int32_t h = (int32_t)CVPixelBufferGetHeight(imageBuffer);
     int32_t w = (int32_t)CVPixelBufferGetWidth(imageBuffer);
-    if (_enCodeSession == nil || h != _destFormat.baseFormat.height || w != _destFormat.baseFormat.width) {
+    if (_enCodeSession == nil || h != _destFormat.baseFormat.height || w != _destFormat.baseFormat.width || _shouldRestart) {
         [self creatEnCodeSessionWithWidth:w height:h];
     }
     
@@ -93,6 +94,7 @@
         return YES;
     }else{
         printf("编码失败：%d",status);
+        _shouldRestart = YES;
         return NO;
     }
 }
@@ -101,6 +103,7 @@
     if (_enCodeSession != nil) {
         VTCompressionSessionInvalidate(_enCodeSession);
     }
+    _shouldRestart = NO;
     OSStatus result = VTCompressionSessionCreate(
                                             NULL,
                                             w,

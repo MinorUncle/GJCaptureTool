@@ -8,7 +8,7 @@
 
 
 #import "GJPCMDecodeFromAAC.h"
-#import "GJDebug.h"
+#import "GJLog.h"
 #import "GJRetainBufferPool.h"
 
 typedef struct _DecodeAudioFrame{
@@ -43,15 +43,15 @@ typedef struct _DecodeAudioFrame{
     if (self) {
         
         if (sourceDescription != NULL) {
-            _sourceFormatDescription = *sourceDescription;
+            _sourceFormat = *sourceDescription;
         }else{
-            _sourceFormatDescription = [GJPCMDecodeFromAAC defaultSourceFormateDescription];
+            memset(&_sourceFormat, 0, sizeof(_sourceFormat));
         }
         
         if (destDescription != NULL) {
-            _destFormatDescription = *destDescription;
+            _destFormat = *destDescription;
         }else{
-            _destFormatDescription = [GJPCMDecodeFromAAC defaultDestFormatDescription];
+            _destFormat = [GJPCMDecodeFromAAC defaultDestFormatDescription];
         }
         [self initQueue];
     }
@@ -61,9 +61,8 @@ typedef struct _DecodeAudioFrame{
 
 - (instancetype)init
 {
-    AudioStreamBasicDescription dest = [GJPCMDecodeFromAAC defaultDestFormatDescription];
-    AudioStreamBasicDescription sour = [GJPCMDecodeFromAAC defaultSourceFormateDescription];
-    return [self initWithDestDescription:&dest SourceDescription:&sour];
+   
+    return [self initWithDestDescription:nil SourceDescription:nil];
 }
 -(void)initQueue{
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_CONCURRENT);
@@ -98,6 +97,7 @@ typedef struct _DecodeAudioFrame{
 }
 -(void)stop{
     _running = NO;
+    queueClean(_resumeQueue);
 }
 //编码输入
 static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData,AudioStreamPacketDescription **outDataPacketDescription, void *inUserData)
@@ -119,7 +119,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         retainBuffer = frame->audioBuffer;
         description = &(frame->packetDesc);
         ioData->mBuffers[0].mData = (uint8_t*)retainBuffer->data + description->mStartOffset;
-        ioData->mBuffers[0].mNumberChannels = decode->_sourceFormatDescription.mChannelsPerFrame;
+        ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
         ioData->mBuffers[0].mDataByteSize = retainBuffer->size - (UInt32)description->mStartOffset;
         description->mDataByteSize -= description->mStartOffset;
         description->mStartOffset = 0;
@@ -149,25 +149,62 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (!queuePush(_resumeQueue, frame,1000)) {
         retainBufferUnRetain(audioBuffer);
         free(frame);
-    } ;
+        GJLOG(GJ_LOGWARNING,"aac decode to pcm queuePush faile");
+    }
 }
 
 #define AAC_FRAME_PER_PACKET 1024
 
-
+static const int mpeg4audio_sample_rates[16] = {
+    96000, 88200, 64000, 48000, 44100, 32000,
+    24000, 22050, 16000, 12000, 11025, 8000, 7350
+};
 -(BOOL)_createEncodeConverter{
     if (_decodeConvert) {
         AudioConverterDispose(_decodeConvert);
     }
+    
+    if(_sourceFormat.mFormatID <= 0){
+    // get audio format
+        GJDecodeAudioFrame* frame;
+        if (queuePeekWaitValue(_resumeQueue, 0,(void**)&frame, INT_MAX) && _running) {
+            uint8_t* adts = frame->audioBuffer->data;
+            uint8_t sampleIndex = adts[2] << 2;
+            sampleIndex = sampleIndex>>4;
+            int sampleRate = mpeg4audio_sample_rates[sampleIndex];
+            uint8_t channel = adts[2] & 0x1 <<2;
+            channel += (adts[3] & 0xb0)>>6;
+            
+            memset(&_sourceFormat, 0, sizeof(_sourceFormat));
+            _sourceFormat.mFormatID = kAudioFormatMPEG4AAC;
+            _sourceFormat.mChannelsPerFrame = channel;
+            _sourceFormat.mSampleRate = sampleRate;
+            _sourceFormat.mFramesPerPacket = 1024;
+        }else{
+            return false;
+        }
+    }
+    
+    if (_destFormat.mFormatID <= 0) {
+        _destFormat.mSampleRate       = _sourceFormat.mSampleRate;               // 3
+        _destFormat.mChannelsPerFrame = _sourceFormat.mChannelsPerFrame;                     // 4
+        _destFormat.mFramesPerPacket  = 1;                     // 7
+        _destFormat.mBitsPerChannel   = 16;                    // 5
+        _destFormat.mBytesPerFrame   = _destFormat.mChannelsPerFrame * _destFormat.mBitsPerChannel/8;
+        _destFormat.mFramesPerPacket = _destFormat.mBytesPerFrame * _destFormat.mFramesPerPacket ;
+        _destFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
+    }
+    
+    
     UInt32 size = sizeof(AudioStreamBasicDescription);
-    AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormatDescription);
-    AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_sourceFormatDescription);
+    AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormat);
+    AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_sourceFormat);
     
 
-    OSStatus status = AudioConverterNew(&_sourceFormatDescription, &_destFormatDescription, &_decodeConvert);
-    assert(!status);
-    GJLOG(@"AudioConverterNewSpecific success");
-
+    OSStatus status = AudioConverterNew(&_sourceFormat, &_destFormat, &_decodeConvert);
+    if (status != noErr) {
+        GJLOG(GJ_LOGERROR, "AudioConverterNew error:%d",status);
+    }
     _destMaxOutSize = 0;
     status = AudioConverterGetProperty(_decodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
     _destMaxOutSize *= AAC_FRAME_PER_PACKET;
@@ -176,9 +213,9 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true);
     
-    AudioConverterGetProperty(_decodeConvert, kAudioConverterCurrentInputStreamDescription, &size, &_sourceFormatDescription);
+    AudioConverterGetProperty(_decodeConvert, kAudioConverterCurrentInputStreamDescription, &size, &_sourceFormat);
     
-    AudioConverterGetProperty(_decodeConvert, kAudioConverterCurrentOutputStreamDescription, &size, &_destFormatDescription);
+    AudioConverterGetProperty(_decodeConvert, kAudioConverterCurrentOutputStreamDescription, &size, &_destFormat);
     
 //    [self performSelectorInBackground:@selector(_converterStart) withObject:nil];
     dispatch_async(_decodeQueue, ^{
@@ -201,7 +238,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         outCacheBufferList.mNumberBuffers = 1;
         outCacheBufferList.mBuffers[0].mNumberChannels = 1;
         outCacheBufferList.mBuffers[0].mData = buffer->data;
-        outCacheBufferList.mBuffers[0].mDataByteSize = AAC_FRAME_PER_PACKET * _destFormatDescription.mBytesPerPacket;
+        outCacheBufferList.mBuffers[0].mDataByteSize = AAC_FRAME_PER_PACKET * _destFormat.mBytesPerPacket;
         
         OSStatus status = AudioConverterFillComplexBuffer(_decodeConvert, encodeInputDataProc, (__bridge void*)self, &numPackets, &outCacheBufferList, &packetDesc);
         // assert(!status);
@@ -209,11 +246,11 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
             
             retainBufferUnRetain(buffer);
             char* codeChar = (char*)&status;
-            GJLOG(@"AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
+            GJLOG(GJ_LOGDEBUG, "AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
             break;
         }
         
-        buffer->size = _destFormatDescription.mBytesPerPacket*numPackets;
+        buffer->size = _destFormat.mBytesPerPacket*numPackets;
         int pts = _currentPts;
         _currentPts = -1;
         [self.delegate pcmDecode:self completeBuffer:buffer pts:pts];
@@ -228,8 +265,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         retainBufferUnRetain(_preFrame->audioBuffer);
         free(_preFrame);
     }
-
-    NSLog(@"GJPCMDecodeFromAAC dealloc");
+    GJLOG(GJ_LOGDEBUG, "gjpcmdecodeformaac delloc");
 }
 
 #pragma mark - mutex

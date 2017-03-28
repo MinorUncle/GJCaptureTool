@@ -13,7 +13,7 @@
 #import "GJRetainBuffer.h"
 @class GJH264Decoder;
 @protocol GJH264DecoderDelegate <NSObject>
--(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(CMTime)pts;
+-(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(uint64_t)pts;
 @end
 
 @interface GJH264Decoder : NSObject
@@ -21,5 +21,5 @@
 @property(nonatomic,weak)id<GJH264DecoderDelegate> delegate;
 //default kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
 @property(nonatomic,assign)OSType outPutImageFormat;
--(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(CMTime)pts;
+-(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(uint64_t)pts;
 @end

@@ -31,7 +31,7 @@ GJQueue* _mp4VideoQueue;
 GJQueue* _mp4AudioQueue;
 BOOL _recodeState;
 
-@interface ViewController ()<GJCaptureToolDelegate,GJH264DecoderDelegate,GJH264EncoderDelegate,AACEncoderFromPCMDelegate,PCMDecodeFromAACDelegate,AudioStreamPraseDelegate,H264DecoderDelegate,H264EncoderDelegate,GJAudioQueueRecoderDelegate>
+@interface ViewController ()<GJCaptureToolDelegate,GJH264DecoderDelegate,GJH264EncoderDelegate,AACEncoderFromPCMDelegate,GJPCMDecodeFromAACDelegate,AudioStreamPraseDelegate,H264DecoderDelegate,H264EncoderDelegate,GJAudioQueueRecoderDelegate>
 {
     GJAudioQueuePlayer* _audioPlayer;
     AudioPraseStream* _praseStream;
@@ -260,7 +260,7 @@ BOOL _recodeState;
 
 -(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer pts:(int)pts{
     if (_audioPlayer == nil) {
-        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:decoder.destFormatDescription maxBufferSize:decoder.destMaxOutSize macgicCookie:nil];
+        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:decoder.destFormat maxBufferSize:decoder.destMaxOutSize macgicCookie:nil];
         [_audioPlayer start];
     }
     [_audioPlayer playData:buffer packetDescriptions:nil];
@@ -845,7 +845,7 @@ BOOL _recodeState;
 }
 -(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer packetDesc:(AudioStreamPacketDescription *)packetDesc{
     if (_audioPlayer == nil) {
-        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:decoder.destFormatDescription maxBufferSize:decoder.destMaxOutSize macgicCookie:nil];
+        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:decoder.destFormat maxBufferSize:decoder.destMaxOutSize macgicCookie:nil];
         [_audioPlayer start];
     }
     NSLog(@"GJPCMDecodeFromAAC:%d",buffer->size);
@@ -867,14 +867,14 @@ static int aacIndex;
     return;
 #endif
 //    if (aacFramePerS == 0) {
-//        aacFramePerS = encoder.destFormatDescription.mSampleRate;
-//        _rtmpSend.audioStreamFormat = encoder.destFormatDescription;
+//        aacFramePerS = encoder.destFormat.mSampleRate;
+//        _rtmpSend.audioStreamFormat = encoder.destFormat;
 //    }
 //
 //    [_rtmpSend sendAACBuffer:buffer lenth:(int)totalLenth pts:aacIndex/aacFramePerS dts:aacIndex eof:NO];
     
 //    if (_audioPlayer == nil) {
-//        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:encoder.destFormatDescription bufferSize:encoder.destMaxOutSize macgicCookie:[encoder fetchMagicCookie]];
+//        _audioPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:encoder.destFormat bufferSize:encoder.destMaxOutSize macgicCookie:[encoder fetchMagicCookie]];
 //    }
 ////    NSLog(@"GJPCMDecodeFromAAC:%d",lenth);
 //        [_audioPlayer playData:buffer lenth:(UInt32)totalLenth packetCount:count packetDescriptions:packets isEof:NO];

@@ -29,7 +29,7 @@ typedef struct _AQRecorderState {
 @interface GJAudioQueueRecoderFile : NSObject
 @property(nonatomic,assign,readonly)AQRecorderState *pAqData;
 @property(nonatomic,assign)int destMaxOutSize;
-@property(nonatomic,assign,readonly)AudioStreamBasicDescription destFormatDescription;
+@property(nonatomic,assign,readonly)AudioStreamBasicDescription destFormat;
 @property(nonatomic,weak)id<GJAudioQueueRecoderFileDelegate> delegate;
 
 

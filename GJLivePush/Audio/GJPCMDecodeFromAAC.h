@@ -12,16 +12,16 @@
 #import "GJRetainBuffer.h"
 
 @class GJPCMDecodeFromAAC;
-@protocol PCMDecodeFromAACDelegate <NSObject>
+@protocol GJPCMDecodeFromAACDelegate <NSObject>
 -(void)pcmDecode:(GJPCMDecodeFromAAC*)decoder completeBuffer:(GJRetainBuffer*)buffer pts:(int)pts;
 @end
 @interface GJPCMDecodeFromAAC : NSObject
-@property (nonatomic,assign,readonly) AudioStreamBasicDescription sourceFormatDescription;
-@property (nonatomic,assign,readonly)AudioStreamBasicDescription destFormatDescription;
+@property (nonatomic,assign,readonly) AudioStreamBasicDescription sourceFormat;
+@property (nonatomic,assign,readonly)AudioStreamBasicDescription destFormat;
 
 
 @property (nonatomic,assign,readonly) UInt32 bitRate;
-@property (nonatomic,weak) id<PCMDecodeFromAACDelegate>delegate;
+@property (nonatomic,weak) id<GJPCMDecodeFromAACDelegate>delegate;
 @property (nonatomic,assign,readonly) UInt32 destMaxOutSize;
 
 -(void)start;
