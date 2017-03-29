@@ -50,6 +50,7 @@
 		6A7D08741E8A46BA008CE0E5 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = 044018EC1E6CF4E400DEBF98 /* GJLivePull.m */; };
 		6A7D08751E8A46BA008CE0E5 /* GJPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 046EDC1B1E6E745A00D9D8FC /* GJPlayer.m */; };
 		6A7D08761E8A46BA008CE0E5 /* GJRtmpPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 0440189F1E6CF13F00DEBF98 /* GJRtmpPull.c */; };
+		6A7D08AD1E8B85EA008CE0E5 /* GJAudioQueuePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440188B1E6CF13F00DEBF98 /* GJAudioQueuePlayer.m */; };
 		6ABD5B651E88B65A00404A6B /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6ABD5B661E88B73B00404A6B /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E61E84BE3F002A2A2D /* libcrypto.a */; };
 		6ABD5B671E88B73B00404A6B /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E41E84BE3F002A2A2D /* libopenssl.a */; };
@@ -1489,6 +1490,7 @@
 				6A7D08761E8A46BA008CE0E5 /* GJRtmpPull.c in Sources */,
 				044018C21E6CF13F00DEBF98 /* GJPCMDecodeFromAAC.m in Sources */,
 				04A081741E70E63A000E2B64 /* GJAudioQueueDrivePlayer.m in Sources */,
+				6A7D08AD1E8B85EA008CE0E5 /* GJAudioQueuePlayer.m in Sources */,
 				044018CB1E6CF13F00DEBF98 /* GJLivePush+advanced.m in Sources */,
 				044018CD1E6CF14000DEBF98 /* GJLivePush.m in Sources */,
 				044018BC1E6CF13F00DEBF98 /* GJAudioQueueRecoder.m in Sources */,

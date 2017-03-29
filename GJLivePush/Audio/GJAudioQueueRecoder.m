@@ -100,6 +100,23 @@ static void adtsDataForPacketLength(int packetLength, uint8_t*packet,int sampleR
     packet[4] = (char)((fullLength&0x7FF) >> 3);
     packet[5] = (char)(((fullLength&7)<<5) + 0x1F);
     packet[6] = (char)0xFC;
+    
+    
+    
+#if 0
+    static const int mpeg4audio_sample_rates[16] = {
+        96000, 88200, 64000, 48000, 44100, 32000,
+        24000, 22050, 16000, 12000, 11025, 8000, 7350
+    };
+    uint8_t* adts = packet;
+    uint8_t sampleIndex = adts[2] << 2;
+    sampleIndex = sampleIndex>>4;
+    int rsampleRate = mpeg4audio_sample_rates[sampleIndex];
+    uint8_t rchannel = adts[2] & 0x1 <<2;
+    rchannel += (adts[3] & 0xc0)>>6;
+    printf("samplerate:%d,channel:%d",rsampleRate,rchannel);
+
+#endif
 }
 static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer,const AudioTimeStamp *inStartTime,UInt32 inNumPackets, const AudioStreamPacketDescription  *inPacketDesc){
     GJAudioQueueRecoder* tempSelf = (__bridge GJAudioQueueRecoder*)aqData;

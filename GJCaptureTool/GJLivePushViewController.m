@@ -41,7 +41,7 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    GJ_LogSetLevel(GJ_LOGINFO);
+    GJ_LogSetLevel(GJ_LOGALL);
     _livePush = [[GJLivePush alloc]init];
     _livePush.delegate = self;
     _livePull = [[GJLivePull alloc]init];
@@ -240,14 +240,10 @@
         _delayLab.text = [NSString stringWithFormat:@"发送阻塞延时%d ms 帧数：%d",status->cacheTime,status->cacheCount];
 }
 -(void)livePull:(GJLivePull *)livePull connentSuccessWithElapsed:(int)elapsed{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        _pullStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%d ms",elapsed];
-    });
+    _pullStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%d ms",elapsed];
 }
 -(void)livePull:(GJLivePull *)livePull closeConnent:(GJPullSessionInfo *)info resion:(GJConnentCloceReason)reason{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        _pullStateLab.text = [NSString stringWithFormat:@"推流关闭 总推流时长：%ld ms",info->sessionDuring];
-    });
+    _pullStateLab.text = [NSString stringWithFormat:@"推流关闭 总推流时长：%ld ms",info->sessionDuring];
 }
 -(void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullStatus *)status{
     if (_livePull == livePull) {

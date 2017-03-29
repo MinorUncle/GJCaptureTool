@@ -77,7 +77,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         case GJRTMPPullMessageType_closeComplete:{
             NSDate* stopDate = [NSDate date];
             GJPullSessionInfo info = {0};
-            info.sessionDuring = [stopDate timeIntervalSinceDate:livePull.startPullDate];
+            info.sessionDuring = [stopDate timeIntervalSinceDate:livePull.startPullDate]*1000;
             [livePull.delegate livePull:livePull closeConnent:&info resion:kConnentCloce_Active];
         }
             break;
@@ -123,7 +123,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         _videoPull = NULL;
         _pulling = NO;
     }
-    _fristAudioDate = _fristVideoDate = _startPullDate = _connentDate = nil;
+    _fristAudioDate = _fristVideoDate = _connentDate = nil;
     [_lock unlock];
 }
 
@@ -152,7 +152,7 @@ static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBu
             sampleIndex = sampleIndex>>4;
             int sampleRate = mpeg4audio_sample_rates[sampleIndex];
             uint8_t channel = adts[2] & 0x1 <<2;
-            channel += (adts[3] & 0xb0)>>6;
+            channel += (adts[3] & 0xc0)>>6;
             AudioStreamBasicDescription sourceformat = {0};
             sourceformat.mFormatID = kAudioFormatMPEG4AAC;
             sourceformat.mChannelsPerFrame = channel;
@@ -180,6 +180,10 @@ static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBu
         format.mStartOffset = 7;
         format.mVariableFramesInPacket = 0;
         [livePull.audioDecoder decodeBuffer:buffer packetDescriptions:&format pts:pts];
+//        static int times =0;
+//        NSData* audio = [NSData dataWithBytes:buffer->data length:buffer->size];
+//        NSLog(@" pullaudio times:%d ,%@",times++,audio);
+        
     }else if (dataType == GJRTMPVideoData) {
         [livePull.videoDecoder decodeBuffer:buffer pts:pts];
     }
@@ -190,6 +194,8 @@ static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBu
 }
 
 -(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer pts:(int64_t)pts{
+
+    
     [_player addAudioDataWith:buffer pts:pts];
 }
 

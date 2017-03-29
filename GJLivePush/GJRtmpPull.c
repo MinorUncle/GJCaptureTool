@@ -23,6 +23,7 @@ static bool retainBufferRelease(GJRetainBuffer* buffer){
     return false;
 }
 static void* callbackLoop(void* parm){
+    pthread_setname_np("rtmpCallBackLoop");
     GJRtmpPull* pull = (GJRtmpPull*)parm;
     RTMPPacket* packet;
     while (queuePop(pull->pullBufferQueue, (void**)&packet, 10000000) && !pull->stopRequest) {
@@ -72,9 +73,11 @@ static void* callbackLoop(void* parm){
         retainBufferUnRetain(retainBuffer);
     }
     queueEnablePop(pull->pullBufferQueue, true);
+    GJLOG(GJ_LOGDEBUG, "pullCallBackEnd");
     return NULL;
 }
 static void* pullRunloop(void* parm){
+    pthread_setname_np("rtmpPullLoop");
     GJRtmpPull* pull = (GJRtmpPull*)parm;
     GJRTMPPullMessageType errType = GJRTMPPullMessageType_connectError;
     void* errParm = NULL;
@@ -138,6 +141,7 @@ ERROR:
     }else{
         pull->pullThread = NULL;
     }
+    GJLOG(GJ_LOGDEBUG, "pullRunloop end");
     return NULL;
 }
 void GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,void* rtmpPullParm){

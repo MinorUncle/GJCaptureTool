@@ -15,6 +15,10 @@
 #import "GJLog.h"
 #import <sys/time.h>
 
+//#define GJAUDIOQUEUEPLAY
+#ifdef GJAUDIOQUEUEPLAY
+#import "GJAudioQueuePlayer.h"
+#endif
 
 
 #define VIDEO_PTS_PRECISION   0.4
@@ -56,6 +60,9 @@ typedef enum _TimeSYNCType{
     
     int                         _audioOffset;
     
+#ifdef GJAUDIOQUEUEPLAY
+    GJAudioQueuePlayer* _audioTestPlayer;
+#endif
 }
 @property(strong,nonatomic)GJImageYUVDataInput* YUVInput;
 @property(assign,nonatomic)GJQueue*             imageQueue;
@@ -69,7 +76,7 @@ typedef enum _TimeSYNCType{
 @property(assign,nonatomic)long                 bufferTime;
 
 @property(assign,nonatomic)long                 lastPauseFlag;
-@property(assign,nonatomic)long                 speed;
+@property(assign,nonatomic)float                 speed;
 @property(assign,nonatomic)TimeSYNCType         syncType;
 
 
@@ -104,7 +111,6 @@ long long getTime(){
 }
 -(void) playRunLoop{
     pthread_setname_np("GJPlayRunLoop");
-    
     GJImageBuffer* cImageBuf;
     if (queuePop(_imageQueue, (void**)&cImageBuf, INT_MAX) && (_status != kPlayStatusStop)) {
         OSType type = CVPixelBufferGetPixelFormatType(cImageBuf->image);
@@ -123,7 +129,7 @@ long long getTime(){
     GJAudioBuffer* audioBuffer;
     queueSetMinCacheSize(_audioQueue, 12);
     if (queuePeekWaitValue(_audioQueue, queueGetMinCacheSize(_audioQueue), (void**)&audioBuffer,INT_MAX)) {
-        if (_status == kPlayStatusRunning || _status == kPlayStatusPause) {
+        if (_status != kPlayStatusStop) {
             if (_audioFormat.mFormatID <=0) {
                 queueSetMinCacheSize(_audioQueue, 0);
                 if (((uint64_t*)audioBuffer->audioData) && 0xFFF0 != 0xFFF0) {
@@ -149,9 +155,11 @@ long long getTime(){
         }else if (_audioFormat.mFormatID == kAudioFormatMPEG4AAC){
             _audioOffset = 7;
         }
+
         _audioPlayer = [[GJAudioQueueDrivePlayer alloc]initWithSampleRate:_audioFormat.mSampleRate channel:_audioFormat.mChannelsPerFrame formatID:_audioFormat.mFormatID];
         _audioPlayer.delegate = self;
         [_audioPlayer start];
+
         _startPts = audioBuffer->pts;
         _syncType = kTimeSYNCAudio;
     }else{
@@ -257,6 +265,7 @@ ERROR:
 
 -(void)start{
     [_oLock lock];
+    GJLOG(GJ_LOGINFO, "gjplayer start");
     if (_playThread == nil) {
         _status = kPlayStatusRunning;
         _playThread = [[NSThread alloc]initWithTarget:self selector:@selector(playRunLoop) object:nil];
@@ -345,21 +354,25 @@ ERROR:
     [_oLock unlock];
 }
 -(void)dewatering{
-    GJLOG(GJ_LOGDEBUG, "startDewatering");
     return;
     [_oLock lock];
     if (_status == kPlayStatusRunning) {
-        _speed = 1.2;
-        _audioPlayer.speed = _speed;
+        if (_speed<=1.0) {
+            GJLOG(GJ_LOGDEBUG, "startDewatering");
+            _speed = 1.2;
+            _audioPlayer.speed = _speed;
+        }
     }
     [_oLock unlock];
 }
 -(void)stopDewatering{
-    GJLOG(GJ_LOGDEBUG, "stopDewatering");
     return;
     [_oLock lock];
-    _speed = 1.0;
-    _audioPlayer.speed = _speed;
+    if (_speed > 1.0) {
+        GJLOG(GJ_LOGDEBUG, "stopDewatering");
+        _speed = 1.0;
+        _audioPlayer.speed = _speed;
+    }
     [_oLock unlock];
 }
 -(GJCacheInfo)getAudioCache{
@@ -402,6 +415,8 @@ ERROR:
     return value;
 }
 -(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(int64_t)pts{
+    
+    
     GJImageBuffer* imageBuffer  = (GJImageBuffer*)malloc(sizeof(GJImageBuffer));
     imageBuffer->image = imageData;
     imageBuffer->pts = pts;
@@ -439,6 +454,36 @@ static const int mpeg4audio_sample_rates[16] = {
     24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
 -(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(int64_t)pts{
+#ifdef GJAUDIOQUEUEPLAY
+    if (_audioTestPlayer == nil) {
+        if (_audioFormat.mFormatID <=0) {
+            queueSetMinCacheSize(_audioQueue, 0);
+            if (((uint64_t*)audioData->data) && 0xFFF0 != 0xFFF0) {
+                NSAssert(0, @"音频格式不支持");
+            }
+            uint8_t* adts = audioData->data;
+            uint8_t sampleIndex = adts[2] << 2;
+            sampleIndex = sampleIndex>>4;
+            int sampleRate = mpeg4audio_sample_rates[sampleIndex];
+            uint8_t channel = adts[2] & 0x1 <<2;
+            channel += (adts[3] & 0xb0)>>6;
+            _audioFormat.mChannelsPerFrame = channel;
+            _audioFormat.mSampleRate = sampleRate;
+            _audioFormat.mFramesPerPacket = 1024;
+            _audioFormat.mFormatID = kAudioFormatMPEG4AAC;
+        }
+        if (_audioFormat.mFormatID == kAudioFormatLinearPCM) {
+            _audioOffset = 0;
+        }else if (_audioFormat.mFormatID == kAudioFormatMPEG4AAC){
+            _audioOffset = 7;
+        }
+        _audioTestPlayer = [[GJAudioQueuePlayer alloc]initWithSampleRate:_audioFormat.mSampleRate channel:_audioFormat.mChannelsPerFrame formatID:_audioFormat.mFormatID];
+        [_audioTestPlayer start];
+    }
+
+    [_audioTestPlayer playData:audioData packetDescriptions:nil];
+    return YES;
+#endif
     GJAudioBuffer* audioBuffer = (GJAudioBuffer*)malloc(sizeof(GJAudioBuffer));
     audioBuffer->audioData = audioData;
     audioBuffer->pts = pts;
@@ -446,10 +491,20 @@ static const int mpeg4audio_sample_rates[16] = {
         retainBufferRetain(audioData);
         if (_syncType == kTimeSYNCAudio) {
             long length = queueGetLength(_audioQueue);
-            if (length > _highVideoWaterFlag) {
-                [self dewatering];
-            }else if (length < _lowAudioWaterFlag){
-                [self buffering];
+            if (_status == kPlayStatusBuffering) {
+                if (length > _lowAudioWaterFlag){
+                    [self stopBuffering];
+                }
+            }else if (_status == kPlayStatusRunning){
+                if (length > _highVideoWaterFlag ) {
+                    if (_speed <= 1.0) {
+                        [self dewatering];
+                    }
+                }else if (length < _lowAudioWaterFlag ){
+                    if (_speed >1.0) {
+                        [self stopDewatering];
+                    }
+                }
             }
         }
         return YES;
@@ -485,7 +540,7 @@ static const int mpeg4audio_sample_rates[16] = {
 
         retainBufferUnRetain(audioBuffer->audioData);
         _aClock = audioBuffer->pts;
-        GJLOG(GJ_LOGALL,"audio play pts:%d",_aClock);
+        GJLOG(GJ_LOGALL,"audio play pts:%d size:%d",_aClock,*size);
         free(audioBuffer);
         return YES;
     }else{

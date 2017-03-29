@@ -409,6 +409,7 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
         }
         inBuffer->mAudioDataByteSize = player.format.mBytesPerFrame*1024;
         memset(inBuffer->mAudioData, 0, inBuffer->mAudioDataByteSize);
+        GJLOG(GJ_LOGWARNING, "play silence audio");
     }
     
     OSStatus status = AudioQueueEnqueueBuffer(inAQ, inBuffer, 0, NULL);

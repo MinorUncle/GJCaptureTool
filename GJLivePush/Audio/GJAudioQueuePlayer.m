@@ -372,6 +372,8 @@ static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
         if (player.status == kPlayAStopStatus) {
             AudioQueueFreeBuffer(inAQ, inBuffer);
             return;
+        }else{
+            NSLog(@"没有数据，重复播放");
         }
     }
     inBuffer->mPacketDescriptionCount = 1;

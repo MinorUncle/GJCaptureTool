@@ -58,6 +58,16 @@ void retainBufferFree(GJRetainBuffer* buffer);
  */
 void retainBufferSetFrontSize(GJRetainBuffer* buffer,int frontSize);
 
+    
+/**
+ 移动data指针，不做内存的修改，但是会涉及到front等的修改.不要在retainbufferpool中使用，否则容易引起内存持续减少出错
+
+ @param buffer buffer description
+ @param offset 偏移的大小，不能移到内存外，否则false
+ @return 是否成功
+ */
+bool retainBufferMoveDataPoint(GJRetainBuffer* buffer,int offset);
+
 #ifdef __cplusplus
 }
 #endif

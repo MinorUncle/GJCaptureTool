@@ -90,6 +90,7 @@ typedef struct _DecodeAudioFrame{
 
 
 -(void)start{
+    GJLOG(GJ_LOGINFO, "AACDecode Start");
     _running = YES;
     if (_decodeConvert == NULL) {
         [self _createEncodeConverter];

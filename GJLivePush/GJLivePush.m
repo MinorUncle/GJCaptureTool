@@ -12,6 +12,11 @@
 #import "GJDebug.h"
 #import "GJH264Encoder.h"
 #import "GJAudioQueueRecoder.h"
+
+//#define GJPUSHAUDIOQUEUEPLAY_TEST
+#ifdef GJPUSHAUDIOQUEUEPLAY_TEST
+#import "GJAudioQueuePlayer.h"
+#endif
 @interface GJLivePush()<GJH264EncoderDelegate,GJAudioQueueRecoderDelegate>
 {
     GPUImageVideoCamera* _videoCamera;
@@ -29,7 +34,9 @@
     int             _sendFrame;
     int              _unitFrame;
     NSLock*          _pushLock;
-    
+#ifdef GJPUSHAUDIOQUEUEPLAY_TEST
+    GJAudioQueuePlayer* _audioTestPlayer;
+#endif
 }
 @property(strong,nonatomic)GJH264Encoder* videoEncoder;
 @property(copy,nonatomic)NSString* pushUrl;
@@ -173,15 +180,15 @@
         _unitFrame = 0;
         [self.delegate livePush:self updatePushStatus:&status ];
     }];
-
+    if (_audioRecoder == nil) {
+        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:config.audioSampleRate channel:config.channel formatID:kAudioFormatMPEG4AAC];
+        _audioRecoder.delegate = self;
+    }
     return true;
 }
 
 -(void)pushRun{
-    if (_audioRecoder == nil) {
-        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:2 formatID:kAudioFormatMPEG4AAC];
-        _audioRecoder.delegate = self;
-    }
+
     [_audioRecoder startRecodeAudio];
     __weak GJLivePush* wkSelf = self;
     wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
@@ -222,7 +229,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
         case GJRTMPPushMessageType_closeComplete:{
             GJPushSessionInfo info = {0};
             NSDate* stopDate = [NSDate date];
-            info.sessionDuring = [stopDate timeIntervalSinceDate:livePush.startPushDate];
+            info.sessionDuring = [stopDate timeIntervalSinceDate:livePush.startPushDate]*1000;
             [livePush.delegate livePush:livePush closeConnent:&info resion:kConnentCloce_Active];
         }
             break;
@@ -255,15 +262,23 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 
 }
 -(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamData:(GJRetainBuffer*)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions pts:(int)pts{
-//    printf("audio Pts:%d\n",(int)pts.value*1000/pts.timescale);
 //    static int times =0;
 //    NSData* audio = [NSData dataWithBytes:dataBuffer->data length:dataBuffer->size];
-//    NSLog(@"audio times:%d ,%@",times++,audio);
+//    NSLog(@"pushaudio times:%d ,%@",times++,audio);
     _sendByte += dataBuffer->size;
     _unitByte += dataBuffer->size;
     int cpts = [[NSDate date]timeIntervalSinceDate:_connentDate]*1000;
-
+#ifdef GJPUSHAUDIOQUEUEPLAY_TEST
+    if (_audioTestPlayer == nil) {
+        _audioTestPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:recoder.format maxBufferSize:2000 macgicCookie:nil];
+        [_audioTestPlayer start];
+    }else{
+        retainBufferMoveDataPoint(dataBuffer, 7);
+        [_audioTestPlayer playData:dataBuffer packetDescriptions:packetDescriptions];
+    }
+#else
     GJRtmpPush_SendAACData(_videoPush, dataBuffer, cpts);
+#endif
 }
 -(void)dealloc{
     if (_videoPush) {
