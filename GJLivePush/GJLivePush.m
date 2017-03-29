@@ -23,21 +23,25 @@
     GJAudioQueueRecoder* _audioRecoder;
     NSTimer*        _timer;
     
-    long            _sendByte;
-    long            _unitByte;
+    int            _sendByte;
+    int            _unitByte;
     
-    long             _sendFrame;
-    long            _unitFrame;
+    int             _sendFrame;
+    int              _unitFrame;
     NSLock*          _pushLock;
     
 }
-@property(strong,nonatomic)NSDate*            startDate;
 @property(strong,nonatomic)GJH264Encoder* videoEncoder;
 @property(copy,nonatomic)NSString* pushUrl;
 @property(strong,nonatomic)GPUImageFilter* videoStreamFilter; //可能公用_cropFilter
 @property(assign,nonatomic)GJRtmpPush* videoPush;
 
 @property(assign,nonatomic)int gaterFrequency;
+
+@property(strong,nonatomic)NSDate* startPushDate;
+@property(strong,nonatomic)NSDate* connentDate;
+@property(strong,nonatomic)NSDate* fristVideoDate;
+@property(strong,nonatomic)NSDate* fristAudioDate;
 
 @end
 
@@ -154,23 +158,26 @@
     }
     [_videoStreamFilter forceProcessingAtSize:config.pushSize];
     _videoStreamFilter.frameProcessingCompletionBlock = nil;
+    
+    _startPushDate = [NSDate date];
     GJRtmpPush_StartConnect(self.videoPush, self.pushUrl.UTF8String);
     
     _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
-        long frameRate = _unitFrame / _gaterFrequency;
-        long bitrate = _unitByte / _gaterFrequency;
+        GJCacheInfo info = GJRtmpPush_GetBufferCacheInfo(_videoPush);
+        GJPushStatus status = {0};
+        status.bitrate = _unitByte / _gaterFrequency;
+        status.frameRate =  _unitFrame / _gaterFrequency;
+        status.cacheTime = info.cacheTime;
+        status.cacheCount = info.cacheCount;
         _unitByte = 0;
         _unitFrame = 0;
-        GJCacheInfo info = GJRtmpPush_GetBufferCacheInfo(_videoPush);
-        [self.delegate livePush:self frameRate:frameRate bitrate:bitrate quality:0 delayTime:info.cacheTime delayCount:info.cacheCount];
-        
+        [self.delegate livePush:self updatePushStatus:&status ];
     }];
 
     return true;
 }
 
 -(void)pushRun{
-    _startDate = [NSDate date];
     if (_audioRecoder == nil) {
         _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:2 formatID:kAudioFormatMPEG4AAC];
         _audioRecoder.delegate = self;
@@ -179,7 +186,7 @@
     __weak GJLivePush* wkSelf = self;
     wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
         CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
-        uint64_t pts = [[NSDate date]timeIntervalSinceDate:wkSelf.startDate]*1000;
+        uint64_t pts = [[NSDate date]timeIntervalSinceDate:wkSelf.connentDate]*1000;
         [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:pts fourceKey:false];
     };
 }
@@ -208,23 +215,26 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
     switch (messageType) {
         case GJRTMPPushMessageType_connectSuccess:
             GJLOG(@"连接成功\n");
-            [livePush.delegate livePush:livePush messageType:kLivePushConnectSuccess infoDesc:nil];
-            
+            livePush.connentDate = [NSDate date];
+            [livePush.delegate livePush:livePush connentSuccessWithElapsed:[livePush.connentDate timeIntervalSinceDate:livePush.startPushDate]*1000];
             [livePush pushRun];
             break;
-        case GJRTMPPushMessageType_closeComplete:
-            [livePush.delegate livePush:livePush messageType:kLivePushCloseSuccess infoDesc:nil];
-            break;
-        case GJRTMPPushMessageType_connectError:
-            GJLOG(@"连接失败\n");
-            [livePush.delegate livePush:livePush messageType:kLivePushConnentError infoDesc:@"rtmp连接失败"];
-            [livePush stopStreamPush];
-            
+        case GJRTMPPushMessageType_closeComplete:{
+            GJPushSessionInfo info = {0};
+            NSDate* stopDate = [NSDate date];
+            info.sessionDuring = [stopDate timeIntervalSinceDate:livePush.startPushDate];
+            [livePush.delegate livePush:livePush closeConnent:&info resion:kConnentCloce_Active];
+        }
             break;
         case GJRTMPPushMessageType_urlPraseError:
-            
+        case GJRTMPPushMessageType_connectError:
+            GJLOG(@"连接失败\n");
+            [livePush.delegate livePush:livePush errorType:kLivePushConnectError infoDesc:@"rtmp连接失败"];
+            [livePush stopStreamPush];
             break;
         case GJRTMPPushMessageType_sendPacketError:
+            [livePush.delegate livePush:livePush errorType:kLivePushWritePacketError infoDesc:@"发送失败"];
+            [livePush stopStreamPush];
             break;
         default:
             break;
@@ -251,7 +261,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 //    NSLog(@"audio times:%d ,%@",times++,audio);
     _sendByte += dataBuffer->size;
     _unitByte += dataBuffer->size;
-    int cpts = [[NSDate date]timeIntervalSinceDate:_startDate]*1000;
+    int cpts = [[NSDate date]timeIntervalSinceDate:_connentDate]*1000;
 
     GJRtmpPush_SendAACData(_videoPush, dataBuffer, cpts);
 }

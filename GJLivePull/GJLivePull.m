@@ -10,7 +10,7 @@
 #import "GJRtmpPull.h"
 #import "GJH264Decoder.h"
 #import "GJPlayer.h"
-#import "GJDebug.h"
+#import "GJLog.h"
 #import "GJPCMDecodeFromAAC.h"
 #import <CoreImage/CoreImage.h>
 
@@ -24,13 +24,14 @@
     
     NSTimer * _timer;
     
+    NSRecursiveLock* _lock;
 }
 @property(strong,nonatomic)GJH264Decoder* videoDecoder;
 @property(strong,nonatomic)GJPCMDecodeFromAAC* audioDecoder;
 
 @property(strong,nonatomic)GJPlayer* player;
 @property(assign,nonatomic)long sendByte;
-@property(assign,nonatomic)long unitByte;
+@property(assign,nonatomic)int unitByte;
 
 @property(assign,nonatomic)int gaterFrequency;
 
@@ -46,60 +47,75 @@
 {
     self = [super init];
     if (self) {
+        
         _player = [[GJPlayer alloc]init];
         _videoDecoder = [[GJH264Decoder alloc]init];
         _videoDecoder.delegate = self;
         _enablePreview = YES;
         _gaterFrequency = 2.0;
+        _lock = [[NSRecursiveLock alloc]init];
     }
     return self;
 }
 
 static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm){
     GJLivePull* livePull = (__bridge GJLivePull *)(rtmpPullParm);
-    LivePullMessageType message = kLivePullUnknownError;
     switch (messageType) {
         case GJRTMPPullMessageType_connectError:
         case GJRTMPPullMessageType_urlPraseError:
-            message = kLivePullConnectError;
+            [livePull.delegate livePull:livePull errorType:kLivePushConnectError infoDesc:@"连接错误"];
             [livePull stopStreamPull];
             break;
         case GJRTMPPullMessageType_sendPacketError:
+            [livePull.delegate livePull:livePull errorType:kLivePullReadPacketError infoDesc:@"读取失败"];
             [livePull stopStreamPull];
             break;
-            
         case GJRTMPPullMessageType_connectSuccess:
             livePull.connentDate = [NSDate date];
-            message = kLivePullConnectSuccess;
+            [livePull.delegate livePull:livePull connentSuccessWithElapsed:[livePull.connentDate timeIntervalSinceDate:livePull.startPullDate]*1000];
             break;
-        case GJRTMPPullMessageType_closeComplete:
-            message = kLivePullCloseSuccess;
+        case GJRTMPPullMessageType_closeComplete:{
+            NSDate* stopDate = [NSDate date];
+            GJPullSessionInfo info = {0};
+            info.sessionDuring = [stopDate timeIntervalSinceDate:livePull.startPullDate];
+            [livePull.delegate livePull:livePull closeConnent:&info resion:kConnentCloce_Active];
+        }
             break;
         default:
+            GJLOG(GJ_LOGERROR,"not catch info：%d",messageType);
             break;
     }
-    [livePull.delegate livePull:livePull messageType:message infoDesc:nil];
 }
 
 
 
 - (BOOL)startStreamPullWithUrl:(char*)url{
-    
+    [_lock lock];
     GJAssert(_videoPull == NULL, "请先关闭上一个流\n");
     _pulling = true;
     GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
     GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
     [_audioDecoder start];
     _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
-        GJCacheInfo info = _player.cache;
-        [self.delegate livePull:self bitrate:_unitByte/_gaterFrequency cacheTime:info.cacheTime cacheFrame:info.cacheCount];
-        _unitByte=0;
+        GJCacheInfo videoCache = [_player getVideoCache];
+        GJCacheInfo audioCache = [_player getAudioCache];
+        GJPullStatus status = {0};
+        status.bitrate = _unitByte/_gaterFrequency;
+        _unitByte = 0;
+        status.audioCacheCount = audioCache.cacheCount;
+        status.audioCacheTime = audioCache.cacheTime;
+        status.videoCacheTime = videoCache.cacheTime;
+        status.videoCacheCount = videoCache.cacheCount;
+        
+        [self.delegate livePull:self updatePullStatus:&status];
     }];
     _startPullDate = [NSDate date];
+    [_lock unlock];
     return YES;
 }
 
 - (void)stopStreamPull{
+    [_lock lock];
     if (_videoPull) {
         [_audioDecoder stop];
         [_player stop];
@@ -108,6 +124,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         _pulling = NO;
     }
     _fristAudioDate = _fristVideoDate = _startPullDate = _connentDate = nil;
+    [_lock unlock];
 }
 
 -(UIView *)getPreviewView{

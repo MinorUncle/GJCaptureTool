@@ -11,7 +11,7 @@
 #import <CoreVideo/CVImageBuffer.h>
 #import <AVFoundation/AVFoundation.h>
 #import "GJRetainBuffer.h"
-#import "GJLivePushDefine.h"
+#import "GJLiveDefine.h"
 @class UIView;
 typedef enum _GJPlayStatus{
     kPlayStatusStop,
@@ -24,7 +24,6 @@ typedef enum _GJPlayStatus{
 
 @interface GJPlayer : NSObject
 @property(readonly,nonatomic)UIView* displayView;
-@property(readonly,nonatomic)GJCacheInfo cache;
 
 
 @property(assign,nonatomic)AudioStreamBasicDescription audioFormat;
@@ -33,5 +32,8 @@ typedef enum _GJPlayStatus{
 -(void)stop;
 -(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(int64_t)pts;
 -(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(int64_t)pts;
+-(GJCacheInfo)getVideoCache;
+-(GJCacheInfo)getAudioCache;
+
 @end
  

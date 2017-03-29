@@ -8,22 +8,20 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
-#import "GJLivePullDefine.h"
+#import "GJLiveDefine.h"
 @class UIView;
 @class GJLivePull;
 
 @protocol GJLivePullDelegate <NSObject>
 @required
-/**
- 直播信息回调，当直播类型为KKPull_PROTOCOL_ZEGO时，直播地址从这里回调(重要).
- 
- @param livePull livePull description
- @param type 信息type，
- @param infoDesc 信息值，具体类型见LivePullInfoType
- */
--(void)livePull:(GJLivePull*)livePull messageType:(LivePullMessageType)type infoDesc:(NSString*)infoDesc;
 
--(void)livePull:(GJLivePull*)livePull bitrate:(long)bitrate cacheTime:(long)cacheTime cacheFrame:(int)count;
+-(void)livePull:(GJLivePull*)livePull updatePullStatus:(GJPullStatus*)status;
+-(void)livePull:(GJLivePull*)livePull fristFrameDecode:(GJPullFristFrameInfo*)info;
+-(void)livePull:(GJLivePull*)livePull closeConnent:(GJPullSessionInfo*)info resion:(GJConnentCloceReason)reason;
+-(void)livePull:(GJLivePull*)livePull connentSuccessWithElapsed:(int)elapsed;
+
+-(void)livePull:(GJLivePull*)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString*)infoDesc;
+
 
 @optional
 @end

@@ -30,7 +30,8 @@
 @property (strong, nonatomic) UILabel *pushStateLab;
 @property (strong, nonatomic) UILabel *pullStateLab;
 @property (strong, nonatomic) UILabel *delayLab;
-@property (strong, nonatomic) UILabel *cacheLab;
+@property (strong, nonatomic) UILabel *videoCacheLab;
+@property (strong, nonatomic) UILabel *audioCacheLab;
 
 
 
@@ -57,7 +58,7 @@
     
     
     rect.origin = CGPointMake(10, 20);
-    rect.size = CGSizeMake(300, 30);
+    rect.size = CGSizeMake(self.view.bounds.size.width-10, 30);
     _pushStateLab = [[UILabel alloc]initWithFrame:rect];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
@@ -95,10 +96,16 @@
     [self.view addSubview:_delayLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
-    _cacheLab = [[UILabel alloc]initWithFrame:rect];
-    _cacheLab.textColor = [UIColor redColor];
-    _cacheLab.text = @"播放缓存时长0.0 ms 帧数：0";
-    [self.view addSubview:_cacheLab];
+    _videoCacheLab = [[UILabel alloc]initWithFrame:rect];
+    _videoCacheLab.textColor = [UIColor redColor];
+    _videoCacheLab.text = @"视频播放缓存时长0.0 ms 帧数：0";
+    [self.view addSubview:_videoCacheLab];
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _audioCacheLab = [[UILabel alloc]initWithFrame:rect];
+    _audioCacheLab.textColor = [UIColor redColor];
+    _audioCacheLab.text = @"音频播放缓存时长0.0 ms 帧数：0";
+    [self.view addSubview:_audioCacheLab];
     
     int count = 3;
     rect.origin.y = CGRectGetMaxY(self.topView.frame);
@@ -196,16 +203,20 @@
     // Dispose of any resources that can be recreated.
 }
 
--(void)livePush:(GJLivePush *)livePush messageType:(LivePushMessageType)type infoDesc:(id)infoDesc{
+
+-(void)livePush:(GJLivePush *)livePush connentSuccessWithElapsed:(int)elapsed{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        _pushStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%d ms",elapsed];
+    });
+}
+-(void)livePush:(GJLivePush *)livePush closeConnent:(GJPushSessionInfo *)info resion:(GJConnentCloceReason)reason{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        _pushStateLab.text = [NSString stringWithFormat:@"推流关闭 总推流时长：%ld ms",info->sessionDuring];
+    });
+}
+-(void)livePush:(GJLivePush *)livePush errorType:(GJLiveErrorType)type infoDesc:(id)infoDesc{
     switch (type) {
-        case kLivePushConnectSuccess:
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                _pushStateLab.text =@"推流连接成功";
-            });
-        }
-            break;
-        case kLivePushConnentError:{
+        case kLivePushConnectError:{
             dispatch_async(dispatch_get_main_queue(), ^{
                 _pushStateLab.text =@"推流连接失败";
                 [_livePush stopStreamPush];
@@ -213,9 +224,9 @@
             });
             break;
         }
-        case kLivePushCloseSuccess:{
+        case kLivePushWritePacketError:{
             dispatch_async(dispatch_get_main_queue(), ^{
-                _pullStateLab.text =@"推流结束";
+                _pullStateLab.text =@"网络错误";
             });
             break;
         }
@@ -223,20 +234,40 @@
             break;
     }
 }
+-(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushStatus *)status{
+        _sendRateLab.text = [NSString stringWithFormat:@"发送码率:%0.2f KB/s",status->bitrate/1024.0];
+        _fpsLab.text = [NSString stringWithFormat:@"发送帧率%d",status->frameRate];
+        _delayLab.text = [NSString stringWithFormat:@"发送阻塞延时%d ms 帧数：%d",status->cacheTime,status->cacheCount];
+}
+-(void)livePull:(GJLivePull *)livePull connentSuccessWithElapsed:(int)elapsed{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        _pullStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%d ms",elapsed];
+    });
+}
+-(void)livePull:(GJLivePull *)livePull closeConnent:(GJPullSessionInfo *)info resion:(GJConnentCloceReason)reason{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        _pullStateLab.text = [NSString stringWithFormat:@"推流关闭 总推流时长：%ld ms",info->sessionDuring];
+    });
+}
+-(void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullStatus *)status{
+    if (_livePull == livePull) {
+        _pullRateLab.text = [NSString stringWithFormat:@"接收码率:%0.2f KB/s",status->bitrate/1024.0];
+        _videoCacheLab.text = [NSString stringWithFormat:@"视频播放缓存时长%d ms 帧数：%d",status->videoCacheTime,status->videoCacheCount];
+        _audioCacheLab.text = [NSString stringWithFormat:@"音频播放缓存时长%d ms 帧数：%d",status->audioCacheTime,status->audioCacheCount];
+    }
 
--(void)livePull:(GJLivePull *)livePull messageType:(LivePullMessageType)type infoDesc:(NSString *)infoDesc{
+}
+
+-(void)livePull:(GJLivePull *)livePull fristFrameDecode:(GJPullFristFrameInfo *)info{
+    NSLog(@"pull size:%@",[NSValue valueWithCGSize:info->size]);
+}
+-(void)livePull:(GJLivePull *)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString *)infoDesc{
 
     switch (type) {
-        case kLivePullConnectSuccess:
-        {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                _pullStateLab.text =@"拉流连接成功";
-            });
-        }
-            break;
+        case kLivePullReadPacketError:
         case kLivePullConnectError:{
             dispatch_async(dispatch_get_main_queue(), ^{
-                _pullStateLab.text =@"拉流连接失败";
+                _pullStateLab.text =@"拉流失败";
                 [livePull stopStreamPull];
                 if (livePull == _livePull) {
                     _pullButton.selected = false;
@@ -246,28 +277,12 @@
             });
             break;
         }
-        case kLivePullCloseSuccess:{
-            dispatch_async(dispatch_get_main_queue(), ^{
-                _pullStateLab.text =@"拉流结束";
-            });
-            break;
-        }
         default:
             break;
     }
 }
 
--(void)livePull:(GJLivePull *)livePull bitrate:(long)bitrate cacheTime:(long)cacheTime cacheFrame:(int)cacheCount{
-    if (_livePull == livePull) {
-        _pullRateLab.text = [NSString stringWithFormat:@"接收码率:%0.2f KB/s",bitrate/1024.0];
-        _cacheLab.text = [NSString stringWithFormat:@"播放缓存时长%ld ms 帧数：%d",cacheTime,cacheCount];
-    }
-}
--(void)livePush:(GJLivePush *)livePush frameRate:(long)frameRate bitrate:(long)bitrate quality:(long)quality delayTime:(long)delay delayCount:(int)count{
-    _sendRateLab.text = [NSString stringWithFormat:@"发送码率:%0.2f KB/s",bitrate/1024.0];
-    _fpsLab.text = [NSString stringWithFormat:@"发送帧率%ld",frameRate];
-    _delayLab.text = [NSString stringWithFormat:@"发送阻塞延时%ld ms 帧数：%d",delay,count];
-}
+
 /*
 #pragma mark - Navigation
 

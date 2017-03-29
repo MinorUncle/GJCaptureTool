@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "GJLivePushDefine.h"
+#import "GJLiveDefine.h"
 
 enum AVCaptureDevicePosition;
 @class UIView;
@@ -17,17 +17,12 @@ enum AVCaptureDevicePosition;
 @required
 
 
-/**
- 直播信息回调，当直播类型为KKPUSH_PROTOCOL_ZEGO时，直播地址从这里回调(重要).
- 
- @param livePush livePush description
- @param type 信息type，
- @param infoDesc 信息值，具体类型见LivePushInfoType
- */
--(void)livePush:(GJLivePush*)livePush messageType:(LivePushMessageType)type infoDesc:(id)infoDesc;
+-(void)livePush:(GJLivePush*)livePush updatePushStatus:(GJPushStatus*)status;
+-(void)livePush:(GJLivePush*)livePush closeConnent:(GJPushSessionInfo*)info resion:(GJConnentCloceReason)reason;
+-(void)livePush:(GJLivePush*)livePush connentSuccessWithElapsed:(int)elapsed;
 
+-(void)livePush:(GJLivePush*)livePush errorType:(GJLiveErrorType)type infoDesc:(NSString*)info;
 
--(void)livePush:(GJLivePush*)livePush frameRate:(long)frameRate bitrate:(long)bitrate quality:(long)quality delayTime:(long)delay delayCount:(int)count;
 
 @optional
 

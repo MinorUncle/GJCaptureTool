@@ -11,7 +11,7 @@
 #include "rtmp.h"
 #include "GJBufferPool.h"
 #include "GJQueue.h"
-#import "GJLivePushDefine.h"
+#import "GJLiveDefine.h"
 
 typedef enum _GJRTMPPushMessageType{
     GJRTMPPushMessageType_connectSuccess,
