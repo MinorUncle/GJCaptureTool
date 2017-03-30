@@ -160,8 +160,11 @@ void GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,void* rtm
     pull->messageCallback = callback;
     pull->messageCallbackParm = rtmpPullParm;
     pull->stopRequest = false;
+    pthread_mutex_init(&pull->mutex, NULL);
+
     *pullP = pull;
 }
+
 void GJRtmpPull_CloseAndRelease(GJRtmpPull* pull){
     if (pull->pullThread == NULL) {
         free(pull);

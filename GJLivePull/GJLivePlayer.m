@@ -1,12 +1,12 @@
 //
-//  GJPlayer.m
+//  GJLivePlayer.m
 //  GJCaptureTool
 //
 //  Created by mac on 17/3/7.
 //  Copyright © 2017年 MinorUncle. All rights reserved.
 //
 
-#import "GJPlayer.h"
+#import "GJLivePlayer.h"
 #import "GJAudioQueueDrivePlayer.h"
 #import "GJImageYUVDataInput.h"
 #import "GJImageView.h"
@@ -43,7 +43,7 @@ typedef enum _TimeSYNCType{
     kTimeSYNCExternal,
 }TimeSYNCType;
 
-@interface GJPlayer()<GJAudioQueueDrivePlayerDelegate>{
+@interface GJLivePlayer()<GJAudioQueueDrivePlayerDelegate>{
     GJImageView*                _displayView;
     GJImageYUVDataInput*        _yuvInput;
     GJAudioQueueDrivePlayer*    _audioPlayer;
@@ -81,7 +81,7 @@ typedef enum _TimeSYNCType{
 
 
 @end
-@implementation GJPlayer
+@implementation GJLivePlayer
 
 long long getTime(){
 #ifdef USE_CLOCK
@@ -237,6 +237,7 @@ long long getTime(){
         cImageBuf = NULL;
     }
 ERROR:
+    GJLOG(GJ_LOGINFO, "playRunLoop out");
     _status = kPlayStatusStop;
     _playThread = nil;
     return;
@@ -265,7 +266,7 @@ ERROR:
 
 -(void)start{
     [_oLock lock];
-    GJLOG(GJ_LOGINFO, "gjplayer start");
+    GJLOG(GJ_LOGINFO, "GJLivePlayer start");
     if (_playThread == nil) {
         _status = kPlayStatusRunning;
         _playThread = [[NSThread alloc]initWithTarget:self selector:@selector(playRunLoop) object:nil];
@@ -326,9 +327,17 @@ ERROR:
         _status = kPlayStatusBuffering;
         GJLOG(GJ_LOGDEBUG, "start buffing");
         _lastPauseFlag = getTime() / 1000;
-        queueSetMinCacheSize(_imageQueue, (uint)(queueGetLength(_imageQueue)+_lowAudioWaterFlag));
-        queueSetMinCacheSize(_audioQueue, (uint)(queueGetLength(_imageQueue)+_lowVideoWaterFlag));
         [_audioPlayer pause];
+        if ([self.delegate respondsToSelector:@selector(livePlayer:bufferPercent:)]) {
+            [self.delegate livePlayer:self bufferPercent:0.0];
+        }
+        if (_syncType == kTimeSYNCAudio) {
+            queueSetMinCacheSize(_audioQueue, (uint)(_lowAudioWaterFlag));
+            queueLockPop(_imageQueue);
+        }else{
+            queueSetMinCacheSize(_imageQueue, (uint)(_lowVideoWaterFlag));
+            queueLockPop(_audioQueue);
+        }
     }else{
         GJLOG(GJ_LOGDEBUG, "buffer when status not in running");
     }
@@ -339,13 +348,19 @@ ERROR:
     if (_status == kPlayStatusBuffering) {
         _status = kPlayStatusRunning;
         GJLOG(GJ_LOGDEBUG,"buffer total:%d\n",_bufferTime);
-        queueSetMinCacheSize(_imageQueue, 0);
-        queueSetMinCacheSize(_audioQueue, 0);
+
+        if (_syncType == kTimeSYNCAudio) {
+            queueSetMinCacheSize(_audioQueue, 0);
+            queueUnLockPop(_imageQueue);
+        }else{
+            queueSetMinCacheSize(_imageQueue, 0);
+            queueUnLockPop(_audioQueue);
+        }
         if (_lastPauseFlag != 0) {
             _bufferTime += getTime() / 1000 - _lastPauseFlag;
             _lastPauseFlag = 0;
         }else{
-            GJLOG(GJ_LOGWARNING, "暂停管理出现问题");
+            GJAssert(0, "暂停管理出现问题");
         }
         [_audioPlayer resume];
     }else{
@@ -491,9 +506,17 @@ static const int mpeg4audio_sample_rates[16] = {
         retainBufferRetain(audioData);
         if (_syncType == kTimeSYNCAudio) {
             long length = queueGetLength(_audioQueue);
-            if (_status == kPlayStatusBuffering) {
+            if (_status == kPlayStatusBuffering){
+              
                 if (length > _lowAudioWaterFlag){
+                    if ([self.delegate respondsToSelector:@selector(livePlayer:bufferPercent:)]) {
+                        [self.delegate livePlayer:self bufferPercent:length*1.0/_lowAudioWaterFlag];
+                    }
                     [self stopBuffering];
+                }else{
+                    if ([self.delegate respondsToSelector:@selector(livePlayer:bufferPercent:)]) {
+                        [self.delegate livePlayer:self bufferPercent:1.0];
+                    }
                 }
             }else if (_status == kPlayStatusRunning){
                 if (length > _highVideoWaterFlag ) {

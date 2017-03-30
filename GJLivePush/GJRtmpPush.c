@@ -7,7 +7,7 @@
 //
 
 #include "GJRtmpPush.h"
-#include "GJDebug.h"
+#include "GJLog.h"
 
 //extern "C"{
 #include "sps_decode.h"
@@ -23,6 +23,8 @@ typedef struct _GJRTMP_Packet {
     GJRetainBuffer* retainBuffer;
 }GJRTMP_Packet;
 void GJRtmpPush_Release(GJRtmpPush* push);
+void GJRtmpPush_Delloc(GJRtmpPush* push);
+
 static void* sendRunloop(void* parm){
     pthread_setname_np("rtmpPushRunloop");
     GJRtmpPush* push = (GJRtmpPush*)parm;
@@ -40,13 +42,11 @@ static void* sendRunloop(void* parm){
     
     ret = RTMP_Connect(push->rtmp, NULL);
     if (!ret && push->messageCallback) {
-        RTMP_Close(push->rtmp);
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret && push->messageCallback) {
-        RTMP_Close(push->rtmp);
 
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
@@ -55,7 +55,7 @@ static void* sendRunloop(void* parm){
     }
     
     GJRTMP_Packet* packet;
-    while (queuePop(push->sendBufferQueue, (void**)&packet, INT32_MAX)) {
+    while (!push->stopRequest && queuePop(push->sendBufferQueue, (void**)&packet, INT32_MAX)) {
         int iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
 //        static int i = 0;
 //        GJPrintf("sendcount:%d,pts:%d\n",i++,packet->packet.m_nTimeStamp);
@@ -74,21 +74,23 @@ static void* sendRunloop(void* parm){
 
     }
     
-    queueEnablePop(push->sendBufferQueue, true);
-    RTMP_Close(push->rtmp);
-    if (push->messageCallback) {
-        push->messageCallback(push, GJRTMPPushMessageType_closeComplete,push->rtmpPushParm,NULL);
-    }
-    push->sendThread = NULL;
+  
 
     errType = GJRTMPPushMessageType_closeComplete;
 ERROR:
+    
+    RTMP_Close(push->rtmp);
     push->messageCallback(push, errType,push->rtmpPushParm,errParm);
-    GJRtmpPush_Release(push);
-    if (push->stopRequest) {
-        free(push);
-    }else{
-        push->sendThread = NULL;
+
+    bool shouldDelloc = false;
+    pthread_mutex_lock(&push->mutex);
+    push->sendThread = NULL;
+    if (push->releaseRequest == true) {
+        shouldDelloc = true;
+    }
+    pthread_mutex_unlock(&push->mutex);
+    if (shouldDelloc) {
+        GJRtmpPush_Delloc(push);
     }
     return NULL;
 }
@@ -109,20 +111,12 @@ void GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,void* rt
     push->messageCallback = callback;
     push->rtmpPushParm = rtmpPushParm;
     push->stopRequest = false;
+    push->releaseRequest = false;
+    pthread_mutex_init(&push->mutex, NULL);
+
     *sender = push;
 }
-void GJRtmpPush_Release(GJRtmpPush* push){
-    GJAssert(!(push->sendThread && !push->stopRequest),"请在stopconnect函数 或者GJRTMPMessageType_closeComplete回调 后调用\n");
-    RTMP_Free(push->rtmp);
-    
-    GJRTMP_Packet* packet;
-    while (queuePop(push->sendBufferQueue, (void**)&packet, 0)) {
-        retainBufferUnRetain(packet->retainBuffer);
-        GJBufferPoolSetData(push->memoryCachePool, packet);
-    }
-    GJBufferPoolCleanAndFree(&push->memoryCachePool);
-    queueCleanAndFree(&push->sendBufferQueue);
-}
+
 
 void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t pts){
     if (sender->stopRequest) {
@@ -267,18 +261,43 @@ void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
     GJAssert(length <= MAX_URL_LENGTH-1, "sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
     memcpy(sender->pushUrl, sendUrl, length+1);
     sender->stopRequest = false;
+    if (sender->sendThread) {
+        pthread_join(sender->sendThread, NULL);
+    }
     pthread_create(&sender->sendThread, NULL, sendRunloop, sender);
 }
+void GJRtmpPush_Delloc(GJRtmpPush* push){
 
-void GJRtmpPush_CloseAndRelease(GJRtmpPush* sender){
-    if (sender->sendThread == NULL) {
-        free(sender);//线程已经退出
-    }else{
-        sender->stopRequest = true;
-        queueEnablePop(sender->sendBufferQueue, false);//防止临界情况
-        queueBroadcastPop(sender->sendBufferQueue);
+        RTMP_Free(push->rtmp);
+        GJRTMP_Packet* packet;
+        while (queuePop(push->sendBufferQueue, (void**)&packet, 0)) {
+            retainBufferUnRetain(packet->retainBuffer);
+            GJBufferPoolSetData(push->memoryCachePool, packet);
+        }
+        GJBufferPoolCleanAndFree(&push->memoryCachePool);
+        queueCleanAndFree(&push->sendBufferQueue);
+}
+
+void GJRtmpPush_Release(GJRtmpPush* push){
+    GJLOG(GJ_LOGINFO,"GJRtmpPush_Release");
+    
+    bool shouldDelloc = false;
+    pthread_mutex_lock(&push->mutex);
+    push->releaseRequest = true;
+    if (push->sendThread == NULL) {
+        shouldDelloc = true;
+    }
+    pthread_mutex_unlock(&push->mutex);
+    if (shouldDelloc) {
+        GJRtmpPush_Delloc(push);
     }
 }
+void GJRtmpPush_Close(GJRtmpPush* sender){
+    GJLOG(GJ_LOGINFO,"GJRtmpPush_Close");
+    sender->stopRequest = true;
+    queueBroadcastPop(sender->sendBufferQueue);
+}
+
 
 float GJRtmpPush_GetBufferRate(GJRtmpPush* sender){
     long length = queueGetLength(sender->sendBufferQueue);

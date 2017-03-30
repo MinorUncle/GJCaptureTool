@@ -45,6 +45,8 @@ typedef struct _GJRtmpPull{
     GJRetainBufferPool*           memoryCachePool;
     pthread_t               pullThread;
     pthread_t               callbackThread;
+    pthread_mutex_t     mutex;
+
     int                     pullPacketCount;
     int                     dropPacketCount;
     int                     pullByte;
@@ -54,6 +56,8 @@ typedef struct _GJRtmpPull{
     void*                   dataCallbackParm;
 
     int                     stopRequest;
+    int                     releaseRequest;
+
 }GJRtmpPull;
 
 void GJRtmpPull_Create(GJRtmpPull** pull,PullMessageCallback callback,void* rtmpPullParm);

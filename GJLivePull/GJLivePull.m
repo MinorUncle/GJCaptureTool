@@ -9,13 +9,13 @@
 #import "GJLivePull.h"
 #import "GJRtmpPull.h"
 #import "GJH264Decoder.h"
-#import "GJPlayer.h"
+#import "GJLivePlayer.h"
 #import "GJLog.h"
 #import "GJPCMDecodeFromAAC.h"
 #import <CoreImage/CoreImage.h>
 
 
-@interface GJLivePull()<GJH264DecoderDelegate,GJPCMDecodeFromAACDelegate>
+@interface GJLivePull()<GJH264DecoderDelegate,GJPCMDecodeFromAACDelegate,GJLivePlayerDeletate>
 {
     GJRtmpPull* _videoPull;
     NSThread*  _playThread;
@@ -29,7 +29,7 @@
 @property(strong,nonatomic)GJH264Decoder* videoDecoder;
 @property(strong,nonatomic)GJPCMDecodeFromAAC* audioDecoder;
 
-@property(strong,nonatomic)GJPlayer* player;
+@property(strong,nonatomic)GJLivePlayer* player;
 @property(assign,nonatomic)long sendByte;
 @property(assign,nonatomic)int unitByte;
 
@@ -48,7 +48,8 @@
     self = [super init];
     if (self) {
         
-        _player = [[GJPlayer alloc]init];
+        _player = [[GJLivePlayer alloc]init];
+        _player.delegate = self;
         _videoDecoder = [[GJH264Decoder alloc]init];
         _videoDecoder.delegate = self;
         _enablePreview = YES;
@@ -93,7 +94,9 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     [_lock lock];
     GJAssert(_videoPull == NULL, "请先关闭上一个流\n");
     _pulling = true;
-    GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
+    if (_videoPull == nil) {
+        GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
+    }
     GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
     [_audioDecoder start];
     _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
@@ -123,6 +126,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         _videoPull = NULL;
         _pulling = NO;
     }
+    [_timer invalidate];
     _fristAudioDate = _fristVideoDate = _connentDate = nil;
     [_lock unlock];
 }
@@ -197,6 +201,12 @@ static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBu
 
     
     [_player addAudioDataWith:buffer pts:pts];
+}
+
+-(void)livePlayer:(GJLivePlayer *)livePlayer bufferPercent:(float)percent{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.delegate livePull:self buffingPercent:percent];
+    });
 }
 
 @end

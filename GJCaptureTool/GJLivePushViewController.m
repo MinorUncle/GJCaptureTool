@@ -32,6 +32,7 @@
 @property (strong, nonatomic) UILabel *delayLab;
 @property (strong, nonatomic) UILabel *videoCacheLab;
 @property (strong, nonatomic) UILabel *audioCacheLab;
+@property (strong, nonatomic) UILabel *playerBufferLab;
 
 
 
@@ -106,6 +107,12 @@
     _audioCacheLab.textColor = [UIColor redColor];
     _audioCacheLab.text = @"音频播放缓存时长0.0 ms 帧数：0";
     [self.view addSubview:_audioCacheLab];
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _playerBufferLab = [[UILabel alloc]initWithFrame:rect];
+    _playerBufferLab.textColor = [UIColor redColor];
+    _playerBufferLab.text = @"播放缓冲状态：未缓冲";
+    [self.view addSubview:_playerBufferLab];
     
     int count = 3;
     rect.origin.y = CGRectGetMaxY(self.topView.frame);
@@ -243,7 +250,7 @@
     _pullStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%d ms",elapsed];
 }
 -(void)livePull:(GJLivePull *)livePull closeConnent:(GJPullSessionInfo *)info resion:(GJConnentCloceReason)reason{
-    _pullStateLab.text = [NSString stringWithFormat:@"推流关闭 总推流时长：%ld ms",info->sessionDuring];
+    _pullStateLab.text = [NSString stringWithFormat:@"拉流关闭 总推流时长：%ld ms",info->sessionDuring];
 }
 -(void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullStatus *)status{
     if (_livePull == livePull) {
@@ -278,6 +285,16 @@
     }
 }
 
+-(void)livePull:(GJLivePull *)livePull buffingPercent:(float)buffingPercent{
+    if (buffingPercent > 0.99) {
+        _playerBufferLab.text = [NSString stringWithFormat:@"播放缓冲状态：完成"];
+
+    }else{
+        _playerBufferLab.text = [NSString stringWithFormat:@"播放缓冲状态：%0.2f",buffingPercent];
+
+    }
+
+}
 
 /*
 #pragma mark - Navigation

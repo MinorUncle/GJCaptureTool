@@ -203,7 +203,7 @@
         [_lastFilter removeTarget:_videoStreamFilter];
         [_audioRecoder stop];
         [_videoEncoder flush];
-        GJRtmpPush_CloseAndRelease(_videoPush);
+        GJRtmpPush_Close(_videoPush);
         _videoPush = nil;
         [_timer invalidate];
     }
@@ -282,7 +282,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 }
 -(void)dealloc{
     if (_videoPush) {
-        GJRtmpPush_CloseAndRelease(_videoPush);
+        GJRtmpPush_Release(_videoPush);
     }
 }
 @end

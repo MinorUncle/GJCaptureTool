@@ -1,5 +1,5 @@
 //
-//  GJPlayer.h
+//  GJLivePlayer.h
 //  GJCaptureTool
 //
 //  Created by mac on 17/3/7.
@@ -13,6 +13,7 @@
 #import "GJRetainBuffer.h"
 #import "GJLiveDefine.h"
 @class UIView;
+@class GJLivePlayer;
 typedef enum _GJPlayStatus{
     kPlayStatusStop,
     kPlayStatusRunning,
@@ -20,10 +21,16 @@ typedef enum _GJPlayStatus{
     kPlayStatusBuffering,
 }GJPlayStatus;
 
+@protocol GJLivePlayerDeletate <NSObject>
+
+-(void)livePlayer:(GJLivePlayer*)livePlayer bufferPercent:(float)percent;
+@end
 
 
-@interface GJPlayer : NSObject
+
+@interface GJLivePlayer : NSObject
 @property(readonly,nonatomic)UIView* displayView;
+@property(weak,nonatomic)id<GJLivePlayerDeletate> delegate;
 
 
 @property(assign,nonatomic)AudioStreamBasicDescription audioFormat;
