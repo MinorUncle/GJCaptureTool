@@ -90,7 +90,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
 
 
 
-- (BOOL)startStreamPullWithUrl:(char*)url{
+- (bool)startStreamPullWithUrl:(char*)url{
     [_lock lock];
     GJAssert(_videoPull == NULL, "请先关闭上一个流\n");
     _pulling = true;
@@ -122,7 +122,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     if (_videoPull) {
         [_audioDecoder stop];
         [_player stop];
-        GJRtmpPull_CloseAndRelease(_videoPull);
+        GJRtmpPull_Close(_videoPull);
         _videoPull = NULL;
         _pulling = NO;
     }

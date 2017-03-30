@@ -268,14 +268,17 @@ void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
 }
 void GJRtmpPush_Delloc(GJRtmpPush* push){
 
-        RTMP_Free(push->rtmp);
-        GJRTMP_Packet* packet;
-        while (queuePop(push->sendBufferQueue, (void**)&packet, 0)) {
-            retainBufferUnRetain(packet->retainBuffer);
-            GJBufferPoolSetData(push->memoryCachePool, packet);
-        }
-        GJBufferPoolCleanAndFree(&push->memoryCachePool);
-        queueCleanAndFree(&push->sendBufferQueue);
+    RTMP_Free(push->rtmp);
+    GJRTMP_Packet* packet;
+    while (queuePop(push->sendBufferQueue, (void**)&packet, 0)) {
+        retainBufferUnRetain(packet->retainBuffer);
+        GJBufferPoolSetData(push->memoryCachePool, packet);
+    }
+    GJBufferPoolCleanAndFree(&push->memoryCachePool);
+    queueCleanAndFree(&push->sendBufferQueue);
+    free(push);
+    GJLOG(GJ_LOGDEBUG, "GJRtmpPush_Delloc");
+
 }
 
 void GJRtmpPush_Release(GJRtmpPush* push){

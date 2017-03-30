@@ -14,68 +14,16 @@
 #define RTMP_RECEIVE_TIMEOUT    3
 
 
-void GJRtmpPull_Release(GJRtmpPull* pull);
+void GJRtmpPull_Delloc(GJRtmpPull* pull);
 
 static bool retainBufferRelease(GJRetainBuffer* buffer){
     RTMPPacket* packet = buffer->parm;
     RTMPPacket_Free(packet);
     free(packet);
+    free(buffer);
     return false;
 }
-static void* callbackLoop(void* parm){
-    pthread_setname_np("rtmpCallBackLoop");
-    GJRtmpPull* pull = (GJRtmpPull*)parm;
-    RTMPPacket* packet;
-    while (queuePop(pull->pullBufferQueue, (void**)&packet, 10000000) && !pull->stopRequest) {
-        GJRTMPDataType dataType = 0;
-        void* outPoint;
-        int outSize;
-        if (packet->m_packetType == RTMP_PACKET_TYPE_AUDIO) {
-            dataType = GJRTMPAudioData;
-            outPoint = packet->m_body+2;
-            outSize = packet->m_nBodySize-2;
-        }else if (packet->m_packetType == RTMP_PACKET_TYPE_VIDEO){
-            dataType = GJRTMPVideoData;
-            uint8_t *sps = NULL,*pps = NULL,*pp = NULL;
-            int isKey = 0;
-            int spsSize = 0,ppsSize = 0,ppSize = 0;
-            find_pp_sps_pps(&isKey, (uint8_t*)packet->m_body, packet->m_nBodySize, &pp, &sps, &spsSize, &pps, &ppsSize, NULL, NULL);
-            
-            if (pp && sps) {
-                ppSize = (int)((uint8_t*)packet->m_body + packet->m_nBodySize - pp);//ppSize最好通过计算获得，直接查找的话查找数据量比较大
-                pps = memmove(pp-ppsSize, pps, ppsSize);
-                sps = memmove(pps-spsSize, sps, spsSize);
-                outPoint = sps;
-                outSize = spsSize+ppsSize+ppSize;
-            }else if(pp){
-                ppSize = (int)((uint8_t*)packet->m_body + packet->m_nBodySize - pp);//ppSize最好通过计算获得，直接查找的话查找数据量比较大
-                outPoint = pp;
-                outSize = ppSize;
-            }else{
-             
-                GJAssert(0, "数据有误\n");
-                RTMPPacket_Free(packet);
-                free(packet);
-                continue;
-            }
-        }else{
-            GJLOG(GJ_LOGWARNING,"not media Packet:%p type:%d \n",packet,packet->m_packetType);
-            RTMPPacket_Free(packet);
-            free(packet);
-            continue;
-        }
 
-        GJRetainBuffer* retainBuffer = NULL;
-        retainBufferPack(&retainBuffer, outPoint, outSize, retainBufferRelease, packet);
-//        static int count = 0;
-//        printf("pull count:%d  pts:%d\n",count++,packet->m_nTimeStamp);
-        pull->dataCallback(pull,dataType,retainBuffer,pull->dataCallbackParm,packet->m_nTimeStamp);
-        retainBufferUnRetain(retainBuffer);
-    }
-    queueEnablePop(pull->pullBufferQueue, true);
-    GJLOG(GJ_LOGDEBUG, "pullCallBackEnd");
-    return NULL;
-}
 static void* pullRunloop(void* parm){
     pthread_setname_np("rtmpPullLoop");
     GJRtmpPull* pull = (GJRtmpPull*)parm;
@@ -106,8 +54,6 @@ static void* pullRunloop(void* parm){
     }
 
     
-    pthread_create(&pull->callbackThread, NULL, callbackLoop, pull);
-
     while(!pull->stopRequest){
         RTMPPacket* packet = (RTMPPacket*)malloc(sizeof(RTMPPacket));
         memset(packet, 0, sizeof(RTMPPacket));
@@ -119,8 +65,51 @@ static void* pullRunloop(void* parm){
             }
             
             RTMP_ClientPacket(pull->rtmp, packet);
-            bool ret = queuePush(pull->pullBufferQueue, packet, 1000000);
-            GJAssert(ret, "queuePush 不可能失败的失败\n");
+            
+            GJRTMPDataType dataType = 0;
+            void* outPoint;
+            int outSize;
+            if (packet->m_packetType == RTMP_PACKET_TYPE_AUDIO) {
+                dataType = GJRTMPAudioData;
+                outPoint = packet->m_body+2;
+                outSize = packet->m_nBodySize-2;
+            }else if (packet->m_packetType == RTMP_PACKET_TYPE_VIDEO){
+                dataType = GJRTMPVideoData;
+                uint8_t *sps = NULL,*pps = NULL,*pp = NULL;
+                int isKey = 0;
+                int spsSize = 0,ppsSize = 0,ppSize = 0;
+                find_pp_sps_pps(&isKey, (uint8_t*)packet->m_body, packet->m_nBodySize, &pp, &sps, &spsSize, &pps, &ppsSize, NULL, NULL);
+                
+                if (pp && sps) {
+                    ppSize = (int)((uint8_t*)packet->m_body + packet->m_nBodySize - pp);//ppSize最好通过计算获得，直接查找的话查找数据量比较大
+                    pps = memmove(pp-ppsSize, pps, ppsSize);
+                    sps = memmove(pps-spsSize, sps, spsSize);
+                    outPoint = sps;
+                    outSize = spsSize+ppsSize+ppSize;
+                }else if(pp){
+                    ppSize = (int)((uint8_t*)packet->m_body + packet->m_nBodySize - pp);//ppSize最好通过计算获得，直接查找的话查找数据量比较大
+                    outPoint = pp;
+                    outSize = ppSize;
+                }else{
+                    
+                    GJAssert(0, "数据有误\n");
+                    RTMPPacket_Free(packet);
+                    free(packet);
+                    packet = NULL;
+                    break;
+                }
+            }else{
+                GJLOG(GJ_LOGWARNING,"not media Packet:%p type:%d \n",packet,packet->m_packetType);
+                RTMPPacket_Free(packet);
+                free(packet);
+                packet = NULL;
+                break;
+            }
+            
+            GJRetainBuffer* retainBuffer = NULL;
+            retainBufferPack(&retainBuffer, outPoint, outSize, retainBufferRelease, packet);
+            pull->dataCallback(pull,dataType,retainBuffer,pull->dataCallbackParm,packet->m_nTimeStamp);
+            retainBufferUnRetain(retainBuffer);
             packet = NULL;
             break;
         }
@@ -130,16 +119,19 @@ static void* pullRunloop(void* parm){
 //            GJAssert(0, "读取数据错误\n");
         }
     }
-    pthread_join(pull->callbackThread, NULL);
-    pull->callbackThread = NULL;
     errType = GJRTMPPullMessageType_closeComplete;
 ERROR:
     pull->messageCallback(pull, errType,pull->messageCallbackParm,errParm);
-    GJRtmpPull_Release(pull);
-    if (pull->stopRequest) {
-        free(pull);
-    }else{
-        pull->pullThread = NULL;
+    
+    bool shouldDelloc = false;
+    pthread_mutex_lock(&pull->mutex);
+    pull->pullThread = NULL;
+    if (pull->releaseRequest == true) {
+        shouldDelloc = true;
+    }
+    pthread_mutex_unlock(&pull->mutex);
+    if (shouldDelloc) {
+        GJRtmpPull_Delloc(pull);
     }
     GJLOG(GJ_LOGDEBUG, "pullRunloop end");
     return NULL;
@@ -165,30 +157,39 @@ void GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,void* rtm
     *pullP = pull;
 }
 
-void GJRtmpPull_CloseAndRelease(GJRtmpPull* pull){
-    if (pull->pullThread == NULL) {
-        free(pull);
-    }else{
-        pull->stopRequest = true;
-//        RTMP_Close(pull->rtmp);
-        queueEnablePop(pull->pullBufferQueue, false);//防止临界情况
-        queueBroadcastPop(pull->pullBufferQueue);
-    }
-}
-
-void GJRtmpPull_Release(GJRtmpPull* pull){
-    GJAssert(!(pull->pullThread && !pull->stopRequest),"请在stopconnect函数 或者GJRTMPMessageType_closeComplete回调 后调用\n");
-    RTMP_Free(pull->rtmp);
+void GJRtmpPull_Delloc(GJRtmpPull* pull){
     RTMPPacket* packet;
     while (queuePop(pull->pullBufferQueue, (void**)&packet, 0)) {
         RTMPPacket_Free(packet);
         free(packet);
     }
     queueCleanAndFree(&pull->pullBufferQueue);
+    free(pull);
+    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Delloc");
+}
+void GJRtmpPull_Close(GJRtmpPull* pull){
+    pull->stopRequest = true;
+    queueBroadcastPop(pull->pullBufferQueue);
 
 }
+void GJRtmpPull_Release(GJRtmpPull* pull){
+    bool shouldDelloc = false;
+    pthread_mutex_lock(&pull->mutex);
+    pull->releaseRequest = true;
+    if (pull->pullThread == NULL) {
+        shouldDelloc = true;
+    }
+    pthread_mutex_unlock(&pull->mutex);
+    if (shouldDelloc) {
+        GJRtmpPull_Delloc(pull);
+    }
+}
+
 
 void GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,void* callbackParm,const char* pullUrl){
+    if (pull->pullThread != NULL) {
+        pthread_join(pull->pullThread, NULL);
+    }
     size_t length = strlen(pullUrl);
     GJAssert(length <= MAX_URL_LENGTH-1, "sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
     memcpy(pull->pullUrl, pullUrl, length+1);
