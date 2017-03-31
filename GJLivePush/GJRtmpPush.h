@@ -42,6 +42,10 @@ typedef struct _GJRtmpPush{
     void*               rtmpPushParm;
     int                 stopRequest;
     int                 releaseRequest;
+    
+    long                inPts;
+    long                outPts;
+
 
 }GJRtmpPush;
 

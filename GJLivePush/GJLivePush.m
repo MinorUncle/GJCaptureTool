@@ -9,7 +9,7 @@
 #import "GJLivePush.h"
 #import "GJImageFilters.h"
 #import "GJRtmpPush.h"
-#import "GJDebug.h"
+#import "GJLog.h"
 #import "GJH264Encoder.h"
 #import "GJAudioQueueRecoder.h"
 
@@ -27,6 +27,7 @@
     GPUImageCropFilter* _cropFilter;
     GJAudioQueueRecoder* _audioRecoder;
     NSTimer*        _timer;
+    
     
     int            _sendByte;
     int            _unitByte;
@@ -55,8 +56,16 @@
 @implementation GJLivePush
 @synthesize previewView = _previewView;
 
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        _gaterFrequency = 2.0;
+
+    }
+    return self;
+}
 - (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition{
-    _gaterFrequency = 2.0;
     _caputreSizeType = sizeType;
     _cameraPosition = cameraPosition;
     _captureFps = fps;
@@ -169,6 +178,15 @@
     _startPushDate = [NSDate date];
     GJRtmpPush_StartConnect(self.videoPush, self.pushUrl.UTF8String);
     
+    if (_audioRecoder == nil) {
+        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:config.audioSampleRate channel:config.channel formatID:kAudioFormatMPEG4AAC];
+        _audioRecoder.delegate = self;
+    }
+    return true;
+}
+
+-(void)pushRun{
+
     _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
         GJCacheInfo info = GJRtmpPush_GetBufferCacheInfo(_videoPush);
         GJPushStatus status = {0};
@@ -180,14 +198,6 @@
         _unitFrame = 0;
         [self.delegate livePush:self updatePushStatus:&status ];
     }];
-    if (_audioRecoder == nil) {
-        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:config.audioSampleRate channel:config.channel formatID:kAudioFormatMPEG4AAC];
-        _audioRecoder.delegate = self;
-    }
-    return true;
-}
-
--(void)pushRun{
 
     [_audioRecoder startRecodeAudio];
     __weak GJLivePush* wkSelf = self;
@@ -199,14 +209,15 @@
 }
 
 - (void)stopStreamPush{
-    if (_videoPush) {
-        [_lastFilter removeTarget:_videoStreamFilter];
-        [_audioRecoder stop];
-        [_videoEncoder flush];
-        GJRtmpPush_Close(_videoPush);
-        _videoPush = nil;
-        [_timer invalidate];
-    }
+    
+    GJRtmpPush_Close(_videoPush);
+    [_lastFilter removeTarget:_videoStreamFilter];
+    [_audioRecoder stop];
+    [_videoEncoder flush];
+    [_timer invalidate];
+    _timer = nil;
+    GJLOG(GJ_LOGINFO, "推流停止");
+
 }
 
 -(UIView *)getPreviewView{
@@ -219,33 +230,38 @@
 #pragma mark rtmp callback
 static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType,void* rtmpPushParm,void* messageParm){
     GJLivePush* livePush = (__bridge GJLivePush *)(rtmpPushParm);
-    switch (messageType) {
-        case GJRTMPPushMessageType_connectSuccess:
-            GJLOG(@"连接成功\n");
-            livePush.connentDate = [NSDate date];
-            [livePush.delegate livePush:livePush connentSuccessWithElapsed:[livePush.connentDate timeIntervalSinceDate:livePush.startPushDate]*1000];
-            [livePush pushRun];
-            break;
-        case GJRTMPPushMessageType_closeComplete:{
-            GJPushSessionInfo info = {0};
-            NSDate* stopDate = [NSDate date];
-            info.sessionDuring = [stopDate timeIntervalSinceDate:livePush.startPushDate]*1000;
-            [livePush.delegate livePush:livePush closeConnent:&info resion:kConnentCloce_Active];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        switch (messageType) {
+            case GJRTMPPushMessageType_connectSuccess:
+            {
+                GJLOG(GJ_LOGINFO, "推流连接成功");
+                livePush.connentDate = [NSDate date];
+                [livePush.delegate livePush:livePush connentSuccessWithElapsed:[livePush.connentDate timeIntervalSinceDate:livePush.startPushDate]*1000];
+                [livePush pushRun];
+            }
+                break;
+            case GJRTMPPushMessageType_closeComplete:{
+                GJPushSessionInfo info = {0};
+                NSDate* stopDate = [NSDate date];
+                info.sessionDuring = [stopDate timeIntervalSinceDate:livePush.startPushDate]*1000;
+                [livePush.delegate livePush:livePush closeConnent:&info resion:kConnentCloce_Active];
+            }
+                break;
+            case GJRTMPPushMessageType_urlPraseError:
+            case GJRTMPPushMessageType_connectError:
+                GJLOG(GJ_LOGINFO, "推流连接失败");
+                [livePush.delegate livePush:livePush errorType:kLivePushConnectError infoDesc:@"rtmp连接失败"];
+                [livePush stopStreamPush];
+                break;
+            case GJRTMPPushMessageType_sendPacketError:
+                [livePush.delegate livePush:livePush errorType:kLivePushWritePacketError infoDesc:@"发送失败"];
+                [livePush stopStreamPush];
+                break;
+            default:
+                break;
         }
-            break;
-        case GJRTMPPushMessageType_urlPraseError:
-        case GJRTMPPushMessageType_connectError:
-            GJLOG(@"连接失败\n");
-            [livePush.delegate livePush:livePush errorType:kLivePushConnectError infoDesc:@"rtmp连接失败"];
-            [livePush stopStreamPush];
-            break;
-        case GJRTMPPushMessageType_sendPacketError:
-            [livePush.delegate livePush:livePush errorType:kLivePushWritePacketError infoDesc:@"发送失败"];
-            [livePush stopStreamPush];
-            break;
-        default:
-            break;
-    }
+    });
+    
 }
 
 #pragma mark delegate

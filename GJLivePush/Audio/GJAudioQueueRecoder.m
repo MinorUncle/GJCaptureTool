@@ -10,7 +10,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 #import "GJRetainBufferPool.h"
-
+#import "GJLog.h"
 #define NUMBER_BUFFERS 4
 
 #define DEFAULT_MAX_SIZE 2048
@@ -207,11 +207,8 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
     _callbackDelay = DEFAULT_DELAY;
     status = AudioQueueNewInput ( &format, handleInputBuffer, (__bridge void * _Nullable)(self),  NULL, 0, 0, &_mAudioQueue);
     if (status != 0) {
-#ifdef DEBUG
-        NSLog(@"AudioQueueNewInput error:%d",status);
         char *formatName = (char *)&(status);
-        NSLog(@"error is: %c%c%c%c     -----------", formatName[3], formatName[2], formatName[1], formatName[0]);
-#endif
+        GJLOG(GJ_LOGERROR, "AudioQueueNewInput error:%d: %c%c%c%c---------", formatName[3], formatName[2], formatName[1], formatName[0]);
         _mAudioQueue = NULL;
         
         return NO;
@@ -239,8 +236,6 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
 }
 -(void)receiveNotification:(NSNotification*)notifica{
     
-    NSLog(@"noti:%@",notifica);
-    
     if ([notifica.name isEqualToString:AVAudioSessionInterruptionNotification]) {
         AVAudioSessionInterruptionType type = [notifica.userInfo[AVAudioSessionInterruptionTypeKey] longValue];
         AVAudioSessionInterruptionOptions options = [notifica.userInfo[AVAudioSessionInterruptionOptionKey] longValue];
@@ -252,24 +247,30 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
     
 }
 -(void)reStart{
+    GJLOG(GJ_LOGINFO,"reStart");
     _status = kRecoderStopStatus;
     AudioQueueReset(_mAudioQueue);
     [self startRecodeAudio];
 }
 -(BOOL)startRecodeAudio{
-
+    
+    GJLOG(GJ_LOGINFO,"startRecodeAudio");
     if (_status == kRecoderRunningStatus || _status == kRecoderInvalidStatus) {
         return NO;
     }
     NSError* error;
     [[AVAudioSession sharedInstance]setCategory:AVAudioSessionCategoryPlayAndRecord error:&error];
+    if (error) {
+        GJLOG(GJ_LOGERROR,"AVAudioSession setCategory error:%s",error.localizedDescription);
+    }
+    error = NULL;
     [[AVAudioSession sharedInstance]overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker  error:NULL];
     if (error) {
-        NSLog(@"setCategory error:%@",error);
+        GJLOG(GJ_LOGERROR,"AVAudioSession overrideOutputAudioPort error:%s",error.localizedDescription);
     }
     [[AVAudioSession sharedInstance]setActive:YES error:&error];
     if (error) {
-        NSLog(@"setActive error:%@",error);
+        GJLOG(GJ_LOGERROR,"AVAudioSession setActive error:%s",error.localizedDescription);
     }
     NSArray<AVAudioSessionPortDescription*>* inputs = [AVAudioSession sharedInstance].availableInputs;
     for (AVAudioSessionPortDescription* input in inputs) {//设置非内置麦克风
@@ -282,12 +283,12 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
     for (int i = 0; i < NUMBER_BUFFERS; ++i) {           // 1
         OSStatus  status = AudioQueueAllocateBuffer (_mAudioQueue,_maxOutSize,&_mAudioBuffers[i]);
         if (status < 0) {
-            NSLog(@"AudioQueueAllocateBuffer error:%d",status);
+            GJLOG(GJ_LOGERROR,"AudioQueueAllocateBuffer error:%d",status);
             return NO;
         }
         status = AudioQueueEnqueueBuffer (_mAudioQueue,_mAudioBuffers[i],0,NULL);
         if (status < 0) {
-            NSLog(@"AudioQueueEnqueueBuffer error:%d",status);
+            GJLOG(GJ_LOGERROR,"AudioQueueEnqueueBuffer error:%d",status);
             return NO;
         }
     }
@@ -295,7 +296,7 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
     
     OSStatus status = AudioQueueStart(_mAudioQueue,NULL);
     if (status < 0) {
-        NSLog(@"start error:%d",status);
+        GJLOG(GJ_LOGERROR,"AudioQueueStart error:%d",status);
         return NO;
     }else{
         _status = kRecoderRunningStatus;
@@ -306,7 +307,7 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
     if (_status == kRecoderRunningStatus) {
         _status = kRecoderStopStatus;
         AudioQueueStop(_mAudioQueue,true);
-        
+        GJLOG(GJ_LOGINFO,"AudioQueueStop");
     }
 }
 -(void)pause{

@@ -20,7 +20,6 @@
     GJRtmpPull* _videoPull;
     NSThread*  _playThread;
     
-    BOOL    _pulling;
     
     NSTimer * _timer;
     
@@ -39,6 +38,7 @@
 @property(strong,nonatomic)NSDate* startPullDate;
 @property(strong,nonatomic)NSDate* connentDate;
 @property(strong,nonatomic)NSDate* fristVideoDate;
+@property(strong,nonatomic)NSDate* fristDecodeVideoDate;
 @property(strong,nonatomic)NSDate* fristAudioDate;
 
 @end
@@ -61,44 +61,40 @@
 
 static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm){
     GJLivePull* livePull = (__bridge GJLivePull *)(rtmpPullParm);
-    switch (messageType) {
-        case GJRTMPPullMessageType_connectError:
-        case GJRTMPPullMessageType_urlPraseError:
-            [livePull.delegate livePull:livePull errorType:kLivePushConnectError infoDesc:@"连接错误"];
-            [livePull stopStreamPull];
-            break;
-        case GJRTMPPullMessageType_sendPacketError:
-            [livePull.delegate livePull:livePull errorType:kLivePullReadPacketError infoDesc:@"读取失败"];
-            [livePull stopStreamPull];
-            break;
-        case GJRTMPPullMessageType_connectSuccess:
-            livePull.connentDate = [NSDate date];
-            [livePull.delegate livePull:livePull connentSuccessWithElapsed:[livePull.connentDate timeIntervalSinceDate:livePull.startPullDate]*1000];
-            break;
-        case GJRTMPPullMessageType_closeComplete:{
-            NSDate* stopDate = [NSDate date];
-            GJPullSessionInfo info = {0};
-            info.sessionDuring = [stopDate timeIntervalSinceDate:livePull.startPullDate]*1000;
-            [livePull.delegate livePull:livePull closeConnent:&info resion:kConnentCloce_Active];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        switch (messageType) {
+            case GJRTMPPullMessageType_connectError:
+            case GJRTMPPullMessageType_urlPraseError:
+                [livePull.delegate livePull:livePull errorType:kLivePushConnectError infoDesc:@"连接错误"];
+                [livePull stopStreamPull];
+                break;
+            case GJRTMPPullMessageType_sendPacketError:
+                [livePull.delegate livePull:livePull errorType:kLivePullReadPacketError infoDesc:@"读取失败"];
+                [livePull stopStreamPull];
+                break;
+            case GJRTMPPullMessageType_connectSuccess:
+            {
+                livePull.connentDate = [NSDate date];
+                [livePull.delegate livePull:livePull connentSuccessWithElapsed:[livePull.connentDate timeIntervalSinceDate:livePull.startPullDate]*1000];
+                    [livePull updateStatusCallback];
+            }
+                break;
+            case GJRTMPPullMessageType_closeComplete:{
+                NSDate* stopDate = [NSDate date];
+                GJPullSessionInfo info = {0};
+                info.sessionDuring = [stopDate timeIntervalSinceDate:livePull.startPullDate]*1000;
+                [livePull.delegate livePull:livePull closeConnent:&info resion:kConnentCloce_Active];
+            }
+                break;
+            default:
+                GJLOG(GJ_LOGERROR,"not catch info：%d",messageType);
+                break;
         }
-            break;
-        default:
-            GJLOG(GJ_LOGERROR,"not catch info：%d",messageType);
-            break;
-    }
+    });
 }
 
+-(void)updateStatusCallback{
 
-
-- (bool)startStreamPullWithUrl:(char*)url{
-    [_lock lock];
-    GJAssert(_videoPull == NULL, "请先关闭上一个流\n");
-    _pulling = true;
-    if (_videoPull == nil) {
-        GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
-    }
-    GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
-    [_audioDecoder start];
     _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
         GJCacheInfo videoCache = [_player getVideoCache];
         GJCacheInfo audioCache = [_player getAudioCache];
@@ -112,6 +108,18 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         
         [self.delegate livePull:self updatePullStatus:&status];
     }];
+}
+
+- (bool)startStreamPullWithUrl:(char*)url{
+    [_lock lock];
+    _fristAudioDate = _fristVideoDate = _connentDate = _fristDecodeVideoDate = nil;
+    if (_videoPull == nil) {
+        GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
+    }
+    GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
+    [_audioDecoder start];
+
+    
     _startPullDate = [NSDate date];
     [_lock unlock];
     return YES;
@@ -119,15 +127,10 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
 
 - (void)stopStreamPull{
     [_lock lock];
-    if (_videoPull) {
-        [_audioDecoder stop];
-        [_player stop];
-        GJRtmpPull_Close(_videoPull);
-        _videoPull = NULL;
-        _pulling = NO;
-    }
+    [_audioDecoder stop];
+    [_player stop];
+    GJRtmpPull_Close(_videoPull);
     [_timer invalidate];
-    _fristAudioDate = _fristVideoDate = _connentDate = nil;
     [_lock unlock];
 }
 
@@ -193,6 +196,15 @@ static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBu
     }
 }
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts{
+
+    if (_fristDecodeVideoDate == nil) {
+        _fristDecodeVideoDate = [NSDate date];
+       size_t w = CVPixelBufferGetWidth(imageBuffer);
+       size_t h=  CVPixelBufferGetHeight(imageBuffer);
+        GJPullFristFrameInfo info = {0};
+        info.size = CGSizeMake((float)w, (float)h);
+        [self.delegate livePull:self fristFrameDecode:&info];
+    }
     [_player addVideoDataWith:imageBuffer pts:pts];
     return;    
 }
@@ -208,5 +220,9 @@ static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBu
         [self.delegate livePull:self buffingPercent:percent];
     });
 }
-
+-(void)dealloc{
+    if (_videoPull) {
+        GJRtmpPull_Release(_videoPull);
+    }
+}
 @end

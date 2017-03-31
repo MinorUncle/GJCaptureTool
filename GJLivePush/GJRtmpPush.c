@@ -26,7 +26,7 @@ void GJRtmpPush_Release(GJRtmpPush* push);
 void GJRtmpPush_Delloc(GJRtmpPush* push);
 
 static void* sendRunloop(void* parm){
-    pthread_setname_np("rtmpPushRunloop");
+    pthread_setname_np("rtmpPushLoop");
     GJRtmpPush* push = (GJRtmpPush*)parm;
     GJRTMPPushMessageType errType = GJRTMPPushMessageType_connectError;
     void* errParm = NULL;
@@ -56,6 +56,7 @@ static void* sendRunloop(void* parm){
     
     GJRTMP_Packet* packet;
     while (!push->stopRequest && queuePop(push->sendBufferQueue, (void**)&packet, INT32_MAX)) {
+        push->outPts = packet->packet.m_nTimeStamp;
         int iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
 //        static int i = 0;
 //        GJPrintf("sendcount:%d,pts:%d\n",i++,packet->packet.m_nTimeStamp);
@@ -92,6 +93,8 @@ ERROR:
     if (shouldDelloc) {
         GJRtmpPush_Delloc(push);
     }
+    GJLOG(GJ_LOGINFO,"sendRunloop end");
+
     return NULL;
 }
 
@@ -210,12 +213,13 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t 
         // NALU data
 //        memcpy(&body[iIndex],pp,ppSize);   //不需要移动
     }
-    retainBufferRetain(buffer);
       if(sender->stopRequest || !queuePush(sender->sendBufferQueue, packet, 0)){
-        retainBufferUnRetain(buffer);
         GJBufferPoolSetData(sender->memoryCachePool, packet);
         sender->dropPacketCount++;
-    };
+      }else{
+          retainBufferRetain(buffer);
+          sender->inPts = packet->packet.m_nTimeStamp;
+      }
 }
 
 void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t dts){
@@ -248,22 +252,26 @@ void GJRtmpPush_SendAACData(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t d
     sendPacket->m_hasAbsTimestamp = 0;
     sendPacket->m_headerType = RTMP_PACKET_SIZE_LARGE;
     sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
-    retainBufferRetain(buffer);
     if(!queuePush(sender->sendBufferQueue, packet, 0)){
-        retainBufferUnRetain(buffer);
         GJBufferPoolSetData(sender->memoryCachePool, packet);
         sender->dropPacketCount++;
-    };
+    }else{
+        retainBufferRetain(buffer);
+        sender->inPts = packet->packet.m_nTimeStamp;
+    }
 }
 
 void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
+    GJLOG(GJ_LOGINFO,"GJRtmpPush_StartConnect");
+
     size_t length = strlen(sendUrl);
     GJAssert(length <= MAX_URL_LENGTH-1, "sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
     memcpy(sender->pushUrl, sendUrl, length+1);
-    sender->stopRequest = false;
     if (sender->sendThread) {
+        GJRtmpPush_Close(sender);
         pthread_join(sender->sendThread, NULL);
     }
+    sender->stopRequest = false;
     pthread_create(&sender->sendThread, NULL, sendRunloop, sender);
 }
 void GJRtmpPush_Delloc(GJRtmpPush* push){
@@ -309,18 +317,9 @@ float GJRtmpPush_GetBufferRate(GJRtmpPush* sender){
     return length / size;
 };
 GJCacheInfo GJRtmpPush_GetBufferCacheInfo(GJRtmpPush* sender){
-    GJRTMP_Packet* packet;
-    long newPts = 0;
     GJCacheInfo value = {0};
-    queueLockPop(sender->sendBufferQueue);
     value.cacheCount = (int)queueGetLength(sender->sendBufferQueue);
-    if(queuePeekValue(sender->sendBufferQueue, value.cacheCount, (void**)&packet)){
-        newPts = packet->packet.m_nTimeStamp;
-        if (queuePeekValue(sender->sendBufferQueue, 0, (void**)&packet)) {
-            value.cacheTime = (int)(newPts - packet->packet.m_nTimeStamp);
-        }
-    }
-    queueUnLockPop(sender->sendBufferQueue);
+    value.cacheTime = (int)(sender->inPts - sender->outPts);
     return value;
 }
 

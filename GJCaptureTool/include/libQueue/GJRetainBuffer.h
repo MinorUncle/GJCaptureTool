@@ -10,6 +10,8 @@
 #define GJRetainBuffer_h
 #include <stdio.h>
 
+#include <stdbool.h>
+
 #ifndef __cplusplus
 #ifndef bool
 #   define bool unsigned int

@@ -11,11 +11,90 @@
 #import <AVFoundation/AVFoundation.h>
 #import "GJLivePull.h"
 #import "GJLog.h"
+
+@interface PullShow : NSObject
+{
+    
+}
+@property (strong, nonatomic) UILabel *pullRateLab;
+@property (strong, nonatomic) UILabel *pullStateLab;
+@property (strong, nonatomic) UILabel *videoCacheLab;
+@property (strong, nonatomic) UILabel *audioCacheLab;
+@property (strong, nonatomic) UILabel *playerBufferLab;
+
+
+@property (strong, nonatomic) UIView* view;;
+@property (assign, nonatomic) CGRect frame;
+@property (strong, nonatomic) GJLivePull* pull;
+@property (weak, nonatomic) UIButton* pullBtn;;
+
+@end
+
+@implementation PullShow
+- (instancetype)initWithView:(UIView*)view
+{
+    self = [super init];
+    if (self) {
+        _view = view;
+        _pullStateLab = [[UILabel alloc]init];
+        _pullStateLab.numberOfLines = 0;
+        _pullStateLab.text = @"未连接";
+        _pullStateLab.textColor = [UIColor redColor];
+        [self.view addSubview:_pullStateLab];
+        
+        _pullRateLab = [[UILabel alloc]init];
+        _pullRateLab.textColor = [UIColor redColor];
+        _pullRateLab.text = @"Bitrate:0.0 KB/s";
+        _pullRateLab.numberOfLines = 0;
+        [self.view addSubview:_pullRateLab];
+        
+        _videoCacheLab = [[UILabel alloc]init];
+        _videoCacheLab.textColor = [UIColor redColor];
+        _videoCacheLab.text = @"V:0.0 ms :0帧";
+        _videoCacheLab.numberOfLines = 0;
+        [self.view addSubview:_videoCacheLab];
+        
+        _audioCacheLab = [[UILabel alloc]init];
+        _audioCacheLab.numberOfLines = 0;
+        _audioCacheLab.textColor = [UIColor redColor];
+        _audioCacheLab.text = @"A:0.0 ms :0帧";
+        [self.view addSubview:_audioCacheLab];
+        
+        _playerBufferLab = [[UILabel alloc]init];
+        _playerBufferLab.numberOfLines = 0;
+        _playerBufferLab.textColor = [UIColor redColor];
+        _playerBufferLab.text = @"buffer：未缓冲";
+        [self.view addSubview:_playerBufferLab];
+    }
+    return self;
+}
+-(void)setFrame:(CGRect)frame{
+    _frame = frame;
+    self.view.frame = frame;
+    CGRect rect = frame;
+    int count = 5;
+    rect.origin.x = 0;
+    rect.origin.y = 0;
+    rect.size.height *= 1.0/count;
+    _pullStateLab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _pullRateLab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _videoCacheLab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _audioCacheLab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _playerBufferLab.frame = rect;
+}
+@end
 @interface GJLivePushViewController ()<GJLivePushDelegate,GJLivePullDelegate>
 {
     GJLivePush* _livePush;
-    GJLivePull* _livePull;
-    GJLivePull* _livePull2;
+
 }
 @property (strong, nonatomic) UIView *topView;
 @property (strong, nonatomic) UIView *bottomView;
@@ -25,16 +104,13 @@
 
 @property (strong, nonatomic) UILabel *fpsLab;
 @property (strong, nonatomic) UILabel *sendRateLab;
-@property (strong, nonatomic) UILabel *pullRateLab;
 
 @property (strong, nonatomic) UILabel *pushStateLab;
-@property (strong, nonatomic) UILabel *pullStateLab;
+
 @property (strong, nonatomic) UILabel *delayLab;
-@property (strong, nonatomic) UILabel *videoCacheLab;
-@property (strong, nonatomic) UILabel *audioCacheLab;
-@property (strong, nonatomic) UILabel *playerBufferLab;
 
 
+@property(strong,nonatomic)NSMutableArray<PullShow*>* pulls;
 
 @end
 
@@ -42,16 +118,16 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGALL);
     _livePush = [[GJLivePush alloc]init];
     _livePush.delegate = self;
-    _livePull = [[GJLivePull alloc]init];
-    _livePull.delegate = self;
+ 
     
     CGRect rect = self.view.bounds;
     rect.size.height *= 0.45;
     self.topView = _livePush.previewView;//[[UIView alloc]initWithFrame:rect];
-    self.topView.contentMode = UIViewContentModeScaleAspectFill;
+    self.topView.contentMode = UIViewContentModeScaleAspectFit;
     self.topView.frame = rect;
     self.topView.backgroundColor = [UIColor blackColor];
     [self.view addSubview:self.topView];
@@ -66,13 +142,6 @@
     [self.view addSubview:_pushStateLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
-    _pullStateLab = [[UILabel alloc]initWithFrame:rect];
-    _pullStateLab.text = @"拉流未连接";
-    _pullStateLab.textColor = [UIColor redColor];
-    [self.view addSubview:_pullStateLab];
-
-    
-    rect.origin.y = CGRectGetMaxY(rect);
     _fpsLab = [[UILabel alloc]initWithFrame:rect];
     _fpsLab.textColor = [UIColor redColor];
     _fpsLab.text = @"发送帧率0";
@@ -85,34 +154,10 @@
     [self.view addSubview:_sendRateLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
-    _pullRateLab = [[UILabel alloc]initWithFrame:rect];
-    _pullRateLab.textColor = [UIColor redColor];
-    _pullRateLab.text = @"接收码率:0.0 KB/s";
-    [self.view addSubview:_pullRateLab];
-    
-    rect.origin.y = CGRectGetMaxY(rect);
     _delayLab = [[UILabel alloc]initWithFrame:rect];
     _delayLab.textColor = [UIColor redColor];
     _delayLab.text = @"发送阻塞延时0.0 ms 帧数：0";
     [self.view addSubview:_delayLab];
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _videoCacheLab = [[UILabel alloc]initWithFrame:rect];
-    _videoCacheLab.textColor = [UIColor redColor];
-    _videoCacheLab.text = @"视频播放缓存时长0.0 ms 帧数：0";
-    [self.view addSubview:_videoCacheLab];
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _audioCacheLab = [[UILabel alloc]initWithFrame:rect];
-    _audioCacheLab.textColor = [UIColor redColor];
-    _audioCacheLab.text = @"音频播放缓存时长0.0 ms 帧数：0";
-    [self.view addSubview:_audioCacheLab];
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _playerBufferLab = [[UILabel alloc]initWithFrame:rect];
-    _playerBufferLab.textColor = [UIColor redColor];
-    _playerBufferLab.text = @"播放缓冲状态：未缓冲";
-    [self.view addSubview:_playerBufferLab];
     
     int count = 3;
     rect.origin.y = CGRectGetMaxY(self.topView.frame);
@@ -129,43 +174,36 @@
     _pushButton.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:_pushButton];
     
-    rect.origin.x = CGRectGetMaxX(rect);
-    _pullButton = [[UIButton alloc]initWithFrame:rect];
-    [_pullButton setTitle:@"拉流1开始" forState:UIControlStateNormal];
-    [_pullButton setTitle:@"拉流1结束" forState:UIControlStateSelected];
-    [_pullButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    [_pullButton setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
-    [_pullButton setShowsTouchWhenHighlighted:YES];
-    [_pullButton addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _pullButton.backgroundColor = [UIColor whiteColor];
-    [self.view addSubview:_pullButton];
-    rect.origin.x = CGRectGetMaxX(rect);
-    _pull2Button = [[UIButton alloc]initWithFrame:rect];
-    [_pull2Button setTitle:@"拉流2开始" forState:UIControlStateNormal];
-    [_pull2Button setTitle:@"拉流2结束" forState:UIControlStateSelected];
-    [_pull2Button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    [_pull2Button setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
-    [_pull2Button setShowsTouchWhenHighlighted:YES];
-    [_pull2Button addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _pull2Button.backgroundColor = [UIColor whiteColor];
-    [self.view addSubview:_pull2Button];
-    
-    rect.origin.x = 0;
-    rect.origin.y = CGRectGetMaxY(rect);
-    rect.size.height = self.view.bounds.size.height * 0.45;
-    rect.size.width = self.view.bounds.size.width*0.5;
-    self.bottomView = [_livePull getPreviewView];
-    _bottomView.frame = rect;
-    _bottomView.backgroundColor = [UIColor redColor];
-    [self.view addSubview:_bottomView];
-    
-    _livePull2 = [[GJLivePull alloc]init];
-    UIView* show2 = [_livePull2 getPreviewView];
-    show2.backgroundColor = [UIColor yellowColor];
-    rect.origin.x = CGRectGetMaxX(rect);
-    show2.frame = rect;
-    [self.view addSubview:show2];
-
+    CGRect sRect;
+    sRect.origin.x = 0;
+    sRect.origin.y = CGRectGetMaxY(rect);
+    sRect.size.height = self.view.bounds.size.height - sRect.origin.y;
+    sRect.size.width = self.view.bounds.size.width/(count-1);
+    for (int i = 0; i<count -1; i++) {
+        rect.origin.x = CGRectGetMaxX(rect);
+        UIButton* pullButton = [[UIButton alloc]initWithFrame:rect];
+        [pullButton setTitle:@"拉流1开始" forState:UIControlStateNormal];
+        [pullButton setTitle:@"拉流1结束" forState:UIControlStateSelected];
+        [pullButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+        [pullButton setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+        [pullButton setShowsTouchWhenHighlighted:YES];
+        [pullButton addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+        pullButton.backgroundColor = [UIColor whiteColor];
+        [self.view addSubview:pullButton];
+        
+        GJLivePull* livePull = [[GJLivePull alloc]init];
+        livePull.delegate = self;
+        
+        PullShow* show = [[PullShow alloc]initWithView:[livePull getPreviewView]];
+        show.pullBtn = pullButton;
+        show.frame = sRect;
+        show.view.backgroundColor = [UIColor yellowColor];
+        show.view.contentMode = UIViewContentModeScaleAspectFit;
+        sRect.origin.x = CGRectGetMaxX(sRect);
+        show.pull = livePull;
+        [_pulls addObject:show];
+        [self.view addSubview:show.view];
+    }
     
     [_livePush startCaptureWithSizeType:kCaptureSize352_288 fps:15 position:AVCaptureDevicePositionBack];
     
@@ -189,19 +227,24 @@
              [_livePush stopStreamPush];
         }
       
-    }else if(btn == _pullButton){
-        if (btn.selected) {
-            [_livePull startStreamPullWithUrl:url];
-        }else{
-            [_livePull stopStreamPull];
+    }else{
+        GJLivePull* pull = NULL;
+        for (PullShow* show in _pulls) {
+            if (show.pullBtn == btn) {
+                pull = show.pull;
+                break;
+            }
         }
-
-    }else if(btn == _pull2Button){
-        if (btn.selected) {
-            [_livePull2 startStreamPullWithUrl:url];
-        }else{
-            [_livePull2 stopStreamPull];
+        if (pull == NULL) {
+            assert(0);
         }
+        
+        if (btn.selected) {
+            [pull startStreamPullWithUrl:url];
+        }else{
+            [pull stopStreamPull];
+        }
+        
     }
 
 }
@@ -212,14 +255,21 @@
 
 
 -(void)livePush:(GJLivePush *)livePush connentSuccessWithElapsed:(int)elapsed{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        _pushStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%d ms",elapsed];
-    });
+    _pushStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%d ms",elapsed];
 }
 -(void)livePush:(GJLivePush *)livePush closeConnent:(GJPushSessionInfo *)info resion:(GJConnentCloceReason)reason{
+    GJPushSessionInfo pushInfo = *info;
     dispatch_async(dispatch_get_main_queue(), ^{
-        _pushStateLab.text = [NSString stringWithFormat:@"推流关闭 总推流时长：%ld ms",info->sessionDuring];
+        _pushStateLab.text = [NSString stringWithFormat:@"推流关闭 总推流时长：%ld ms",pushInfo.sessionDuring];
     });
+}
+-(PullShow*)getShowWithPush:(GJLivePull*)pull{
+    for (PullShow* show in _pulls) {
+        if (show.pull == pull) {
+            return show;
+        }
+    }
+    assert(0);
 }
 -(void)livePush:(GJLivePush *)livePush errorType:(GJLiveErrorType)type infoDesc:(id)infoDesc{
     switch (type) {
@@ -233,7 +283,7 @@
         }
         case kLivePushWritePacketError:{
             dispatch_async(dispatch_get_main_queue(), ^{
-                _pullStateLab.text =@"网络错误";
+                _pushStateLab.text =@"网络错误";
             });
             break;
         }
@@ -247,18 +297,21 @@
         _delayLab.text = [NSString stringWithFormat:@"发送阻塞延时%d ms 帧数：%d",status->cacheTime,status->cacheCount];
 }
 -(void)livePull:(GJLivePull *)livePull connentSuccessWithElapsed:(int)elapsed{
-    _pullStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%d ms",elapsed];
+    PullShow* show = [self getShowWithPush:livePull];
+    show.pullStateLab.text = [NSString stringWithFormat:@"connent during：%d ms",elapsed];
 }
 -(void)livePull:(GJLivePull *)livePull closeConnent:(GJPullSessionInfo *)info resion:(GJConnentCloceReason)reason{
-    _pullStateLab.text = [NSString stringWithFormat:@"拉流关闭 总推流时长：%ld ms",info->sessionDuring];
+    PullShow* show = [self getShowWithPush:livePull];
+    show.pullStateLab.text = [NSString stringWithFormat:@"connent total：%ld ms",info->sessionDuring];
 }
 -(void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullStatus *)status{
-    if (_livePull == livePull) {
-        _pullRateLab.text = [NSString stringWithFormat:@"接收码率:%0.2f KB/s",status->bitrate/1024.0];
-        _videoCacheLab.text = [NSString stringWithFormat:@"视频播放缓存时长%d ms 帧数：%d",status->videoCacheTime,status->videoCacheCount];
-        _audioCacheLab.text = [NSString stringWithFormat:@"音频播放缓存时长%d ms 帧数：%d",status->audioCacheTime,status->audioCacheCount];
-    }
-
+    GJPullStatus pullStatus = *status;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        PullShow* show = [self getShowWithPush:livePull];
+        show.pullRateLab.text = [NSString stringWithFormat:@"Bitrate:%0.2f KB/s",pullStatus.bitrate/1024.0];
+        show.videoCacheLab.text = [NSString stringWithFormat:@"V:%d ms %d帧",pullStatus.videoCacheTime,pullStatus.videoCacheCount];
+        show.audioCacheLab.text = [NSString stringWithFormat:@"A:%d ms %d帧",pullStatus.audioCacheTime,pullStatus.audioCacheCount];
+    });
 }
 
 -(void)livePull:(GJLivePull *)livePull fristFrameDecode:(GJPullFristFrameInfo *)info{
@@ -269,15 +322,10 @@
     switch (type) {
         case kLivePullReadPacketError:
         case kLivePullConnectError:{
-            dispatch_async(dispatch_get_main_queue(), ^{
-                _pullStateLab.text =@"拉流失败";
-                [livePull stopStreamPull];
-                if (livePull == _livePull) {
-                    _pullButton.selected = false;
-                }else{
-                    _pull2Button.selected = false;
-                }
-            });
+                PullShow* show = [self getShowWithPush:livePull];
+                show.pullStateLab.text =@"connect error";
+                [show.pull stopStreamPull];
+                show.pullBtn.selected = false;
             break;
         }
         default:
@@ -286,11 +334,13 @@
 }
 
 -(void)livePull:(GJLivePull *)livePull buffingPercent:(float)buffingPercent{
+    PullShow* show = [self getShowWithPush:livePull];
+
     if (buffingPercent > 0.99) {
-        _playerBufferLab.text = [NSString stringWithFormat:@"播放缓冲状态：完成"];
+        show.playerBufferLab.text = [NSString stringWithFormat:@"buffer：结束"];
 
     }else{
-        _playerBufferLab.text = [NSString stringWithFormat:@"播放缓冲状态：%0.2f",buffingPercent];
+        show.playerBufferLab.text = [NSString stringWithFormat:@"buffer：%0.2f",buffingPercent];
 
     }
 

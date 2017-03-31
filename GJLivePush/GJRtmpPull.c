@@ -21,7 +21,7 @@ static bool retainBufferRelease(GJRetainBuffer* buffer){
     RTMPPacket_Free(packet);
     free(packet);
     free(buffer);
-    return false;
+    return true;
 }
 
 static void* pullRunloop(void* parm){
@@ -168,11 +168,15 @@ void GJRtmpPull_Delloc(GJRtmpPull* pull){
     GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Delloc");
 }
 void GJRtmpPull_Close(GJRtmpPull* pull){
+    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Close");
+
     pull->stopRequest = true;
     queueBroadcastPop(pull->pullBufferQueue);
 
 }
 void GJRtmpPull_Release(GJRtmpPull* pull){
+    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Release");
+
     bool shouldDelloc = false;
     pthread_mutex_lock(&pull->mutex);
     pull->releaseRequest = true;
@@ -187,7 +191,10 @@ void GJRtmpPull_Release(GJRtmpPull* pull){
 
 
 void GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,void* callbackParm,const char* pullUrl){
+    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_StartConnect");
+
     if (pull->pullThread != NULL) {
+        GJRtmpPull_Close(pull);
         pthread_join(pull->pullThread, NULL);
     }
     size_t length = strlen(pullUrl);
