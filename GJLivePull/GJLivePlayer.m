@@ -21,6 +21,7 @@
 #endif
 
 
+
 #define VIDEO_PTS_PRECISION   0.4
 #define AUDIO_PTS_PRECISION   0.1
 
@@ -51,8 +52,8 @@ typedef struct CacheControl{
 }GJCacheControl;
 typedef struct PlayControl{
     GJPlayStatus         status;
-    pthread_mutex_t     oLock;
-    int                  audioOffset;
+    pthread_mutex_t      oLock;
+    int                 audioOffset;
     pthread_t            playThread;
 
     GJQueue*             imageQueue;
@@ -62,7 +63,10 @@ typedef struct SyncControl{
     long                 aClock;
     long                 vClock;
     float                speed;
-    long                 bufferTime;
+    long                 bufferTotalDuration;
+    long                 lastBufferDuration;
+    long                 bufferTimes;
+
     long                 startTime;
     long                 showTime;
     long                 startPts;
@@ -71,7 +75,11 @@ typedef struct SyncControl{
     long                 inAPts;
     long                 outAPts;
     long                 lastPauseFlag;
-    TimeSYNCType         syncType;
+    TimeSYNCType          syncType;
+    
+#ifdef NETWORK_DELAY
+    long                 networkDelay;
+#endif
 }GJSyncControl;
 @interface GJLivePlayer()<GJAudioQueueDrivePlayerDelegate>{
     
@@ -115,10 +123,10 @@ long getClockLine(GJSyncControl* sync){
     }else{
         long time = getTime() / 1000;
         if (sync->speed > 1.0) {
-            sync->bufferTime -= (sync->speed - 1.0)*(time-sync->showTime);
+            sync->bufferTotalDuration -= (sync->speed - 1.0)*(time-sync->showTime);
         }
         float timeDiff = time - sync->startTime;
-        return timeDiff + sync->startPts-sync->bufferTime;
+        return timeDiff + sync->startPts-sync->bufferTotalDuration;
     }
 }
 static void* playRunLoop(void* parm){
@@ -217,7 +225,7 @@ static void* playRunLoop(void* parm){
                 if(_syncControl->syncType != kTimeSYNCAudio){
                     [player buffering];
                 }else{
-                    usleep(10*1000);
+                    usleep(16*1000);
                 }
             }
             continue;
@@ -356,8 +364,8 @@ ERROR:
         GJLOG(GJ_LOGDEBUG, "start buffing");
         _syncControl.lastPauseFlag = getTime() / 1000;
         [_audioPlayer pause];
-        if ([self.delegate respondsToSelector:@selector(livePlayer:bufferPercent:)]) {
-            [self.delegate livePlayer:self bufferPercent:0.0];
+        if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
+            [self.delegate livePlayer:self bufferUpdatePercent:0.0 duration:0.0];
         }
         if (_syncControl.syncType == kTimeSYNCAudio) {
             queueSetMinCacheSize(_playControl.audioQueue, (uint)(_cacheControl.lowAudioWaterFlag));
@@ -376,7 +384,6 @@ ERROR:
     pthread_mutex_lock(&_playControl.oLock);
     if (_playControl.status == kPlayStatusBuffering) {
         _playControl.status = kPlayStatusRunning;
-        GJLOG(GJ_LOGDEBUG,"buffer total:%d\n",_syncControl.bufferTime);
 
         if (_syncControl.syncType == kTimeSYNCAudio) {
             queueSetMinCacheSize(_playControl.audioQueue, 0);
@@ -386,18 +393,24 @@ ERROR:
             queueUnLockPop(_playControl.audioQueue);
         }
         if (_syncControl.lastPauseFlag != 0) {
-            _syncControl.bufferTime += getTime() / 1000 - _syncControl.lastPauseFlag;
+            _syncControl.lastBufferDuration = getTime() / 1000 - _syncControl.lastPauseFlag;
+            _syncControl.bufferTotalDuration += _syncControl.lastBufferDuration;
+            _syncControl.bufferTimes++;
             _syncControl.lastPauseFlag = 0;
+            GJLOG(GJ_LOGINFO, "buffing times:%d,totalduring:%ld",_syncControl.bufferTimes,_syncControl.bufferTotalDuration);
         }else{
             GJAssert(0, "暂停管理出现问题");
         }
         [_audioPlayer resume];
+        GJLOG(GJ_LOGDEBUG,"buffer total:%d\n",_syncControl.lastBufferDuration);
+
     }else{
         GJLOG(GJ_LOGDEBUG, "stopBuffering when status not buffering");
     }
     pthread_mutex_unlock(&_playControl.oLock);
 }
 -(void)dewatering{
+    return;
     pthread_mutex_lock(&_playControl.oLock);
     if (_playControl.status == kPlayStatusRunning) {
         if (_syncControl.speed<=1.0) {
@@ -409,6 +422,7 @@ ERROR:
     pthread_mutex_unlock(&_playControl.oLock);
 }
 -(void)stopDewatering{
+    return;
     pthread_mutex_lock(&_playControl.oLock);
     if (_syncControl.speed > 1.0) {
         GJLOG(GJ_LOGDEBUG, "stopDewatering");
@@ -431,12 +445,22 @@ ERROR:
 
     return value;
 }
+#ifdef NETWORK_DELAY
+-(long)getNetWorkDelay{
+    return _syncControl.networkDelay;
+}
+#endif
 -(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(int64_t)pts{    
     GJImageBuffer* imageBuffer  = (GJImageBuffer*)malloc(sizeof(GJImageBuffer));
     imageBuffer->image = imageData;
     imageBuffer->pts = pts;
     if (queuePush(_playControl.imageQueue, imageBuffer, 0)) {
         _syncControl.inVPts = imageBuffer->pts;
+#ifdef NETWORK_DELAY
+        int date = [[NSDate date]timeIntervalSince1970]*1000;
+        _syncControl.networkDelay = date - _syncControl.inVPts;
+#endif
+
         CVPixelBufferRetain(imageData);
         if (_syncControl.syncType != kTimeSYNCAudio && queueGetLength(_playControl.imageQueue)> _cacheControl.highVideoWaterFlag) {
             [self dewatering];
@@ -506,18 +530,23 @@ static const int mpeg4audio_sample_rates[16] = {
     if(queuePush(_playControl.audioQueue, audioBuffer, 0)){
         retainBufferRetain(audioData);
         _syncControl.inAPts = audioBuffer->pts;
+#ifdef NETWORK_DELAY
+        int date = [[NSDate date]timeIntervalSince1970]*1000;
+        _syncControl.networkDelay = date - _syncControl.inAPts;
+#endif
         if (_syncControl.syncType == kTimeSYNCAudio) {
             long length = queueGetLength(_playControl.audioQueue);
             if (_playControl.status == kPlayStatusBuffering){
-              
-                if (length > _cacheControl.lowAudioWaterFlag){
-                    if ([self.delegate respondsToSelector:@selector(livePlayer:bufferPercent:)]) {
-                        [self.delegate livePlayer:self bufferPercent:length*1.0/_cacheControl.lowAudioWaterFlag];
+                long duration = (long)(getTime()/1000) - _syncControl.lastPauseFlag;
+                if (length < _cacheControl.lowAudioWaterFlag){
+                    if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
+                        [self.delegate livePlayer:self bufferUpdatePercent:length*1.0/_cacheControl.lowAudioWaterFlag duration:duration];
+//                        [self.delegate livePlayer:self bufferPercent:length*1.0/_cacheControl.lowAudioWaterFlag];
                     }
-                    [self stopBuffering];
                 }else{
-                    if ([self.delegate respondsToSelector:@selector(livePlayer:bufferPercent:)]) {
-                        [self.delegate livePlayer:self bufferPercent:1.0];
+                    if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
+                        [self.delegate livePlayer:self bufferUpdatePercent:1.0 duration:duration];
+                        [self stopBuffering];
                     }
                 }
             }else if (_playControl.status == kPlayStatusRunning){

@@ -19,7 +19,8 @@
 -(void)livePull:(GJLivePull*)livePull fristFrameDecode:(GJPullFristFrameInfo*)info;
 -(void)livePull:(GJLivePull*)livePull closeConnent:(GJPullSessionInfo*)info resion:(GJConnentCloceReason)reason;
 -(void)livePull:(GJLivePull*)livePull connentSuccessWithElapsed:(int)elapsed;
--(void)livePull:(GJLivePull*)livePull buffingPercent:(float)buffingPercent;
+-(void)livePull:(GJLivePull*)livePull bufferUpdatePercent:(float)percent duration:(long)duration;
+-(void)livePull:(GJLivePull*)livePull networkDelay:(long)delay;
 
 -(void)livePull:(GJLivePull*)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString*)infoDesc;
 

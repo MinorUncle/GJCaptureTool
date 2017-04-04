@@ -8,7 +8,7 @@
 
 #include "GJRtmpPush.h"
 #include "GJLog.h"
-
+#import <Foundation/Foundation.h>
 //extern "C"{
 #include "sps_decode.h"
 //}
@@ -127,6 +127,9 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t 
         return;
     }
 
+//    static int time1 = 0;
+//    NSData* data1 = [NSData dataWithBytes:buffer->data length:buffer->size];
+//    NSLog(@"push%d:%@",time1++,data1);
     
     uint8_t *sps = NULL,*pps = NULL,*pp = NULL;
     int isKey = 0;
@@ -140,14 +143,19 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t 
     int iIndex = 0;
     int preSize = 0;//前面额外需要的空间；
     int spsPreSize = 16,ppPreSize = 9;//flv tag前置预留大小大小
-    preSize = ppPreSize + spsPreSize;
-    if (buffer->frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
-        retainBufferSetFrontSize(buffer, preSize+RTMP_MAX_HEADER_SIZE);
-    }
+   
     find_pp_sps_pps(&isKey, (uint8_t*)buffer->data, buffer->size, &pp, &sps, &spsSize, &pps, &ppsSize, NULL, NULL);
 
     if (pp) {
+        preSize += ppPreSize;
         ppSize = (int)((uint8_t*)buffer->data + buffer->size - pp);//ppsSize最好通过计算获得，直接查找的话查找数据量比较大
+    }
+    if (sps) {
+        preSize += spsPreSize;
+
+    }
+    if (buffer->frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
+        retainBufferSetFrontSize(buffer, preSize+RTMP_MAX_HEADER_SIZE);
     }
     RTMPPacket_Reset(sendPacket);
 
@@ -162,6 +170,8 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t 
     sendPacket->m_nBodySize = preSize + buffer->size;
   
     if (sps && pps) {
+        GJLOG(GJ_LOGINFO, "spsSize:%d,ppsSize:%d",spsSize,ppsSize);
+        GJAssert(ppsSize > 4 && spsSize>4, "pps errpr");
         body[iIndex++] = 0x17;
         body[iIndex++] = 0x00;
         
@@ -189,6 +199,9 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t 
         body[iIndex++] = (ppsSize) & 0xff;
         memmove(&body[iIndex], pps, ppsSize);
         iIndex +=  ppsSize;
+        
+
+
     }
     
     if (pp) {
@@ -202,6 +215,7 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t 
             body[iIndex++] = 0x27;// 2:Pframe  7:AVC
         }
         body[iIndex++] = 0x01;// AVC NALU
+        
         body[iIndex++] = 0x00;
         body[iIndex++] = 0x00;
         body[iIndex++] = 0x00;
@@ -209,10 +223,27 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t 
         body[iIndex++] = ppSize>>24 &0xff;
         body[iIndex++] = ppSize>>16 &0xff;
         body[iIndex++] = ppSize>>8 &0xff;
-        body[iIndex++] = ppSize&0xff;
+        body[iIndex++] = ppSize    &0xff;
         // NALU data
 //        memcpy(&body[iIndex],pp,ppSize);   //不需要移动
     }
+    
+
+//    static int time = 0;
+//    NSData* data = [NSData dataWithBytes:packet->packet.m_body length:40];
+//    NSLog(@"push%d:%@",time++,data);
+//    
+    find_pp_sps_pps(&isKey, (uint8_t*)packet->packet.m_body+9, packet->packet.m_nBodySize-9, &pp, &sps, &spsSize, &pps, &ppsSize, NULL, NULL);
+
+    if (sps || pps) {
+        if (ppsSize != 8+9 || spsSize!= 13+3) {
+            NSData* data = [NSData dataWithBytes:packet->packet.m_body length:packet->packet.m_nBodySize];
+//            NSLog(@"push:%@",data);
+//            NSLog(@"data1:%@",data1);
+        }
+
+    }
+
       if(sender->stopRequest || !queuePush(sender->sendBufferQueue, packet, 0)){
         GJBufferPoolSetData(sender->memoryCachePool, packet);
         sender->dropPacketCount++;

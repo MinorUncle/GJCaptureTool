@@ -21,6 +21,7 @@
 @property (strong, nonatomic) UILabel *videoCacheLab;
 @property (strong, nonatomic) UILabel *audioCacheLab;
 @property (strong, nonatomic) UILabel *playerBufferLab;
+@property (strong, nonatomic) UILabel *netDelay;
 
 
 @property (strong, nonatomic) UIView* view;;
@@ -60,6 +61,13 @@
         _audioCacheLab.text = @"A:0.0 ms :0帧";
         [self.view addSubview:_audioCacheLab];
         
+        _netDelay = [[UILabel alloc]init];
+        _netDelay.numberOfLines = 0;
+        _netDelay.textColor = [UIColor redColor];
+        _netDelay.text = @"NetDelay:0ms";
+        [self.view addSubview:_netDelay];
+
+        
         _playerBufferLab = [[UILabel alloc]init];
         _playerBufferLab.numberOfLines = 0;
         _playerBufferLab.textColor = [UIColor redColor];
@@ -72,7 +80,7 @@
     _frame = frame;
     self.view.frame = frame;
     CGRect rect = frame;
-    int count = 5;
+    int count = 6;
     rect.origin.x = 0;
     rect.origin.y = 0;
     rect.size.height *= 1.0/count;
@@ -86,6 +94,9 @@
     
     rect.origin.y = CGRectGetMaxY(rect);
     _audioCacheLab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _netDelay.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     _playerBufferLab.frame = rect;
@@ -119,7 +130,7 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
-    GJ_LogSetLevel(GJ_LOGALL);
+    GJ_LogSetLevel(GJ_LOGINFO);
     _livePush = [[GJLivePush alloc]init];
     _livePush.delegate = self;
  
@@ -213,7 +224,7 @@
 }
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;
-    char* url = "rtmp://10.0.1.243/live/room";
+    char* url = "rtmp://192.168.1.100/live/room";
     if (btn == _pushButton) {
         if (btn.selected) {
             GJPushConfig config;
@@ -333,19 +344,24 @@
     }
 }
 
--(void)livePull:(GJLivePull *)livePull buffingPercent:(float)buffingPercent{
+-(void)livePull:(GJLivePull *)livePull bufferUpdatePercent:(float)percent duration:(long)duration{
     PullShow* show = [self getShowWithPush:livePull];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        show.playerBufferLab.text = [NSString stringWithFormat:@"buffer：%0.2f  %ld ms",percent,duration];
+            
+    });
 
-    if (buffingPercent > 0.99) {
-        show.playerBufferLab.text = [NSString stringWithFormat:@"buffer：结束"];
-
-    }else{
-        show.playerBufferLab.text = [NSString stringWithFormat:@"buffer：%0.2f",buffingPercent];
-
-    }
 
 }
 
+-(void)livePull:(GJLivePull *)livePull networkDelay:(long)delay{
+    PullShow* show = [self getShowWithPush:livePull];
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        show.netDelay.text = [NSString stringWithFormat:@"NetDelay:%ld ms",delay];
+        
+    });
+}
 /*
 #pragma mark - Navigation
 

@@ -8,7 +8,7 @@
 
 #import "GJH264Decoder.h"
 #import "sps_decode.h"
-#import "GJDebug.h"
+#import "GJLog.h"
 @interface GJH264Decoder()
 {
     dispatch_queue_t _decodeQueue;//解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
@@ -66,7 +66,7 @@ void decodeOutputCallback(
 //    NSLog(@"decodeOutputCallback:%@",[NSThread currentThread]);
     
     if (status != 0) {
-        GJPrintf("解码error:%d",(int)status);
+        GJLOG(GJ_LOGERROR,"解码error1:%d",(int)status);
         return;
     }
 //    GJPrintf("pts:%f   ,ptd:%f\n",presentationTimeStamp.value*1.0 / presentationTimeStamp.timescale,presentationDuration.value*1.0/presentationDuration.timescale);
@@ -155,35 +155,29 @@ void decodeOutputCallback(
                         NSLog(@"key:%@,%@",CFArrayGetValueAtIndex(arr, i),list);
                     }
 #endif
-                    CMVideoDimensions currentDimens = CMVideoFormatDescriptionGetDimensions(desc);
-                    if (_formatDesc == NULL) {
-                        _formatDesc = desc;
+                    if(status != noErr){
+                        GJAssert(0, "sps or pps error");
+                        if (_formatDesc == NULL) {
+                            return;
+                        }
                     }else{
-                        CMVideoDimensions preDimens = CMVideoFormatDescriptionGetDimensions(_formatDesc);
-                        if (currentDimens.width != preDimens.width || currentDimens.height != preDimens.height) {
-                            CFRelease(_formatDesc);
+                        if (_formatDesc == NULL) {
                             _formatDesc = desc;
-                            shouldReCreate = YES;
                         }else{
-                            CFRelease(desc);
+                            if (!CMFormatDescriptionEqual(_formatDesc, desc)) {
+                                shouldReCreate = true;
+                                CFRelease(_formatDesc);
+                                _formatDesc = desc;
+                            }else{
+                                CFRelease(desc);
+                            }
                         }
                     }
-                    
-//                    if (!CMFormatDescriptionEqual(_formatDesc, desc)) {
-//                        shouldReCreate = false;
-//                        if (_formatDesc) {
-//                            CFRelease(_formatDesc);
-//                        }
-//                        _formatDesc = desc;
-//                    }else{
-//                        CFRelease(desc);
-//                    }
-                    if(status == noErr)
-                    {
-                        if (_decompressionSession == NULL || shouldReCreate || _shouldRestart) {
-                            [self createDecompSession];
 
-                        }
+                    if (_decompressionSession == NULL || shouldReCreate || _shouldRestart) {
+                        GJLOG(GJ_LOGWARNING, "reCreate decoder ,format:%p",_formatDesc);
+                        [self createDecompSession];
+
                     }
                 }
             }
@@ -218,7 +212,7 @@ void decodeOutputCallback(
                     
                     
                     if (status != 0) {
-                        GJPrintf("\t\t SampleBufferCreate: \t %d\n", status);
+                        GJLOG(GJ_LOGERROR, "CMSampleBufferCreate：%d",status);
                         goto ERROR;
                     }
                 }else{
@@ -233,7 +227,19 @@ void decodeOutputCallback(
 //                status = CMSampleBufferSetOutputPresentationTimeStamp(sampleBuffer, pts);
 //                
 //                assert(status == 0);
-                [self render:sampleBuffer];
+                VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
+                VTDecodeInfoFlags flagOut;
+                OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
+                if (status < 0) {
+                    GJLOG(GJ_LOGERROR, "解码错误0：%d  ,format:%p",status,_formatDesc);
+//                    [self createDecompSession];
+//                    status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
+//                    if (status < 0) {
+//                        GJLOG(GJ_LOGERROR, "解码错误：%d  丢帧",status);
+//                        _shouldRestart = YES;
+//                    }
+                }
+                
                 CFRelease(sampleBuffer);
                 CFRelease(blockBuffer);
             }
@@ -252,16 +258,16 @@ ERROR:
 }
 
 //解码
-- (void) render:(CMSampleBufferRef)sampleBuffer
-{
-    VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
-    VTDecodeInfoFlags flagOut;
-    OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
-    if (status < 0) {
-        GJPrintf("解码错误error:%d\n",status);
-        _shouldRestart = YES;
-    }
-}
+//- (void) render:(CMSampleBufferRef)sampleBuffer
+//{
+//    VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
+//    VTDecodeInfoFlags flagOut;
+//    OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
+//    if (status < 0) {
+//        GJPrintf("解码错误error:%d\n",status);
+//        _shouldRestart = YES;
+//    }
+//}
 NSString * const naluTypesStrings[] =
 {
     @"0: Unspecified (non-VCL)",

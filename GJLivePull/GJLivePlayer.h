@@ -21,9 +21,11 @@ typedef enum _GJPlayStatus{
     kPlayStatusBuffering,
 }GJPlayStatus;
 
+
 @protocol GJLivePlayerDeletate <NSObject>
 
--(void)livePlayer:(GJLivePlayer*)livePlayer bufferPercent:(float)percent;
+-(void)livePlayer:(GJLivePlayer*)livePlayer bufferUpdatePercent:(float)percent duration:(long)duration;
+
 @end
 
 
@@ -41,6 +43,9 @@ typedef enum _GJPlayStatus{
 -(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(int64_t)pts;
 -(GJCacheInfo)getVideoCache;
 -(GJCacheInfo)getAudioCache;
+#ifdef NETWORK_DELAY
+-(long)getNetWorkDelay;
+#endif
 
 @end
- 
+

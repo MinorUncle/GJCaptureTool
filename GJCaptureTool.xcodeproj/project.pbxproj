@@ -28,7 +28,7 @@
 		044018CD1E6CF14000DEBF98 /* GJLivePush.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440189E1E6CF13F00DEBF98 /* GJLivePush.m */; };
 		044018CF1E6CF14000DEBF98 /* GJRtmpPull.h in Headers */ = {isa = PBXBuildFile; fileRef = 044018A01E6CF13F00DEBF98 /* GJRtmpPull.h */; };
 		044018D01E6CF14000DEBF98 /* GJRtmpPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 044018A11E6CF13F00DEBF98 /* GJRtmpPush.h */; };
-		044018D11E6CF14000DEBF98 /* GJRtmpPush.c in Sources */ = {isa = PBXBuildFile; fileRef = 044018A21E6CF13F00DEBF98 /* GJRtmpPush.c */; };
+		044018D11E6CF14000DEBF98 /* GJRtmpPush.m in Sources */ = {isa = PBXBuildFile; fileRef = 044018A21E6CF13F00DEBF98 /* GJRtmpPush.m */; };
 		044018D31E6CF14000DEBF98 /* GJH264Decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 044018A51E6CF13F00DEBF98 /* GJH264Decoder.h */; };
 		044018D41E6CF14000DEBF98 /* GJH264Decoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 044018A61E6CF13F00DEBF98 /* GJH264Decoder.m */; };
 		044018D51E6CF14000DEBF98 /* GJH264Encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 044018A71E6CF13F00DEBF98 /* GJH264Encoder.h */; };
@@ -49,7 +49,7 @@
 		6A7D08731E8A46BA008CE0E5 /* sps_decode.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A0E86E91E84BE8A002A2A2D /* sps_decode.c */; };
 		6A7D08741E8A46BA008CE0E5 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = 044018EC1E6CF4E400DEBF98 /* GJLivePull.m */; };
 		6A7D08751E8A46BA008CE0E5 /* GJLivePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 046EDC1B1E6E745A00D9D8FC /* GJLivePlayer.m */; };
-		6A7D08761E8A46BA008CE0E5 /* GJRtmpPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 0440189F1E6CF13F00DEBF98 /* GJRtmpPull.c */; };
+		6A7D08761E8A46BA008CE0E5 /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */; };
 		6A7D08AD1E8B85EA008CE0E5 /* GJAudioQueuePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440188B1E6CF13F00DEBF98 /* GJAudioQueuePlayer.m */; };
 		6ABD5B651E88B65A00404A6B /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6ABD5B661E88B73B00404A6B /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E61E84BE3F002A2A2D /* libcrypto.a */; };
@@ -218,10 +218,10 @@
 		0440189C1E6CF13F00DEBF98 /* GJLivePush+advanced.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GJLivePush+advanced.m"; sourceTree = "<group>"; };
 		0440189D1E6CF13F00DEBF98 /* GJLivePush.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePush.h; sourceTree = "<group>"; };
 		0440189E1E6CF13F00DEBF98 /* GJLivePush.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJLivePush.m; sourceTree = "<group>"; };
-		0440189F1E6CF13F00DEBF98 /* GJRtmpPull.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = GJRtmpPull.c; path = ../GJLivePush/GJRtmpPull.c; sourceTree = "<group>"; };
+		0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GJRtmpPull.m; path = ../GJLivePush/GJRtmpPull.m; sourceTree = "<group>"; };
 		044018A01E6CF13F00DEBF98 /* GJRtmpPull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJRtmpPull.h; path = ../GJLivePush/GJRtmpPull.h; sourceTree = "<group>"; };
 		044018A11E6CF13F00DEBF98 /* GJRtmpPush.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJRtmpPush.h; sourceTree = "<group>"; };
-		044018A21E6CF13F00DEBF98 /* GJRtmpPush.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJRtmpPush.c; sourceTree = "<group>"; };
+		044018A21E6CF13F00DEBF98 /* GJRtmpPush.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJRtmpPush.m; sourceTree = "<group>"; };
 		044018A31E6CF13F00DEBF98 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		044018A51E6CF13F00DEBF98 /* GJH264Decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJH264Decoder.h; sourceTree = "<group>"; };
 		044018A61E6CF13F00DEBF98 /* GJH264Decoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJH264Decoder.m; sourceTree = "<group>"; };
@@ -630,7 +630,7 @@
 				0440189D1E6CF13F00DEBF98 /* GJLivePush.h */,
 				0440189E1E6CF13F00DEBF98 /* GJLivePush.m */,
 				044018A11E6CF13F00DEBF98 /* GJRtmpPush.h */,
-				044018A21E6CF13F00DEBF98 /* GJRtmpPush.c */,
+				044018A21E6CF13F00DEBF98 /* GJRtmpPush.m */,
 				044018A31E6CF13F00DEBF98 /* Info.plist */,
 			);
 			path = GJLivePush;
@@ -692,7 +692,7 @@
 				046EDC1A1E6E745A00D9D8FC /* GJLivePlayer.h */,
 				046EDC1B1E6E745A00D9D8FC /* GJLivePlayer.m */,
 				044018A01E6CF13F00DEBF98 /* GJRtmpPull.h */,
-				0440189F1E6CF13F00DEBF98 /* GJRtmpPull.c */,
+				0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */,
 			);
 			path = GJLivePull;
 			sourceTree = "<group>";
@@ -1487,7 +1487,7 @@
 				6A7D08731E8A46BA008CE0E5 /* sps_decode.c in Sources */,
 				6A7D08741E8A46BA008CE0E5 /* GJLivePull.m in Sources */,
 				6A7D08751E8A46BA008CE0E5 /* GJLivePlayer.m in Sources */,
-				6A7D08761E8A46BA008CE0E5 /* GJRtmpPull.c in Sources */,
+				6A7D08761E8A46BA008CE0E5 /* GJRtmpPull.m in Sources */,
 				044018C21E6CF13F00DEBF98 /* GJPCMDecodeFromAAC.m in Sources */,
 				04A081741E70E63A000E2B64 /* GJAudioQueueDrivePlayer.m in Sources */,
 				6A7D08AD1E8B85EA008CE0E5 /* GJAudioQueuePlayer.m in Sources */,
@@ -1495,7 +1495,7 @@
 				044018CD1E6CF14000DEBF98 /* GJLivePush.m in Sources */,
 				044018BC1E6CF13F00DEBF98 /* GJAudioQueueRecoder.m in Sources */,
 				044018D41E6CF14000DEBF98 /* GJH264Decoder.m in Sources */,
-				044018D11E6CF14000DEBF98 /* GJRtmpPush.c in Sources */,
+				044018D11E6CF14000DEBF98 /* GJRtmpPush.m in Sources */,
 				044018D61E6CF14000DEBF98 /* GJH264Encoder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

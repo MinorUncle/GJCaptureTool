@@ -9,6 +9,13 @@
 #ifndef GJLiveDefine_h
 #define GJLiveDefine_h
 #import <CoreGraphics/CGGeometry.h>
+#import "GJRetainBuffer.h"
+
+//网络延迟收集，只有在同一收集同时推拉流才准确
+#define NETWORK_DELAY
+
+
+
 typedef struct GJPushConfig {
     //    video 。videoFps;等于采集的fps,pushSize与capturesize不同时会保留最大裁剪缩放
     CGSize      pushSize;
@@ -105,4 +112,23 @@ typedef struct CacheInfo{
     int cacheTime;//ms
     int cacheCount;
 }GJCacheInfo;
+
+typedef struct H264Packet{
+    GJRetainBuffer* memBlock;
+    int pts;
+    uint8_t* sps;
+    int spsSize;
+    uint8_t* pps;
+    int ppsSize;
+    uint8_t* pp;
+    int ppSize;
+    uint8_t* sei;
+    int seiSize;
+}GJH264Packet;
+typedef struct AACPacket{
+    GJRetainBuffer* memBlock;
+    int pts;
+    uint8_t* adts;
+    int adtsSize;
+}GJAACPacket;
 #endif /* GJLiveDefine_h */

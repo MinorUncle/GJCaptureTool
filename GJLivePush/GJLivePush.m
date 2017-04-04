@@ -203,7 +203,7 @@
     __weak GJLivePush* wkSelf = self;
     wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
         CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
-        uint64_t pts = [[NSDate date]timeIntervalSinceDate:wkSelf.connentDate]*1000;
+        int pts = [[NSDate date]timeIntervalSince1970]*1000;
         [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:pts fourceKey:false];
     };
 }
@@ -283,7 +283,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 //    NSLog(@"pushaudio times:%d ,%@",times++,audio);
     _sendByte += dataBuffer->size;
     _unitByte += dataBuffer->size;
-    int cpts = [[NSDate date]timeIntervalSinceDate:_connentDate]*1000;
+    int cpts = [[NSDate date]timeIntervalSince1970]*1000;
 #ifdef GJPUSHAUDIOQUEUEPLAY_TEST
     if (_audioTestPlayer == nil) {
         _audioTestPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:recoder.format maxBufferSize:2000 macgicCookie:nil];

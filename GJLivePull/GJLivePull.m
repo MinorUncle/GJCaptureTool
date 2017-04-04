@@ -107,6 +107,10 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         status.videoCacheCount = videoCache.cacheCount;
         
         [self.delegate livePull:self updatePullStatus:&status];
+        
+        if ([self.delegate respondsToSelector:@selector(livePull:networkDelay:)]) {
+            [self.delegate livePull:self networkDelay:[_player getNetWorkDelay]];
+        }
     }];
 }
 
@@ -215,10 +219,10 @@ static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBu
     [_player addAudioDataWith:buffer pts:pts];
 }
 
--(void)livePlayer:(GJLivePlayer *)livePlayer bufferPercent:(float)percent{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.delegate livePull:self buffingPercent:percent];
-    });
+-(void)livePlayer:(GJLivePlayer *)livePlayer bufferUpdatePercent:(float)percent duration:(long)duration{
+    if ([self.delegate respondsToSelector:@selector(livePull:bufferUpdatePercent:duration:)]) {
+        [self.delegate livePull:self bufferUpdatePercent:percent duration:duration];
+    }
 }
 -(void)dealloc{
     if (_videoPull) {
