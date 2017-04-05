@@ -11,6 +11,7 @@
 #import "GJFormats.h"
 #import "GJQueue.h"
 #import "GJRetainBuffer.h"
+#import "GJLiveDefine+internal.h"
 @class GJH264Decoder;
 @protocol GJH264DecoderDelegate <NSObject>
 -(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts;
@@ -21,5 +22,5 @@
 @property(nonatomic,weak)id<GJH264DecoderDelegate> delegate;
 //default kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
 @property(nonatomic,assign)OSType outPutImageFormat;
--(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(int64_t)pts;
+-(void)decodePacket:(R_GJH264Packet *)packet;
 @end

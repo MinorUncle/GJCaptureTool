@@ -9,22 +9,27 @@
 #include "GJRtmpPull.h"
 #include "GJLog.h"
 #include "sps_decode.h"
-#import "GJLiveDefine.h"
+#import "GJLiveDefine+internal.h"
 #include <string.h>
 #import <Foundation/Foundation.h>
 #define BUFFER_CACHE_SIZE 40
 #define RTMP_RECEIVE_TIMEOUT    3
 
-
-void GJRtmpPull_Delloc(GJRtmpPull* pull);
-
-static bool retainBufferRelease(GJRetainBuffer* buffer){
-    RTMPPacket* packet = buffer->parm;
-    RTMPPacket_Free(packet);
-    free(packet);
+static bool audioRetainBufferRelease(GJRetainBuffer* buffer){
+    R_GJH264Packet* packet = (R_GJH264Packet*)buffer->data;
+    free(packet->memBlock);
     free(buffer);
     return true;
 }
+static bool videoRetainBufferRelease(GJRetainBuffer* buffer){
+    R_GJAACPacket* packet = (R_GJAACPacket*)buffer->data;
+    free(packet->memBlock);
+    free(buffer);
+    return true;
+}
+
+void GJRtmpPull_Delloc(GJRtmpPull* pull);
+
 
 static void* pullRunloop(void* parm){
     pthread_setname_np("rtmpPullLoop");
@@ -60,7 +65,9 @@ static void* pullRunloop(void* parm){
         RTMPPacket* packet = (RTMPPacket*)malloc(sizeof(RTMPPacket));
         memset(packet, 0, sizeof(RTMPPacket));
         while (RTMP_ReadPacket(pull->rtmp, packet)) {
-            
+            uint8_t *sps = NULL,*pps = NULL,*pp = NULL,*sei = NULL;
+            int spsSize = 0,ppsSize = 0,ppSize = 0,seiSize=0;
+            GJStreamPacket streamPacket;
             if (!RTMPPacket_IsReady(packet) || !packet->m_nBodySize)
             {
                 continue;
@@ -73,21 +80,29 @@ static void* pullRunloop(void* parm){
 //            NSData* data = [NSData dataWithBytes:packet->m_body length:packet->m_nBodySize];
 //
 //            NSLog(@"pull%d,%@",time++,data);
-            GJRTMPDataType dataType = 0;
-            void* outPoint;
-            int outSize;
+            GJMediaType dataType = 0;
             if (packet->m_packetType == RTMP_PACKET_TYPE_AUDIO) {
-                dataType = GJRTMPAudioData;
-                outPoint = packet->m_body+2;
-                outSize = packet->m_nBodySize-2;
+                streamPacket.type = GJAudioType;
+                uint8_t* body = (uint8_t*)packet->m_body;
+                R_GJAACPacket* aacPacket = (R_GJAACPacket*)malloc(sizeof(R_GJAACPacket));
+                aacPacket->memBlock = body - RTMP_MAX_HEADER_SIZE;
+                aacPacket->adts = body+2;
+                aacPacket->adtsSize = 7;
+                aacPacket->aac = aacPacket->adts+7;
+                aacPacket->aacSize = (int)(body+packet->m_nBodySize-aacPacket->aac);
+                streamPacket.packet.aacPacket = aacPacket;
+                GJRetainBuffer* retainBuffer = &aacPacket->retain;
+                retainBufferPack(&retainBuffer, aacPacket, sizeof(aacPacket), audioRetainBufferRelease, NULL);
+                free(packet);
+                pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
+                retainBufferUnRetain(retainBuffer);
+                
             }else if (packet->m_packetType == RTMP_PACKET_TYPE_VIDEO){
-                dataType = GJRTMPVideoData;
-                uint8_t *sps = NULL,*pps = NULL,*pp = NULL;
+                dataType = GJVideoType;
+
                 uint8_t *body = (uint8_t*)packet->m_body;
                 uint8_t *pbody = body;
                 int isKey = 0;
-                int spsSize = 0,ppsSize = 0,ppSize = 0;
-                
                 if ((*pbody & 0x0F) == 7) {
                     pbody = body+1;
                     if (*pbody == 0) {//sps pps
@@ -110,46 +125,30 @@ static void* pullRunloop(void* parm){
                         }
                     }
                     if (*pbody == 1) {//naul
-                        find_pp_sps_pps(&isKey, pbody+9,(int)(body+packet->m_nBodySize- pbody-9), &pp, NULL, NULL, NULL, NULL, NULL, NULL);
+                        find_pp_sps_pps(&isKey, pbody+9,(int)(body+packet->m_nBodySize- pbody-9), &pp, NULL, NULL, NULL, NULL, &sei, &seiSize);
                     }
                     
                 }else{
-                    GJLOG(GJ_LOGERROR,"not h264 stream,type:%d\n",body[0] & 0x0F);
-                    assert(0);
+                    GJAssert(0,"not h264 stream,type:%d\n",body[0] & 0x0F);
                 }
-                
-//#define FIND_SPSPPS
-#ifdef FIND_SPSPPS
-                find_pp_sps_pps(&isKey, (uint8_t*)packet->m_body+9, packet->m_nBodySize-9, &pp, &sps, &spsSize, &pps, &ppsSize, NULL, NULL);
-                
-                if (pp && sps) {
-                    spsSize -= 3;
-                    ppsSize -= 9;
-                    
-                    if(spsSize != 13 || ppsSize != 8){
-                        NSData* data = [NSData dataWithBytes:packet->m_body length:packet->m_nBodySize];
-                        NSLog(@"sps data:%@",data);
-                    }
-
-                    ppSize = (int)((uint8_t*)packet->m_body + packet->m_nBodySize - pp);//ppSize最好通过计算获得，直接查找的话查找数据量比较大
-                    pps = memmove(pp-ppsSize, pps, ppsSize);
-                    sps = memmove(pps-spsSize, sps, spsSize);
-                    
-                    outPoint = sps;
-                    outSize = spsSize+ppsSize+ppSize;
-                }else if(pp){
-                    ppSize = (int)((uint8_t*)packet->m_body + packet->m_nBodySize - pp);//ppSize最好通过计算获得，直接查找的话查找数据量比较大
-                    outPoint = pp;
-                    outSize = ppSize;
-                }else{
-                    
-                    GJAssert(0, "数据有误\n");
-                    RTMPPacket_Free(packet);
-                    free(packet);
-                    packet = NULL;
-                    break;
-                }
-#endif
+                R_GJH264Packet* h264Packet = (R_GJH264Packet*)malloc(sizeof(R_GJH264Packet));
+                h264Packet->memBlock = (uint8_t*)packet->m_body;
+                h264Packet->needPreSize = 0;
+                h264Packet->sps = sps;
+                h264Packet->spsSize = spsSize;
+                h264Packet->pps = pps;
+                h264Packet->ppsSize = ppsSize;
+                h264Packet->pp = pp;
+                h264Packet->ppSize = ppSize;
+                h264Packet->sei = sei;
+                h264Packet->seiSize = seiSize;
+                h264Packet->pts = packet->m_nTimeStamp;
+                streamPacket.packet.h264Packet = h264Packet;
+                GJRetainBuffer* retainBuffer = &h264Packet->retain;
+                retainBufferPack(&retainBuffer, h264Packet, sizeof(h264Packet), videoRetainBufferRelease, NULL);
+                free(packet);
+                pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
+                retainBufferUnRetain(retainBuffer);
             }else{
                 GJLOG(GJ_LOGWARNING,"not media Packet:%p type:%d \n",packet,packet->m_packetType);
                 RTMPPacket_Free(packet);
@@ -157,11 +156,6 @@ static void* pullRunloop(void* parm){
                 packet = NULL;
                 break;
             }
-            GJH264Packet retainPacket = {0};
-            GJRetainBuffer* retainBuffer = NULL;
-            retainBufferPack(&retainBuffer, outPoint, outSize, retainBufferRelease, packet);
-            pull->dataCallback(pull,dataType,retainBuffer,pull->dataCallbackParm,packet->m_nTimeStamp);
-            retainBufferUnRetain(retainBuffer);
             packet = NULL;
             break;
         }

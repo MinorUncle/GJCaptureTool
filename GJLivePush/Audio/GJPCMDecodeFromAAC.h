@@ -10,6 +10,7 @@
 #import <CoreMedia/CoreMedia.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import "GJRetainBuffer.h"
+#import "GJLiveDefine+internal.h"
 
 @class GJPCMDecodeFromAAC;
 @protocol GJPCMDecodeFromAACDelegate <NSObject>
@@ -27,7 +28,7 @@
 -(void)start;
 -(void)stop;
 
--(void)decodeBuffer:(GJRetainBuffer*)buffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins pts:(int64_t)pts;
+-(void)decodePacket:(R_GJAACPacket*)packet;
 
 
 - (instancetype)initWithDestDescription:(AudioStreamBasicDescription*)description SourceDescription:(AudioStreamBasicDescription*)sourceDescription;

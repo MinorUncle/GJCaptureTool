@@ -150,15 +150,17 @@ static const int mpeg4audio_sample_rates[16] = {
     96000, 88200, 64000, 48000, 44100, 32000,
     24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
-static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBuffer* buffer,void* parm,int64_t pts){
+static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* parm){
     GJLivePull* livePull = (__bridge GJLivePull *)(parm);
     
-    livePull.sendByte = livePull.sendByte + buffer->size;
-    livePull.unitByte = livePull.unitByte + buffer->size;
-    if (dataType == GJRTMPAudioData) {
+
+    if (streamPacket.type == GJAudioType) {
+        GJRetainBuffer* buffer = &streamPacket.packet.aacPacket->retain;
+        livePull.sendByte = livePull.sendByte + buffer->size;
+        livePull.unitByte = livePull.unitByte + buffer->size;
         if (livePull.fristAudioDate == nil) {
             livePull.fristAudioDate = [NSDate date];
-            uint8_t* adts = buffer->data;
+            uint8_t* adts = streamPacket.packet.aacPacket->adts;
             uint8_t sampleIndex = adts[2] << 2;
             sampleIndex = sampleIndex>>4;
             int sampleRate = mpeg4audio_sample_rates[sampleIndex];
@@ -186,17 +188,17 @@ static void pullDataCallback(GJRtmpPull* pull,GJRTMPDataType dataType,GJRetainBu
             livePull.player.audioFormat = destformat;
             [livePull.player start];
         }
-        AudioStreamPacketDescription format;
-        format.mDataByteSize = buffer->size;
-        format.mStartOffset = 7;
-        format.mVariableFramesInPacket = 0;
-        [livePull.audioDecoder decodeBuffer:buffer packetDescriptions:&format pts:pts];
+        [livePull.audioDecoder decodePacket:streamPacket.packet.aacPacket];
 //        static int times =0;
 //        NSData* audio = [NSData dataWithBytes:buffer->data length:buffer->size];
 //        NSLog(@" pullaudio times:%d ,%@",times++,audio);
         
-    }else if (dataType == GJRTMPVideoData) {
-        [livePull.videoDecoder decodeBuffer:buffer pts:pts];
+    }else if (streamPacket.type == GJVideoType) {
+        GJRetainBuffer* buffer = &streamPacket.packet.aacPacket->retain;
+        livePull.sendByte = livePull.sendByte + buffer->size;
+        livePull.unitByte = livePull.unitByte + buffer->size;
+        
+        [livePull.videoDecoder decodePacket:streamPacket.packet.h264Packet];
     }
 }
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts{

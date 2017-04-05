@@ -122,7 +122,9 @@
     _destFormat.baseFormat.width = w;
     _destFormat.baseFormat.height = h;
     if (_bufferPool != NULL) {
-        GJRetainBufferPoolCleanAndFree(&_bufferPool);
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+            GJRetainBufferPoolCleanAndFree(&_bufferPool);
+        });
     }
     GJRetainBufferPoolCreate(&_bufferPool, w*h,true);///选最大size
     [self _setCompressionSession];
@@ -259,8 +261,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         // Read the NAL unit length
         uint32_t NALUnitLength = 0;
         memcpy(&NALUnitLength, dataPointer + bufferOffset, AVCCHeaderLength);
-        
-        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
+        NALUnitLength = CFSwapInt32HostToBig(NALUnitLength);
         uint8_t* data = dataPointer + bufferOffset;
         memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
         bufferOffset += AVCCHeaderLength + NALUnitLength;

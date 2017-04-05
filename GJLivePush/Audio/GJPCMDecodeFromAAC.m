@@ -11,11 +11,7 @@
 #import "GJLog.h"
 #import "GJRetainBufferPool.h"
 
-typedef struct _DecodeAudioFrame{
-    GJRetainBuffer* audioBuffer;
-    int64_t pts;
-    AudioStreamPacketDescription packetDesc;
-}GJDecodeAudioFrame;
+
 
 @interface GJPCMDecodeFromAAC ()
 {
@@ -28,7 +24,8 @@ typedef struct _DecodeAudioFrame{
 
     
     
-    GJDecodeAudioFrame* _preFrame;
+    R_GJAACPacket* _prePacket;
+    AudioStreamPacketDescription tPacketDesc;
 }
 
 @property (nonatomic,assign) int64_t currentPts;
@@ -106,22 +103,20 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
    
     GJPCMDecodeFromAAC* decode =(__bridge GJPCMDecodeFromAAC*)inUserData;
     
-    if (decode->_preFrame) {
-        retainBufferUnRetain(decode->_preFrame->audioBuffer);
-        free(decode->_preFrame);
-        decode->_preFrame = NULL;
+    if (decode->_prePacket) {
+        retainBufferUnRetain(&decode->_prePacket->retain);
+        decode->_prePacket = NULL;
     }
     GJQueue* param =   decode->_resumeQueue;
     GJRetainBuffer* retainBuffer;
-    GJDecodeAudioFrame* frame;
+    R_GJAACPacket* packet;
     AudioStreamPacketDescription* description = NULL;
     
-    if (decode.running && queuePop(param,(void**)&frame,INT_MAX)) {
-        retainBuffer = frame->audioBuffer;
-        description = &(frame->packetDesc);
-        ioData->mBuffers[0].mData = (uint8_t*)retainBuffer->data + description->mStartOffset;
+    if (decode.running && queuePop(param,(void**)&packet,INT_MAX)) {
+        retainBuffer = &packet->retain;
+        ioData->mBuffers[0].mData = (uint8_t*)packet->aac;
         ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
-        ioData->mBuffers[0].mDataByteSize = retainBuffer->size - (UInt32)description->mStartOffset;
+        ioData->mBuffers[0].mDataByteSize = packet->aacSize;
         description->mDataByteSize -= description->mStartOffset;
         description->mStartOffset = 0;
         *ioNumberDataPackets = 1;
@@ -131,25 +126,21 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     
     if (outDataPacketDescription) {
-        outDataPacketDescription[0] = description;
+        decode->tPacketDesc.mStartOffset = decode->tPacketDesc.mVariableFramesInPacket=0;
+        decode->tPacketDesc.mDataByteSize = packet->aacSize;
+        outDataPacketDescription[0] = &(decode->tPacketDesc);
     }
     if (decode.currentPts <= 0) {
-        decode.currentPts = frame->pts;
+        decode.currentPts = packet->pts;
     }
-    decode->_preFrame = frame;
+    decode->_prePacket = packet;
     return noErr;
 }
 
--(void)decodeBuffer:(GJRetainBuffer*)audioBuffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptioins pts:(int64_t)pts{
-    
-    retainBufferRetain(audioBuffer);
-    GJDecodeAudioFrame *frame = (GJDecodeAudioFrame*)malloc(sizeof(GJDecodeAudioFrame));
-    frame->audioBuffer = audioBuffer;
-    frame->pts = pts;
-    frame->packetDesc = *packetDescriptioins;
-    if (!queuePush(_resumeQueue, frame,1000)) {
-        retainBufferUnRetain(audioBuffer);
-        free(frame);
+-(void)decodePacket:(R_GJAACPacket*)packet{
+    retainBufferRetain(&packet->retain);
+    if (!queuePush(_resumeQueue, packet,1000)) {
+        retainBufferUnRetain(&packet->retain);
         GJLOG(GJ_LOGWARNING,"aac decode to pcm queuePush faile");
     }
 }
@@ -167,9 +158,9 @@ static const int mpeg4audio_sample_rates[16] = {
     
     if(_sourceFormat.mFormatID <= 0){
     // get audio format
-        GJDecodeAudioFrame* frame;
-        if (queuePeekWaitValue(_resumeQueue, 0,(void**)&frame, INT_MAX) && _running) {
-            uint8_t* adts = frame->audioBuffer->data;
+        R_GJAACPacket* packet;
+        if (queuePeekWaitValue(_resumeQueue, 0,(void**)&packet, INT_MAX) && _running) {
+            uint8_t* adts = packet->adts;
             uint8_t sampleIndex = adts[2] << 2;
             sampleIndex = sampleIndex>>4;
             int sampleRate = mpeg4audio_sample_rates[sampleIndex];
@@ -262,9 +253,8 @@ static const int mpeg4audio_sample_rates[16] = {
 -(void)dealloc{
     _isRunning = NO;
     AudioConverterDispose(_decodeConvert);
-    if (_preFrame) {
-        retainBufferUnRetain(_preFrame->audioBuffer);
-        free(_preFrame);
+    if (_prePacket) {
+        retainBufferUnRetain(&_prePacket->retain);
     }
     GJLOG(GJ_LOGDEBUG, "gjpcmdecodeformaac delloc");
 }

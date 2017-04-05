@@ -51,6 +51,7 @@
 		6A7D08751E8A46BA008CE0E5 /* GJLivePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 046EDC1B1E6E745A00D9D8FC /* GJLivePlayer.m */; };
 		6A7D08761E8A46BA008CE0E5 /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */; };
 		6A7D08AD1E8B85EA008CE0E5 /* GJAudioQueuePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440188B1E6CF13F00DEBF98 /* GJAudioQueuePlayer.m */; };
+		6A94E83E1E94D6F200B73901 /* GJLiveDefine+internal.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A94E83D1E94D6F200B73901 /* GJLiveDefine+internal.c */; };
 		6ABD5B651E88B65A00404A6B /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6ABD5B661E88B73B00404A6B /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E61E84BE3F002A2A2D /* libcrypto.a */; };
 		6ABD5B671E88B73B00404A6B /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E41E84BE3F002A2A2D /* libopenssl.a */; };
@@ -467,6 +468,8 @@
 		6A0E86FB1E84E881002A2A2D /* log.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = log.h; sourceTree = "<group>"; };
 		6A0E86FC1E84E881002A2A2D /* rtmp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtmp.h; sourceTree = "<group>"; };
 		6A0E86FD1E84E881002A2A2D /* rtmp_sys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rtmp_sys.h; sourceTree = "<group>"; };
+		6A94E8271E948E7F00B73901 /* GJLiveDefine+internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "GJLiveDefine+internal.h"; sourceTree = "<group>"; };
+		6A94E83D1E94D6F200B73901 /* GJLiveDefine+internal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "GJLiveDefine+internal.c"; sourceTree = "<group>"; };
 		AEEA477A1DC3AB770075EE63 /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		AEEA477B1DC3AB770075EE63 /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
 		AEEA477C1DC3AB770075EE63 /* asn1_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
@@ -625,6 +628,8 @@
 				044018981E6CF13F00DEBF98 /* GJFormats.h */,
 				044018991E6CF13F00DEBF98 /* GJLive.h */,
 				0440189A1E6CF13F00DEBF98 /* GJLiveDefine.h */,
+				6A94E8271E948E7F00B73901 /* GJLiveDefine+internal.h */,
+				6A94E83D1E94D6F200B73901 /* GJLiveDefine+internal.c */,
 				0440189B1E6CF13F00DEBF98 /* GJLivePush+advanced.h */,
 				0440189C1E6CF13F00DEBF98 /* GJLivePush+advanced.m */,
 				0440189D1E6CF13F00DEBF98 /* GJLivePush.h */,
@@ -1486,6 +1491,7 @@
 			files = (
 				6A7D08731E8A46BA008CE0E5 /* sps_decode.c in Sources */,
 				6A7D08741E8A46BA008CE0E5 /* GJLivePull.m in Sources */,
+				6A94E83E1E94D6F200B73901 /* GJLiveDefine+internal.c in Sources */,
 				6A7D08751E8A46BA008CE0E5 /* GJLivePlayer.m in Sources */,
 				6A7D08761E8A46BA008CE0E5 /* GJRtmpPull.m in Sources */,
 				044018C21E6CF13F00DEBF98 /* GJPCMDecodeFromAAC.m in Sources */,

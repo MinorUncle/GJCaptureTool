@@ -113,22 +113,5 @@ typedef struct CacheInfo{
     int cacheCount;
 }GJCacheInfo;
 
-typedef struct H264Packet{
-    GJRetainBuffer* memBlock;
-    int pts;
-    uint8_t* sps;
-    int spsSize;
-    uint8_t* pps;
-    int ppsSize;
-    uint8_t* pp;
-    int ppSize;
-    uint8_t* sei;
-    int seiSize;
-}GJH264Packet;
-typedef struct AACPacket{
-    GJRetainBuffer* memBlock;
-    int pts;
-    uint8_t* adts;
-    int adtsSize;
-}GJAACPacket;
+
 #endif /* GJLiveDefine_h */

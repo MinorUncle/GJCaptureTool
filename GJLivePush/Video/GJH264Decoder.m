@@ -95,161 +95,121 @@ void decodeOutputCallback(
     return codeIndex;
 }
 
--(void)decodeBuffer:(GJRetainBuffer *)buffer pts:(int64_t)pts
+-(void)decodePacket:(R_GJH264Packet *)packet
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     
     OSStatus status;
-    uint8_t *data = NULL;
-    uint8_t *pps = NULL;
-    uint8_t *sps = NULL;
-    uint8_t *frame = buffer->data;
-    long frameSize = buffer->size;
-    int _spsSize = 0;
-    int _ppsSize = 0;
     long blockLength = 0;
     CMSampleBufferRef sampleBuffer = NULL;
     CMBlockBufferRef blockBuffer = NULL;
-
-    uint8_t fristCodeSize = 0;//兼容三个0和四个0
-    uint8_t secondCodeSize = 0;
-    uint8_t* fristPoint = [self startCodeIndex:frame size:frameSize codeSize:&fristCodeSize];
-    uint8_t* secondPoint = [self startCodeIndex:fristPoint + fristCodeSize size:frame + frameSize - fristPoint - fristCodeSize codeSize:&secondCodeSize];
-
-    while (fristPoint < frame + frameSize) {
-        int nalu_type = (fristPoint[fristCodeSize] & 0x1F);
-        switch (nalu_type) {
-            case 7:
-                _spsSize = (int)(secondPoint - fristPoint) - fristCodeSize;
-                sps = fristPoint+fristCodeSize;
-                int w,h,fps;
-                w = h = fps = 0;
-                h264_decode_sps(sps, _spsSize, &w, &h, &fps);
-                break;
-            case 8:{
-                _ppsSize = (int)(secondPoint - fristPoint) - fristCodeSize;
-                pps = fristPoint+fristCodeSize;
-                if (pps && sps) {
-                    uint8_t*  parameterSetPointers[2] = {sps, pps};
-                    size_t parameterSetSizes[2] = {_spsSize, _ppsSize};
-                    
-                    CMVideoFormatDescriptionRef  desc;
-                    status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,
-                                                                                 (const uint8_t *const*)parameterSetPointers,
-                                                                                 parameterSetSizes, 4,
-                                                                                 &desc);
-                    
-                    BOOL shouldReCreate = NO;
-                    
-                
-                    
+    
+    if (packet->sps && packet->pps) {
+        uint8_t*  parameterSetPointers[2] = {packet->sps, packet->pps};
+        size_t parameterSetSizes[2] = {packet->spsSize, packet->ppsSize};
+        
+        CMVideoFormatDescriptionRef  desc;
+        status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,
+                                                                     (const uint8_t *const*)parameterSetPointers,
+                                                                     parameterSetSizes, 4,
+                                                                     &desc);
+        BOOL shouldReCreate = NO;
 #if 0
-                    FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
-
-                    char* code = (char*)&re;
-                    NSLog(@"code:%c %c %c %c \n",code[3],code[2],code[1],code[0]);
-                    CFArrayRef arr = CMVideoFormatDescriptionGetExtensionKeysCommonWithImageBuffers();
-                    signed long count = CFArrayGetCount(arr);
-                    for (int i = 0; i<count; i++) {
-                        CFPropertyListRef  list = CMFormatDescriptionGetExtension(desc, CFArrayGetValueAtIndex(arr, i));
-                        NSLog(@"key:%@,%@",CFArrayGetValueAtIndex(arr, i),list);
-                    }
-#endif
-                    if(status != noErr){
-                        GJAssert(0, "sps or pps error");
-                        if (_formatDesc == NULL) {
-                            return;
-                        }
-                    }else{
-                        if (_formatDesc == NULL) {
-                            _formatDesc = desc;
-                        }else{
-                            if (!CMFormatDescriptionEqual(_formatDesc, desc)) {
-                                shouldReCreate = true;
-                                CFRelease(_formatDesc);
-                                _formatDesc = desc;
-                            }else{
-                                CFRelease(desc);
-                            }
-                        }
-                    }
-
-                    if (_decompressionSession == NULL || shouldReCreate || _shouldRestart) {
-                        GJLOG(GJ_LOGWARNING, "reCreate decoder ,format:%p",_formatDesc);
-                        [self createDecompSession];
-
-                    }
-                }
-            }
-                break;
-            case 5:
-            case 1:
-            {
-//                int offset = _spsSize + _ppsSize;
-                blockLength = (int)(secondPoint - fristPoint);
-                data = fristPoint;
-                uint32_t dataLength32 = htonl (blockLength - fristCodeSize);
-                memcpy (data, &dataLength32, sizeof (uint32_t));
-                status = CMBlockBufferCreateWithMemoryBlock(NULL, data,
-                                                            blockLength,
-                                                            kCFAllocatorNull, NULL,
-                                                            0,
-                                                            blockLength,
-                                                            0, &blockBuffer);
-                
-                
-                if(status == noErr)
-                {
-                    const size_t sampleSize = blockLength;
-                    CMSampleTimingInfo timingInfo ;
-                    timingInfo.decodeTimeStamp = kCMTimeInvalid;
-                    timingInfo.duration = kCMTimeInvalid;
-                    timingInfo.presentationTimeStamp = CMTimeMake(pts, 1000);
-                    status = CMSampleBufferCreate(kCFAllocatorDefault,
-                                                  blockBuffer, true, NULL, NULL,
-                                                  _formatDesc, 1, 1, &timingInfo, 1,
-                                                  &sampleSize, &sampleBuffer);
-                    
-                    
-                    if (status != 0) {
-                        GJLOG(GJ_LOGERROR, "CMSampleBufferCreate：%d",status);
-                        goto ERROR;
-                    }
-                }else{
-                    goto ERROR;
-                }
-
-
-                CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
-                CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
-                CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
-                
-//                status = CMSampleBufferSetOutputPresentationTimeStamp(sampleBuffer, pts);
-//                
-//                assert(status == 0);
-                VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
-                VTDecodeInfoFlags flagOut;
-                OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
-                if (status < 0) {
-                    GJLOG(GJ_LOGERROR, "解码错误0：%d  ,format:%p",status,_formatDesc);
-//                    [self createDecompSession];
-//                    status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
-//                    if (status < 0) {
-//                        GJLOG(GJ_LOGERROR, "解码错误：%d  丢帧",status);
-//                        _shouldRestart = YES;
-//                    }
-                }
-                
-                CFRelease(sampleBuffer);
-                CFRelease(blockBuffer);
-            }
-                
-            default:
-                break;
+        FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
+        
+        char* code = (char*)&re;
+        NSLog(@"code:%c %c %c %c \n",code[3],code[2],code[1],code[0]);
+        CFArrayRef arr = CMVideoFormatDescriptionGetExtensionKeysCommonWithImageBuffers();
+        signed long count = CFArrayGetCount(arr);
+        for (int i = 0; i<count; i++) {
+            CFPropertyListRef  list = CMFormatDescriptionGetExtension(desc, CFArrayGetValueAtIndex(arr, i));
+            NSLog(@"key:%@,%@",CFArrayGetValueAtIndex(arr, i),list);
         }
-        fristPoint = secondPoint;
-        fristCodeSize = secondCodeSize;
-        secondPoint = [self startCodeIndex:fristPoint + fristCodeSize size:frame + frameSize - fristPoint - fristCodeSize codeSize:&secondCodeSize];
+#endif
+        
+        
+        if(status != noErr){
+            GJAssert(0, "sps or pps error");
+            if (_formatDesc == NULL) {
+                return;
+            }
+        }else{
+            if (_formatDesc == NULL) {
+                _formatDesc = desc;
+            }else{
+                if (!CMFormatDescriptionEqual(_formatDesc, desc)) {
+                    shouldReCreate = true;
+                    CFRelease(_formatDesc);
+                    _formatDesc = desc;
+                }else{
+                    CFRelease(desc);
+                }
+            }
+        }
+        
+        if (_decompressionSession == NULL || shouldReCreate || _shouldRestart) {
+            GJLOG(GJ_LOGWARNING, "reCreate decoder ,format:%p",_formatDesc);
+            [self createDecompSession];
+        }
+    }
+    
+    if (packet->pp) {
+        blockLength = (int)(packet->ppSize);
+        void* data = packet->pp;
+        uint32_t dataLength32 = htonl (blockLength - 4);
+        memcpy (data, &dataLength32, sizeof (uint32_t));
+        status = CMBlockBufferCreateWithMemoryBlock(NULL, data,
+                                                    blockLength,
+                                                    kCFAllocatorNull, NULL,
+                                                    0,
+                                                    blockLength,
+                                                    0, &blockBuffer);
+        
+        
+        if(status == noErr)
+        {
+            const size_t sampleSize = blockLength;
+            CMSampleTimingInfo timingInfo ;
+            timingInfo.decodeTimeStamp = kCMTimeInvalid;
+            timingInfo.duration = kCMTimeInvalid;
+            timingInfo.presentationTimeStamp = CMTimeMake(packet->pts, 1000);
+            status = CMSampleBufferCreate(kCFAllocatorDefault,
+                                          blockBuffer, true, NULL, NULL,
+                                          _formatDesc, 1, 1, &timingInfo, 1,
+                                          &sampleSize, &sampleBuffer);
+            
+            
+            if (status != 0) {
+                GJLOG(GJ_LOGERROR, "CMSampleBufferCreate：%d",status);
+                goto ERROR;
+            }
+        }else{
+            goto ERROR;
+        }
+        
+        
+        CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
+        CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
+        CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
+        
+        //                status = CMSampleBufferSetOutputPresentationTimeStamp(sampleBuffer, pts);
+        //
+        //                assert(status == 0);
+        VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
+        VTDecodeInfoFlags flagOut;
+        OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
+        if (status < 0) {
+            GJLOG(GJ_LOGERROR, "解码错误0：%d  ,format:%p",status,_formatDesc);
+            //                    [self createDecompSession];
+            //                    status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
+            //                    if (status < 0) {
+            //                        GJLOG(GJ_LOGERROR, "解码错误：%d  丢帧",status);
+            //                        _shouldRestart = YES;
+            //                    }
+        }
+        
+        CFRelease(sampleBuffer);
+        CFRelease(blockBuffer);
     }
     
 ERROR:

@@ -222,9 +222,10 @@
     
        // Do any additional setup after loading the view.
 }
+static char* url = "rtmp://10.0.1.126/live/room";
+
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;
-    char* url = "rtmp://192.168.1.100/live/room";
     if (btn == _pushButton) {
         if (btn.selected) {
             GJPushConfig config;

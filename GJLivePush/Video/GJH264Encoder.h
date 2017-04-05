@@ -11,7 +11,7 @@
 #import "GJFormats.h"
 #import "GJRetainBuffer.h"
 #import "GJBufferPool.h"
-
+#import "GJLiveDefine+internal.h"
 
 typedef enum _GJEncodeQuality{
     GJEncodeQualityExcellent=0,
@@ -28,12 +28,11 @@ typedef enum _GJEncodeQuality{
  数据压缩完成时回调。
 
  @param encoder encoder description
- @param buffer 引用用数据
- @param keyFrame 是否关键帧
- @param pts pts description
+ @param packet 引用用数据
+
  @return 可以理解为下一级数据缓存的比例，用于动态编码。
  */
--(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(int64_t)pts;
+-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompletePacket:(R_GJH264Packet*)packet;
 
 /**
  编码质量回调
