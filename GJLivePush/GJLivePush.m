@@ -265,14 +265,18 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 }
 
 #pragma mark delegate
--(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(int64_t)pts{
-//    printf("video Pts:%d\n",(int)pts.value*1000/pts.timescale);
+-(float)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet{
     GJRtmpPush_SendH264Data(_videoPush, buffer, (int)pts);
     _unitFrame++;
     _sendFrame++;
     _sendByte += buffer->size;
     _unitByte += buffer->size;
     return GJRtmpPush_GetBufferRate(_videoPush);
+
+}
+
+-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(int64_t)pts{
+//    printf("video Pts:%d\n",(int)pts.value*1000/pts.timescale);
 }
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
 

@@ -92,7 +92,7 @@ static void* pullRunloop(void* parm){
                 aacPacket->aacSize = (int)(body+packet->m_nBodySize-aacPacket->aac);
                 streamPacket.packet.aacPacket = aacPacket;
                 GJRetainBuffer* retainBuffer = &aacPacket->retain;
-                retainBufferPack(&retainBuffer, aacPacket, sizeof(aacPacket), audioRetainBufferRelease, NULL);
+                retainBufferPack(&retainBuffer, aacPacket, sizeof(R_GJAACPacket), audioRetainBufferRelease, NULL);
                 free(packet);
                 pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);
@@ -145,7 +145,7 @@ static void* pullRunloop(void* parm){
                 h264Packet->pts = packet->m_nTimeStamp;
                 streamPacket.packet.h264Packet = h264Packet;
                 GJRetainBuffer* retainBuffer = &h264Packet->retain;
-                retainBufferPack(&retainBuffer, h264Packet, sizeof(h264Packet), videoRetainBufferRelease, NULL);
+                retainBufferPack(&retainBuffer, h264Packet, sizeof(R_GJH264Packet), videoRetainBufferRelease, NULL);
                 free(packet);
                 pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);

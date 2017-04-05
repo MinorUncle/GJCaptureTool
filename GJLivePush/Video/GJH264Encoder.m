@@ -7,7 +7,8 @@
 //
 
 #import "GJH264Encoder.h"
-#import "GJRetainBufferPool.h"
+#import "GJBufferPool.h"
+#import "GJLiveDefine+internal.h"
 #import "GJLog.h"
 
 #define DEFAULT_DELAY  10
@@ -18,7 +19,7 @@
     
 }
 @property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
-@property(nonatomic,assign)GJRetainBufferPool* bufferPool;
+@property(nonatomic,assign)GJBufferPool* bufferPool;
 @property(nonatomic,assign)int32_t currentBitRate;//当前码率
 @property(nonatomic,assign)int currentDelayCount;//调整之后要过几帧才能反应，所以要延迟几帧再做检测调整；
 @property(nonatomic,assign)BOOL shouldRestart;
@@ -123,10 +124,10 @@
     _destFormat.baseFormat.height = h;
     if (_bufferPool != NULL) {
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-            GJRetainBufferPoolCleanAndFree(&_bufferPool);
+            GJBufferPoolCleanAndFree(&_bufferPool);
         });
     }
-    GJRetainBufferPoolCreate(&_bufferPool, w*h,true);///选最大size
+    GJBufferPoolCreate(&_bufferPool,1, true);
     [self _setCompressionSession];
 
     VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
@@ -184,6 +185,13 @@
         }
     }
 }
+static bool retainBufferRelease(GJRetainBuffer* buffer){
+    R_GJH264Packet* packet = (R_GJH264Packet*)buffer->data;
+    GJBufferPool* pool = buffer->parm;
+    GJBufferPoolSetData(pool, packet->memBlock);
+    free(packet);
+    return true;
+}
 
 void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon,OSStatus statu,VTEncodeInfoFlags infoFlags,
                           CMSampleBufferRef sample ){
@@ -194,13 +202,16 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         return;
     }
     GJH264Encoder* encoder = (__bridge GJH264Encoder *)(outputCallbackRefCon);
-    GJRetainBuffer* retainBuffer = GJRetainBufferPoolGetData(encoder.bufferPool);
-
+    R_GJH264Packet* pushPacket = (R_GJH264Packet*)malloc(sizeof(R_GJH264Packet));
+    memset(pushPacket, 0, sizeof(R_GJH264Packet));
+#define PUSH_PACKET_PRE_SIZE 45
+    pushPacket->needPreSize = PUSH_PACKET_PRE_SIZE;
+    
     CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sample);
     size_t length, totalLength;
     size_t bufferOffset = 0;
-    uint8_t *dataPointer;
-    CMBlockBufferGetDataPointer(dataBuffer, 0, &length, &totalLength, (char**)&dataPointer);
+    uint8_t *inDataPointer;
+    CMBlockBufferGetDataPointer(dataBuffer, 0, &length, &totalLength, (char**)&inDataPointer);
 
     bool keyframe = !CFDictionaryContainsKey( (CFArrayGetValueAtIndex(CMSampleBufferGetSampleAttachmentsArray(sample, true), 0)), kCMSampleAttachmentKey_NotSync);
     
@@ -216,6 +227,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             GJLOG(GJ_LOGERROR,"CMVideoFormatDescriptionGetH264ParameterSetAt sps error:%d",statusCode);
             return;
         }
+        
         size_t pparameterSetSize, pparameterSetCount;
         int ppHeadSize;
         const uint8_t *pparameterSet;
@@ -226,18 +238,22 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             return;
         }
         size_t spsppsSize = 4+4+sparameterSetSize+pparameterSetSize;
-       
-        uint8_t* data = retainBuffer->data;
+        pushPacket->memBlock = GJBufferPoolGetSizeData(encoder.bufferPool,(uint)(spsppsSize+totalLength+pushPacket->needPreSize));
+
+        uint8_t* data = pushPacket->memBlock+pushPacket->needPreSize;
         memcpy(&data[0], "\x00\x00\x00\x01", 4);
 //        memcpy(&data[0], &sparameterSetSize, 4);
         memcpy(&data[4], sparameterSet, sparameterSetSize);
+        pushPacket->sps=data;
+        pushPacket->spsSize=4+(int)sparameterSetSize;
         memcpy(&data[4+sparameterSetSize], "\x00\x00\x00\x01", 4);
 //        memcpy(&data[4+sparameterSetSize], &pparameterSetSize, 4);
         memcpy(&data[8+sparameterSetSize], pparameterSet, pparameterSetSize);
-        
+        pushPacket->pps = data+4+sparameterSetSize;
+        pushPacket->ppsSize = 4+(int)pparameterSetSize;
 //        拷贝keyframe;
-        memcpy(data+spsppsSize, dataPointer, totalLength);
-        dataPointer = data;
+        memcpy(data+spsppsSize, inDataPointer, totalLength);
+        inDataPointer = data;
         totalLength += spsppsSize;
         bufferOffset = spsppsSize;
         
@@ -252,26 +268,36 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //        totalLength -= seiLength + 4;
 
     }else{
-        memcpy(retainBuffer->data, dataPointer, totalLength);
-        dataPointer = retainBuffer->data;
+        pushPacket->memBlock = GJBufferPoolGetSizeData(encoder.bufferPool,(uint)(totalLength+pushPacket->needPreSize));
+
+        memcpy(pushPacket->memBlock+pushPacket->needPreSize, inDataPointer, totalLength);
     }
     
     static const uint32_t AVCCHeaderLength = 4;
     while (bufferOffset < totalLength) {
         // Read the NAL unit length
         uint32_t NALUnitLength = 0;
-        memcpy(&NALUnitLength, dataPointer + bufferOffset, AVCCHeaderLength);
+        memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
+        int type = inDataPointer[bufferOffset+AVCCHeaderLength] & 0x1F;
+        if (type == 6) {//SEI
+            pushPacket->sei = inDataPointer+bufferOffset;
+            pushPacket->seiSize =(int)(inDataPointer+NALUnitLength+4);
+        }else if (type == 1 || type == 5){
+            pushPacket->pp = inDataPointer+bufferOffset;
+            pushPacket->ppSize =(int)(inDataPointer+NALUnitLength+4);
+        }
         NALUnitLength = CFSwapInt32HostToBig(NALUnitLength);
-        uint8_t* data = dataPointer + bufferOffset;
+        uint8_t* data = inDataPointer + bufferOffset;
         memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
         bufferOffset += AVCCHeaderLength + NALUnitLength;
     }
     
-    
-    GJAssert(bufferOffset == totalLength, "数据出错\n");
-    retainBuffer->size = (int)bufferOffset;//size初始是最大值，一定要设置当前值
-    
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
+
+    GJAssert(bufferOffset == totalLength, "数据出错\n");
+    GJRetainBuffer* retainBuffer = &pushPacket->retain;
+    retainBufferPack(&retainBuffer, pushPacket, sizeof(R_GJH264Packet), retainBufferRelease, encoder.bufferPool);
+    pushPacket->pts = pts.value;
 
 #if 0
     CMTime ptd = CMSampleBufferGetDuration(sample);
@@ -281,7 +307,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     CMTime dts = CMSampleBufferGetDecodeTimeStamp(sample);
     GJLOG(GJ_LOGINFO,"encode dts:%f pts:%f\n",dts.value*1.0 / dts.timescale,pts.value*1.0/pts.timescale);
 #endif
-    float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompleteBuffer:retainBuffer keyFrame:keyframe pts:pts.value];
+    float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompletePacket:pushPacket];
     retainBufferUnRetain(retainBuffer);
 
     if (encoder.currentDelayCount==0) {

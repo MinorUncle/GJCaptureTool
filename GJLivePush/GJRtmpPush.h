@@ -12,6 +12,7 @@
 #include "GJBufferPool.h"
 #include "GJQueue.h"
 #import "GJLiveDefine.h"
+#import "GJLiveDefine+internal.h"
 
 typedef enum _GJRTMPPushMessageType{
     GJRTMPPushMessageType_connectSuccess,
@@ -58,8 +59,8 @@ void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmp
  @param data data description
  @param pts pts description，以ms为单位
  */
-void GJRtmpPush_SendH264Data(GJRtmpPush* push,GJRetainBuffer* data,uint32_t pts);
-void GJRtmpPush_SendAACData(GJRtmpPush* push,GJRetainBuffer* data,uint32_t dts);
+void GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data,uint32_t pts);
+void GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data,uint32_t dts);
 void GJRtmpPush_Close(GJRtmpPush* push);
 void GJRtmpPush_Release(GJRtmpPush* push);
 void GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);

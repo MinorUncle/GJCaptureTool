@@ -121,7 +121,7 @@ void GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,void* rt
 }
 
 
-void GJRtmpPush_SendH264Data(GJRtmpPush* sender,GJRetainBuffer* buffer,uint32_t pts){
+void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* buffer,uint32_t pts){
     if (sender->stopRequest) {
        
         return;
