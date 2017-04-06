@@ -15,18 +15,8 @@
 #define BUFFER_CACHE_SIZE 40
 #define RTMP_RECEIVE_TIMEOUT    3
 
-static bool audioRetainBufferRelease(GJRetainBuffer* buffer){
-    R_GJH264Packet* packet = (R_GJH264Packet*)buffer->data;
-    free(packet->memBlock);
-    free(buffer);
-    return true;
-}
-static bool videoRetainBufferRelease(GJRetainBuffer* buffer){
-    R_GJAACPacket* packet = (R_GJAACPacket*)buffer->data;
-    free(packet->memBlock);
-    free(buffer);
-    return true;
-}
+
+
 
 void GJRtmpPull_Delloc(GJRtmpPull* pull);
 
@@ -85,14 +75,15 @@ static void* pullRunloop(void* parm){
                 streamPacket.type = GJAudioType;
                 uint8_t* body = (uint8_t*)packet->m_body;
                 R_GJAACPacket* aacPacket = (R_GJAACPacket*)malloc(sizeof(R_GJAACPacket));
-                aacPacket->memBlock = body - RTMP_MAX_HEADER_SIZE;
+                GJRetainBuffer* retainBuffer = &aacPacket->retain;
+                retainBufferPack(&retainBuffer, body - RTMP_MAX_HEADER_SIZE, RTMP_MAX_HEADER_SIZE+packet->m_nBodySize, R_RetainBufferRelease, NULL);
+
                 aacPacket->adts = body+2;
                 aacPacket->adtsSize = 7;
                 aacPacket->aac = aacPacket->adts+7;
                 aacPacket->aacSize = (int)(body+packet->m_nBodySize-aacPacket->aac);
                 streamPacket.packet.aacPacket = aacPacket;
-                GJRetainBuffer* retainBuffer = &aacPacket->retain;
-                retainBufferPack(&retainBuffer, aacPacket, sizeof(R_GJAACPacket), audioRetainBufferRelease, NULL);
+               
                 free(packet);
                 pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);
@@ -132,8 +123,10 @@ static void* pullRunloop(void* parm){
                     GJAssert(0,"not h264 stream,type:%d\n",body[0] & 0x0F);
                 }
                 R_GJH264Packet* h264Packet = (R_GJH264Packet*)malloc(sizeof(R_GJH264Packet));
-                h264Packet->memBlock = (uint8_t*)packet->m_body;
-                h264Packet->needPreSize = 0;
+                memset(h264Packet, 0, sizeof(R_GJH264Packet));
+                GJRetainBuffer* retainBuffer = &h264Packet->retain;
+                retainBufferPack(&retainBuffer, packet->m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet->m_nBodySize, R_RetainBufferRelease, NULL);
+               
                 h264Packet->sps = sps;
                 h264Packet->spsSize = spsSize;
                 h264Packet->pps = pps;
@@ -144,8 +137,7 @@ static void* pullRunloop(void* parm){
                 h264Packet->seiSize = seiSize;
                 h264Packet->pts = packet->m_nTimeStamp;
                 streamPacket.packet.h264Packet = h264Packet;
-                GJRetainBuffer* retainBuffer = &h264Packet->retain;
-                retainBufferPack(&retainBuffer, h264Packet, sizeof(R_GJH264Packet), videoRetainBufferRelease, NULL);
+           
                 free(packet);
                 pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);

@@ -9,10 +9,11 @@
 #ifndef GJLiveDefine_internal_h
 #define GJLiveDefine_internal_h
 #include "GJRetainBuffer.h"
+
+#define SEND_SEI
+
 typedef struct H264Packet{
     GJRetainBuffer retain;
-    uint8_t* memBlock;
-    int needPreSize;
     int64_t pts;
     uint8_t* sps;
     int spsSize;
@@ -25,8 +26,6 @@ typedef struct H264Packet{
 }R_GJH264Packet;
 typedef struct AACPacket{
     GJRetainBuffer retain;
-    uint8_t* memBlock;
-    int needPreSize;
     int64_t pts;
     uint8_t* adts;
     int adtsSize;
@@ -47,4 +46,5 @@ typedef struct _GJStreamPacket{
     }packet;
 }GJStreamPacket;
 
+bool R_RetainBufferRelease(GJRetainBuffer* buffer);
 #endif /* GJLiveDefine_internal_h */

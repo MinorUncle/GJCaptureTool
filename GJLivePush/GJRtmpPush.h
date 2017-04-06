@@ -33,7 +33,6 @@ typedef struct _GJRtmpPush{
     GJQueue*            sendBufferQueue;
     char                pushUrl[MAX_URL_LENGTH];
     
-    GJBufferPool*       memoryCachePool;
     pthread_t           sendThread;
     pthread_mutex_t     mutex;
     int                 sendPacketCount;
@@ -59,8 +58,8 @@ void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmp
  @param data data description
  @param pts pts description，以ms为单位
  */
-void GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data,uint32_t pts);
-void GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data,uint32_t dts);
+void GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data);
+void GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data);
 void GJRtmpPush_Close(GJRtmpPush* push);
 void GJRtmpPush_Release(GJRtmpPush* push);
 void GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);

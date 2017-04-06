@@ -186,10 +186,9 @@
     }
 }
 static bool retainBufferRelease(GJRetainBuffer* buffer){
-    R_GJH264Packet* packet = (R_GJH264Packet*)buffer->data;
     GJBufferPool* pool = buffer->parm;
-    GJBufferPoolSetData(pool, packet->memBlock);
-    free(packet);
+    GJBufferPoolSetData(pool, buffer->data-buffer->frontSize);
+    free(buffer);
     return true;
 }
 
@@ -203,9 +202,10 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     }
     GJH264Encoder* encoder = (__bridge GJH264Encoder *)(outputCallbackRefCon);
     R_GJH264Packet* pushPacket = (R_GJH264Packet*)malloc(sizeof(R_GJH264Packet));
+    GJRetainBuffer* retainBuffer = &pushPacket->retain;
     memset(pushPacket, 0, sizeof(R_GJH264Packet));
 #define PUSH_PACKET_PRE_SIZE 45
-    pushPacket->needPreSize = PUSH_PACKET_PRE_SIZE;
+    int needPreSize = PUSH_PACKET_PRE_SIZE;
     
     CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sample);
     size_t length, totalLength;
@@ -238,9 +238,11 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             return;
         }
         size_t spsppsSize = 4+4+sparameterSetSize+pparameterSetSize;
-        pushPacket->memBlock = GJBufferPoolGetSizeData(encoder.bufferPool,(uint)(spsppsSize+totalLength+pushPacket->needPreSize));
+        int needSize = (int)(spsppsSize+totalLength+needPreSize);
+        retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
+        retainBufferMoveDataPoint(retainBuffer, needPreSize);
 
-        uint8_t* data = pushPacket->memBlock+pushPacket->needPreSize;
+        uint8_t* data = retainBuffer->data;
         memcpy(&data[0], "\x00\x00\x00\x01", 4);
 //        memcpy(&data[0], &sparameterSetSize, 4);
         memcpy(&data[4], sparameterSet, sparameterSetSize);
@@ -268,9 +270,12 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //        totalLength -= seiLength + 4;
 
     }else{
-        pushPacket->memBlock = GJBufferPoolGetSizeData(encoder.bufferPool,(uint)(totalLength+pushPacket->needPreSize));
-
-        memcpy(pushPacket->memBlock+pushPacket->needPreSize, inDataPointer, totalLength);
+        int needSize = (int)(totalLength+needPreSize);
+        uint8_t* rDate = GJBufferPoolGetSizeData(encoder.bufferPool,needSize);
+        retainBufferPack(&retainBuffer, rDate, needSize, retainBufferRelease, encoder.bufferPool);
+        retainBufferMoveDataPoint(retainBuffer, needPreSize);
+        memcpy(rDate, inDataPointer, totalLength);
+        inDataPointer = rDate;
     }
     
     static const uint32_t AVCCHeaderLength = 4;
@@ -278,15 +283,15 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         // Read the NAL unit length
         uint32_t NALUnitLength = 0;
         memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
+        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
         int type = inDataPointer[bufferOffset+AVCCHeaderLength] & 0x1F;
         if (type == 6) {//SEI
             pushPacket->sei = inDataPointer+bufferOffset;
             pushPacket->seiSize =(int)(inDataPointer+NALUnitLength+4);
-        }else if (type == 1 || type == 5){
+        }else if (type == 1 || type == 5){//pp
             pushPacket->pp = inDataPointer+bufferOffset;
             pushPacket->ppSize =(int)(inDataPointer+NALUnitLength+4);
         }
-        NALUnitLength = CFSwapInt32HostToBig(NALUnitLength);
         uint8_t* data = inDataPointer + bufferOffset;
         memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
         bufferOffset += AVCCHeaderLength + NALUnitLength;
@@ -295,8 +300,6 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
 
     GJAssert(bufferOffset == totalLength, "数据出错\n");
-    GJRetainBuffer* retainBuffer = &pushPacket->retain;
-    retainBufferPack(&retainBuffer, pushPacket, sizeof(R_GJH264Packet), retainBufferRelease, encoder.bufferPool);
     pushPacket->pts = pts.value;
 
 #if 0
