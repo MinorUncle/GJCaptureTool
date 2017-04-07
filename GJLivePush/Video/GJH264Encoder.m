@@ -68,6 +68,9 @@
     }
     
     
+   
+
+    
     int32_t h = (int32_t)CVPixelBufferGetHeight(imageBuffer);
     int32_t w = (int32_t)CVPixelBufferGetWidth(imageBuffer);
     if (_enCodeSession == nil || h != _destFormat.baseFormat.height || w != _destFormat.baseFormat.width || _shouldRestart) {
@@ -90,6 +93,9 @@
                                                       NULL,
                                                       NULL );
     
+    CFNumberRef bitRate ;
+    VTSessionCopyProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, kCFAllocatorDefault, &bitRate);
+    CFRelease(bitRate);
     if (status == 0) {
         _encodeframeCount++;
         return YES;
@@ -204,8 +210,8 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     R_GJH264Packet* pushPacket = (R_GJH264Packet*)malloc(sizeof(R_GJH264Packet));
     GJRetainBuffer* retainBuffer = &pushPacket->retain;
     memset(pushPacket, 0, sizeof(R_GJH264Packet));
-#define PUSH_PACKET_PRE_SIZE 45
-    int needPreSize = PUSH_PACKET_PRE_SIZE;
+#define PUSH_H264_PACKET_PRE_SIZE 45
+    int needPreSize = PUSH_H264_PACKET_PRE_SIZE;
     
     CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sample);
     size_t length, totalLength;
@@ -240,9 +246,8 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         size_t spsppsSize = 4+4+sparameterSetSize+pparameterSetSize;
         int needSize = (int)(spsppsSize+totalLength+needPreSize);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
-        retainBufferMoveDataPoint(retainBuffer, needPreSize);
 
-        uint8_t* data = retainBuffer->data;
+        uint8_t* data = retainBuffer->data+needPreSize;
         memcpy(&data[0], "\x00\x00\x00\x01", 4);
 //        memcpy(&data[0], &sparameterSetSize, 4);
         memcpy(&data[4], sparameterSet, sparameterSetSize);
@@ -271,37 +276,38 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
     }else{
         int needSize = (int)(totalLength+needPreSize);
-        uint8_t* rDate = GJBufferPoolGetSizeData(encoder.bufferPool,needSize);
-        retainBufferPack(&retainBuffer, rDate, needSize, retainBufferRelease, encoder.bufferPool);
-        retainBufferMoveDataPoint(retainBuffer, needPreSize);
+        retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
+        uint8_t* rDate = retainBuffer->data+needPreSize;
         memcpy(rDate, inDataPointer, totalLength);
         inDataPointer = rDate;
     }
-    
+    int type;
     static const uint32_t AVCCHeaderLength = 4;
     while (bufferOffset < totalLength) {
         // Read the NAL unit length
         uint32_t NALUnitLength = 0;
         memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
         NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
-        int type = inDataPointer[bufferOffset+AVCCHeaderLength] & 0x1F;
+        type = inDataPointer[bufferOffset+AVCCHeaderLength] & 0x1F;
         if (type == 6) {//SEI
             pushPacket->sei = inDataPointer+bufferOffset;
-            pushPacket->seiSize =(int)(inDataPointer+NALUnitLength+4);
+            pushPacket->seiSize =(int)(NALUnitLength+4);
         }else if (type == 1 || type == 5){//pp
             pushPacket->pp = inDataPointer+bufferOffset;
-            pushPacket->ppSize =(int)(inDataPointer+NALUnitLength+4);
+            pushPacket->ppSize =(int)(NALUnitLength+4);
         }
         uint8_t* data = inDataPointer + bufferOffset;
         memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
         bufferOffset += AVCCHeaderLength + NALUnitLength;
+  
     }
     
-    CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
+//    CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
 
     GJAssert(bufferOffset == totalLength, "数据出错\n");
-    pushPacket->pts = pts.value;
+    pushPacket->pts = (int64_t)[[NSDate date]timeIntervalSince1970]*1000;
 
+ 
 #if 0
     CMTime ptd = CMSampleBufferGetDuration(sample);
     CMTime opts = CMSampleBufferGetOutputPresentationTimeStamp(sample);

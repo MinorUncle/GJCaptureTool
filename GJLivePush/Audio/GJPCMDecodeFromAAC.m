@@ -109,16 +109,12 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     GJQueue* param =   decode->_resumeQueue;
     GJRetainBuffer* retainBuffer;
-    R_GJAACPacket* packet;
-    AudioStreamPacketDescription* description = NULL;
-    
+    R_GJAACPacket* packet;    
     if (decode.running && queuePop(param,(void**)&packet,INT_MAX)) {
         retainBuffer = &packet->retain;
         ioData->mBuffers[0].mData = (uint8_t*)packet->aac;
         ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
         ioData->mBuffers[0].mDataByteSize = packet->aacSize;
-        description->mDataByteSize -= description->mStartOffset;
-        description->mStartOffset = 0;
         *ioNumberDataPackets = 1;
     }else{
         *ioNumberDataPackets = 0;
@@ -139,7 +135,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
 -(void)decodePacket:(R_GJAACPacket*)packet{
     retainBufferRetain(&packet->retain);
-    if (!queuePush(_resumeQueue, packet,1000)) {
+    while(!queuePush(_resumeQueue, packet,1000)) {
         retainBufferUnRetain(&packet->retain);
         GJLOG(GJ_LOGWARNING,"aac decode to pcm queuePush faile");
     }

@@ -9,7 +9,7 @@
 #import "GJAudioQueueRecoder.h"
 #import <AudioToolbox/AudioToolbox.h>
 #import <AVFoundation/AVFoundation.h>
-#import "GJRetainBufferPool.h"
+#import "GJBufferPool.h"
 #import "GJLog.h"
 #define NUMBER_BUFFERS 4
 
@@ -24,7 +24,7 @@
     dispatch_queue_t _recodeQueue;
 }
 @property(assign,nonatomic) AudioQueueRef mAudioQueue;
-@property(assign,nonatomic) GJRetainBufferPool* bufferPool;
+@property(assign,nonatomic) GJBufferPool* bufferPool;
 
 @end;
 
@@ -118,26 +118,40 @@ static void adtsDataForPacketLength(int packetLength, uint8_t*packet,int sampleR
 
 #endif
 }
+
+static bool retainBufferRelease(GJRetainBuffer* buffer){
+    GJBufferPool* pool = buffer->parm;
+    GJBufferPoolSetData(pool, buffer->data+buffer->frontSize);
+    free(buffer);
+    return YES;
+}
 static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer,const AudioTimeStamp *inStartTime,UInt32 inNumPackets, const AudioStreamPacketDescription  *inPacketDesc){
     GJAudioQueueRecoder* tempSelf = (__bridge GJAudioQueueRecoder*)aqData;
    
     if (tempSelf.status == kRecoderRunningStatus){
-        GJRetainBuffer* buffer = GJRetainBufferPoolGetData(tempSelf.bufferPool);
+        uint8_t* data = GJBufferPoolGetData(tempSelf.bufferPool);
+#define PUSH_AAC_PACKET_PRE_SIZE 25
+        uint8_t* aacData = data+PUSH_AAC_PACKET_PRE_SIZE;
+        R_GJAACPacket* packet = (R_GJAACPacket*)malloc(sizeof(R_GJAACPacket));
+        GJRetainBuffer* retainBuffer = &packet->retain;
+        retainBufferPack(&retainBuffer, data, tempSelf.maxOutSize, retainBufferRelease, tempSelf.bufferPool);
         int offset = 0;
         if (tempSelf.format.mFormatID == kAudioFormatMPEG4AAC) {
             offset = 7;
-            adtsDataForPacketLength(inBuffer->mAudioDataByteSize, buffer->data,tempSelf.format.mSampleRate,tempSelf.format.mChannelsPerFrame);
-
+            adtsDataForPacketLength(inBuffer->mAudioDataByteSize, aacData,tempSelf.format.mSampleRate,tempSelf.format.mChannelsPerFrame);
+            packet->adts = aacData;
+            packet->adtsSize = offset;
         }
-        memcpy(buffer->data+offset, inBuffer->mAudioData, inBuffer->mAudioDataByteSize+offset);
-        buffer->size = inBuffer->mAudioDataByteSize+offset;
-        int pts = inStartTime->mSampleTime*1000/ tempSelf.format.mSampleRate;
+        packet->aac = aacData+offset;
+        packet->aacSize = inBuffer->mAudioDataByteSize;
+        memcpy(packet->aac, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
+        packet->pts = [[NSDate date]timeIntervalSince1970]*1000;
+
 //        static int count ;
 //        NSLog(@"send num:%d:%@",count++,[NSData dataWithBytes:buffer->data+7 length:buffer->size-7]);
 //        NSLog(@"audio size:%d",inBuffer->mAudioDataByteSize);
-        AudioStreamPacketDescription desc = (AudioStreamPacketDescription){7,0,inBuffer->mAudioDataByteSize+7};
-        [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamData:buffer packetDescriptions:&desc pts:pts];
-        retainBufferUnRetain(buffer);
+        [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamPacket:packet];
+        retainBufferUnRetain(retainBuffer);
         AudioQueueEnqueueBuffer (tempSelf.mAudioQueue,inBuffer,0,NULL);
     }else{
         AudioQueueFreeBuffer(inAQ, inBuffer);
@@ -226,7 +240,7 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
         }
     }
     
-    GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize,true);
+    GJBufferPoolCreate(&_bufferPool, maxPacketSize, true);
     
     [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:AVAudioSessionInterruptionNotification object:nil];
 

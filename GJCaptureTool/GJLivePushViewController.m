@@ -216,7 +216,7 @@
         [self.view addSubview:show.view];
     }
     
-    [_livePush startCaptureWithSizeType:kCaptureSize352_288 fps:15 position:AVCaptureDevicePositionBack];
+    [_livePush startCaptureWithSizeType:kCaptureSize1280_720 fps:15 position:AVCaptureDevicePositionBack];
     
     [_livePush startPreview];
     
@@ -231,7 +231,7 @@ static char* url = "rtmp://10.0.1.126/live/room";
             GJPushConfig config;
             config.channel = 1;
             config.audioSampleRate = 44100;
-            config.pushSize = CGSizeMake(288, 352);
+            config.pushSize = CGSizeMake(360, 640);
             config.videoBitRate = 8*80*1024;
             config.pushUrl = url;
             [_livePush startStreamPushWithConfig:config];

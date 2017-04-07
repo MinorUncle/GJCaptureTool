@@ -178,10 +178,10 @@
     _startPushDate = [NSDate date];
     GJRtmpPush_StartConnect(self.videoPush, self.pushUrl.UTF8String);
     
-    if (_audioRecoder == nil) {
-        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:config.audioSampleRate channel:config.channel formatID:kAudioFormatMPEG4AAC];
-        _audioRecoder.delegate = self;
-    }
+//    if (_audioRecoder == nil) {
+//        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:config.audioSampleRate channel:config.channel formatID:kAudioFormatMPEG4AAC];
+//        _audioRecoder.delegate = self;
+//    }
     return true;
 }
 
@@ -266,11 +266,13 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 
 #pragma mark delegate
 -(float)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet{
-    GJRtmpPush_SendH264Data(_videoPush, packet);
+
     _unitFrame++;
     _sendFrame++;
-    _sendByte += packet->retain;
-    _unitByte += packet->memSize;
+    _sendByte += packet->retain.frontSize+packet->retain.size;
+    _unitByte += packet->retain.frontSize+packet->retain.size;
+    GJRtmpPush_SendH264Data(_videoPush, packet);
+
     return GJRtmpPush_GetBufferRate(_videoPush);
 
 }
@@ -281,13 +283,12 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
 
 }
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamData:(GJRetainBuffer*)dataBuffer packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions pts:(int)pts{
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamPacket:(R_GJAACPacket *)packet{
 //    static int times =0;
 //    NSData* audio = [NSData dataWithBytes:dataBuffer->data length:dataBuffer->size];
 //    NSLog(@"pushaudio times:%d ,%@",times++,audio);
-    _sendByte += dataBuffer->size;
-    _unitByte += dataBuffer->size;
-    int cpts = [[NSDate date]timeIntervalSince1970]*1000;
+    _sendByte += packet->retain.frontSize+packet->retain.size;
+    _unitByte += packet->retain.frontSize+packet->retain.size;
 #ifdef GJPUSHAUDIOQUEUEPLAY_TEST
     if (_audioTestPlayer == nil) {
         _audioTestPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:recoder.format maxBufferSize:2000 macgicCookie:nil];
@@ -297,7 +298,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
         [_audioTestPlayer playData:dataBuffer packetDescriptions:packetDescriptions];
     }
 #else
-    GJRtmpPush_SendAACData(_videoPush, dataBuffer, cpts);
+    GJRtmpPush_SendAACData(_videoPush, packet);
 #endif
 }
 -(void)dealloc{

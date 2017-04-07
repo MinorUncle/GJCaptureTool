@@ -105,8 +105,8 @@ void decodeOutputCallback(
     CMBlockBufferRef blockBuffer = NULL;
     
     if (packet->sps && packet->pps) {
-        uint8_t*  parameterSetPointers[2] = {packet->sps, packet->pps};
-        size_t parameterSetSizes[2] = {packet->spsSize, packet->ppsSize};
+        uint8_t*  parameterSetPointers[2] = {packet->sps+4, packet->pps+4};
+        size_t parameterSetSizes[2] = {packet->spsSize-4, packet->ppsSize-4};
         
         CMVideoFormatDescriptionRef  desc;
         status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,

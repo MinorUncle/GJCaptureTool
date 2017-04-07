@@ -57,6 +57,7 @@ static void* sendRunloop(void* parm){
     GJRTMP_Packet* packet;
     while (!push->stopRequest && queuePop(push->sendBufferQueue, (void**)&packet, INT32_MAX)) {
         push->outPts = packet->packet.m_nTimeStamp;
+   
         int iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
 //        static int i = 0;
 //        GJPrintf("sendcount:%d,pts:%d\n",i++,packet->packet.m_nTimeStamp);
@@ -64,10 +65,12 @@ static void* sendRunloop(void* parm){
             push->sendByte += packet->retainBuffer->size;
             push->sendPacketCount ++;
             retainBufferUnRetain(packet->retainBuffer);
+            free(packet);
         }else{
             GJAssert(iRet, "error send video FRAME\n");
             errType = GJRTMPPushMessageType_sendPacketError;
             retainBufferUnRetain(packet->retainBuffer);
+            free(packet);
             goto ERROR;
         };
 
@@ -128,14 +131,15 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
 //    NSData* data1 = [NSData dataWithBytes:buffer->data length:buffer->size];
 //    NSLog(@"push%d:%@",time1++,data1);
     
-    uint8_t *sps = NULL,*pps = NULL,*pp = NULL;
-    int isKey = 0;
-    int spsSize = 0,ppsSize = 0,ppSize = 0;
+    uint8_t *sps = packet->sps,*pps = packet->pps,*pp = packet->pp;
+    int spsSize = packet->spsSize,ppsSize = packet->ppsSize,ppSize = packet->ppSize;
     
     GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)malloc(sizeof(GJRTMP_Packet));
+    memset(pushPacket, 0, sizeof(GJRTMP_Packet));
     GJRetainBuffer*retainBuffer = (GJRetainBuffer*)packet;
     pushPacket->retainBuffer = retainBuffer;
     RTMPPacket* sendPacket = &pushPacket->packet;
+
     unsigned char * body=NULL;
     int iIndex = 0;
     int preSize = 0;//前面额外需要的空间；
@@ -147,19 +151,18 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     }
     if (packet->pp) {
         preSize += ppPreSize;
-        sendPacket->m_body = (char*)packet->pp - preSize;
+        sendPacket->m_body = (char*)packet->pp - preSize-spsSize-ppsSize;
         sendPacket->m_nBodySize = preSize + packet->ppSize;
     }
 #ifdef SEND_SEI
     if (packet->sei) {
-        sendPacket->m_body = (char*)packet->sei - preSize;
+        sendPacket->m_body = (char*)packet->sei - preSize-spsSize-ppsSize;
         sendPacket->m_nBodySize += packet->seiSize;
     }
 #endif
-    if (retainBuffer->frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
+    if (packet->pp-packet->retain.data < preSize+RTMP_MAX_HEADER_SIZE+spsSize+ppsSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
         GJAssert(0, "预留位置过小");
     }
-    RTMPPacket_Reset(sendPacket);
 
     body = (unsigned char *)sendPacket->m_body;
     sendPacket->m_packetType = RTMP_PACKET_TYPE_VIDEO;
@@ -203,7 +206,7 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     
     if (pp) {
 
-        if(isKey)
+        if((packet->pp[4] & 0x1F) == 5)
         {
             body[iIndex++] = 0x17;// 1:Iframe  7:AVC
         }
@@ -246,13 +249,13 @@ void GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
     
     RTMPPacket* sendPacket = &pushPacket->packet;
     RTMPPacket_Reset(sendPacket);
-    if (retainBuffer->frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
+    if (buffer->adts - buffer->retain.data < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
         GJAssert(0, "预留内存不够");
 //        retainBufferSetFrontSize(buffer, preSize);
     }
 
-    sendPacket->m_body = (char*)retainBuffer->data - 2;
-    sendPacket->m_nBodySize = retainBuffer->size+2;
+    sendPacket->m_body = (char*)buffer->adts - preSize;
+    sendPacket->m_nBodySize = buffer->adtsSize+buffer->aacSize+preSize;
 
     body = (unsigned char *)sendPacket->m_body;
     
@@ -332,6 +335,7 @@ GJCacheInfo GJRtmpPush_GetBufferCacheInfo(GJRtmpPush* sender){
     GJCacheInfo value = {0};
     value.cacheCount = (int)queueGetLength(sender->sendBufferQueue);
     value.cacheTime = (int)(sender->inPts - sender->outPts);
+
     return value;
 }
 
