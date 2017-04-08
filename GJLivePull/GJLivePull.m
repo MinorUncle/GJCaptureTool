@@ -107,10 +107,12 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         status.videoCacheCount = videoCache.cacheCount;
         
         [self.delegate livePull:self updatePullStatus:&status];
-        
+#ifdef NETWORK_DELAY
+     
         if ([self.delegate respondsToSelector:@selector(livePull:networkDelay:)]) {
             [self.delegate livePull:self networkDelay:[_player getNetWorkDelay]];
         }
+#endif
     }];
 }
 
@@ -122,6 +124,8 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     }
     GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
     [_audioDecoder start];
+
+    [_player start];
 
     
     _startPullDate = [NSDate date];
@@ -186,7 +190,6 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
             [livePull.audioDecoder start];
             
             livePull.player.audioFormat = destformat;
-            [livePull.player start];
         }
         [livePull.audioDecoder decodePacket:streamPacket.packet.aacPacket];
 //        static int times =0;
@@ -194,10 +197,17 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
 //        NSLog(@" pullaudio times:%d ,%@",times++,audio);
         
     }else if (streamPacket.type == GJVideoType) {
-        GJRetainBuffer* buffer = &streamPacket.packet.aacPacket->retain;
+        GJRetainBuffer* buffer = &streamPacket.packet.h264Packet->retain;
         livePull.sendByte = livePull.sendByte + buffer->size;
         livePull.unitByte = livePull.unitByte + buffer->size;
-        
+//        static int times;
+//        R_GJH264Packet* packet = streamPacket.packet.h264Packet;
+//        NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
+//        NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
+//        NSData* pp = [NSData dataWithBytes:packet->pp length:30];
+//        
+//        NSLog(@"pull:%d,sps%@,pps%@,pp%@,ppssize:%d",times++,sps,pps,pp,packet->ppSize);
+
         [livePull.videoDecoder decodePacket:streamPacket.packet.h264Packet];
     }
 }

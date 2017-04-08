@@ -48,8 +48,7 @@
 
 @property(strong,nonatomic)NSDate* startPushDate;
 @property(strong,nonatomic)NSDate* connentDate;
-@property(strong,nonatomic)NSDate* fristVideoDate;
-@property(strong,nonatomic)NSDate* fristAudioDate;
+@property(strong,nonatomic)NSDate* fristFrameDate;
 
 @end
 
@@ -198,12 +197,12 @@
         _unitFrame = 0;
         [self.delegate livePush:self updatePushStatus:&status ];
     }];
-
+    _fristFrameDate = [NSDate date];
     [_audioRecoder startRecodeAudio];
     __weak GJLivePush* wkSelf = self;
     wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
         CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
-        int pts = [[NSDate date]timeIntervalSince1970]*1000;
+        int pts = [[NSDate date]timeIntervalSinceDate:wkSelf.fristFrameDate]*1000;
         [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:pts fourceKey:false];
     };
 }
@@ -271,6 +270,12 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
     _sendFrame++;
     _sendByte += packet->retain.frontSize+packet->retain.size;
     _unitByte += packet->retain.frontSize+packet->retain.size;
+//    static int times;
+//    NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
+//    NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
+//    NSData* pp = [NSData dataWithBytes:packet->pp length:30];
+//
+//    NSLog(@"push:%d,sps%@,pps%@,pp%@,ppsize:%d",times++,sps,pps,pp,packet->ppSize);
     GJRtmpPush_SendH264Data(_videoPush, packet);
 
     return GJRtmpPush_GetBufferRate(_videoPush);
@@ -298,6 +303,8 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
         [_audioTestPlayer playData:dataBuffer packetDescriptions:packetDescriptions];
     }
 #else
+    packet->pts = (int64_t)([[NSDate date]timeIntervalSinceDate:_fristFrameDate]*1000);
+
     GJRtmpPush_SendAACData(_videoPush, packet);
 #endif
 }

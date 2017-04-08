@@ -93,9 +93,7 @@
                                                       NULL,
                                                       NULL );
     
-    CFNumberRef bitRate ;
-    VTSessionCopyProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, kCFAllocatorDefault, &bitRate);
-    CFRelease(bitRate);
+    
     if (status == 0) {
         _encodeframeCount++;
         return YES;
@@ -194,7 +192,7 @@
 static bool retainBufferRelease(GJRetainBuffer* buffer){
     GJBufferPool* pool = buffer->parm;
     GJBufferPoolSetData(pool, buffer->data-buffer->frontSize);
-    free(buffer);
+    GJBufferPoolSetData(defauleBufferPool(), (void*)buffer);
     return true;
 }
 
@@ -207,7 +205,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         return;
     }
     GJH264Encoder* encoder = (__bridge GJH264Encoder *)(outputCallbackRefCon);
-    R_GJH264Packet* pushPacket = (R_GJH264Packet*)malloc(sizeof(R_GJH264Packet));
+    R_GJH264Packet* pushPacket = (R_GJH264Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJH264Packet));
     GJRetainBuffer* retainBuffer = &pushPacket->retain;
     memset(pushPacket, 0, sizeof(R_GJH264Packet));
 #define PUSH_H264_PACKET_PRE_SIZE 45
@@ -302,10 +300,10 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
   
     }
     
-//    CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
+    CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
 
     GJAssert(bufferOffset == totalLength, "数据出错\n");
-    pushPacket->pts = (int64_t)[[NSDate date]timeIntervalSince1970]*1000;
+    pushPacket->pts = pts.value;
 
  
 #if 0

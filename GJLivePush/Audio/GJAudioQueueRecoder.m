@@ -122,7 +122,7 @@ static void adtsDataForPacketLength(int packetLength, uint8_t*packet,int sampleR
 static bool retainBufferRelease(GJRetainBuffer* buffer){
     GJBufferPool* pool = buffer->parm;
     GJBufferPoolSetData(pool, buffer->data+buffer->frontSize);
-    free(buffer);
+    GJBufferPoolSetData(defauleBufferPool(), (void*)buffer);
     return YES;
 }
 static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer,const AudioTimeStamp *inStartTime,UInt32 inNumPackets, const AudioStreamPacketDescription  *inPacketDesc){
@@ -132,7 +132,8 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
         uint8_t* data = GJBufferPoolGetData(tempSelf.bufferPool);
 #define PUSH_AAC_PACKET_PRE_SIZE 25
         uint8_t* aacData = data+PUSH_AAC_PACKET_PRE_SIZE;
-        R_GJAACPacket* packet = (R_GJAACPacket*)malloc(sizeof(R_GJAACPacket));
+        
+        R_GJAACPacket* packet = (R_GJAACPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJAACPacket));
         GJRetainBuffer* retainBuffer = &packet->retain;
         retainBufferPack(&retainBuffer, data, tempSelf.maxOutSize, retainBufferRelease, tempSelf.bufferPool);
         int offset = 0;

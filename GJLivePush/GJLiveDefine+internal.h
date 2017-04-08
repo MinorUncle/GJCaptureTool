@@ -10,7 +10,7 @@
 #define GJLiveDefine_internal_h
 #include "GJRetainBuffer.h"
 
-#define SEND_SEI
+//#define SEND_SEI
 
 typedef struct H264Packet{
     GJRetainBuffer retain;

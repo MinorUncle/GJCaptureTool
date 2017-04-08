@@ -52,46 +52,42 @@ static void* pullRunloop(void* parm){
 
     
     while(!pull->stopRequest){
-        RTMPPacket* packet = (RTMPPacket*)malloc(sizeof(RTMPPacket));
-        memset(packet, 0, sizeof(RTMPPacket));
-        while (RTMP_ReadPacket(pull->rtmp, packet)) {
+        RTMPPacket packet = {0};
+        while (RTMP_ReadPacket(pull->rtmp, &packet)) {
             uint8_t *sps = NULL,*pps = NULL,*pp = NULL,*sei = NULL;
             int spsSize = 0,ppsSize = 0,ppSize = 0,seiSize=0;
             GJStreamPacket streamPacket;
-            if (!RTMPPacket_IsReady(packet) || !packet->m_nBodySize)
+            if (!RTMPPacket_IsReady(&packet) || !packet.m_nBodySize)
             {
                 continue;
             }
             
-            RTMP_ClientPacket(pull->rtmp, packet);
+            RTMP_ClientPacket(pull->rtmp, &packet);
             
-//            static int time = 0;
-//            
-//            NSData* data = [NSData dataWithBytes:packet->m_body length:packet->m_nBodySize];
-//
-//            NSLog(@"pull%d,%@",time++,data);
-            GJMediaType dataType = 0;
-            if (packet->m_packetType == RTMP_PACKET_TYPE_AUDIO) {
+            if (packet.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
                 streamPacket.type = GJAudioType;
-                uint8_t* body = (uint8_t*)packet->m_body;
+                uint8_t* body = (uint8_t*)packet.m_body;
                 R_GJAACPacket* aacPacket = (R_GJAACPacket*)malloc(sizeof(R_GJAACPacket));
                 GJRetainBuffer* retainBuffer = &aacPacket->retain;
-                retainBufferPack(&retainBuffer, body - RTMP_MAX_HEADER_SIZE, RTMP_MAX_HEADER_SIZE+packet->m_nBodySize, R_RetainBufferRelease, NULL);
+                retainBufferPack(&retainBuffer, body - RTMP_MAX_HEADER_SIZE, RTMP_MAX_HEADER_SIZE+packet.m_nBodySize, R_RetainBufferRelease, NULL);
 
                 aacPacket->adts = body+2;
                 aacPacket->adtsSize = 7;
                 aacPacket->aac = aacPacket->adts+7;
-                aacPacket->aacSize = (int)(body+packet->m_nBodySize-aacPacket->aac);
+                aacPacket->aacSize = (int)(body+packet.m_nBodySize-aacPacket->aac);
                 streamPacket.packet.aacPacket = aacPacket;
-               
-                free(packet);
+                packet.m_body=NULL;
                 pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);
                 
-            }else if (packet->m_packetType == RTMP_PACKET_TYPE_VIDEO){
-                dataType = GJVideoType;
+            }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
+//                static int time = 0;
+//                
+//                NSData* data = [NSData dataWithBytes:packet->m_body length:30];
+//                
+//                NSLog(@"pull:%d,size:%d,%@",time++,packet->m_nBodySize,data);
 
-                uint8_t *body = (uint8_t*)packet->m_body;
+                uint8_t *body = (uint8_t*)packet.m_body;
                 uint8_t *pbody = body;
                 int isKey = 0;
                 if ((*pbody & 0x0F) == 7) {
@@ -108,7 +104,7 @@ static void* pullRunloop(void* parm){
                         ppsSize += pbody[1];
                         pps = pbody+2;
                         pbody = pps+ppsSize;
-                        if (pbody+4<body+packet->m_nBodySize) {
+                        if (pbody+4<body+packet.m_nBodySize) {
                             pbody++;
                         }else{
                             GJLOG(GJ_LOGINFO,"only spspps\n");
@@ -116,7 +112,8 @@ static void* pullRunloop(void* parm){
                         }
                     }
                     if (*pbody == 1) {//naul
-                        find_pp_sps_pps(&isKey, pbody+9,(int)(body+packet->m_nBodySize- pbody-9), &pp, NULL, NULL, NULL, NULL, &sei, &seiSize);
+                        find_pp_sps_pps(&isKey, pbody+8,(int)(body+packet.m_nBodySize- pbody-8), &pp, NULL, NULL, NULL, NULL, &sei, &seiSize);
+                        ppSize = (int)((uint8_t*)packet.m_body+packet.m_nBodySize-pp);
                     }
                     
                 }else{
@@ -125,7 +122,7 @@ static void* pullRunloop(void* parm){
                 R_GJH264Packet* h264Packet = (R_GJH264Packet*)malloc(sizeof(R_GJH264Packet));
                 memset(h264Packet, 0, sizeof(R_GJH264Packet));
                 GJRetainBuffer* retainBuffer = &h264Packet->retain;
-                retainBufferPack(&retainBuffer, packet->m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet->m_nBodySize, R_RetainBufferRelease, NULL);
+                retainBufferPack(&retainBuffer, packet.m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet.m_nBodySize, R_RetainBufferRelease, NULL);
                
                 h264Packet->sps = sps;
                 h264Packet->spsSize = spsSize;
@@ -135,25 +132,22 @@ static void* pullRunloop(void* parm){
                 h264Packet->ppSize = ppSize;
                 h264Packet->sei = sei;
                 h264Packet->seiSize = seiSize;
-                h264Packet->pts = packet->m_nTimeStamp;
+                h264Packet->pts = packet.m_nTimeStamp;
+                streamPacket.type = GJVideoType;
                 streamPacket.packet.h264Packet = h264Packet;
            
-                free(packet);
                 pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);
+                packet.m_body=NULL;
             }else{
-                GJLOG(GJ_LOGWARNING,"not media Packet:%p type:%d \n",packet,packet->m_packetType);
-                RTMPPacket_Free(packet);
-                free(packet);
-                packet = NULL;
+                GJLOG(GJ_LOGWARNING,"not media Packet:%p type:%d \n",packet,packet.m_packetType);
+                RTMPPacket_Free(&packet);
                 break;
             }
-            packet = NULL;
             break;
         }
-        if (packet) {
-            RTMPPacket_Free(packet);
-            free(packet);
+        if (packet.m_body) {
+            RTMPPacket_Free(&packet);
 //            GJAssert(0, "读取数据错误\n");
         }
     }
