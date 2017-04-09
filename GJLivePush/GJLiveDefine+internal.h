@@ -11,7 +11,7 @@
 #include "GJRetainBuffer.h"
 
 //#define SEND_SEI
-
+#define TEST
 typedef struct H264Packet{
     GJRetainBuffer retain;
     int64_t pts;

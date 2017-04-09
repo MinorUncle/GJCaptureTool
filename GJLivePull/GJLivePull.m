@@ -65,7 +65,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         switch (messageType) {
             case GJRTMPPullMessageType_connectError:
             case GJRTMPPullMessageType_urlPraseError:
-                [livePull.delegate livePull:livePull errorType:kLivePushConnectError infoDesc:@"连接错误"];
+                [livePull.delegate livePull:livePull errorType:kLivePullConnectError infoDesc:@"连接错误"];
                 [livePull stopStreamPull];
                 break;
             case GJRTMPPullMessageType_sendPacketError:
@@ -154,6 +154,7 @@ static const int mpeg4audio_sample_rates[16] = {
     96000, 88200, 64000, 48000, 44100, 32000,
     24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
+
 static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* parm){
     GJLivePull* livePull = (__bridge GJLivePull *)(parm);
     
@@ -200,13 +201,13 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
         GJRetainBuffer* buffer = &streamPacket.packet.h264Packet->retain;
         livePull.sendByte = livePull.sendByte + buffer->size;
         livePull.unitByte = livePull.unitByte + buffer->size;
-//        static int times;
-//        R_GJH264Packet* packet = streamPacket.packet.h264Packet;
-//        NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
-//        NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
-//        NSData* pp = [NSData dataWithBytes:packet->pp length:30];
-//        
-//        NSLog(@"pull:%d,sps%@,pps%@,pp%@,ppssize:%d",times++,sps,pps,pp,packet->ppSize);
+        static int times;
+        R_GJH264Packet* packet = streamPacket.packet.h264Packet;
+        NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
+        NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
+        NSData* pp = [NSData dataWithBytes:packet->pp length:30];
+//
+        NSLog(@"dece:%d,sps%@,pps%@,pp%d,pts:%lld",times++,sps,pps,streamPacket.packet.h264Packet->ppSize,streamPacket.packet.h264Packet->pts);
 
         [livePull.videoDecoder decodePacket:streamPacket.packet.h264Packet];
     }
@@ -224,10 +225,21 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
     [_player addVideoDataWith:imageBuffer pts:pts];
     return;    
 }
+#ifdef TEST
+-(void)pullimage:(CVImageBufferRef)streamPacket time:(CMTime)pts{
+    static int s = 0;
+    if (s == 0) {
+        s++;
+        [_player start];
+    }
+    [_player addVideoDataWith:streamPacket pts:pts.value];
+}
+-(void)pullDataCallback:(GJStreamPacket)streamPacket{
+    pullDataCallback(_videoPull, streamPacket, (__bridge void *)(self));
+}
+#endif
 
 -(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer pts:(int64_t)pts{
-
-    
     [_player addAudioDataWith:buffer pts:pts];
 }
 

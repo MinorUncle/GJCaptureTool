@@ -8,6 +8,9 @@
 
 #import <Foundation/Foundation.h>
 #import "GJLiveDefine.h"
+#import <CoreVideo/CVImageBuffer.h>
+#import <CoreMedia/CMTime.h>
+#import "GJLiveDefine+internal.h"
 
 enum AVCaptureDevicePosition;
 @class UIView;
@@ -22,6 +25,8 @@ enum AVCaptureDevicePosition;
 -(void)livePush:(GJLivePush*)livePush connentSuccessWithElapsed:(int)elapsed;
 
 -(void)livePush:(GJLivePush*)livePush errorType:(GJLiveErrorType)type infoDesc:(NSString*)info;
+-(void)livePush:(GJLivePush*)livePush pushPacket:(R_GJH264Packet*)packet;
+-(void)livePush:(GJLivePush*)livePush pushImagebuffer:(CVImageBufferRef)packet pts:(CMTime)pts;
 
 
 @optional
@@ -62,6 +67,8 @@ enum AVCaptureDevicePosition;
 - (bool)startStreamPushWithConfig:(GJPushConfig)config;
 
 - (void)stopStreamPush;
+
+- (void)videoRecodeWithPath:(NSString*)path;
 
 
 

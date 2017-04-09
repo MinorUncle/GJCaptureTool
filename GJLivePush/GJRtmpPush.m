@@ -61,9 +61,11 @@ static void* sendRunloop(void* parm){
 //        NSData* d = [NSData dataWithBytes:packet->packet.m_body length:30];
 //        NSLog(@"push:%d,size:%d,%@",times++,packet->packet.m_nBodySize,d);
         int iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
-//        static int i = 0;
-//        GJPrintf("sendcount:%d,pts:%d\n",i++,packet->packet.m_nTimeStamp);
+        
         if (iRet) {
+//            static int i = 0;
+//            NSLog(@"sendcount:%d,lenth:%d,pts:%d \n",i++,packet->packet.m_nBodySize,packet->packet.m_nTimeStamp);
+
             push->sendByte += packet->retainBuffer->size;
             push->sendPacketCount ++;
             retainBufferUnRetain(packet->retainBuffer);
@@ -144,28 +146,32 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
 
     unsigned char * body=NULL;
     int iIndex = 0;
-    int preSize = 0;//前面额外需要的空间；
-    int sps_ppsPreSize = 16,ppPreSize = 9;//flv tag前置预留大小大小
+    int sps_ppsPreSize = 0,ppPreSize = 0,ppHasPreSize=9;//flv tag前置预留大小大小
    
 
     if (packet->sps) {
-        preSize += sps_ppsPreSize;
+        sps_ppsPreSize = 16;
     }
     if (packet->pp) {
-        if ((pp[0] & 0x1F) == 5) {
+ 
+        ppPreSize = 9;
+        
+        if ((pp[4] & 0x1F) == 5) {
             isKey = true;
-        }
-        preSize += ppPreSize;
-    }
 #ifdef SEND_SEI
-    if (packet->sei) {
-        pp = packet->sei;
-        ppSize += packet->seiSize;
-    }
+            if (packet->sei) {
+                pp = packet->sei;
+                ppSize += packet->seiSize;
+            }
 #endif
-    sendPacket->m_body = (char*)pp - preSize-spsSize-ppsSize;
-    sendPacket->m_nBodySize = ppSize+spsSize+ppsSize+preSize;
-    if (pp-packet->retain.data < preSize+RTMP_MAX_HEADER_SIZE+spsSize+ppsSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
+            ppHasPreSize -= packet->pp - packet->pps - packet->ppsSize;
+        }
+    }else{
+        GJAssert(0, "没有pp");
+    }
+    sendPacket->m_body = (char*)pp - ppPreSize - sps_ppsPreSize - spsSize - ppsSize;
+    sendPacket->m_nBodySize = ppSize+spsSize+ppsSize+ppPreSize+sps_ppsPreSize;
+    if (pp-packet->retain.data < ppPreSize+sps_ppsPreSize+RTMP_MAX_HEADER_SIZE+spsSize+ppsSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
         GJAssert(0, "预留位置过小");
     }
 
@@ -178,8 +184,17 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     sendPacket->m_nTimeStamp = (uint32_t)packet->pts;
   
     if (sps && pps) {
-        GJLOG(GJ_LOGINFO, "spsSize:%d,ppsSize:%d",spsSize,ppsSize);
-        GJAssert(ppsSize > 4 && spsSize>4, "pps errpr");
+
+        //先移动，防止被填充:[13]sps,[13+spsSize+3]pps
+        if (ppHasPreSize<0) {//右移动
+            pps = memmove(pp - ppPreSize - ppsSize, pps, ppsSize);
+            sps = memmove(pp - ppPreSize - ppsSize - spsSize - 3, sps, spsSize);
+        }else{
+            sps = memmove(pp - ppPreSize - ppsSize - spsSize - 3, sps, spsSize);
+            pps = memmove(pp - ppPreSize - ppsSize, pps, ppsSize);
+        }
+
+
         body[iIndex++] = 0x17;
         body[iIndex++] = 0x00;
         
@@ -198,14 +213,14 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         body[iIndex++] = (spsSize >> 8) & 0xff;
         body[iIndex++] = spsSize & 0xff;
         
-        memmove(&body[iIndex],sps,spsSize);
+//        memmove(&body[iIndex],sps,spsSize);
         iIndex +=  spsSize;
 
         /*pps*/
         body[iIndex++]   = 0x01;
         body[iIndex++] = ((ppsSize) >> 8) & 0xff;
         body[iIndex++] = (ppsSize) & 0xff;
-        memmove(&body[iIndex], pps, ppsSize);
+//        memmove(&body[iIndex], pps, ppsSize);
         iIndex +=  ppsSize;
     }
     if (pp) {
@@ -239,6 +254,8 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
       sender->dropPacketCount++;
     }else{
       sender->inPts = pushPacket->packet.m_nTimeStamp;
+//        static int times = 0;
+//        NSLog(@"push:%d,pp%d,pts:%ld",times++,pushPacket->packet.m_nBodySize,sender->inPts);
     }
 }
 

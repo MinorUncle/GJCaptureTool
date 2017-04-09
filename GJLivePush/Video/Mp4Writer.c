@@ -27,7 +27,7 @@ void mp4WriterAddVideo(Mp4WriterContext* context, uint8_t* data,size_t size,doub
         }
 
         if (context->videoTrackID == MP4_INVALID_TRACK_ID) {
-            h264_decode_sps(sps, (unsigned int)spsSize, (int*)&context->width, (int*)&context->height, NULL);
+            h264_decode_sps(sps+4, (unsigned int)spsSize-4, (int*)&context->width, (int*)&context->height, NULL);
             if (context->width <= 0 || context->height <= 0 ) {
                 printf("decode SPS error");
                 return;

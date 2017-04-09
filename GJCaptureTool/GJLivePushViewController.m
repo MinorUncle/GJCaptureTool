@@ -11,7 +11,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "GJLivePull.h"
 #import "GJLog.h"
-
+#import "log.h"
 @interface PullShow : NSObject
 {
     
@@ -131,6 +131,8 @@
     [super viewDidLoad];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGINFO);
+    RTMP_LogSetLevel(RTMP_LOGDEBUG);
+    
     _livePush = [[GJLivePush alloc]init];
     _livePush.delegate = self;
  
@@ -234,7 +236,12 @@ static char* url = "rtmp://192.168.18.21/live/room";
             config.pushSize = CGSizeMake(360, 640);
             config.videoBitRate = 8*80*1024;
             config.pushUrl = url;
+            
+            NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
+            path = [path stringByAppendingPathComponent:@"test.mp4"];
+//            [_livePush videoRecodeWithPath:path];
             [_livePush startStreamPushWithConfig:config];
+            
         }else{
              [_livePush stopStreamPush];
         }
@@ -303,6 +310,22 @@ static char* url = "rtmp://192.168.18.21/live/room";
             break;
     }
 }
+-(void)livePush:(GJLivePush *)livePush pushPacket:(R_GJH264Packet *)packet{
+    if (_pulls.count>0) {
+        GJStreamPacket ppush;
+        ppush.type = GJVideoType;
+        ppush.packet.h264Packet = packet;
+        [_pulls[0].pull pullDataCallback:ppush];
+    }
+}
+-(void)livePush:(GJLivePush *)livePush pushImagebuffer:(CVImageBufferRef)packet pts:(CMTime)pts{
+    if (_pulls.count>0) {
+        [_pulls[0].pull pullimage:packet time:pts];
+        
+    }
+
+}
+
 -(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushStatus *)status{
         _sendRateLab.text = [NSString stringWithFormat:@"发送码率:%0.2f KB/s",status->bitrate/1024.0];
         _fpsLab.text = [NSString stringWithFormat:@"发送帧率%d",status->frameRate];

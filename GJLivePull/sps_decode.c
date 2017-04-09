@@ -327,9 +327,6 @@ void find_pp_sps_pps(int *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **s
         }
         p++;
     }
-    if (sps[0] != 0) {
-        printf("sps");
-    }
     
 }
 

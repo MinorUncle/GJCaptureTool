@@ -69,7 +69,8 @@ void decodeOutputCallback(
         GJLOG(GJ_LOGERROR,"解码error1:%d",(int)status);
         return;
     }
-//    GJPrintf("pts:%f   ,ptd:%f\n",presentationTimeStamp.value*1.0 / presentationTimeStamp.timescale,presentationDuration.value*1.0/presentationDuration.timescale);
+
+
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
     if ([decoder.delegate respondsToSelector:@selector(GJH264Decoder:decodeCompleteImageData:pts:)]) {
         [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:presentationTimeStamp.value*1000/presentationTimeStamp.timescale];
@@ -99,6 +100,7 @@ void decodeOutputCallback(
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     
+
     OSStatus status;
     long blockLength = 0;
     CMSampleBufferRef sampleBuffer = NULL;

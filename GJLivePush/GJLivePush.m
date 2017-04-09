@@ -12,7 +12,7 @@
 #import "GJLog.h"
 #import "GJH264Encoder.h"
 #import "GJAudioQueueRecoder.h"
-
+#import "Mp4Writer.h"
 //#define GJPUSHAUDIOQUEUEPLAY_TEST
 #ifdef GJPUSHAUDIOQUEUEPLAY_TEST
 #import "GJAudioQueuePlayer.h"
@@ -26,6 +26,7 @@
     GPUImageOutput* _lastFilter;
     GPUImageCropFilter* _cropFilter;
     GJAudioQueueRecoder* _audioRecoder;
+    Mp4WriterContext *_mp4Recoder;
     NSTimer*        _timer;
     
     
@@ -210,6 +211,10 @@
 - (void)stopStreamPush{
     
     GJRtmpPush_Close(_videoPush);
+    if (_mp4Recoder) {
+        mp4WriterClose(&(_mp4Recoder));
+        _mp4Recoder = NULL;
+    }
     [_lastFilter removeTarget:_videoStreamFilter];
     [_audioRecoder stop];
     [_videoEncoder flush];
@@ -263,6 +268,13 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
     
 }
 
+
+- (void)videoRecodeWithPath:(NSString*)path{
+    if(_mp4Recoder == nil){
+        mp4WriterCreate(&_mp4Recoder, path.UTF8String, _captureFps);
+    }
+}
+
 #pragma mark delegate
 -(float)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet{
 
@@ -270,14 +282,31 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
     _sendFrame++;
     _sendByte += packet->retain.frontSize+packet->retain.size;
     _unitByte += packet->retain.frontSize+packet->retain.size;
-//    static int times;
-//    NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
-//    NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
+    static int times;
+    NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
+    NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
 //    NSData* pp = [NSData dataWithBytes:packet->pp length:30];
-//
 //    NSLog(@"push:%d,sps%@,pps%@,pp%@,ppsize:%d",times++,sps,pps,pp,packet->ppSize);
+    NSLog(@"encd:%d,sps%@,pps%@,pp%d,pts:%lld",times++,sps,pps,packet->ppSize,packet->pts);
+
+    if (_mp4Recoder) {
+        uint8_t* frame;long size=0;
+        if (packet->sps) {
+            frame = packet->sps;
+            size = packet->pp+packet->ppSize - packet->sps;
+        }else{
+            frame = packet->pp;
+            size = packet->ppSize;
+        }
+        mp4WriterAddVideo(_mp4Recoder, frame, size, (double)packet->pts);
+
+    }
+    
+//    [self.delegate livePush:self pushPacket:packet];
     GJRtmpPush_SendH264Data(_videoPush, packet);
 
+    
+    
     return GJRtmpPush_GetBufferRate(_videoPush);
 
 }

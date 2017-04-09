@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <CoreMedia/CMTime.h>
 #import "GJLiveDefine.h"
 @class UIView;
 @class GJLivePull;
@@ -28,6 +29,7 @@
 @optional
 @end
 
+#include "GJLiveDefine+internal.h"
 @interface GJLivePull : NSObject
 @property(nonatomic,strong,readonly,getter=getPreviewView)UIView* previewView;
 
@@ -43,5 +45,8 @@
 - (bool)startStreamPullWithUrl:(char*)url;
 
 - (void)stopStreamPull;
+
+-(void)pullDataCallback:(GJStreamPacket)streamPacket;
+-(void)pullimage:(CVImageBufferRef)streamPacket time:(CMTime)pts;
 
 @end

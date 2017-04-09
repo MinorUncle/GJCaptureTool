@@ -22,6 +22,9 @@
 #endif
 
 
+#define DISPLAY_JUMP_TEST
+
+
 
 #define VIDEO_PTS_PRECISION   0.4
 #define AUDIO_PTS_PRECISION   0.1
@@ -251,7 +254,7 @@ static void* playRunLoop(void* parm){
                 delay = VIDEO_PTS_PRECISION*1000-16;
                 break;//视频不会长时间等待视频
             }
-            GJLOG(GJ_LOGWARNING, "视频等待时间长 delay:%ld PTS:%ld clock:%ld",delay,cImageBuf->pts,timeStandards);
+            GJLOG(GJ_LOGWARNING, "视频等待时间过长 delay:%ld PTS:%ld clock:%ld",delay,cImageBuf->pts,timeStandards);
             usleep(VIDEO_PTS_PRECISION*1000000);
             timeStandards = getClockLine(_syncControl);
             delay = cImageBuf->pts - timeStandards;
@@ -264,15 +267,15 @@ static void* playRunLoop(void* parm){
         }
     DISPLAY:
         if (delay > 10) {
+            GJLOG(GJ_LOGALL,"play wait:%d, video pts:%ld",delay,_syncControl->vCPTS);
             usleep((unsigned int)delay * 1000);
         }
         _syncControl->vClock = getTime() / 1000;
         _syncControl->outVPts = cImageBuf->pts;
-        static int oTimes;
-        NSLog(@"oTimes:%d,pts:%lld",oTimes++,cImageBuf->pts);
+//        static int oTimes;
+//        NSLog(@"oTimes:%d,pts:%lld",oTimes++,cImageBuf->pts);
         [player.YUVInput updateDataWithImageBuffer:cImageBuf->image timestamp: CMTimeMake(cImageBuf->pts, 1000)];
         _syncControl->vCPTS = cImageBuf->pts;
-        GJLOG(GJ_LOGALL,"video pts:%ld",_syncControl->vCPTS);
     DROP:
         CVPixelBufferRelease(cImageBuf->image);
 
@@ -300,7 +303,12 @@ ERROR:
         _cacheControl.highVideoWaterFlag = 60;
 
         pthread_mutex_init(&_playControl.oLock, NULL);
-        _displayView = [[GJImageView alloc]init];
+        
+#ifdef DISPLAY_JUMP_TEST
+        _displayView = [[UIImageView alloc]init];
+#else
+    _displayView = [[GJImageView alloc]init];
+#endif
         queueCreate(&_playControl.imageQueue, VIDEO_MAX_CACHE_COUNT, true, false);//150为暂停时视频最大缓冲
         queueCreate(&_playControl.audioQueue, AUDIO_MAX_CACHE_COUNT, true, false);
     }
@@ -463,13 +471,26 @@ ERROR:
     return _syncControl.networkDelay;
 }
 #endif
--(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(int64_t)pts{    
+-(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(int64_t)pts{
+    
+#ifdef DISPLAY_JUMP_TEST
+    CIImage* cimage = [CIImage imageWithCVPixelBuffer:imageData];
+    UIImage* image = [UIImage imageWithCIImage:cimage];
+    // Update the display with the captured image for DEBUG purposes
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        ( (UIImageView*)_displayView).image = image;
+    });
+    return YES;
+    
+#endif
+    
     GJImageBuffer* imageBuffer  = (GJImageBuffer*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJImageBuffer));
     imageBuffer->image = imageData;
     imageBuffer->pts = pts;
     CVPixelBufferRetain(imageData);
-    static int iTimes;
-    NSLog(@"inTimes:%d,pts:%lld",iTimes++,pts);
+//    static int iTimes;
+//    NSLog(@"inTimes:%d,pts:%lld",iTimes++,pts);
     if (queuePush(_playControl.imageQueue, imageBuffer, 0)) {
         _syncControl.inVPts = imageBuffer->pts;
 #ifdef NETWORK_DELAY

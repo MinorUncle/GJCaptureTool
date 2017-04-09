@@ -90,7 +90,7 @@ BOOL _recodeState;
     self.topView = [[UIView alloc]init];//[[UIView alloc]initWithFrame:rect];
     self.topView.contentMode = UIViewContentModeScaleAspectFill;
     self.topView.frame = rect;
-    self.topView.backgroundColor = [UIColor blackColor];
+    self.topView.backgroundColor = [UIColor yellowColor];
     [self.view addSubview:self.topView];
     
     
@@ -166,8 +166,8 @@ BOOL _recodeState;
 
 }
 
-//#define CAPTURE_ON
-#define AUDIOQUEUE_ON
+#define CAPTURE_ON
+//#define AUDIOQUEUE_ON
 
 
 -(void)takeSelect:(UIButton*)btn{
@@ -255,7 +255,7 @@ BOOL _recodeState;
 #endif
     
     
-    [_audioDecoder decodeBuffer:dataBuffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions pts:pts];
+//    [_audioDecoder decodeBuffer:dataBuffer packetDescriptions:(AudioStreamPacketDescription *)packetDescriptions pts:pts];
 }
 
 -(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer pts:(int)pts{
@@ -507,7 +507,7 @@ BOOL _recodeState;
 //    [_playView displayYUV420pData:(void*)(baseAdd + d) width:(uint32_t)w height:(uint32_t)h];
 
   
-    [_gjEncoder encodeImageBuffer:imageBuffer pts:kCMTimeZero fourceKey:NO];
+    [_gjEncoder encodeImageBuffer:imageBuffer pts:0 fourceKey:NO];
     
     
 //            if (_encoder == nil) {
@@ -619,7 +619,7 @@ BOOL _recodeState;
 
 }
 
--(void)GJH264Encoder:(GJH264Encoder *)encoder encodeCompleteBuffer:(GJRetainBuffer *)buffer keyFrame:(BOOL)keyFrame dts:(double)dts
+-(float)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet
 {
 
     
@@ -648,7 +648,7 @@ BOOL _recodeState;
 
     
     _totalCount ++;
-    _totalByte += buffer->size;
+    _totalByte += packet->spsSize+packet->ppsSize+packet->ppSize;
 //    if (!_rtmpSend->GetConnectedFlag()) {
 //        dispatch_async(dispatch_get_main_queue(), ^{
 //            _stateLab.text = @"连接中。。。";
@@ -710,10 +710,11 @@ BOOL _recodeState;
 //    }
 
 //    printf("fram type:%x,",buffer[4]);
-//    [_gjDecoder decodeBuffer:buffer withLenth:(uint32_t)totalLenth];
+    [_gjDecoder decodePacket:packet];
+    return 0;
 }
 
--(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(uint)pts{
+-(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts{
 //    CVPixelBufferLockBaseAddress(imageBuffer, 0);
 //    uint8_t* baseAdd = (uint8_t*)CVPixelBufferGetBaseAddress(imageBuffer);
 //    size_t w = CVPixelBufferGetWidth(imageBuffer);
@@ -750,7 +751,7 @@ BOOL _recodeState;
     // Update the display with the captured image for DEBUG purposes
     dispatch_async(dispatch_get_main_queue(), ^{
         
-        self.imageView.image = image;
+        ( (UIImageView*)self.bottomView).image = image;
     });
     
     
@@ -838,7 +839,7 @@ BOOL _recodeState;
         UIImage* image = [self getImageWithBuffer:data bytesPerRow:width width:width height:height];
         //     Update the display with the captured image for DEBUG purposes
         dispatch_async(dispatch_get_main_queue(), ^{
-            self.imageView.image = image;
+   ( (UIImageView*)self.bottomView).image = image;
         });
 
     }

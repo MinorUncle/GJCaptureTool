@@ -13,7 +13,7 @@
 #include <string.h>
 #import <Foundation/Foundation.h>
 #define BUFFER_CACHE_SIZE 40
-#define RTMP_RECEIVE_TIMEOUT    3
+#define RTMP_RECEIVE_TIMEOUT    10
 
 
 
@@ -90,30 +90,24 @@ static void* pullRunloop(void* parm){
                 uint8_t *body = (uint8_t*)packet.m_body;
                 uint8_t *pbody = body;
                 int isKey = 0;
-                if ((*pbody & 0x0F) == 7) {
-                    pbody = body+1;
-                    if (*pbody == 0) {//sps pps
-                        pbody= body+9;
-                        pbody= body+11;
-                        spsSize += pbody[0]<<8;
-                        spsSize += pbody[1];
-                        sps = body +13;
+                if ((pbody[0] & 0x0F) == 7) {
+                    if (pbody[1] == 0) {//sps pps
+                        spsSize += pbody[11]<<8;
+                        spsSize += pbody[12];
+                        sps = pbody+13;
                         
-                        pbody = sps+spsSize+1;
-                        ppsSize += pbody[0]<<8;
-                        ppsSize += pbody[1];
-                        pps = pbody+2;
+                        pbody = sps+spsSize;
+                        ppsSize += pbody[1]<<8;
+                        ppsSize += pbody[2];
+                        pps = pbody+3;
                         pbody = pps+ppsSize;
-                        if (pbody+4<body+packet.m_nBodySize) {
-                            pbody++;
-                        }else{
+                        if (pbody+4>body+packet.m_nBodySize) {
                             GJLOG(GJ_LOGINFO,"only spspps\n");
-
                         }
                     }
-                    if (*pbody == 1) {//naul
+                    if (pbody[1] == 1) {//naul
                         find_pp_sps_pps(&isKey, pbody+8,(int)(body+packet.m_nBodySize- pbody-8), &pp, NULL, NULL, NULL, NULL, &sei, &seiSize);
-                        ppSize = (int)((uint8_t*)packet.m_body+packet.m_nBodySize-pp);
+                        ppSize = (int)(body+packet.m_nBodySize-pp);
                     }
                     
                 }else{

@@ -127,8 +127,9 @@
     _destFormat.baseFormat.width = w;
     _destFormat.baseFormat.height = h;
     if (_bufferPool != NULL) {
+        GJBufferPool* pool = _bufferPool;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-            GJBufferPoolCleanAndFree(&_bufferPool);
+            GJBufferPoolCleanAndFree((GJBufferPool**)&pool);
         });
     }
     GJBufferPoolCreate(&_bufferPool,1, true);
@@ -229,6 +230,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         if (statusCode != noErr)
         {
             GJLOG(GJ_LOGERROR,"CMVideoFormatDescriptionGetH264ParameterSetAt sps error:%d",statusCode);
+            GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
             return;
         }
         
@@ -239,6 +241,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         if ((statusCode != noErr))
         {
             GJLOG(GJ_LOGERROR,"CMVideoFormatDescriptionGetH264ParameterSetAt pps error:%d",statusCode);
+            GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
             return;
         }
         size_t spsppsSize = 4+4+sparameterSetSize+pparameterSetSize;
@@ -258,9 +261,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         pushPacket->ppsSize = 4+(int)pparameterSetSize;
 //        拷贝keyframe;
         memcpy(data+spsppsSize, inDataPointer, totalLength);
-        inDataPointer = data;
-        totalLength += spsppsSize;
-        bufferOffset = spsppsSize;
+        inDataPointer = data + spsppsSize;
         
         //sei
 //        NSData* dt = [NSData dataWithBytes:dataPointer length:MIN(totalLength, 100)];
@@ -271,7 +272,6 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //        
 //        dataPointer += seiLength + 4;
 //        totalLength -= seiLength + 4;
-
     }else{
         int needSize = (int)(totalLength+needPreSize);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
@@ -288,6 +288,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
         type = inDataPointer[bufferOffset+AVCCHeaderLength] & 0x1F;
         if (type == 6) {//SEI
+            
             pushPacket->sei = inDataPointer+bufferOffset;
             pushPacket->seiSize =(int)(NALUnitLength+4);
         }else if (type == 1 || type == 5){//pp
@@ -314,6 +315,8 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     CMTime dts = CMSampleBufferGetDecodeTimeStamp(sample);
     GJLOG(GJ_LOGINFO,"encode dts:%f pts:%f\n",dts.value*1.0 / dts.timescale,pts.value*1.0/pts.timescale);
 #endif
+//        static int i = 0;
+//        NSLog(@"encodecount:%d,lenth:%d,pts:%lld \n",i++,pushPacket->ppsSize+pushPacket->spsSize+pushPacket->ppSize,pts.value);
     float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompletePacket:pushPacket];
     retainBufferUnRetain(retainBuffer);
 
@@ -336,20 +339,28 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             _dropStep = 0;
             GJLOG(GJ_LOGINFO, "appendQuality to not drop 0 frame,bitrate:%f",_currentBitRate/1024.0/8.0);
             self.currentBitRate = _allowMinBitRate;
-            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
+            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
+                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
+            }
         }else{
             GJLOG(GJ_LOGINFO, "appendQuality by reduce to drop frame:%d",_dropStep);
             self.currentBitRate = _allowMinBitRate*(1-1.0/_dropStep);
-            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
+            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
+                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
+            }
         }
     }else{
         if (_currentBitRate < _destFormat.baseFormat.bitRate) {
             GJLOG(GJ_LOGINFO, "appendQuality by add to bitrate:%f",_currentBitRate/1024.0/8.0);
             self.currentBitRate += (_destFormat.baseFormat.bitRate - _currentBitRate)*0.2;
-            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
+            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
+                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
+            }
         }else{
             GJLOG(GJ_LOGINFO, "appendQuality to full speed:%f",_currentBitRate/1024.0/8.0);
-            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityExcellent];
+            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
+                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityExcellent];
+            }
         }
     }
 }
@@ -361,7 +372,9 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             bitrate = _allowMinBitRate;
         }
         self.currentBitRate = bitrate;
-        [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
+        if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
+            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
+        }
     }else{
  
         if (_dropStep != 1) {//最多到1，丢一半
@@ -372,10 +385,15 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             }
             GJLOG(GJ_LOGINFO, "reduceQuality by add to drop frame setp:%d",_dropStep);
             self.currentBitRate = _allowMinBitRate*(1-1.0/_dropStep);
-            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
+            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
+                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
+            }
         }else{
             GJLOG(GJ_LOGINFO, "reduceQuality to minimum quality:%f",_currentBitRate/1024.0/8.0);
-            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityTerrible];
+            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
+                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityTerrible];
+            }
+            
         }
     }
 }
