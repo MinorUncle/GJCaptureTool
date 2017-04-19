@@ -26,7 +26,8 @@
 #import "log.h"
 #import "GJAudioQueueRecoder.h"
 #import "GJRetainBuffer.h"
-
+#import "GJImagePixelImageInput.h"
+#import "GJImageView.h"
 GJQueue* _mp4VideoQueue;
 GJQueue* _mp4AudioQueue;
 BOOL _recodeState;
@@ -49,7 +50,7 @@ BOOL _recodeState;
     GJAudioQueueRecoder* _audioRecoder;
     AudioUnitCapture* _unitAudioRecoder;
     
-
+    GJImagePixelImageInput* _imageInput;
 }
 
 @property (strong, nonatomic) UIView *topView;
@@ -159,10 +160,13 @@ BOOL _recodeState;
     rect.origin.y = CGRectGetMaxY(rect);
     rect.size.height = self.view.bounds.size.height * 0.45;
     rect.size.width = self.view.bounds.size.width;
-    self.bottomView = [[UIImageView alloc]init];//[_livePull getPreviewView];
+    self.bottomView = [[GJImageView alloc]init];//[[UIImageView alloc]init];//[_livePull getPreviewView];
     _bottomView.frame = rect;
     _bottomView.backgroundColor = [UIColor redColor];
     [self.view addSubview:_bottomView];
+    
+    _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:GJPixelImageFormat_32BGRA];
+    [_imageInput addTarget:(GJImageView*)self.bottomView];
 
 }
 
@@ -507,8 +511,9 @@ BOOL _recodeState;
 //    [_playView displayYUV420pData:(void*)(baseAdd + d) width:(uint32_t)w height:(uint32_t)h];
 
   
-    [_gjEncoder encodeImageBuffer:imageBuffer pts:0 fourceKey:NO];
-    
+//    [_gjEncoder encodeImageBuffer:imageBuffer pts:0 fourceKey:NO];
+    CMTime t = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
+    [_imageInput updateDataWithImageBuffer:imageBuffer timestamp:t];
     
 //            if (_encoder == nil) {
 //                CVImageBufferRef imgRef = CMSampleBufferGetImageBuffer(sampleBuffer);

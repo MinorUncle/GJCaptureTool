@@ -64,7 +64,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         _focusCursor = [[CALayer alloc]init];
         _focusCursor.borderColor = [UIColor orangeColor].CGColor;
         _focusCursor.borderWidth = 1;
-        
+        _captureVideoPreviewLayer.frame = layer.bounds;
         [layer addSublayer:_captureVideoPreviewLayer];
         [layer addSublayer:_focusCursor];
         _captureType = type;
@@ -178,7 +178,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         GJLOG(@"添加视频数据输出成功");
     }
     _videoConnect = [_captureDataOutput connectionWithMediaType:AVMediaTypeVideo];
-    self.captureDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange)};
+    self.captureDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_32BGRA)};
 
        //链接创建后
     NSError * error;
