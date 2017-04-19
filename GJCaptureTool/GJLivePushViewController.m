@@ -224,7 +224,7 @@
     
        // Do any additional setup after loading the view.
 }
-static char* url = "rtmp://192.168.18.21/live/room";
+static char* url = "rtmp://10.0.1.126/live/room";
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;
@@ -344,8 +344,8 @@ static char* url = "rtmp://192.168.18.21/live/room";
     dispatch_async(dispatch_get_main_queue(), ^{
         PullShow* show = [self getShowWithPush:livePull];
         show.pullRateLab.text = [NSString stringWithFormat:@"Bitrate:%0.2f KB/s",pullStatus.bitrate/1024.0];
-        show.videoCacheLab.text = [NSString stringWithFormat:@"V:%d ms %d帧",pullStatus.videoCacheTime,pullStatus.videoCacheCount];
-        show.audioCacheLab.text = [NSString stringWithFormat:@"A:%d ms %d帧",pullStatus.audioCacheTime,pullStatus.audioCacheCount];
+        show.videoCacheLab.text = [NSString stringWithFormat:@"V cache:%d ms %d帧",pullStatus.videoCacheTime,pullStatus.videoCacheCount];
+        show.audioCacheLab.text = [NSString stringWithFormat:@"A cache:%d ms %d帧",pullStatus.audioCacheTime,pullStatus.audioCacheCount];
     });
 }
 

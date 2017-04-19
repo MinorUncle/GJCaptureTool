@@ -271,6 +271,9 @@ void find_pp_sps_pps(int *isKey, uint8_t* data,int size,uint8_t **pp,uint8_t **s
                 headSize = 4;
             }else if(p[2] == 1){
                 headSize = 3;
+            }else if(p[2] == 0){
+                p+=1;
+                continue;
             }else{
                 p+=2;
                 continue;

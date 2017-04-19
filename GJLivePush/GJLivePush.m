@@ -285,8 +285,6 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
     static int times;
     NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
     NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
-//    NSData* pp = [NSData dataWithBytes:packet->pp length:30];
-//    NSLog(@"push:%d,sps%@,pps%@,pp%@,ppsize:%d",times++,sps,pps,pp,packet->ppSize);
     NSLog(@"encd:%d,sps%@,pps%@,pp%d,pts:%lld",times++,sps,pps,packet->ppSize,packet->pts);
 
     if (_mp4Recoder) {
