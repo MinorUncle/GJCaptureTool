@@ -83,8 +83,8 @@ static void* pullRunloop(void* parm){
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
                 static int time = 0;
 //
-                NSData* data = [NSData dataWithBytes:packet.m_body length:30];
-                NSLog(@"time:%d data:%@",time++,data);
+//                NSData* data = [NSData dataWithBytes:packet.m_body length:30];
+//                NSLog(@"time:%d data:%@",time++,data);
 
                 uint8_t *body = (uint8_t*)packet.m_body;
                 uint8_t *pbody = body;
@@ -130,8 +130,6 @@ static void* pullRunloop(void* parm){
                 h264Packet->pts = packet.m_nTimeStamp;
                 streamPacket.type = GJVideoType;
                 streamPacket.packet.h264Packet = h264Packet;
-                
-                data = [NSData dataWithBytes:packet.m_body length:30];
                 
                 pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);

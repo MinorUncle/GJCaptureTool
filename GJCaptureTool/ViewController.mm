@@ -165,8 +165,7 @@ BOOL _recodeState;
     _bottomView.backgroundColor = [UIColor redColor];
     [self.view addSubview:_bottomView];
     
-    _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:GJPixelImageFormat_32BGRA];
-    [_imageInput addTarget:(GJImageView*)self.bottomView];
+
 
 }
 
@@ -511,9 +510,16 @@ BOOL _recodeState;
 //    [_playView displayYUV420pData:(void*)(baseAdd + d) width:(uint32_t)w height:(uint32_t)h];
 
   
-//    [_gjEncoder encodeImageBuffer:imageBuffer pts:0 fourceKey:NO];
-    CMTime t = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
-    [_imageInput updateDataWithImageBuffer:imageBuffer timestamp:t];
+    [_gjEncoder encodeImageBuffer:imageBuffer pts:0 fourceKey:NO];
+    
+//    if (_imageInput == nil) {
+//        OSType type = CVPixelBufferGetPixelFormatType(imageBuffer);
+//        _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:(GJYUVPixelImageFormat)type];
+//        [_imageInput addTarget:(GJImageView*)self.bottomView];
+//    }
+//    
+//    CMTime t = CMSampleBufferGetPresentationTimeStamp(sampleBuffer);
+//    [_imageInput updateDataWithImageBuffer:imageBuffer timestamp:t];
     
 //            if (_encoder == nil) {
 //                CVImageBufferRef imgRef = CMSampleBufferGetImageBuffer(sampleBuffer);
@@ -628,7 +634,7 @@ BOOL _recodeState;
 {
 
     
-//    [_gjDecoder decodeBuffer:buffer];
+    [_gjDecoder decodePacket:packet];
 //#if 0 // mp4v2
 //    if (_recodeState == YES) {
 //        if (_mp4Write) {
@@ -720,6 +726,15 @@ BOOL _recodeState;
 }
 
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts{
+    
+    if (_imageInput == nil) {
+        OSType type = CVPixelBufferGetPixelFormatType(imageBuffer);
+        _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:(GJYUVPixelImageFormat)type];
+        [_imageInput addTarget:(GJImageView*)self.bottomView];
+    }
+    
+    [_imageInput updateDataWithImageBuffer:imageBuffer timestamp:CMTimeMake(1, 1)];
+    
 //    CVPixelBufferLockBaseAddress(imageBuffer, 0);
 //    uint8_t* baseAdd = (uint8_t*)CVPixelBufferGetBaseAddress(imageBuffer);
 //    size_t w = CVPixelBufferGetWidth(imageBuffer);
@@ -751,13 +766,13 @@ BOOL _recodeState;
 //    memcpy(cacheData+sds0*ds0, planeAdd1, sds1*ds1);
 //
 
-    CIImage* cimage = [CIImage imageWithCVPixelBuffer:imageBuffer];
-    UIImage* image = [UIImage imageWithCIImage:cimage];
-    // Update the display with the captured image for DEBUG purposes
-    dispatch_async(dispatch_get_main_queue(), ^{
-        
-        ( (UIImageView*)self.bottomView).image = image;
-    });
+//    CIImage* cimage = [CIImage imageWithCVPixelBuffer:imageBuffer];
+//    UIImage* image = [UIImage imageWithCIImage:cimage];
+//    // Update the display with the captured image for DEBUG purposes
+//    dispatch_async(dispatch_get_main_queue(), ^{
+//        
+//        ( (UIImageView*)self.bottomView).image = image;
+//    });
     
     
 //    _totalCount ++;

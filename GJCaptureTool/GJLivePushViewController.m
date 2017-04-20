@@ -227,7 +227,7 @@
 static char* url = "rtmp://10.0.1.126/live/room";
 
 -(void)takeSelect:(UIButton*)btn{
-    btn.selected = !btn.selected;
+    btn.selected = !btn.selected;rtmp://10.0.1.126/live/room
     if (btn == _pushButton) {
         if (btn.selected) {
             GJPushConfig config;

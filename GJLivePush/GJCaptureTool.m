@@ -178,7 +178,7 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         GJLOG(@"添加视频数据输出成功");
     }
     _videoConnect = [_captureDataOutput connectionWithMediaType:AVMediaTypeVideo];
-    self.captureDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_32BGRA)};
+    self.captureDataOutput.videoSettings = @{(id)kCVPixelBufferPixelFormatTypeKey:@(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)};
 
        //链接创建后
     NSError * error;

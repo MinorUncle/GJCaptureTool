@@ -51,7 +51,7 @@
     format.level=profileLevelMain;
     format.allowBframe=false;//false时解码dts一直为0
     format.allowPframe=true;
-    format.baseFormat.bitRate=60*1024*8;//bit/s
+    format.baseFormat.bitRate=100*1024*8;//bit/s
     format.gopSize=10;
     return format;
 }
@@ -128,6 +128,7 @@
     _destFormat.baseFormat.height = h;
     if (_bufferPool != NULL) {
         GJBufferPool* pool = _bufferPool;
+        _bufferPool = NULL;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
             GJBufferPoolCleanAndFree((GJBufferPool**)&pool);
         });
@@ -307,6 +308,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     pushPacket->pts = pts.value;
 
  
+    
 #if 0
     CMTime ptd = CMSampleBufferGetDuration(sample);
     CMTime opts = CMSampleBufferGetOutputPresentationTimeStamp(sample);

@@ -95,7 +95,19 @@
 }
 -(void)stop{
     _running = NO;
-    queueClean(_resumeQueue);
+    long length = queueGetLength(_resumeQueue);
+    if (length>0) {
+        R_GJAACPacket** packet = (R_GJAACPacket**)malloc(sizeof(R_GJAACPacket*)*length);
+        if (queueClean(_resumeQueue,(void**)packet,&length)) {
+            for (int i = 0 ; i<length; i++) {
+                retainBufferUnRetain(&packet[i]->retain);
+            }
+        }else{
+            GJLOG(GJ_LOGERROR, "queueClean error");
+        }
+        free(packet);
+
+    }
 }
 //编码输入
 static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData,AudioStreamPacketDescription **outDataPacketDescription, void *inUserData)
