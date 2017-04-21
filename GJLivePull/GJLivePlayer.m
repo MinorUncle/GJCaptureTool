@@ -281,7 +281,7 @@ ERROR:
 }
 
 -(void)start{
-//    pthread_mutex_lock(&_playControl.oLock);
+    pthread_mutex_lock(&_playControl.oLock);
     GJLOG(GJ_LOGINFO, "GJLivePlayer start");
  
     _syncControl.startVPts = _syncControl.startAPts = LONG_MIN;
@@ -295,16 +295,21 @@ ERROR:
 //    }else{
 //        GJLOG(GJ_LOGWARNING, "重复播放");
 //    }
-//    pthread_mutex_unlock(&_playControl.oLock);
+    pthread_mutex_unlock(&_playControl.oLock);
 }
 -(void)stop{
     [self stopBuffering];
     if(_playControl.status != kPlayStatusStop){
+        pthread_mutex_lock(&_playControl.oLock);
         _playControl.status = kPlayStatusStop;
-        [_audioPlayer stop:false];
         queueBroadcastPop(_playControl.imageQueue);
         queueBroadcastPop(_playControl.audioQueue);
+        pthread_mutex_unlock(&_playControl.oLock);
+
         pthread_join(_playControl.playVideoThread, NULL);
+
+        pthread_mutex_lock(&_playControl.oLock);
+        [_audioPlayer stop:false];
         long vlength = queueGetLength(_playControl.imageQueue);
         long alength = queueGetLength(_playControl.audioQueue);
         
@@ -329,9 +334,13 @@ ERROR:
         }
         GJLOG(GJ_LOGINFO, "gjliveplayer stop end");
 
-     }else{
+     
+        pthread_mutex_unlock(&_playControl.oLock);
+        
+    }else{
         GJLOG(GJ_LOGWARNING, "重复停止");
     }
+    
 }
 //-(void)pause{
 //
