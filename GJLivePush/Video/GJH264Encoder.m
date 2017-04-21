@@ -69,38 +69,47 @@
     
     
    
-
-    
-    int32_t h = (int32_t)CVPixelBufferGetHeight(imageBuffer);
-    int32_t w = (int32_t)CVPixelBufferGetWidth(imageBuffer);
-    if (_enCodeSession == nil || h != _destFormat.baseFormat.height || w != _destFormat.baseFormat.width || _shouldRestart) {
-        [self creatEnCodeSessionWithWidth:w height:h];
-    }
-    
-//    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount*1000.0/_destFormat.baseFormat.fps, 1000);
-   
-    NSMutableDictionary * properties = NULL;
-    if (fourceKey) {
-        properties = [[NSMutableDictionary alloc]init];
-        [properties setObject:@YES forKey:(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame];
-    }
-    OSStatus status = VTCompressionSessionEncodeFrame(
-                                                      _enCodeSession,
-                                                      imageBuffer,
-                                                      CMTimeMake(pts, 1000),  //pts能得到dts和pts
-                                                      kCMTimeInvalid,// may be kCMTimeInvalid ,dts只能得到dts
-                                                       (__bridge CFDictionaryRef)properties,
-                                                      NULL,
-                                                      NULL );
-    
-    
-    if (status == 0) {
-        _encodeframeCount++;
-        return YES;
-    }else{
-        GJLOG(GJ_LOGERROR,"编码失败：%d",status);
-        _shouldRestart = YES;
-        return NO;
+RETRY:
+    {
+        int32_t h = (int32_t)CVPixelBufferGetHeight(imageBuffer);
+        int32_t w = (int32_t)CVPixelBufferGetWidth(imageBuffer);
+        
+        if (_enCodeSession == nil || h != _destFormat.baseFormat.height || w != _destFormat.baseFormat.width || _shouldRestart) {
+            [self creatEnCodeSessionWithWidth:w height:h];
+        }
+        
+    //    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount*1000.0/_destFormat.baseFormat.fps, 1000);
+       
+        NSMutableDictionary * properties = NULL;
+        if (fourceKey) {
+            properties = [[NSMutableDictionary alloc]init];
+            [properties setObject:@YES forKey:(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame];
+        }
+        OSStatus status = VTCompressionSessionEncodeFrame(
+                                                          _enCodeSession,
+                                                          imageBuffer,
+                                                          CMTimeMake(pts, 1000),  //pts能得到dts和pts
+                                                          kCMTimeInvalid,// may be kCMTimeInvalid ,dts只能得到dts
+                                                           (__bridge CFDictionaryRef)properties,
+                                                          NULL,
+                                                          NULL );
+        
+        
+        if (status == 0) {
+            _encodeframeCount++;
+            return YES;
+        }else{
+            if (status == kVTInvalidSessionErr) {
+                GJLOG(GJ_LOGERROR,"编码失败 kVTInvalidSessionErr,重新编码");
+                VTCompressionSessionInvalidate(_enCodeSession);
+                _enCodeSession = nil;
+                goto RETRY;
+            }else{
+                GJLOG(GJ_LOGERROR,"编码失败：%d",status);
+            }
+            _shouldRestart = YES;
+            return NO;
+        }
     }
 }
 

@@ -92,7 +92,7 @@ typedef struct SyncControl{
     long                 inAPts;
     long                 outAPts;
     long                 lastPauseFlag;
-    TimeSYNCType         syncType;
+    TimeSYNCType          syncType;
 #ifdef NETWORK_DELAY
     long                 networkDelay;
 #endif
@@ -135,9 +135,7 @@ long getClockLine(GJSyncControl* sync){
         return sync->aCPTS+timeDiff;
     }else{
         long time = getTime() / 1000;
-        if (sync->speed > 1.0) {
-            sync->speedTotalDuration += (sync->speed - 1.0)*(time-sync->vClock);
-        }
+    
         float timeDiff = time - sync->startVTime;
         return timeDiff + sync->startVPts-sync->bufferTotalDuration+sync->speedTotalDuration;
 
@@ -210,6 +208,7 @@ static void* playVideoRunLoop(void* parm){
                 delay = 0;
             }else{
                 GJLOG(GJ_LOGWARNING, "视频落后音频严重，delay：%ld, PTS:%ld clock:%ld，丢视频帧",delay,cImageBuf->pts,timeStandards);
+//                _syncControl->speedTotalDuration += delay;
                 _syncControl->vCPTS = cImageBuf->pts;
                 _syncControl->vClock = getTime() / 1000;
                 goto DROP;
@@ -220,9 +219,16 @@ static void* playVideoRunLoop(void* parm){
             GJLOG(GJ_LOGALL,"play wait:%d, video pts:%ld",delay,_syncControl->vCPTS);
             usleep((unsigned int)delay * 1000);
         }
+        
+        if (_syncControl->speed > 1.0) {
+            _syncControl->speedTotalDuration += (_syncControl->speed - 1.0)*(getTime() / 1000.0-_syncControl->vClock);
+        }
+        
         _syncControl->vClock = getTime() / 1000;
         _syncControl->outVPts = cImageBuf->pts;
         _syncControl->vCPTS = cImageBuf->pts;
+        
+
 
 #ifdef UIIMAGE_SHOW
         {
@@ -415,7 +421,7 @@ ERROR:
     pthread_mutex_unlock(&_playControl.oLock);
 }
 -(void)dewatering{
-    return;
+//    return;
     pthread_mutex_lock(&_playControl.oLock);
     if (_playControl.status == kPlayStatusRunning) {
         if (_syncControl.speed<=1.0) {
@@ -427,7 +433,7 @@ ERROR:
     pthread_mutex_unlock(&_playControl.oLock);
 }
 -(void)stopDewatering{
-    return;
+//    return;
     pthread_mutex_lock(&_playControl.oLock);
     if (_syncControl.speed > 1.0) {
         GJLOG(GJ_LOGDEBUG, "stopDewatering");

@@ -153,6 +153,12 @@ void decodeOutputCallback(
             GJLOG(GJ_LOGWARNING, "reCreate decoder ,format:%p",_formatDesc);
             [self createDecompSession];
         }
+    }else{
+        if (_decompressionSession == NULL) {
+            GJLOG(GJ_LOGERROR, "解码器为空，且缺少关键帧，丢帧");
+            goto ERROR;
+        }
+
     }
     
     if (packet->pp) {
@@ -189,29 +195,42 @@ void decodeOutputCallback(
             goto ERROR;
         }
         
-        
-        CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
-        CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
-        CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
-        
-        //                status = CMSampleBufferSetOutputPresentationTimeStamp(sampleBuffer, pts);
-        //
-        //                assert(status == 0);
-        VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
-        VTDecodeInfoFlags flagOut;
-        OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
-        if (status < 0) {
-            GJLOG(GJ_LOGERROR, "解码错误0：%d  ,format:%p",status,_formatDesc);
-            //                    [self createDecompSession];
-            //                    status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
-            //                    if (status < 0) {
-            //                        GJLOG(GJ_LOGERROR, "解码错误：%d  丢帧",status);
-            //                        _shouldRestart = YES;
-            //                    }
+RETRY:
+        {
+            CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
+            CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
+            CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
+            
+            //                status = CMSampleBufferSetOutputPresentationTimeStamp(sampleBuffer, pts);
+            //
+            //                assert(status == 0);
+            VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
+            VTDecodeInfoFlags flagOut;
+            
+            OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
+            if (status < 0) {
+                if(kVTInvalidSessionErr == status){
+                    VTDecompressionSessionInvalidate(_decompressionSession);
+                    _decompressionSession = nil;
+                    GJLOG(GJ_LOGERROR, "解码错误  kVTInvalidSessionErr");
+                    if (packet->sps) {
+                        GJLOG(GJ_LOGERROR, "解码错误后关键帧，重新解码");
+                        [self createDecompSession];
+                        goto RETRY;
+                    }
+                }
+                GJLOG(GJ_LOGERROR, "解码错误0：%d  ,format:%p",status,_formatDesc);
+                //                    [self createDecompSession];
+                //                    status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
+                //                    if (status < 0) {
+                //                        GJLOG(GJ_LOGERROR, "解码错误：%d  丢帧",status);
+                //                        _shouldRestart = YES;
+                //                    }
+            }
+            
+            CFRelease(sampleBuffer);
+            CFRelease(blockBuffer);
         }
-        
-        CFRelease(sampleBuffer);
-        CFRelease(blockBuffer);
     }
     
 ERROR:
