@@ -56,6 +56,7 @@ typedef struct _GJRtmpPull{
 
 }GJRtmpPull;
 
+//所有不阻塞
 void GJRtmpPull_Create(GJRtmpPull** pull,PullMessageCallback callback,void* rtmpPullParm);
 void GJRtmpPull_Close(GJRtmpPull* pull);
 void GJRtmpPull_Release(GJRtmpPull* pull);

@@ -21,7 +21,7 @@
     NSThread*  _playThread;
     
     
-    NSTimer * _timer;
+    
     
     NSRecursiveLock* _lock;
 }
@@ -33,6 +33,7 @@
 @property(assign,nonatomic)int unitByte;
 
 @property(assign,nonatomic)int gaterFrequency;
+@property(strong,nonatomic)NSTimer * timer;
 
 
 @property(strong,nonatomic)NSDate* startPullDate;
@@ -61,25 +62,32 @@
 
 static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm){
     GJLivePull* livePull = (__bridge GJLivePull *)(rtmpPullParm);
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         switch (messageType) {
             case GJRTMPPullMessageType_connectError:
             case GJRTMPPullMessageType_urlPraseError:
+                GJLOG(GJ_LOGERROR, "pull connect error:%d",messageType);
                 [livePull.delegate livePull:livePull errorType:kLivePullConnectError infoDesc:@"连接错误"];
                 [livePull stopStreamPull];
                 break;
             case GJRTMPPullMessageType_sendPacketError:
+                GJLOG(GJ_LOGERROR, "pull sendPacket error:%d",messageType);
                 [livePull.delegate livePull:livePull errorType:kLivePullReadPacketError infoDesc:@"读取失败"];
                 [livePull stopStreamPull];
                 break;
             case GJRTMPPullMessageType_connectSuccess:
             {
+                GJLOG(GJ_LOGINFO, "pull connectSuccess");
                 livePull.connentDate = [NSDate date];
                 [livePull.delegate livePull:livePull connentSuccessWithElapsed:[livePull.connentDate timeIntervalSinceDate:livePull.startPullDate]*1000];
-                    [livePull updateStatusCallback];
+                livePull.timer = [NSTimer scheduledTimerWithTimeInterval:livePull.gaterFrequency target:livePull selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
+                GJLOG(GJ_LOGINFO, "NSTimer START:%s",[NSString stringWithFormat:@"%@",livePull.timer].UTF8String);
+
             }
                 break;
             case GJRTMPPullMessageType_closeComplete:{
+                GJLOG(GJ_LOGINFO, "pull closeComplete");
                 NSDate* stopDate = [NSDate date];
                 GJPullSessionInfo info = {0};
                 info.sessionDuring = [stopDate timeIntervalSinceDate:livePull.startPullDate]*1000;
@@ -94,8 +102,6 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
 }
 
 -(void)updateStatusCallback{
-
-    _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
         GJCacheInfo videoCache = [_player getVideoCache];
         GJCacheInfo audioCache = [_player getAudioCache];
         GJPullStatus status = {0};
@@ -113,21 +119,18 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
             [self.delegate livePull:self networkDelay:[_player getNetWorkDelay]];
         }
 #endif
-    }];
 }
 
 - (bool)startStreamPullWithUrl:(char*)url{
     [_lock lock];
     _fristAudioDate = _fristVideoDate = _connentDate = _fristDecodeVideoDate = nil;
-    if (_videoPull == nil) {
-        GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
+    if (_videoPull != nil) {
+        GJRtmpPull_Release(_videoPull);
     }
+    GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
     GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
     [_audioDecoder start];
-
-    [_player start];
-
-    
+    [_player start];    
     _startPullDate = [NSDate date];
     [_lock unlock];
     return YES;
@@ -138,7 +141,10 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     [_audioDecoder stop];
     [_player stop];
     GJRtmpPull_Close(_videoPull);
+    GJRtmpPull_Release(_videoPull);
+    _videoPull = NULL;
     [_timer invalidate];
+    GJLOG(GJ_LOGINFO, "NSTimer invalidate:%s",[NSString stringWithFormat:@"%@",_timer].UTF8String);
     [_lock unlock];
 }
 
