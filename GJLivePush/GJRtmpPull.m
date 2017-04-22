@@ -81,7 +81,7 @@ static void* pullRunloop(void* parm){
                 retainBufferUnRetain(retainBuffer);
                 
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
-                static int time = 0;
+//                static int time = 0;
 //
 //                NSData* data = [NSData dataWithBytes:packet.m_body length:30];
 //                NSLog(@"time:%d data:%@",time++,data);
