@@ -12,6 +12,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "GJRetainBuffer.h"
 #import "GJLiveDefine.h"
+#import "GJLiveDefine+internal.h"
 @class UIView;
 @class GJLivePlayer;
 typedef enum _GJPlayStatus{
@@ -41,8 +42,8 @@ typedef enum _GJPlayStatus{
 -(void)stop;
 -(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(int64_t)pts;
 -(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(int64_t)pts;
--(GJCacheInfo)getVideoCache;
--(GJCacheInfo)getAudioCache;
+-(GJTrafficStatus)getVideoCache;
+-(GJTrafficStatus)getAudioCache;
 #ifdef NETWORK_DELAY
 -(long)getNetWorkDelay;
 #endif

@@ -20,7 +20,7 @@ enum AVCaptureDevicePosition;
 @required
 
 
--(void)livePush:(GJLivePush*)livePush updatePushStatus:(GJPushStatus*)status;
+-(void)livePush:(GJLivePush*)livePush updatePushStatus:(GJPushSessionStatus*)status;
 -(void)livePush:(GJLivePush*)livePush closeConnent:(GJPushSessionInfo*)info resion:(GJConnentCloceReason)reason;
 -(void)livePush:(GJLivePush*)livePush connentSuccessWithElapsed:(int)elapsed;
 

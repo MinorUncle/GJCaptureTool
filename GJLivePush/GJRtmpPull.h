@@ -33,19 +33,25 @@ struct _GJRtmpPull;
 typedef void(*PullMessageCallback)(struct _GJRtmpPull* rtmpPull, GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm);
 typedef void(*PullDataCallback)(struct _GJRtmpPull* rtmpPull,GJStreamPacket packet,void* rtmpPullParm);
 
+
+
+
 #define MAX_URL_LENGTH 100
 typedef struct _GJRtmpPull{
     RTMP*                   rtmp;
     GJQueue*                pullBufferQueue;
     char                    pullUrl[MAX_URL_LENGTH];
     
-    GJRetainBufferPool*           memoryCachePool;
+    GJRetainBufferPool*      memoryCachePool;
     pthread_t               pullThread;
     pthread_mutex_t          mutex;
 
-    int                     pullPacketCount;
-    int                     dropPacketCount;
-    int                     pullByte;
+    GJTrafficUnit           videoPullInfo;
+    GJTrafficUnit           audioPullInfo;
+
+//    int                     pullPacketCount;
+//    int                     dropPacketCount;
+//    int                     pullByte;
     PullMessageCallback     messageCallback;
     PullDataCallback        dataCallback;
     void*                   messageCallbackParm;
@@ -62,7 +68,8 @@ void GJRtmpPull_Close(GJRtmpPull* pull);
 void GJRtmpPull_Release(GJRtmpPull* pull);
 
 void GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,void* callbackParm,const char* pullUrl);
-float GJRtmpPull_GetBufferRate(GJRtmpPull* pull);
+GJTrafficUnit GJRtmpPull_GetVideoPullInfo(GJRtmpPull* pull);
+GJTrafficUnit GJRtmpPull_GetAudioPullInfo(GJRtmpPull* pull);
 
 
 

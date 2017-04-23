@@ -73,20 +73,35 @@ typedef enum _LiveErrorType{
 }GJLiveErrorType;
 
 
-typedef struct PushStatus{
-    int cacheTime;//ms,包括音频和视频，下同
-    int cacheCount;
-    int netWorkQuarity;
-    int bitrate;//kB/s
-    int frameRate;//fps,video
-}GJPushStatus;
-typedef struct PullStatus{
-    int videoCacheTime;//ms
-    int videoCacheCount;
-    int audioCacheTime;//ms
-    int audioCacheCount;
-    int bitrate;//kB/s
-}GJPullStatus;
+typedef enum _GJNetworkQuality{
+    GJNetworkQualityExcellent=0,
+    GJNetworkQualityGood,
+    GJNetworkQualitybad,
+    GJNetworkQualityTerrible,
+}GJNetworkQuality;
+typedef struct PushInfo{
+    float bitrate;//byte/s
+    float frameRate;//
+    long  cacheTime;
+    long  cacheCount;
+}GJPushInfo;
+typedef struct PullInfo{
+    float bitrate;//byte/s
+    float frameRate;//
+    long  cacheTime;
+    long  cacheCount;
+}GJPullInfo;
+
+typedef struct PushSessionStatus{
+    GJPushInfo videoStatus;
+    GJPushInfo audioStatus;
+    GJNetworkQuality netWorkQuarity;
+   
+}GJPushSessionStatus;
+typedef struct PullSessionStatus{
+    GJPullInfo videoStatus;
+    GJPullInfo audioStatus;
+}GJPullSessionStatus;
 typedef struct _PushSessionInfo{
     long sendFrameCount;
     long dropFrameCount;
@@ -107,11 +122,6 @@ typedef struct _PullSessionInfo{
 typedef struct _PullFristFrameInfo{
     CGSize size;
 }GJPullFristFrameInfo;
-
-typedef struct CacheInfo{
-    int cacheTime;//ms
-    int cacheCount;
-}GJCacheInfo;
 
 
 #endif /* GJLiveDefine_h */

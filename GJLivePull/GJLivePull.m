@@ -19,7 +19,7 @@
 {
     GJRtmpPull* _videoPull;
     NSThread*  _playThread;
-    
+    GJPullSessionStatus _pullSessionStatus;
     
     
     
@@ -29,10 +29,14 @@
 @property(strong,nonatomic)GJPCMDecodeFromAAC* audioDecoder;
 
 @property(strong,nonatomic)GJLivePlayer* player;
-@property(assign,nonatomic)long sendByte;
-@property(assign,nonatomic)int unitByte;
+@property(assign,nonatomic)long pullVByte;
+@property(assign,nonatomic)int unitVByte;
+@property(assign,nonatomic)int  unitVPacketCount;
+@property(assign,nonatomic)long pullAByte;
+@property(assign,nonatomic)int unitAByte;
+@property(assign,nonatomic)int  unitAPacketCount;
 
-@property(assign,nonatomic)int gaterFrequency;
+@property(assign,nonatomic)float gaterFrequency;
 @property(strong,nonatomic)NSTimer * timer;
 
 
@@ -102,22 +106,30 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
 }
 
 -(void)updateStatusCallback{
-        GJCacheInfo videoCache = [_player getVideoCache];
-        GJCacheInfo audioCache = [_player getAudioCache];
-        GJPullStatus status = {0};
-        status.bitrate = _unitByte/_gaterFrequency;
-        _unitByte = 0;
-        status.audioCacheCount = audioCache.cacheCount;
-        status.audioCacheTime = audioCache.cacheTime;
-        status.videoCacheTime = videoCache.cacheTime;
-        status.videoCacheCount = videoCache.cacheCount;
+    GJTrafficStatus vCache = [_player getVideoCache];
+    GJTrafficStatus aCache = [_player getAudioCache];
+    _pullSessionStatus.videoStatus.cacheCount = vCache.enter.count - vCache.leave.count;
+    _pullSessionStatus.videoStatus.cacheTime = vCache.enter.pts - vCache.leave.pts;
+    _pullSessionStatus.videoStatus.bitrate = _unitVByte / _gaterFrequency;
+    _unitVByte = 0;
+    _pullSessionStatus.videoStatus.frameRate = _unitVPacketCount / _gaterFrequency;
+    _unitVPacketCount = 0;
+
+    _pullSessionStatus.audioStatus.cacheCount = aCache.enter.count - aCache.leave.count;
+    _pullSessionStatus.audioStatus.cacheTime = aCache.enter.pts - aCache.leave.pts;
+    _pullSessionStatus.audioStatus.bitrate = _unitAByte / _gaterFrequency;
+    _unitAByte = 0;
+    _pullSessionStatus.audioStatus.frameRate = _unitAByte / _gaterFrequency;
+    _unitAPacketCount = 0;
+
+
         
-        [self.delegate livePull:self updatePullStatus:&status];
+    [self.delegate livePull:self updatePullStatus:&_pullSessionStatus];
 #ifdef NETWORK_DELAY
      
-        if ([self.delegate respondsToSelector:@selector(livePull:networkDelay:)]) {
-            [self.delegate livePull:self networkDelay:[_player getNetWorkDelay]];
-        }
+    if ([self.delegate respondsToSelector:@selector(livePull:networkDelay:)]) {
+        [self.delegate livePull:self networkDelay:[_player getNetWorkDelay]];
+    }
 #endif
 }
 
@@ -167,8 +179,9 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
 
     if (streamPacket.type == GJAudioType) {
         GJRetainBuffer* buffer = &streamPacket.packet.aacPacket->retain;
-        livePull.sendByte = livePull.sendByte + buffer->size;
-        livePull.unitByte = livePull.unitByte + buffer->size;
+        livePull.pullAByte += buffer->size;
+        livePull.unitAByte += buffer->size;
+        livePull.unitAPacketCount ++;
         if (livePull.fristAudioDate == nil) {
             livePull.fristAudioDate = [NSDate date];
             uint8_t* adts = streamPacket.packet.aacPacket->adts;
@@ -198,15 +211,23 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
             
             livePull.player.audioFormat = destformat;
         }
+        
+//        R_GJAACPacket* packet = streamPacket.packet.aacPacket;
+//        static int times;
+//        NSData* audio = [NSData dataWithBytes:packet->aac length:MIN(packet->aacSize,10)];
+//        NSData* adts = [NSData dataWithBytes:packet->adts length:packet->adtsSize];
+//        NSLog(@"pullaudio times:%d ,adts%@,audio:%@,audioSize:%d",times++,adts,audio,packet->aacSize);
+        
         [livePull.audioDecoder decodePacket:streamPacket.packet.aacPacket];
-//        static int times =0;
-//        NSData* audio = [NSData dataWithBytes:buffer->data length:buffer->size];
-//        NSLog(@" pullaudio times:%d ,%@",times++,audio);
+        
+     
         
     }else if (streamPacket.type == GJVideoType) {
         GJRetainBuffer* buffer = &streamPacket.packet.h264Packet->retain;
-        livePull.sendByte = livePull.sendByte + buffer->size;
-        livePull.unitByte = livePull.unitByte + buffer->size;
+        livePull.pullVByte += buffer->size;
+        livePull.unitVByte += buffer->size;
+        livePull.unitVPacketCount ++;
+
 //        static int times;
 //        R_GJH264Packet* packet = streamPacket.packet.h264Packet;
 //        NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];

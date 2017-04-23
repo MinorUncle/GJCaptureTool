@@ -147,7 +147,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
 -(void)decodePacket:(R_GJAACPacket*)packet{
     retainBufferRetain(&packet->retain);
-    while(!queuePush(_resumeQueue, packet,1000)) {
+    if(!queuePush(_resumeQueue, packet,1000)) {
         retainBufferUnRetain(&packet->retain);
         GJLOG(GJ_LOGWARNING,"aac decode to pcm queuePush faile");
     }

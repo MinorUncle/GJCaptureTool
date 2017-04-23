@@ -51,14 +51,14 @@
         
         _videoCacheLab = [[UILabel alloc]init];
         _videoCacheLab.textColor = [UIColor redColor];
-        _videoCacheLab.text = @"V:0.0 ms :0帧";
+        _videoCacheLab.text = @"cache V:0.0 ms f:0";
         _videoCacheLab.numberOfLines = 0;
         [self.view addSubview:_videoCacheLab];
         
         _audioCacheLab = [[UILabel alloc]init];
         _audioCacheLab.numberOfLines = 0;
         _audioCacheLab.textColor = [UIColor redColor];
-        _audioCacheLab.text = @"A:0.0 ms :0帧";
+        _audioCacheLab.text = @"cache A:0.0 ms f:0";
         [self.view addSubview:_audioCacheLab];
         
         _netDelay = [[UILabel alloc]init];
@@ -118,7 +118,8 @@
 
 @property (strong, nonatomic) UILabel *pushStateLab;
 
-@property (strong, nonatomic) UILabel *delayLab;
+@property (strong, nonatomic) UILabel *delayVLab;
+@property (strong, nonatomic) UILabel *delayALab;
 
 
 @property(strong,nonatomic)NSMutableArray<PullShow*>* pulls;
@@ -157,20 +158,26 @@
     rect.origin.y = CGRectGetMaxY(rect);
     _fpsLab = [[UILabel alloc]initWithFrame:rect];
     _fpsLab.textColor = [UIColor redColor];
-    _fpsLab.text = @"发送帧率0";
+    _fpsLab.text = @"FPS V:0,A:0";
     [self.view addSubview:_fpsLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
     _sendRateLab = [[UILabel alloc]initWithFrame:rect];
     _sendRateLab.textColor = [UIColor redColor];
-    _sendRateLab.text = @"发送码率:0.0 KB/s";
+    _sendRateLab.text = @"bitrate V:0 KB/s A:0 KB/s";
     [self.view addSubview:_sendRateLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
-    _delayLab = [[UILabel alloc]initWithFrame:rect];
-    _delayLab.textColor = [UIColor redColor];
-    _delayLab.text = @"发送阻塞延时0.0 ms 帧数：0";
-    [self.view addSubview:_delayLab];
+    _delayVLab = [[UILabel alloc]initWithFrame:rect];
+    _delayVLab.textColor = [UIColor redColor];
+    _delayVLab.text = @"cache V t:0 ms f:0";
+    [self.view addSubview:_delayVLab];
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _delayALab = [[UILabel alloc]initWithFrame:rect];
+    _delayALab.textColor = [UIColor redColor];
+    _delayALab.text = @"cache A t:0 ms f:0";
+    [self.view addSubview:_delayALab];
     
     int count = 3;
     rect.origin.y = CGRectGetMaxY(self.topView.frame);
@@ -326,10 +333,11 @@ static char* url = "rtmp://192.168.18.21/live/room";
 
 }
 
--(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushStatus *)status{
-        _sendRateLab.text = [NSString stringWithFormat:@"发送码率:%0.2f KB/s",status->bitrate/1024.0];
-        _fpsLab.text = [NSString stringWithFormat:@"发送帧率%d",status->frameRate];
-        _delayLab.text = [NSString stringWithFormat:@"发送阻塞延时%d ms 帧数：%d",status->cacheTime,status->cacheCount];
+-(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushSessionStatus *)status{
+    _sendRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f KB/s A:%0.2f KB/s",status->videoStatus.bitrate/1024.0,status->audioStatus.bitrate/1024.0];
+    _fpsLab.text = [NSString stringWithFormat:@"FPS V:%0.2f,A:%0.2f",status->videoStatus.frameRate,status->audioStatus.frameRate];
+    _delayVLab.text = [NSString stringWithFormat:@"cache V t:%ld ms f:%ld",status->videoStatus.cacheTime,status->videoStatus.cacheCount];
+    _delayALab.text = [NSString stringWithFormat:@"cache A t:%ld ms f:%ld",status->audioStatus.cacheTime,status->audioStatus.cacheCount];
 }
 -(void)livePull:(GJLivePull *)livePull connentSuccessWithElapsed:(int)elapsed{
     PullShow* show = [self getShowWithPush:livePull];
@@ -339,13 +347,13 @@ static char* url = "rtmp://192.168.18.21/live/room";
     PullShow* show = [self getShowWithPush:livePull];
     show.pullStateLab.text = [NSString stringWithFormat:@"connent total：%ld ms",info->sessionDuring];
 }
--(void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullStatus *)status{
-    GJPullStatus pullStatus = *status;
+-(void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullSessionStatus *)status{
+    GJPullSessionStatus pullStatus = *status;
     dispatch_async(dispatch_get_main_queue(), ^{
         PullShow* show = [self getShowWithPush:livePull];
-        show.pullRateLab.text = [NSString stringWithFormat:@"Bitrate:%0.2f KB/s",pullStatus.bitrate/1024.0];
-        show.videoCacheLab.text = [NSString stringWithFormat:@"V cache:%d ms %d帧",pullStatus.videoCacheTime,pullStatus.videoCacheCount];
-        show.audioCacheLab.text = [NSString stringWithFormat:@"A cache:%d ms %d帧",pullStatus.audioCacheTime,pullStatus.audioCacheCount];
+        show.pullRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f KB/s A:%0.2f KB/s",pullStatus.videoStatus.bitrate/1024.0,pullStatus.audioStatus.bitrate/1024.0];
+        show.videoCacheLab.text = [NSString stringWithFormat:@"cache V t:%ld ms f:%ld",pullStatus.videoStatus.cacheTime,pullStatus.videoStatus.cacheCount];
+        show.audioCacheLab.text = [NSString stringWithFormat:@"cache A t:%ld ms f:%ld",pullStatus.audioStatus.cacheTime,pullStatus.audioStatus.cacheCount];
     });
 }
 

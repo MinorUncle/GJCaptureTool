@@ -16,7 +16,7 @@
 @protocol GJLivePullDelegate <NSObject>
 @required
 
--(void)livePull:(GJLivePull*)livePull updatePullStatus:(GJPullStatus*)status;
+-(void)livePull:(GJLivePull*)livePull updatePullStatus:(GJPullSessionStatus*)status;
 -(void)livePull:(GJLivePull*)livePull fristFrameDecode:(GJPullFristFrameInfo*)info;
 -(void)livePull:(GJLivePull*)livePull closeConnent:(GJPullSessionInfo*)info resion:(GJConnentCloceReason)reason;
 -(void)livePull:(GJLivePull*)livePull connentSuccessWithElapsed:(int)elapsed;

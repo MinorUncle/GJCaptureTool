@@ -12,6 +12,15 @@
 
 //#define SEND_SEI
 #define TEST
+typedef struct TrafficUnit{
+    long pts;//ms
+    long count;
+    long byte;
+}GJTrafficUnit;
+typedef struct TrafficStatus{
+    GJTrafficUnit leave;
+    GJTrafficUnit enter;
+}GJTrafficStatus;
 typedef struct H264Packet{
     GJRetainBuffer retain;
     int64_t pts;

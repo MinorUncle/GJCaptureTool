@@ -36,6 +36,7 @@ static void* sendRunloop(void* parm){
         push->messageCallback(push, GJRTMPPushMessageType_urlPraseError,push->rtmpPushParm,NULL);
         goto ERROR;
     }
+    GJLOG(GJ_LOGINFO, "RTMP_SetupURL success");
     RTMP_EnableWrite(push->rtmp);
     
     push->rtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
@@ -45,6 +46,8 @@ static void* sendRunloop(void* parm){
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }
+    GJLOG(GJ_LOGINFO, "RTMP_Connect success");
+
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret && push->messageCallback) {
 
@@ -53,21 +56,24 @@ static void* sendRunloop(void* parm){
     }else{
         push->messageCallback(push, GJRTMPPushMessageType_connectSuccess,push->rtmpPushParm,NULL);
     }
-    
+    GJLOG(GJ_LOGINFO, "RTMP_ConnectStream success");
     GJRTMP_Packet* packet;
     while (!push->stopRequest && queuePop(push->sendBufferQueue, (void**)&packet, INT32_MAX)) {
-        push->outPts = packet->packet.m_nTimeStamp;
-//        static int times;
-//        NSData* d = [NSData dataWithBytes:packet->packet.m_body length:30];
-//        NSLog(@"push:%d,size:%d,%@",times++,packet->packet.m_nBodySize,d);
+        
+
         int iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
         
         if (iRet) {
-//            static int i = 0;
-//            NSLog(@"sendcount:%d,lenth:%d,pts:%d \n",i++,packet->packet.m_nBodySize,packet->packet.m_nTimeStamp);
+            if (packet->packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
+                push->videoStatus.leave.byte+=packet->packet.m_nBodySize;
+                push->videoStatus.leave.count++;
+                push->videoStatus.leave.pts = packet->packet.m_nTimeStamp;
+            }else{
+                push->audioStatus.leave.byte+=packet->packet.m_nBodySize;
+                push->audioStatus.leave.count++;
+                push->audioStatus.leave.pts = packet->packet.m_nTimeStamp;
+            }
 
-            push->sendByte += packet->retainBuffer->size;
-            push->sendPacketCount ++;
             retainBufferUnRetain(packet->retainBuffer);
             GJBufferPoolSetData(defauleBufferPool(), (void*)packet);
         }else{
@@ -248,26 +254,26 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     }
 
     retainBufferRetain(retainBuffer);
-    if(sender->stopRequest || !queuePush(sender->sendBufferQueue, pushPacket, 0)){
-      retainBufferUnRetain(retainBuffer);
-      GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
-      sender->dropPacketCount++;
-    }else{
-      sender->inPts = pushPacket->packet.m_nTimeStamp;
-//        static int times = 0;
-//        NSLog(@"push:%d,pp%d,pts:%ld",times++,pushPacket->packet.m_nBodySize,sender->inPts);
+    while (!sender->stopRequest) {
+        if (queuePush(sender->sendBufferQueue, pushPacket, 0)) {
+            sender->videoStatus.enter.pts = pushPacket->packet.m_nTimeStamp;
+            sender->videoStatus.enter.count++;
+            sender->videoStatus.enter.byte += pushPacket->packet.m_nBodySize;
+            return;
+        }else{
+            usleep(1000);
+        }
     }
+    retainBufferUnRetain(retainBuffer);
+    GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
 }
 
 void GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
-    if (sender->stopRequest) {
-        return;
-    }
     unsigned char * body;
     int preSize = 2;
     GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
 
-    GJRetainBuffer* retainBuffer = (GJRetainBuffer*)buffer;
+    GJRetainBuffer* retainBuffer = &buffer->retain;
     pushPacket->retainBuffer = retainBuffer;
     
     RTMPPacket* sendPacket = &pushPacket->packet;
@@ -293,13 +299,19 @@ void GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
     sendPacket->m_headerType = RTMP_PACKET_SIZE_LARGE;
     sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
     retainBufferRetain(retainBuffer);
-    if(!queuePush(sender->sendBufferQueue, pushPacket, 0)){
-        retainBufferUnRetain(retainBuffer);
-        GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
-        sender->dropPacketCount++;
-    }else{
-        sender->inPts = pushPacket->packet.m_nTimeStamp;
+    
+    while (!sender->stopRequest) {
+        if (queuePush(sender->sendBufferQueue, pushPacket, 0)) {
+            sender->audioStatus.enter.pts = pushPacket->packet.m_nTimeStamp;
+            sender->audioStatus.enter.count++;
+            sender->audioStatus.enter.byte += pushPacket->packet.m_nBodySize;
+            return;
+        }else{
+            usleep(1000);
+        }
     }
+    retainBufferUnRetain(retainBuffer);
+    GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
 }
 
 void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
@@ -355,12 +367,11 @@ float GJRtmpPush_GetBufferRate(GJRtmpPush* sender){
 //    GJPrintf("BufferRate length:%ld ,size:%f   rate:%f\n",length,size,length/size);
     return length / size;
 };
-GJCacheInfo GJRtmpPush_GetBufferCacheInfo(GJRtmpPush* sender){
-    GJCacheInfo value = {0};
-    value.cacheCount = (int)queueGetLength(sender->sendBufferQueue);
-    value.cacheTime = (int)(sender->inPts - sender->outPts);
-
-    return value;
+GJTrafficStatus GJRtmpPush_GetVideoBufferCacheInfo(GJRtmpPush* push){
+    return push->videoStatus;
+}
+GJTrafficStatus GJRtmpPush_GetAudioBufferCacheInfo(GJRtmpPush* push){
+    return push->audioStatus;
 }
 
 

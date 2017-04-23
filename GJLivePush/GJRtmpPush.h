@@ -24,6 +24,8 @@ typedef enum _GJRTMPPushMessageType{
     GJRTMPPushMessageType_sendPacketError,//网络错误，发送失败
 }GJRTMPPushMessageType;
 
+
+
 struct _GJRtmpPush;
 typedef void(*PullMessageCallback)(struct _GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType,void* rtmpPullParm,void* messageParm);
 
@@ -35,17 +37,21 @@ typedef struct _GJRtmpPush{
     
     pthread_t           sendThread;
     pthread_mutex_t     mutex;
-    int                 sendPacketCount;
-    int                 dropPacketCount;
-    int                 sendByte;
+//    int                 sendPacketCount;
+//    int                 dropPacketCount;//不能丢帧
+//    int                 sendByte;
     PullMessageCallback messageCallback;
     void*               rtmpPushParm;
     int                 stopRequest;
     int                 releaseRequest;
     
-    long                inPts;
-    long                outPts;
-
+    GJTrafficStatus        audioStatus;
+    GJTrafficStatus        videoStatus;
+//    long                inVPts;
+//    long                outVPts;
+//
+//    long                inAPts;
+//    long                outAPts;
 
 }GJRtmpPush;
 
@@ -56,7 +62,6 @@ void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmp
 
  @param push push description
  @param data data description
- @param pts pts description，以ms为单位
  */
 void GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data);
 void GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data);
@@ -64,4 +69,5 @@ void GJRtmpPush_Close(GJRtmpPush* push);
 void GJRtmpPush_Release(GJRtmpPush* push);
 void GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);
 float GJRtmpPush_GetBufferRate(GJRtmpPush* push);
-GJCacheInfo GJRtmpPush_GetBufferCacheInfo(GJRtmpPush* push);
+GJTrafficStatus GJRtmpPush_GetVideoBufferCacheInfo(GJRtmpPush* push);
+GJTrafficStatus GJRtmpPush_GetAudioBufferCacheInfo(GJRtmpPush* push);

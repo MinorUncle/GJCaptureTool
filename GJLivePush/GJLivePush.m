@@ -29,12 +29,10 @@
     Mp4WriterContext *_mp4Recoder;
     NSTimer*        _timer;
     
-    
-    int            _sendByte;
-    int            _unitByte;
-    
-    int             _sendFrame;
-    int              _unitFrame;
+    GJPushSessionStatus _pushSessionStatus;
+    GJTrafficStatus        _audioInfo;
+    GJTrafficStatus        _videoInfo;
+
     NSLock*          _pushLock;
 #ifdef GJPUSHAUDIOQUEUEPLAY_TEST
     GJAudioQueuePlayer* _audioTestPlayer;
@@ -45,7 +43,7 @@
 @property(strong,nonatomic)GPUImageFilter* videoStreamFilter; //可能公用_cropFilter
 @property(assign,nonatomic)GJRtmpPush* videoPush;
 
-@property(assign,nonatomic)int gaterFrequency;
+@property(assign,nonatomic)float gaterFrequency;
 
 @property(strong,nonatomic)NSDate* startPushDate;
 @property(strong,nonatomic)NSDate* connentDate;
@@ -169,34 +167,51 @@
         _videoEncoder.deleagte = self;
     }
     _pushUrl = [NSString stringWithUTF8String:config.pushUrl];
-    if (_videoPush == nil) {
-        GJRtmpPush_Create(&_videoPush, rtmpCallback, (__bridge void *)(self));
+    if (_videoPush != nil) {
+        GJRtmpPush_Release(_videoPush);
+        _videoPush = NULL;
     }
+    GJRtmpPush_Create(&_videoPush, rtmpCallback, (__bridge void *)(self));
     [_videoStreamFilter forceProcessingAtSize:config.pushSize];
     _videoStreamFilter.frameProcessingCompletionBlock = nil;
     
     _startPushDate = [NSDate date];
     GJRtmpPush_StartConnect(self.videoPush, self.pushUrl.UTF8String);
-    
-//    if (_audioRecoder == nil) {
-//        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:config.audioSampleRate channel:config.channel formatID:kAudioFormatMPEG4AAC];
-//        _audioRecoder.delegate = self;
-//    }
+    [self setupMicrophoneWithSampleRate:config.audioSampleRate channel:config.channel];
     return true;
+}
+
+-(BOOL)setupMicrophoneWithSampleRate:(int)sampleRate channel:(int)channel{
+    if (_audioRecoder != nil || _audioRecoder.format.mChannelsPerFrame != channel || _audioRecoder.format.mSampleRate != sampleRate){
+        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:sampleRate channel:channel formatID:kAudioFormatMPEG4AAC];
+        _audioRecoder.delegate = self;
+    
+    }
+    if (_audioRecoder) {
+        GJLOG(GJ_LOGINFO, "GJAudioQueueRecoder 初始化成功");
+        return YES;
+    }else{
+        GJLOG(GJ_LOGERROR, "GJAudioQueueRecoder CREATE ERROR");
+        return NO;
+    }
 }
 
 -(void)pushRun{
 
     _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
-        GJCacheInfo info = GJRtmpPush_GetBufferCacheInfo(_videoPush);
-        GJPushStatus status = {0};
-        status.bitrate = _unitByte / _gaterFrequency;
-        status.frameRate =  _unitFrame / _gaterFrequency;
-        status.cacheTime = info.cacheTime;
-        status.cacheCount = info.cacheCount;
-        _unitByte = 0;
-        _unitFrame = 0;
-        [self.delegate livePush:self updatePushStatus:&status ];
+        GJTrafficStatus vInfo = GJRtmpPush_GetVideoBufferCacheInfo(_videoPush);
+        GJTrafficStatus aInfo = GJRtmpPush_GetAudioBufferCacheInfo(_videoPush);
+
+        _pushSessionStatus.videoStatus.cacheTime = vInfo.enter.pts - vInfo.leave.pts;
+        _pushSessionStatus.videoStatus.frameRate = (vInfo.leave.count - _videoInfo.leave.count)/_gaterFrequency;
+        _pushSessionStatus.videoStatus.bitrate = (vInfo.leave.byte - _videoInfo.leave.byte)/_gaterFrequency;
+        _videoInfo = vInfo;
+        
+        _pushSessionStatus.audioStatus.cacheTime = aInfo.enter.pts - aInfo.leave.pts;
+        _pushSessionStatus.audioStatus.frameRate = (aInfo.leave.count - _audioInfo.leave.count)/_gaterFrequency;
+        _pushSessionStatus.audioStatus.bitrate = (aInfo.leave.byte - _audioInfo.leave.byte)/_gaterFrequency;
+        _audioInfo = aInfo;        
+        [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
     }];
     _fristFrameDate = [NSDate date];
     [_audioRecoder startRecodeAudio];
@@ -211,6 +226,8 @@
 - (void)stopStreamPush{
     
     GJRtmpPush_Close(_videoPush);
+    GJRtmpPush_Release(_videoPush);
+    _videoPush = NULL;
     if (_mp4Recoder) {
         mp4WriterClose(&(_mp4Recoder));
         _mp4Recoder = NULL;
@@ -278,10 +295,6 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 #pragma mark delegate
 -(float)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet{
 
-    _unitFrame++;
-    _sendFrame++;
-    _sendByte += packet->retain.frontSize+packet->retain.size;
-    _unitByte += packet->retain.frontSize+packet->retain.size;
 //    static int times;
 //    NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
 //    NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
@@ -300,10 +313,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 
     }
     
-//    [self.delegate livePush:self pushPacket:packet];
     GJRtmpPush_SendH264Data(_videoPush, packet);
-
-    
     
     return GJRtmpPush_GetBufferRate(_videoPush);
 
@@ -313,14 +323,14 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 ////    printf("video Pts:%d\n",(int)pts.value*1000/pts.timescale);
 //}
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
-
+    _pushSessionStatus.netWorkQuarity = (GJNetworkQuality)quality;
 }
 -(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamPacket:(R_GJAACPacket *)packet{
 //    static int times =0;
-//    NSData* audio = [NSData dataWithBytes:dataBuffer->data length:dataBuffer->size];
-//    NSLog(@"pushaudio times:%d ,%@",times++,audio);
-    _sendByte += packet->retain.frontSize+packet->retain.size;
-    _unitByte += packet->retain.frontSize+packet->retain.size;
+//    NSData* audio = [NSData dataWithBytes:packet->aac length:MIN(packet->aacSize,10)];
+//    NSData* adts = [NSData dataWithBytes:packet->adts length:packet->adtsSize];
+//    NSLog(@"pushaudio times:%d ,adts%@,audio:%@,audioSize:%d",times++,adts,audio,packet->aacSize);
+    
 #ifdef GJPUSHAUDIOQUEUEPLAY_TEST
     if (_audioTestPlayer == nil) {
         _audioTestPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:recoder.format maxBufferSize:2000 macgicCookie:nil];

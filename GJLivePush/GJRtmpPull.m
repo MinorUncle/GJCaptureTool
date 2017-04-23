@@ -12,6 +12,7 @@
 #import "GJLiveDefine+internal.h"
 #include <string.h>
 #import <Foundation/Foundation.h>
+#import "GJBufferPool.h"
 #define BUFFER_CACHE_SIZE 40
 #define RTMP_RECEIVE_TIMEOUT    10
 
@@ -20,6 +21,13 @@
 
 void GJRtmpPull_Delloc(GJRtmpPull* pull);
 
+bool packetBufferRelease(GJRetainBuffer* buffer){
+    if (buffer->data) {
+        free(buffer->data);
+    }
+    GJBufferPoolSetData(defauleBufferPool(), (uint8_t*)buffer);
+    return true;
+}
 
 static void* pullRunloop(void* parm){
     pthread_setname_np("rtmpPullLoop");
@@ -66,11 +74,18 @@ static void* pullRunloop(void* parm){
             
             if (packet.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
                 streamPacket.type = GJAudioType;
+                pull->audioPullInfo.pts = packet.m_nTimeStamp;
+                pull->audioPullInfo.count++;
+                pull->audioPullInfo.byte += packet.m_nBodySize;
                 uint8_t* body = (uint8_t*)packet.m_body;
-                R_GJAACPacket* aacPacket = (R_GJAACPacket*)malloc(sizeof(R_GJAACPacket));
-                GJRetainBuffer* retainBuffer = &aacPacket->retain;
-                retainBufferPack(&retainBuffer, body - RTMP_MAX_HEADER_SIZE, RTMP_MAX_HEADER_SIZE+packet.m_nBodySize, R_RetainBufferRelease, NULL);
+                
+                R_GJAACPacket* aacPacket = (R_GJAACPacket*)                GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJAACPacket));
+                memset(aacPacket, 0, sizeof(R_GJAACPacket));
 
+                GJRetainBuffer* retainBuffer = &aacPacket->retain;
+                retainBufferPack(&retainBuffer, body - RTMP_MAX_HEADER_SIZE, RTMP_MAX_HEADER_SIZE+packet.m_nBodySize, packetBufferRelease, NULL);
+
+                aacPacket->pts = packet.m_nTimeStamp;
                 aacPacket->adts = body+2;
                 aacPacket->adtsSize = 7;
                 aacPacket->aac = aacPacket->adts+7;
@@ -81,10 +96,8 @@ static void* pullRunloop(void* parm){
                 retainBufferUnRetain(retainBuffer);
                 
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
-//                static int time = 0;
-//
-//                NSData* data = [NSData dataWithBytes:packet.m_body length:30];
-//                NSLog(@"time:%d data:%@",time++,data);
+                streamPacket.type = GJAudioType;
+
 
                 uint8_t *body = (uint8_t*)packet.m_body;
                 uint8_t *pbody = body;
@@ -114,10 +127,11 @@ static void* pullRunloop(void* parm){
                 }else{
                     GJAssert(0,"not h264 stream,type:%d\n",body[0] & 0x0F);
                 }
-                R_GJH264Packet* h264Packet = (R_GJH264Packet*)malloc(sizeof(R_GJH264Packet));
+                
+                R_GJH264Packet* h264Packet = (R_GJH264Packet*)                GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJH264Packet));
                 memset(h264Packet, 0, sizeof(R_GJH264Packet));
                 GJRetainBuffer* retainBuffer = &h264Packet->retain;
-                retainBufferPack(&retainBuffer, packet.m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet.m_nBodySize, R_RetainBufferRelease, NULL);
+                retainBufferPack(&retainBuffer, packet.m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet.m_nBodySize,packetBufferRelease, NULL);
                
                 h264Packet->sps = sps;
                 h264Packet->spsSize = spsSize;
@@ -128,8 +142,12 @@ static void* pullRunloop(void* parm){
                 h264Packet->sei = sei;
                 h264Packet->seiSize = seiSize;
                 h264Packet->pts = packet.m_nTimeStamp;
-                streamPacket.type = GJVideoType;
                 streamPacket.packet.h264Packet = h264Packet;
+                
+                
+                pull->videoPullInfo.pts = packet.m_nTimeStamp;
+                pull->videoPullInfo.count++;
+                pull->videoPullInfo.byte += packet.m_nBodySize;
                 
                 pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);
@@ -231,4 +249,10 @@ void GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,void
     pull->dataCallback = dataCallback;
     pull->dataCallbackParm = callbackParm;
     pthread_create(&pull->pullThread, NULL, pullRunloop, pull);
+}
+GJTrafficUnit GJRtmpPull_GetVideoPullInfo(GJRtmpPull* pull){
+    return pull->videoPullInfo;
+}
+GJTrafficUnit GJRtmpPull_GetAudioPullInfo(GJRtmpPull* pull){
+    return pull->audioPullInfo;
 }
