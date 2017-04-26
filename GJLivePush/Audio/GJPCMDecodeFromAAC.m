@@ -96,6 +96,7 @@
 -(void)stop{
     _running = NO;
     long length = queueGetLength(_resumeQueue);
+    queueBroadcastPop(_resumeQueue);
     if (length>0) {
         R_GJAACPacket** packet = (R_GJAACPacket**)malloc(sizeof(R_GJAACPacket*)*length);
         if (queueClean(_resumeQueue,(void**)packet,&length)) {
@@ -128,6 +129,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
         ioData->mBuffers[0].mDataByteSize = packet->aacSize;
         *ioNumberDataPackets = 1;
+        NSLog(@"decode adtssize:%d size:%d",packet->adtsSize,packet->aacSize);
     }else{
         *ioNumberDataPackets = 0;
         return -1;

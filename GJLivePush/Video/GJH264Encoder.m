@@ -22,6 +22,7 @@
 @property(nonatomic,assign)GJBufferPool* bufferPool;
 @property(nonatomic,assign)int32_t currentBitRate;//当前码率
 @property(nonatomic,assign)int currentDelayCount;//调整之后要过几帧才能反应，所以要延迟几帧再做检测调整；
+@property(nonatomic,assign)int bufferRate;//当前调整时的缓存程度
 @property(nonatomic,assign)BOOL shouldRestart;
 
 
@@ -330,19 +331,31 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //        NSLog(@"encodecount:%d,lenth:%d,pts:%lld \n",i++,pushPacket->ppsSize+pushPacket->spsSize+pushPacket->ppSize,pts.value);
     float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompletePacket:pushPacket];
     retainBufferUnRetain(retainBuffer);
-
-    if (encoder.currentDelayCount==0) {
-        if (bufferRate > 0.5) {
-            [encoder reduceQuality];
+    float difference = bufferRate - encoder.bufferRate;
+    if(bufferRate > 0.9){
+        [encoder reduceQualityWithStep:INT_MAX];
+        encoder.currentDelayCount = DEFAULT_DELAY;
+    }else if (encoder.currentDelayCount==0 || difference < -0.2) {
+        
+        if (bufferRate > 0.2) {
+            [encoder reduceQualityWithStep:1];
             encoder.currentDelayCount = DEFAULT_DELAY;
         }else if(bufferRate - 0.0 <0.001){
             [encoder appendQuality];
             encoder.currentDelayCount = DEFAULT_DELAY;
         }
+    }else if(difference > 0.1){
+        [encoder reduceQualityWithStep:difference*10];
+        encoder.currentDelayCount = DEFAULT_DELAY;
+    }else if(difference < -0.2){
+        [encoder appendQuality];
+        encoder.currentDelayCount = DEFAULT_DELAY;
     }else{
         encoder.currentDelayCount--;
     }
 }
+
+
 //快降慢升
 -(void)appendQuality{
     if (_dropStep > 0) {
@@ -375,7 +388,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         }
     }
 }
--(void)reduceQuality{
+-(void)reduceQualityWithStep:(int)step{
     if (_currentBitRate > _allowMinBitRate) {
         GJLOG(GJ_LOGINFO, "reduceQuality by reduce to bitrate:%f",_currentBitRate/1024.0/8.0);
         int32_t bitrate =_currentBitRate - (_currentBitRate - _allowMinBitRate)*0.4;

@@ -96,7 +96,7 @@ static void* pullRunloop(void* parm){
                 retainBufferUnRetain(retainBuffer);
                 
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
-                streamPacket.type = GJAudioType;
+                streamPacket.type = GJVideoType;
 
 
                 uint8_t *body = (uint8_t*)packet.m_body;

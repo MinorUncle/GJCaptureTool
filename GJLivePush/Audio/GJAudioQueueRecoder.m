@@ -148,6 +148,8 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
         memcpy(packet->aac, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
         packet->pts = [[NSDate date]timeIntervalSince1970]*1000;
 
+        NSLog(@"recode adtssize:%d size:%d",packet->adtsSize,packet->aacSize);
+
 //        static int count ;
 //        NSLog(@"send num:%d:%@",count++,[NSData dataWithBytes:buffer->data+7 length:buffer->size-7]);
 //        NSLog(@"audio size:%d",inBuffer->mAudioDataByteSize);

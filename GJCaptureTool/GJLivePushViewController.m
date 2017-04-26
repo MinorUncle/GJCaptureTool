@@ -231,14 +231,14 @@
     
        // Do any additional setup after loading the view.
 }
-static char* url = "rtmp://192.168.18.21/live/room";
+static char* url = "rtmp://10.0.1.126/live/room";
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;rtmp://10.0.1.126/live/room
     if (btn == _pushButton) {
         if (btn.selected) {
             GJPushConfig config;
-            config.channel = 1;
+            config.channel = 2;
             config.audioSampleRate = 44100;
             config.pushSize = CGSizeMake(360, 640);
             config.videoBitRate = 8*80*1024;

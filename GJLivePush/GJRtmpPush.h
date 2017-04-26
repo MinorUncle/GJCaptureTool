@@ -63,8 +63,8 @@ void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmp
  @param push push description
  @param data data description
  */
-void GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data);
-void GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data);
+bool GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data);
+bool GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data);
 void GJRtmpPush_Close(GJRtmpPush* push);
 void GJRtmpPush_Release(GJRtmpPush* push);
 void GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);

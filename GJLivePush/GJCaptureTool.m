@@ -590,6 +590,7 @@ faile:
 
 }
 - (void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error{
+    
     if ([self.delegate respondsToSelector:@selector(GJCaptureTool:didRecodeFile:)]) {
         [self.delegate GJCaptureTool:self didRecodeFile:outputFileURL];
     }

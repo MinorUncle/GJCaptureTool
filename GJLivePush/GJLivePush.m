@@ -208,7 +208,7 @@
         _videoInfo = vInfo;
         
         _pushSessionStatus.audioStatus.cacheTime = aInfo.enter.pts - aInfo.leave.pts;
-        _pushSessionStatus.audioStatus.frameRate = (aInfo.leave.count - _audioInfo.leave.count)/_gaterFrequency;
+        _pushSessionStatus.audioStatus.frameRate = (aInfo.leave.count - _audioInfo.leave.count)*1024.0/_gaterFrequency;
         _pushSessionStatus.audioStatus.bitrate = (aInfo.leave.byte - _audioInfo.leave.byte)/_gaterFrequency;
         _audioInfo = aInfo;        
         [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
@@ -224,10 +224,12 @@
 }
 
 - (void)stopStreamPush{
-    
-    GJRtmpPush_Close(_videoPush);
-    GJRtmpPush_Release(_videoPush);
-    _videoPush = NULL;
+    if (_videoPush) {
+        GJRtmpPush_Close(_videoPush);
+        GJRtmpPush_Release(_videoPush);
+        _videoPush = NULL;
+    }
+
     if (_mp4Recoder) {
         mp4WriterClose(&(_mp4Recoder));
         _mp4Recoder = NULL;
@@ -313,10 +315,11 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 
     }
     
-    GJRtmpPush_SendH264Data(_videoPush, packet);
-    
-    return GJRtmpPush_GetBufferRate(_videoPush);
-
+    if(!GJRtmpPush_SendH264Data(_videoPush, packet)){
+        return 1;
+    }else{
+        return GJRtmpPush_GetBufferRate(_videoPush);
+    }
 }
 
 //-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(int64_t)pts{
@@ -342,7 +345,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 #else
     packet->pts = (int64_t)([[NSDate date]timeIntervalSinceDate:_fristFrameDate]*1000);
 
-    GJRtmpPush_SendAACData(_videoPush, packet);
+     GJRtmpPush_SendAACData(_videoPush, packet);
 #endif
 }
 -(void)dealloc{

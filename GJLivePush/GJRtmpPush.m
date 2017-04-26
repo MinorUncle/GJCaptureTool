@@ -16,7 +16,7 @@
 
 #define RTMP_RECEIVE_TIMEOUT    3
 
-#define BUFFER_CACHE_SIZE 40
+#define BUFFER_CACHE_SIZE 300
 
 typedef struct _GJRTMP_Packet {
     RTMPPacket packet;
@@ -131,11 +131,7 @@ void GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,void* rt
 }
 
 
-void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
-    if (sender->stopRequest) {
-       
-        return;
-    }
+bool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
 
 //    static int time1 = 0;
 //    NSData* data1 = [NSData dataWithBytes:buffer->data length:buffer->size];
@@ -254,21 +250,19 @@ void GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     }
 
     retainBufferRetain(retainBuffer);
-    while (!sender->stopRequest) {
-        if (queuePush(sender->sendBufferQueue, pushPacket, 0)) {
-            sender->videoStatus.enter.pts = pushPacket->packet.m_nTimeStamp;
-            sender->videoStatus.enter.count++;
-            sender->videoStatus.enter.byte += pushPacket->packet.m_nBodySize;
-            return;
-        }else{
-            usleep(1000);
-        }
+    if (queuePush(sender->sendBufferQueue, pushPacket, 0)) {
+        sender->videoStatus.enter.pts = pushPacket->packet.m_nTimeStamp;
+        sender->videoStatus.enter.count++;
+        sender->videoStatus.enter.byte += pushPacket->packet.m_nBodySize;
+        return true;
+    }else{
+        retainBufferUnRetain(retainBuffer);
+        GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
+        return false;
     }
-    retainBufferUnRetain(retainBuffer);
-    GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
 }
 
-void GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
+bool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
     unsigned char * body;
     int preSize = 2;
     GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
@@ -300,18 +294,16 @@ void GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
     sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
     retainBufferRetain(retainBuffer);
     
-    while (!sender->stopRequest) {
-        if (queuePush(sender->sendBufferQueue, pushPacket, 0)) {
-            sender->audioStatus.enter.pts = pushPacket->packet.m_nTimeStamp;
-            sender->audioStatus.enter.count++;
-            sender->audioStatus.enter.byte += pushPacket->packet.m_nBodySize;
-            return;
-        }else{
-            usleep(1000);
-        }
+    if (queuePush(sender->sendBufferQueue, pushPacket, 0)) {
+        sender->audioStatus.enter.pts = pushPacket->packet.m_nTimeStamp;
+        sender->audioStatus.enter.count++;
+        sender->audioStatus.enter.byte += pushPacket->packet.m_nBodySize;
+        return true;
+    }else{
+        retainBufferUnRetain(retainBuffer);
+        GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
+        return false;
     }
-    retainBufferUnRetain(retainBuffer);
-    GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
 }
 
 void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
@@ -321,8 +313,10 @@ void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
     GJAssert(length <= MAX_URL_LENGTH-1, "sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
     memcpy(sender->pushUrl, sendUrl, length+1);
     if (sender->sendThread) {
+        GJLOG(GJ_LOGWARNING,"上一个push没有释放，开始释放并等待");
         GJRtmpPush_Close(sender);
         pthread_join(sender->sendThread, NULL);
+        GJLOG(GJ_LOGWARNING,"等待push释放结束");
     }
     sender->stopRequest = false;
     pthread_create(&sender->sendThread, NULL, sendRunloop, sender);
