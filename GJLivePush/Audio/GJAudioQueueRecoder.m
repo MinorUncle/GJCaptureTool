@@ -148,7 +148,7 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
         memcpy(packet->aac, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
         packet->pts = [[NSDate date]timeIntervalSince1970]*1000;
 
-        NSLog(@"recode adtssize:%d size:%d",packet->adtsSize,packet->aacSize);
+//        NSLog(@"recode adtssize:%d size:%d",packet->adtsSize,packet->aacSize);
 
 //        static int count ;
 //        NSLog(@"send num:%d:%@",count++,[NSData dataWithBytes:buffer->data+7 length:buffer->size-7]);
@@ -281,10 +281,10 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
         GJLOG(GJ_LOGERROR,"AVAudioSession setCategory error:%s",error.localizedDescription);
     }
     error = NULL;
-    [[AVAudioSession sharedInstance]overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker  error:NULL];
-    if (error) {
-        GJLOG(GJ_LOGERROR,"AVAudioSession overrideOutputAudioPort error:%s",error.localizedDescription);
-    }
+//    [[AVAudioSession sharedInstance]overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker  error:NULL];
+//    if (error) {
+//        GJLOG(GJ_LOGERROR,"AVAudioSession overrideOutputAudioPort error:%s",error.localizedDescription);
+//    }
     [[AVAudioSession sharedInstance]setActive:YES error:&error];
     if (error) {
         GJLOG(GJ_LOGERROR,"AVAudioSession setActive error:%s",error.localizedDescription);

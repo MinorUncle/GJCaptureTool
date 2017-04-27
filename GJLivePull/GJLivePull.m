@@ -152,9 +152,11 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     [_lock lock];
     [_audioDecoder stop];
     [_player stop];
-    GJRtmpPull_Close(_videoPull);
-    GJRtmpPull_Release(_videoPull);
-    _videoPull = NULL;
+    if (_videoPull) {
+        GJRtmpPull_Close(_videoPull);
+        GJRtmpPull_Release(_videoPull);
+        _videoPull = NULL;
+    }
     [_timer invalidate];
     GJLOG(GJ_LOGINFO, "NSTimer invalidate:%s",[NSString stringWithFormat:@"%@",_timer].UTF8String);
     [_lock unlock];

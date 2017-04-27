@@ -129,7 +129,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
         ioData->mBuffers[0].mDataByteSize = packet->aacSize;
         *ioNumberDataPackets = 1;
-        NSLog(@"decode adtssize:%d size:%d",packet->adtsSize,packet->aacSize);
+//        NSLog(@"decode adtssize:%d size:%d",packet->adtsSize,packet->aacSize);
     }else{
         *ioNumberDataPackets = 0;
         return -1;

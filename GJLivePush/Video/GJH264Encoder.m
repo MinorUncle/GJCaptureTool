@@ -11,8 +11,11 @@
 #import "GJLiveDefine+internal.h"
 #import "GJLog.h"
 
-#define DEFAULT_DELAY  10
+//#define DEFAULT_DELAY  10
 #define DEFAULT_MAX_DROP_STEP 5
+//默认i帧是p帧的I_P_RATE+1倍。越小丢帧时码率降低越大
+#define I_P_RATE 4
+
 @interface GJH264Encoder()
 {
     int _dropStep;//隔多少帧丢一帧
@@ -24,6 +27,7 @@
 @property(nonatomic,assign)int currentDelayCount;//调整之后要过几帧才能反应，所以要延迟几帧再做检测调整；
 @property(nonatomic,assign)int bufferRate;//当前调整时的缓存程度
 @property(nonatomic,assign)BOOL shouldRestart;
+@property(nonatomic,assign)BOOL stopRequest;//防止下一帧满时一直等待
 
 
 @end
@@ -37,6 +41,8 @@
         if (format.baseFormat.bitRate>0) {
             _currentBitRate = format.baseFormat.bitRate;
             _allowMinBitRate = _currentBitRate;
+            _dropStep = -1;
+            _allowDropStep = 1;
         }
     }
     return self;
@@ -64,7 +70,7 @@
 -(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts fourceKey:(BOOL)fourceKey
 {
     _frameCount++;
-    if (_dropStep > 0 && _frameCount%(_dropStep+1) == 0) {
+    if (_dropStep >= 0 && _frameCount%(_dropStep+1) == 0) {
         return NO;
     }
     
@@ -116,6 +122,7 @@ RETRY:
 
 -(void)creatEnCodeSessionWithWidth:(int32_t)w height:(int32_t)h{
     if (_enCodeSession != nil) {
+        _stopRequest = YES;
         VTCompressionSessionInvalidate(_enCodeSession);
     }
     _shouldRestart = NO;
@@ -134,6 +141,7 @@ RETRY:
         NSLog(@"VTCompressionSessionCreate 失败------------------status:%d",(int)result);
         return;
     }
+    _stopRequest = NO;
     _destFormat.baseFormat.width = w;
     _destFormat.baseFormat.height = h;
     if (_bufferPool != NULL) {
@@ -329,106 +337,140 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 #endif
 //        static int i = 0;
 //        NSLog(@"encodecount:%d,lenth:%d,pts:%lld \n",i++,pushPacket->ppsSize+pushPacket->spsSize+pushPacket->ppSize,pts.value);
-    float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompletePacket:pushPacket];
-    retainBufferUnRetain(retainBuffer);
-    float difference = bufferRate - encoder.bufferRate;
-    if(bufferRate > 0.9){
-        [encoder reduceQualityWithStep:INT_MAX];
-        encoder.currentDelayCount = DEFAULT_DELAY;
-    }else if (encoder.currentDelayCount==0 || difference < -0.2) {
-        
-        if (bufferRate > 0.2) {
-            [encoder reduceQualityWithStep:1];
-            encoder.currentDelayCount = DEFAULT_DELAY;
-        }else if(bufferRate - 0.0 <0.001){
-            [encoder appendQuality];
-            encoder.currentDelayCount = DEFAULT_DELAY;
+//    NSLog(@"encode frame:%d",pushPacket->ppSize);
+    while (!encoder.stopRequest){
+        float bufferRate = [encoder.deleagte GJH264Encoder:encoder encodeCompletePacket:pushPacket];
+        float difference = bufferRate - encoder.bufferRate;
+        if(bufferRate > 0.999){
+            [encoder reduceQualityWithStep:INT_MAX allowStop:YES];//停止进入
+            encoder.currentDelayCount = encoder.destFormat.baseFormat.fps;
+            usleep(10000);
+            continue;
+        }else if (encoder.currentDelayCount==0) {
+            if (bufferRate > 0.3) {
+                encoder.bufferRate = bufferRate;
+                [encoder reduceQualityWithStep:1 allowStop:NO];
+            }else if(bufferRate - 0.0 <0.1 && encoder.currentBitRate < encoder.destFormat.baseFormat.bitRate){
+                encoder.bufferRate = bufferRate;
+                [encoder appendQualityWithStep:1];
+            }
+            encoder.currentDelayCount = encoder.destFormat.baseFormat.fps;
+        }else if(difference > 0.1){
+            encoder.bufferRate = bufferRate;
+            encoder.currentDelayCount = encoder.destFormat.baseFormat.fps;
+            [encoder reduceQualityWithStep:difference*10 allowStop:NO];
+        }else if(difference < -0.2){
+            encoder.bufferRate = bufferRate;
+            encoder.currentDelayCount = encoder.destFormat.baseFormat.fps;
+            [encoder appendQualityWithStep:(-difference-0.1)*10];
+        }else{
+            encoder.currentDelayCount--;
         }
-    }else if(difference > 0.1){
-        [encoder reduceQualityWithStep:difference*10];
-        encoder.currentDelayCount = DEFAULT_DELAY;
-    }else if(difference < -0.2){
-        [encoder appendQuality];
-        encoder.currentDelayCount = DEFAULT_DELAY;
-    }else{
-        encoder.currentDelayCount--;
+        break;
     }
+    retainBufferUnRetain(retainBuffer);
 }
 
 
 //快降慢升
--(void)appendQuality{
-    if (_dropStep > 0) {
-        if (++_dropStep > DEFAULT_MAX_DROP_STEP) {
-            _dropStep = 0;
-            GJLOG(GJ_LOGINFO, "appendQuality to not drop 0 frame,bitrate:%f",_currentBitRate/1024.0/8.0);
-            self.currentBitRate = _allowMinBitRate;
-            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
-            }
+-(void)appendQualityWithStep:(int)step{
+    int leftStep = step;
+    GJEncodeQuality quality = GJEncodeQualityGood;
+    int32_t bitrate = _currentBitRate;
+    GJLOG(GJ_LOGINFO, "appendQualityWithStep：%d",step);
+    if (_dropStep >= 0) {
+        _dropStep += _allowDropStep-1+leftStep;
+        leftStep = 0;
+        if (_dropStep > DEFAULT_MAX_DROP_STEP) {
+            leftStep -= _dropStep - DEFAULT_MAX_DROP_STEP;
+            _dropStep = -1;
+            bitrate = _allowMinBitRate;
+            quality = GJEncodeQualityGood;
         }else{
-            GJLOG(GJ_LOGINFO, "appendQuality by reduce to drop frame:%d",_dropStep);
-            self.currentBitRate = _allowMinBitRate*(1-1.0/_dropStep);
-            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
-            }
+            bitrate = _allowMinBitRate*(1-1.0/(_dropStep+1))+bitrate/(_destFormat.baseFormat.fps - _destFormat.baseFormat.fps/_dropStep)*I_P_RATE;
+            quality = GJEncodeQualitybad;
         }
-    }else{
-        if (_currentBitRate < _destFormat.baseFormat.bitRate) {
-            GJLOG(GJ_LOGINFO, "appendQuality by add to bitrate:%f",_currentBitRate/1024.0/8.0);
-            self.currentBitRate += (_destFormat.baseFormat.bitRate - _currentBitRate)*0.2;
-            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
-            }
+        GJLOG(GJ_LOGINFO, "appendQuality by reduce to drop frame:%d",_dropStep);
+    }
+    if(leftStep > 0){
+        if (bitrate < _destFormat.baseFormat.bitRate) {
+            bitrate += (_destFormat.baseFormat.bitRate - _allowMinBitRate)*leftStep*0.2;
+            bitrate = MIN(bitrate, _destFormat.baseFormat.bitRate);
+            quality = GJEncodeQualityGood;
         }else{
+            quality = GJEncodeQualityExcellent;
             GJLOG(GJ_LOGINFO, "appendQuality to full speed:%f",_currentBitRate/1024.0/8.0);
-            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityExcellent];
-            }
         }
     }
-}
--(void)reduceQualityWithStep:(int)step{
-    if (_currentBitRate > _allowMinBitRate) {
-        GJLOG(GJ_LOGINFO, "reduceQuality by reduce to bitrate:%f",_currentBitRate/1024.0/8.0);
-        int32_t bitrate =_currentBitRate - (_currentBitRate - _allowMinBitRate)*0.4;
-        if (bitrate < _allowMinBitRate) {
-            bitrate = _allowMinBitRate;
-        }
+    if (_currentBitRate != bitrate) {
         self.currentBitRate = bitrate;
         if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityGood];
+            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityExcellent];
         }
-    }else{
+    }
  
-        if (_dropStep != 1) {//最多到1，丢一半
-            if (_dropStep == 0) {
+}
+-(void)reduceQualityWithStep:(int)step allowStop:(BOOL)allowStop{
+    int leftStep = step;
+    int currentBitRate = _currentBitRate;
+    GJEncodeQuality quality = GJEncodeQualityGood;
+    int32_t bitrate = _currentBitRate;
+    
+    GJLOG(GJ_LOGINFO, "reduceQualityWithStep：%d",step);
+
+    if (_currentBitRate > _allowMinBitRate) {
+        bitrate -= (_destFormat.baseFormat.bitRate - _allowMinBitRate)*leftStep*0.2;
+        leftStep = 0;
+        if (bitrate < _allowMinBitRate) {
+            bitrate = _allowMinBitRate;
+            leftStep = (currentBitRate - bitrate)/((_destFormat.baseFormat.bitRate - _allowMinBitRate)*0.2);
+        }
+        quality = GJEncodeQualityGood;
+    }
+    if (leftStep > 0){
+        if (_dropStep != 0) {//最多到0，即缓冲已经满了，每帧都丢。
+            if (_dropStep < 0) {//没有丢帧，则开始丢弃
                 _dropStep = DEFAULT_MAX_DROP_STEP;
-            }else{
-                _dropStep--;
+            }else{//否则加快丢帧
+                _dropStep -= leftStep;
+                if (_dropStep < _allowDropStep) {
+                    if (allowStop) {
+                        _dropStep = 0;
+                    }else{
+                        _dropStep = _allowDropStep;
+                    }
+                }
             }
-            GJLOG(GJ_LOGINFO, "reduceQuality by add to drop frame setp:%d",_dropStep);
-            self.currentBitRate = _allowMinBitRate*(1-1.0/_dropStep);
-            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualitybad];
-            }
+            GJLOG(GJ_LOGINFO, "reduceQuality by reduce drop frame to setp:%d",_dropStep);
+            //假设i帧是p帧的4倍；,越大，丢帧时码率减少越小
+            bitrate = _allowMinBitRate*(1-1.0/(_dropStep+1))+bitrate/(_destFormat.baseFormat.fps - _destFormat.baseFormat.fps/_dropStep)*I_P_RATE;
+            quality = GJEncodeQualitybad;
         }else{
             GJLOG(GJ_LOGINFO, "reduceQuality to minimum quality:%f",_currentBitRate/1024.0/8.0);
-            if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-                [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityTerrible];
+            if(!allowStop){
+                _dropStep = _allowDropStep;
+                bitrate = _allowMinBitRate*(1-1.0/(_dropStep+1))+bitrate/(_destFormat.baseFormat.fps - _destFormat.baseFormat.fps/_dropStep)*I_P_RATE;
             }
-            
+            quality = GJEncodeQualityTerrible;
         }
+    }
+    self.currentBitRate = bitrate;
+    if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
+        [self.deleagte GJH264Encoder:self qualityQarning:quality];
     }
 }
 -(void)flush{
+    _stopRequest = YES;
     if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
     _enCodeSession = nil;
+    _dropStep = -1;
+    _currentBitRate = _destFormat.baseFormat.bitRate;
 
 }
 
 
 -(void)dealloc{
+    _stopRequest = YES;
     if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);    
 }
 //-(void)restart{

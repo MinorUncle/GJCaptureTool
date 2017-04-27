@@ -225,22 +225,26 @@
 
 - (void)stopStreamPush{
     if (_videoPush) {
+        if (_mp4Recoder) {
+            mp4WriterClose(&(_mp4Recoder));
+            _mp4Recoder = NULL;
+        }
+        
+        [_lastFilter removeTarget:_videoStreamFilter];
+        [_audioRecoder stop];
+        [_videoEncoder flush];
+        [_timer invalidate];
+        _timer = nil;
+        
         GJRtmpPush_Close(_videoPush);
         GJRtmpPush_Release(_videoPush);
         _videoPush = NULL;
+        memset(&_videoInfo, 0, sizeof(_videoInfo));
+        memset(&_audioInfo, 0, sizeof(_audioInfo));
+        GJLOG(GJ_LOGINFO, "推流停止");
+    }else{
+        GJLOG(GJ_LOGWARNING, "推流重复停止");
     }
-
-    if (_mp4Recoder) {
-        mp4WriterClose(&(_mp4Recoder));
-        _mp4Recoder = NULL;
-    }
-    [_lastFilter removeTarget:_videoStreamFilter];
-    [_audioRecoder stop];
-    [_videoEncoder flush];
-    [_timer invalidate];
-    _timer = nil;
-    GJLOG(GJ_LOGINFO, "推流停止");
-
 }
 
 -(UIView *)getPreviewView{

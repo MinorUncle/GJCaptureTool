@@ -238,7 +238,7 @@ static char* url = "rtmp://10.0.1.126/live/room";
     if (btn == _pushButton) {
         if (btn.selected) {
             GJPushConfig config;
-            config.channel = 2;
+            config.channel = 1;
             config.audioSampleRate = 44100;
             config.pushSize = CGSizeMake(360, 640);
             config.videoBitRate = 8*80*1024;

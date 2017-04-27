@@ -236,7 +236,6 @@ static void* playVideoRunLoop(void* parm){
                 delay = 0;
             }else{
                 GJLOG(GJ_LOGWARNING, "视频落后音频严重，delay：%ld, PTS:%ld clock:%ld，丢视频帧",delay,cImageBuf->pts,timeStandards);
-//                _syncControl->speedTotalDuration += delay;
                 _syncControl->videoInfo.cPTS = cImageBuf->pts;
                 _syncControl->videoInfo.trafficStatus.leave.pts = cImageBuf->pts;
                 _syncControl->videoInfo.clock = getTime() / 1000;

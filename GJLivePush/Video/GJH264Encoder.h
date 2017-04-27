@@ -38,7 +38,7 @@ typedef enum _GJEncodeQuality{
  编码质量回调
 
  @param encoder encoder description
- @param quality 0优。1，一般，码率降低。2，差，码率降低且丢帧，3，非常差，码率为允许最小，且丢一半帧以上。
+ @param quality 0优。1，一般，码率降低。2，差，码率降低且丢帧，3，非常差，码率为允许正常最小，且丢一半帧以上。
  */
 -(void)GJH264Encoder:(GJH264Encoder*)encoder qualityQarning:(GJEncodeQuality)quality;
 @end
@@ -58,9 +58,15 @@ typedef enum _GJEncodeQuality{
 @property(assign,nonatomic)NSInteger frameCount;
 
 /**
- //不丢帧情况下允许的最小码率。用于动态码率，期望正常码率在destformat中设置。
+ //不丢帧情况下允许的最小码率。用于动态码率，期望正常码率在destformat中设置
  */
 @property(assign,nonatomic) int allowMinBitRate;
+
+
+/**
+ 网络差时允许最小丢帧的步伐，即隔allowDropStep帧丢一帧。当allowDropStep 小于0时表示不允许丢帧调码率，否则必须大于0，会导致码率小于allowMinBitRate，但是视频质量不下降，且该丢帧为隔帧丢帧，不会大程度影响流畅度。建议和默认是1，即最多为隔一帧丢帧，
+ */
+@property(assign,nonatomic) int allowDropStep;
 
 
 /**

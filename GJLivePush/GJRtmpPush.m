@@ -43,6 +43,7 @@ static void* sendRunloop(void* parm){
     
     ret = RTMP_Connect(push->rtmp, NULL);
     if (!ret && push->messageCallback) {
+        GJLOG(GJ_LOGERROR, "RTMP_Connect error");
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }
@@ -50,6 +51,7 @@ static void* sendRunloop(void* parm){
 
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret && push->messageCallback) {
+        GJLOG(GJ_LOGERROR, "RTMP_ConnectStream error");
 
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
@@ -77,13 +79,13 @@ static void* sendRunloop(void* parm){
             retainBufferUnRetain(packet->retainBuffer);
             GJBufferPoolSetData(defauleBufferPool(), (void*)packet);
         }else{
-            GJAssert(iRet, "error send video FRAME\n");
+            GJLOG(GJ_LOGERROR, "error send video FRAME");
+//            GJAssert(iRet, "error send video FRAME\n");
             errType = GJRTMPPushMessageType_sendPacketError;
             retainBufferUnRetain(packet->retainBuffer);
             GJBufferPoolSetData(defauleBufferPool(), (void*)packet);
             goto ERROR;
         };
-
     }
     
   
