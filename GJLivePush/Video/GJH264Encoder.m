@@ -145,10 +145,11 @@ RETRY:
     _destFormat.baseFormat.width = w;
     _destFormat.baseFormat.height = h;
     if (_bufferPool != NULL) {
-        GJBufferPool* pool = _bufferPool;
+        __block GJBufferPool* pool = _bufferPool;
         _bufferPool = NULL;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-            GJBufferPoolCleanAndFree((GJBufferPool**)&pool);
+            GJBufferPoolClean(pool);
+            GJBufferPoolDealloc(&pool);
         });
     }
     GJBufferPoolCreate(&_bufferPool,1, true);
@@ -471,7 +472,9 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
 -(void)dealloc{
     _stopRequest = YES;
-    if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);    
+    if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
+    GJBufferPoolClean(_bufferPool);
+    GJBufferPoolDealloc(&_bufferPool);
 }
 //-(void)restart{
 //

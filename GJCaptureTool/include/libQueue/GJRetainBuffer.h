@@ -10,14 +10,10 @@
 #define GJRetainBuffer_h
 #include <stdio.h>
 
-#include <stdbool.h>
-
-#ifndef __cplusplus
 #ifndef bool
 #   define bool unsigned int
 #   define true 1
 #   define false 0
-#endif
 #endif
 
 #ifdef __cplusplus
@@ -62,14 +58,13 @@ void retainBufferSetFrontSize(GJRetainBuffer* buffer,int frontSize);
 
     
 /**
- 移动data指针，不做内存的修改，但是会涉及到front等的修改.不要在retainbufferpool中使用，否则容易引起内存持续减少出错
-
+ 移动data指针，不做内存的修改，但是会涉及到front等的修改
+ 
  @param buffer buffer description
  @param offset 偏移的大小，不能移到内存外，否则false
  @return 是否成功
  */
 bool retainBufferMoveDataPoint(GJRetainBuffer* buffer,int offset);
-
 #ifdef __cplusplus
 }
 #endif

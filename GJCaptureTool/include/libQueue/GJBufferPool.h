@@ -21,22 +21,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
-    /**
-     多线程支持，可以是不同size；尽量使用相同size（仅仅多个判断），
-     */
-    typedef struct _GJBufferPool{
-        GJQueue* queue; //不用链表而用数组是避免一直动态创建和销毁结点数据。
-        int    generateSize;
-        uint     minSize;
-    }GJBufferPool;
-    bool GJBufferPoolCreate(GJBufferPool** pool,uint minSize,bool atomic);
-    GJBufferPool* defauleBufferPool();
-    bool GJBufferPoolCleanAndFree(GJBufferPool** pool);
-    uint8_t* GJBufferPoolGetData(GJBufferPool* p);
-    uint8_t* GJBufferPoolGetSizeData(GJBufferPool* p,int size);
-    bool GJBufferPoolSetData(GJBufferPool* p,uint8_t* data);
-    
+
+/**
+    多线程支持，可以是不同size；尽量使用相同size（仅仅多个判断），
+ */
+typedef struct _GJBufferPool{
+    GJQueue* queue; //不用链表而用数组是避免一直动态创建和销毁结点数据。
+    int    generateSize;
+    uint     minSize;
+}GJBufferPool;
+bool GJBufferPoolCreate(GJBufferPool** pool,uint minSize,bool atomic);
+//小数据最好多用默认的，大数据最好不要用默认的
+GJBufferPool* defauleBufferPool();
+void GJBufferPoolDealloc(GJBufferPool** pool);
+//可能会产生阻塞等待
+void GJBufferPoolClean(GJBufferPool* p);
+uint8_t* GJBufferPoolGetData(GJBufferPool* p);
+uint8_t* GJBufferPoolGetSizeData(GJBufferPool* p,int size);
+bool GJBufferPoolSetData(GJBufferPool* p,uint8_t* data);
+
 #ifdef __cplusplus
 }
 #endif

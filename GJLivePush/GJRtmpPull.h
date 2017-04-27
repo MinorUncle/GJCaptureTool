@@ -39,7 +39,6 @@ typedef void(*PullDataCallback)(struct _GJRtmpPull* rtmpPull,GJStreamPacket pack
 #define MAX_URL_LENGTH 100
 typedef struct _GJRtmpPull{
     RTMP*                   rtmp;
-    GJQueue*                pullBufferQueue;
     char                    pullUrl[MAX_URL_LENGTH];
     
     GJRetainBufferPool*      memoryCachePool;

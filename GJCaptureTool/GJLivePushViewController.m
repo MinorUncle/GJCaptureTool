@@ -12,6 +12,7 @@
 #import "GJLivePull.h"
 #import "GJLog.h"
 #import "log.h"
+#import "GJBufferPool.h"
 @interface PullShow : NSObject
 {
     
@@ -393,6 +394,20 @@ static char* url = "rtmp://10.0.1.126/live/room";
         show.netDelay.text = [NSString stringWithFormat:@"NetDelay:%ld ms",delay];
         
     });
+}
+-(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
+    UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"提示" message:@"是否测试释放推拉流对象" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:@"取消", nil];
+    [alert show];
+
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
+    if (buttonIndex == 0) {
+        _livePush = nil;
+        [_pulls removeAllObjects];
+        NSLog(@"释放完成");
+        GJBufferPoolClean(defauleBufferPool());
+    }
 }
 /*
 #pragma mark - Navigation

@@ -192,8 +192,6 @@ void GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,void* rtm
     pull->rtmp = RTMP_Alloc();
     RTMP_Init(pull->rtmp);
     
-//    GJBufferPoolCreate(&pull->memoryCachePool, true);
-    queueCreate(&pull->pullBufferQueue, BUFFER_CACHE_SIZE, true, false);
     pull->messageCallback = callback;
     pull->messageCallbackParm = rtmpPullParm;
     pull->stopRequest = false;
@@ -203,21 +201,18 @@ void GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,void* rtm
 }
 
 void GJRtmpPull_Delloc(GJRtmpPull* pull){
-    RTMPPacket* packet;
-    while (queuePop(pull->pullBufferQueue, (void**)&packet, 0)) {
-        RTMPPacket_Free(packet);
-        free(packet);
+    if (pull) {
+        RTMP_Free(pull->rtmp);
+        free(pull);
+        GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Delloc");
+    }else{
+        GJLOG(GJ_LOGWARNING, "GJRtmpPull_Delloc NULL PULL");
     }
-    queueCleanAndFree(&pull->pullBufferQueue);
-    free(pull);
-    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Delloc");
 }
 void GJRtmpPull_Close(GJRtmpPull* pull){
     GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Close");
 
     pull->stopRequest = true;
-    queueBroadcastPop(pull->pullBufferQueue);
-
 }
 void GJRtmpPull_Release(GJRtmpPull* pull){
     GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Release");

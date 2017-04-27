@@ -329,6 +329,7 @@ void GJRtmpPush_Delloc(GJRtmpPush* push){
     GJRTMP_Packet* packet;
     while (queuePop(push->sendBufferQueue, (void**)&packet, 0)) {
         retainBufferUnRetain(packet->retainBuffer);
+        GJBufferPoolSetData(defauleBufferPool(), (void*)packet);
     }
     queueCleanAndFree(&push->sendBufferQueue);
     free(push);

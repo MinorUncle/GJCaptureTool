@@ -25,11 +25,18 @@ extern "C" {
 
 
 typedef struct _GJRetainBufferPool{
-    GJQueue* queue; //不用链表而用数组是避免一直动态创建和销毁结点数据。
-    uint bufferSize;
-    int    generateSize;
+    GJQueue*    queue; //不用链表而用数组是避免一直动态创建和销毁结点数据。
+    uint        minSize;//最小大小。
+    int         generateSize;
 }GJRetainBufferPool;
-bool GJRetainBufferPoolCreate(GJRetainBufferPool** pool,uint bufferSize,bool atomic);
+bool GJRetainBufferPoolCreate(GJRetainBufferPool** pool,uint minSize,bool atomic);
+
+/**
+ 释放pool,存在没有回收的buffer时会阻塞
+
+ @param pool pool
+ @return return value description
+ */
 bool GJRetainBufferPoolCleanAndFree(GJRetainBufferPool** pool);
 
 
@@ -41,6 +48,18 @@ bool GJRetainBufferPoolCleanAndFree(GJRetainBufferPool** pool);
  @return return value description
  */
 GJRetainBuffer* GJRetainBufferPoolGetData(GJRetainBufferPool* p);
+
+    
+/**
+ 获得retainbuffer,当GJRetainBuffer的引用为0时回收，初始值为1，size必须大于minSize;
+
+
+ @param p p description
+ @param size size description
+ @return return value description
+ */
+GJRetainBuffer* GJRetainBufferPoolGetSizeData(GJRetainBufferPool* p,int size);
+
 
 #ifdef __cplusplus
 }
