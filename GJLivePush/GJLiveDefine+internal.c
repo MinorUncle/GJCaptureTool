@@ -8,10 +8,10 @@
 
 #include "GJLiveDefine+internal.h"
 #include <stdlib.h>
-bool R_RetainBufferRelease(GJRetainBuffer* buffer){
+GBool R_RetainBufferRelease(GJRetainBuffer* buffer){
     if (buffer->data) {
         free(buffer->data);
     }
     free(buffer);
-    return true;
+    return GTrue;
 }

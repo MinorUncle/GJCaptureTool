@@ -210,11 +210,11 @@ RETRY:
         }
     }
 }
-static bool retainBufferRelease(GJRetainBuffer* buffer){
+static GBool retainBufferRelease(GJRetainBuffer* buffer){
     GJBufferPool* pool = buffer->parm;
     GJBufferPoolSetData(pool, buffer->data-buffer->frontSize);
     GJBufferPoolSetData(defauleBufferPool(), (void*)buffer);
-    return true;
+    return GTrue;
 }
 
 void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon,OSStatus statu,VTEncodeInfoFlags infoFlags,

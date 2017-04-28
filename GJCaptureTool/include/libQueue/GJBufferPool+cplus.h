@@ -10,17 +10,18 @@
 #define GJBufferPool_cplus_h
 
 #import "GJQueue+cplus.h"
+#include "GJPlatformHeader.h"
 
 class GJBufferPool;
 typedef struct GJBuffer{
 private:
-    int _capacity;//readOnly,real data size
+    GInt32 _capacity;//readOnly,real data size
 public:
-    void* data;
-    int size;
-    GJBuffer(int8_t* bufferData,int bufferSize);
+    GInt8* data;
+    GInt32 size;
+    GJBuffer(GInt8* bufferData,GInt32 bufferSize);
     GJBuffer();
-    int capacity();
+    GInt32 capacity();
     friend GJBufferPool;
 } GJBuffer;
 
@@ -31,9 +32,9 @@ private:
 public:
     GJBufferPool();//自己新建空间
     static GJBufferPool* defaultBufferPool();//共享的空间   //注意内存紧张时释放内存
-    GJBuffer* getBuffer(int size);
-    void setBuffer(GJBuffer* buffer);
-    void cleanBuffer();
+    GJBuffer* getBuffer(GInt32 size);
+    GVoid setBuffer(GJBuffer* buffer);
+    GVoid cleanBuffer();
     ~GJBufferPool();
 };
 

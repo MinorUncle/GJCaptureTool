@@ -162,7 +162,7 @@ static const int MCAudioQueueBufferCount = 3;
     if (magicCookie)
     {
         status = AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_MagicCookie, [magicCookie bytes], (UInt32)[magicCookie length]);
-        NSLog(@"kAudioQueueProperty_MagicCookie status:%d",status);
+        NSLog(@"kAudioQueueProperty_MagicCookie status:%d",(int)status);
     }
         
     _status = kPlayAStopStatus;
@@ -205,7 +205,7 @@ static const int MCAudioQueueBufferCount = 3;
     status = AudioQueueStart(_audioQueue, NULL);
     if (status != 0) {
         char* codeChar = (char*)&status;
-        NSLog(@"AudioQueueStartError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
+        NSLog(@"AudioQueueStartError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],(int)status);
         NSLog(@"播放失败");
         return NO;
     }
@@ -229,7 +229,7 @@ static const int MCAudioQueueBufferCount = 3;
     _status = kPlayAPauseStatus;
     OSStatus status = AudioQueuePause(_audioQueue);
     if (status != noErr) {
-        NSLog(@"pause error:%d",status);
+        NSLog(@"pause error:%d",(int)status);
         return NO;
     }
     return YES;
@@ -239,7 +239,7 @@ static const int MCAudioQueueBufferCount = 3;
 {
     OSStatus status = AudioQueueReset(_audioQueue);
     if (status != noErr) {
-        NSLog(@"AudioQueueReset error:%d",status);
+        NSLog(@"AudioQueueReset error:%d",(int)status);
         return NO;
     }
     return YES;
@@ -249,7 +249,7 @@ static const int MCAudioQueueBufferCount = 3;
 {
     OSStatus status = AudioQueueFlush(_audioQueue);
     if (status != noErr) {
-        NSLog(@"AudioQueueFlush error:%d",status);
+        NSLog(@"AudioQueueFlush error:%d",(int)status);
         return NO;
     }
     return YES;
@@ -261,7 +261,7 @@ static const int MCAudioQueueBufferCount = 3;
     _status = kPlayAStopStatus;
     OSStatus status = AudioQueueStop(_audioQueue, immediately);
     if (status != noErr) {
-        NSLog(@"AudioQueueStop error:%d",status);
+        NSLog(@"AudioQueueStop error:%d",(int)status);
         _status = pre;
 
         return NO;
@@ -352,11 +352,9 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
 
 
     OSStatus status = AudioQueueEnqueueBuffer(inAQ, inBuffer, 0, NULL);
-#ifdef DEBUG
     if (status < 0) {
         NSLog(@"AudioQueueEnqueueBuffer error:%d",(int)status);
     }
-#endif
 }
 static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer){
     static int count;

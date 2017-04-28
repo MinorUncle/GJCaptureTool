@@ -119,11 +119,11 @@ static void adtsDataForPacketLength(int packetLength, uint8_t*packet,int sampleR
 #endif
 }
 
-static bool retainBufferRelease(GJRetainBuffer* buffer){
+static GBool retainBufferRelease(GJRetainBuffer* buffer){
     GJBufferPool* pool = buffer->parm;
     GJBufferPoolSetData(pool, buffer->data+buffer->frontSize);
     GJBufferPoolSetData(defauleBufferPool(), (void*)buffer);
-    return YES;
+    return GTrue;
 }
 static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer,const AudioTimeStamp *inStartTime,UInt32 inNumPackets, const AudioStreamPacketDescription  *inPacketDesc){
     GJAudioQueueRecoder* tempSelf = (__bridge GJAudioQueueRecoder*)aqData;

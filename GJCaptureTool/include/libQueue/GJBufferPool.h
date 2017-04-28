@@ -10,14 +10,11 @@
 #define GJBufferPool_h
 #include "GJQueue.h"
 #include <stdio.h>
+#include "GJPlatformHeader.h"
 
 /* exploit C++ ability of default values for function parameters */
 
-#ifndef bool
-#   define bool unsigned int
-#   define true 1
-#   define false 0
-#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,13 +24,13 @@ extern "C" {
  */
 typedef struct _GJBufferPool{
     GJQueue* queue; //不用链表而用数组是避免一直动态创建和销毁结点数据。
-    int    generateSize;
-    uint     minSize;
+    GInt32    generateSize;
+    GUInt32     minSize;
 }GJBufferPool;
-bool GJBufferPoolCreate(GJBufferPool** pool,uint minSize,bool atomic);
+GBool GJBufferPoolCreate(GJBufferPool** pool,GUInt32 minSize,GBool atomic);
 //小数据最好多用默认的，大数据最好不要用默认的
 GJBufferPool* defauleBufferPool();
-void GJBufferPoolFree(GJBufferPool** pool);
+GVoid GJBufferPoolFree(GJBufferPool** pool);
 
 /**
  清除内容，当complete为yes时表示彻底清除，可能会产生阻塞等待
@@ -41,10 +38,10 @@ void GJBufferPoolFree(GJBufferPool** pool);
  @param p p description
  @param complete 是否彻底清除
  */
-void GJBufferPoolClean(GJBufferPool* p,bool complete);
-uint8_t* GJBufferPoolGetData(GJBufferPool* p);
-uint8_t* GJBufferPoolGetSizeData(GJBufferPool* p,int size);
-bool GJBufferPoolSetData(GJBufferPool* p,uint8_t* data);
+GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete);
+GUInt8* GJBufferPoolGetData(GJBufferPool* p);
+GUInt8* GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size);
+GBool GJBufferPoolSetData(GJBufferPool* p,GUInt8* data);
 
 #ifdef __cplusplus
 }

@@ -13,9 +13,9 @@
 //#define SEND_SEI
 #define TEST
 typedef struct TrafficUnit{
-    long pts;//ms
-    long count;
-    long byte;
+    GLong pts;//ms
+    GLong count;
+    GLong byte;
 }GJTrafficUnit;
 typedef struct TrafficStatus{
     GJTrafficUnit leave;
@@ -23,23 +23,23 @@ typedef struct TrafficStatus{
 }GJTrafficStatus;
 typedef struct H264Packet{
     GJRetainBuffer retain;
-    int64_t pts;
-    uint8_t* sps;
-    int spsSize;
-    uint8_t* pps;
-    int ppsSize;
-    uint8_t* pp;
-    int ppSize;
-    uint8_t* sei;
-    int seiSize;
+    GInt64 pts;
+    GUInt8* sps;
+    GInt32 spsSize;
+    GUInt8* pps;
+    GInt32 ppsSize;
+    GUInt8* pp;
+    GInt32 ppSize;
+    GUInt8* sei;
+    GInt32 seiSize;
 }R_GJH264Packet;
 typedef struct AACPacket{
     GJRetainBuffer retain;
-    int64_t pts;
-    uint8_t* adts;
-    int adtsSize;
-    uint8_t* aac;
-    int aacSize;
+    GInt64 pts;
+    GUInt8* adts;
+    GInt32 adtsSize;
+    GUInt8* aac;
+    GInt32 aacSize;
 }R_GJAACPacket;
 
 typedef enum _GJMediaType{
@@ -55,5 +55,5 @@ typedef struct _GJStreamPacket{
     }packet;
 }GJStreamPacket;
 
-bool R_RetainBufferRelease(GJRetainBuffer* buffer);
+GBool R_RetainBufferRelease(GJRetainBuffer* buffer);
 #endif /* GJLiveDefine_internal_h */

@@ -27,7 +27,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdint.h>
-
+#include "GJPlatformHeader.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -49,25 +49,25 @@ typedef enum
 
 extern GJ_LogLevel GJ_debuglevel;
 
-typedef void (GJ_LogCallback)(int level, const char *fmt, va_list);
+typedef GVoid (GJ_LogCallback)(GInt32 level, const char *fmt, va_list);
 
 //小于GJ_debuglevel则显示
-void GJ_LogSetLevel(GJ_LogLevel lvl);
+GVoid GJ_LogSetLevel(GJ_LogLevel lvl);
     
     
     
     
-void GJ_LogSetCallback(GJ_LogCallback *cb);
-void GJ_LogSetOutput(FILE *file);
+GVoid GJ_LogSetCallback(GJ_LogCallback *cb);
+GVoid GJ_LogSetOutput(FILE *file);
     
-void GJ_Log(int level, const char *format, ...);
-void GJ_LogHex(int level, const uint8_t *data, unsigned long len);
-void GJ_LogHexString(int level, const uint8_t *data, unsigned long len);
+GVoid GJ_Log(GInt32 level, const char *format, ...);
+GVoid GJ_LogHex(GInt32 level, const GUInt8 *data, GUInt32 len);
+GVoid GJ_LogHexString(GInt32 level, const GUInt8 *data, GUInt32 len);
 
 //所有等级都会打印，但是大于GJ_LOGDEBUG模式会产生中断
-void GJ_LogAssert(int isTrue,const char *format, ...);
+GVoid GJ_LogAssert(GInt32 isTrue,const char *format, ...);
 
-GJ_LogLevel GJ_LogGetLevel(void);
+GJ_LogLevel GJ_LogGetLevel(GVoid);
     
     
     

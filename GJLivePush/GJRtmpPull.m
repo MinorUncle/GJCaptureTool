@@ -19,22 +19,22 @@
 
 
 
-void GJRtmpPull_Delloc(GJRtmpPull* pull);
+GVoid GJRtmpPull_Delloc(GJRtmpPull* pull);
 
-bool packetBufferRelease(GJRetainBuffer* buffer){
+GBool packetBufferRelease(GJRetainBuffer* buffer){
     if (buffer->data) {
         free(buffer->data);
     }
-    GJBufferPoolSetData(defauleBufferPool(), (uint8_t*)buffer);
-    return true;
+    GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer);
+    return GTrue;
 }
 
-static void* pullRunloop(void* parm){
+static GHandle pullRunloop(GHandle parm){
     pthread_setname_np("rtmpPullLoop");
     GJRtmpPull* pull = (GJRtmpPull*)parm;
     GJRTMPPullMessageType errType = GJRTMPPullMessageType_connectError;
-    void* errParm = NULL;
-    int ret = RTMP_SetupURL(pull->rtmp, pull->pullUrl);
+    GHandle errParm = NULL;
+    GInt32 ret = RTMP_SetupURL(pull->rtmp, pull->pullUrl);
     if (!ret && pull->messageCallback) {
         errType = GJRTMPPullMessageType_urlPraseError;
         goto ERROR;
@@ -58,8 +58,8 @@ static void* pullRunloop(void* parm){
     while(!pull->stopRequest){
         RTMPPacket packet = {0};
         while (RTMP_ReadPacket(pull->rtmp, &packet)) {
-            uint8_t *sps = NULL,*pps = NULL,*pp = NULL,*sei = NULL;
-            int spsSize = 0,ppsSize = 0,ppSize = 0,seiSize=0;
+            GUInt8 *sps = NULL,*pps = NULL,*pp = NULL,*sei = NULL;
+            GInt32 spsSize = 0,ppsSize = 0,ppSize = 0,seiSize=0;
             GJStreamPacket streamPacket;
             if (!RTMPPacket_IsReady(&packet) || !packet.m_nBodySize)
             {
@@ -73,7 +73,7 @@ static void* pullRunloop(void* parm){
                 pull->audioPullInfo.pts = packet.m_nTimeStamp;
                 pull->audioPullInfo.count++;
                 pull->audioPullInfo.byte += packet.m_nBodySize;
-                uint8_t* body = (uint8_t*)packet.m_body;
+                GUInt8* body = (GUInt8*)packet.m_body;
                 
                 R_GJAACPacket* aacPacket = (R_GJAACPacket*)                GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJAACPacket));
                 memset(aacPacket, 0, sizeof(R_GJAACPacket));
@@ -85,7 +85,7 @@ static void* pullRunloop(void* parm){
                 aacPacket->adts = body+2;
                 aacPacket->adtsSize = 7;
                 aacPacket->aac = aacPacket->adts+7;
-                aacPacket->aacSize = (int)(body+packet.m_nBodySize-aacPacket->aac);
+                aacPacket->aacSize = (GInt32)(body+packet.m_nBodySize-aacPacket->aac);
                 streamPacket.packet.aacPacket = aacPacket;
                 packet.m_body=NULL;
                 pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
@@ -95,9 +95,9 @@ static void* pullRunloop(void* parm){
                 streamPacket.type = GJVideoType;
 
 
-                uint8_t *body = (uint8_t*)packet.m_body;
-                uint8_t *pbody = body;
-                int isKey = 0;
+                GUInt8 *body = (GUInt8*)packet.m_body;
+                GUInt8 *pbody = body;
+                GInt32 isKey = 0;
                 if ((pbody[0] & 0x0F) == 7) {
                     if (pbody[1] == 0) {//sps pps
                         spsSize += pbody[11]<<8;
@@ -114,8 +114,8 @@ static void* pullRunloop(void* parm){
                         }
                     }
                     if (pbody[1] == 1) {//naul
-                        find_pp_sps_pps(&isKey, pbody+8,(int)(body+packet.m_nBodySize- pbody-8), &pp, NULL, NULL, NULL, NULL, &sei, &seiSize);
-                        ppSize = (int)(body+packet.m_nBodySize-pp);
+                        find_pp_sps_pps(&isKey, pbody+8,(GInt32)(body+packet.m_nBodySize- pbody-8), &pp, NULL, NULL, NULL, NULL, &sei, &seiSize);
+                        ppSize = (GInt32)(body+packet.m_nBodySize-pp);
                     }else{
                         GJAssert(0,"h264 stream no naul\n");
                     }
@@ -165,11 +165,11 @@ ERROR:
     RTMP_Close(pull->rtmp);
     pull->messageCallback(pull, errType,pull->messageCallbackParm,errParm);
     
-    bool shouldDelloc = false;
+    GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
     pull->pullThread = NULL;
-    if (pull->releaseRequest == true) {
-        shouldDelloc = true;
+    if (pull->releaseRequest == GTrue) {
+        shouldDelloc = GTrue;
     }
     pthread_mutex_unlock(&pull->mutex);
     if (shouldDelloc) {
@@ -178,7 +178,7 @@ ERROR:
     GJLOG(GJ_LOGDEBUG, "pullRunloop end");
     return NULL;
 }
-void GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,void* rtmpPullParm){
+GVoid GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,GHandle rtmpPullParm){
     GJRtmpPull* pull = NULL;
     if (*pullP == NULL) {
         pull = (GJRtmpPull*)malloc(sizeof(GJRtmpPull));
@@ -191,13 +191,13 @@ void GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,void* rtm
     
     pull->messageCallback = callback;
     pull->messageCallbackParm = rtmpPullParm;
-    pull->stopRequest = false;
+    pull->stopRequest = GFalse;
     pthread_mutex_init(&pull->mutex, NULL);
 
     *pullP = pull;
 }
 
-void GJRtmpPull_Delloc(GJRtmpPull* pull){
+GVoid GJRtmpPull_Delloc(GJRtmpPull* pull){
     if (pull) {
         RTMP_Free(pull->rtmp);
         free(pull);
@@ -206,19 +206,19 @@ void GJRtmpPull_Delloc(GJRtmpPull* pull){
         GJLOG(GJ_LOGWARNING, "GJRtmpPull_Delloc NULL PULL");
     }
 }
-void GJRtmpPull_Close(GJRtmpPull* pull){
+GVoid GJRtmpPull_Close(GJRtmpPull* pull){
     GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Close");
 
-    pull->stopRequest = true;
+    pull->stopRequest = GTrue;
 }
-void GJRtmpPull_Release(GJRtmpPull* pull){
+GVoid GJRtmpPull_Release(GJRtmpPull* pull){
     GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Release");
 
-    bool shouldDelloc = false;
+    GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
-    pull->releaseRequest = true;
+    pull->releaseRequest = GTrue;
     if (pull->pullThread == NULL) {
-        shouldDelloc = true;
+        shouldDelloc = GTrue;
     }
     pthread_mutex_unlock(&pull->mutex);
     if (shouldDelloc) {
@@ -227,7 +227,7 @@ void GJRtmpPull_Release(GJRtmpPull* pull){
 }
 
 
-void GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,void* callbackParm,const char* pullUrl){
+GVoid GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHandle callbackParm,const GChar* pullUrl){
     GJLOG(GJ_LOGDEBUG, "GJRtmpPull_StartConnect");
 
     if (pull->pullThread != NULL) {
@@ -237,7 +237,7 @@ void GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,void
     size_t length = strlen(pullUrl);
     GJAssert(length <= MAX_URL_LENGTH-1, "sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
     memcpy(pull->pullUrl, pullUrl, length+1);
-    pull->stopRequest = false;
+    pull->stopRequest = GFalse;
     pull->dataCallback = dataCallback;
     pull->dataCallbackParm = callbackParm;
     pthread_create(&pull->pullThread, NULL, pullRunloop, pull);

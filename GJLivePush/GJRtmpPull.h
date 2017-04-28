@@ -30,8 +30,8 @@ typedef enum _GJRTMPPullMessageType{
 
 struct _GJRtmpPull;
 
-typedef void(*PullMessageCallback)(struct _GJRtmpPull* rtmpPull, GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm);
-typedef void(*PullDataCallback)(struct _GJRtmpPull* rtmpPull,GJStreamPacket packet,void* rtmpPullParm);
+typedef GVoid(*PullMessageCallback)(struct _GJRtmpPull* rtmpPull, GJRTMPPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm);
+typedef GVoid(*PullDataCallback)(struct _GJRtmpPull* rtmpPull,GJStreamPacket packet,GHandle rtmpPullParm);
 
 
 
@@ -53,8 +53,8 @@ typedef struct _GJRtmpPull{
 //    int                     pullByte;
     PullMessageCallback     messageCallback;
     PullDataCallback        dataCallback;
-    void*                   messageCallbackParm;
-    void*                   dataCallbackParm;
+    GHandle                   messageCallbackParm;
+    GHandle                   dataCallbackParm;
 
     int                     stopRequest;
     int                     releaseRequest;
@@ -62,11 +62,11 @@ typedef struct _GJRtmpPull{
 }GJRtmpPull;
 
 //所有不阻塞
-void GJRtmpPull_Create(GJRtmpPull** pull,PullMessageCallback callback,void* rtmpPullParm);
-void GJRtmpPull_Close(GJRtmpPull* pull);
-void GJRtmpPull_Release(GJRtmpPull* pull);
+GVoid GJRtmpPull_Create(GJRtmpPull** pull,PullMessageCallback callback,GHandle rtmpPullParm);
+GVoid GJRtmpPull_Close(GJRtmpPull* pull);
+GVoid GJRtmpPull_Release(GJRtmpPull* pull);
 
-void GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,void* callbackParm,const char* pullUrl);
+GVoid GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHandle callbackParm,const GChar* pullUrl);
 GJTrafficUnit GJRtmpPull_GetVideoPullInfo(GJRtmpPull* pull);
 GJTrafficUnit GJRtmpPull_GetAudioPullInfo(GJRtmpPull* pull);
 

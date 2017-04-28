@@ -348,8 +348,8 @@ ERROR:
 
         pthread_mutex_lock(&_playControl.oLock);
         [_audioPlayer stop:false];
-        long vlength = queueGetLength(_playControl.imageQueue);
-        long alength = queueGetLength(_playControl.audioQueue);
+        GInt32 vlength = queueGetLength(_playControl.imageQueue);
+        GInt32 alength = queueGetLength(_playControl.audioQueue);
         
         if (vlength > 0) {
             GJImageBuffer** imageBuffer = (GJImageBuffer**)malloc(vlength*sizeof(GJImageBuffer*));
@@ -562,7 +562,7 @@ ERROR:
     GJLOG(GJ_LOGALL, "收到音频 PTS:%lld",pts);
     if (pts < _syncControl.videoInfo.trafficStatus.enter.pts) {
         pthread_mutex_lock(&_playControl.oLock);
-        long length = queueGetLength(_playControl.imageQueue);
+        GInt32 length = queueGetLength(_playControl.imageQueue);
         GJLOG(GJ_LOGWARNING, "视频pts不递增，抛弃之前的视频帧：%ld帧",length);
         GJImageBuffer** imageBuffer = (GJImageBuffer**)malloc(length*sizeof(GJImageBuffer*));
         queueBroadcastPop(_playControl.imageQueue);//other lock

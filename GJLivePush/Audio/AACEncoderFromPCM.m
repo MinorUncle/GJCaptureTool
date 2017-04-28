@@ -59,8 +59,7 @@
 }
 //编码输入
 static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData,AudioStreamPacketDescription **outDataPacketDescription, void *inUserData)
-{ //<span style="font-family: Arial, Helvetica, sans-serif;">AudioConverterFillComplexBuffer 编码过程中，会要求这个函数来填充输入数据，也就是原始PCM数据</span>
-
+{
     AACEncoderFromPCM* encoder = (__bridge AACEncoderFromPCM*)inUserData;
     
     if (encoder->_preBlockBuffer) {
@@ -107,7 +106,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     OSStatus status = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sampleBuffer, nil, &inBufferList, sizeof(inBufferList), NULL, NULL, 0, &blockBuffer);
     assert(!status);
     if (status != noErr) {
-        NSLog(@"CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer error:%d",status);
+        NSLog(@"CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer error:%d",(int)status);
         return;
     }
     assert(inBufferList.mBuffers[0].mDataByteSize <= MAX_PCM_LENTH);

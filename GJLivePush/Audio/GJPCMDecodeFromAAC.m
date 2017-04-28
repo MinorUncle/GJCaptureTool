@@ -95,7 +95,7 @@
 }
 -(void)stop{
     _running = NO;
-    long length = queueGetLength(_resumeQueue);
+    GInt32 length = queueGetLength(_resumeQueue);
     queueBroadcastPop(_resumeQueue);
     if (length>0) {
         R_GJAACPacket** packet = (R_GJAACPacket**)malloc(sizeof(R_GJAACPacket*)*length);
@@ -274,6 +274,9 @@ static const int mpeg4audio_sample_rates[16] = {
     if (_bufferPool) {
         GJRetainBufferPoolClean(_bufferPool, true);
         GJRetainBufferPoolFree(&_bufferPool);
+    }
+    if (_resumeQueue) {
+        queueFree(&(_resumeQueue));
     }
     GJLOG(GJ_LOGDEBUG, "gjpcmdecodeformaac delloc");
 }

@@ -10,6 +10,7 @@
 #define GJQueue_h
 #include <pthread.h>
 #include <stdio.h>
+#include "GJPlatformHeader.h"
 
 
 /* exploit C++ ability of default values for function parameters */
@@ -22,11 +23,6 @@
 #endif
 #endif
 
-#ifndef bool
-#   define bool unsigned int
-#   define true 1
-#   define false 0
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,25 +32,25 @@ extern "C" {
     
     
 typedef struct _GJData{
-    void* data;
-    unsigned int size;
+    GVoid* data;
+    GUInt32 size;
 }GJData;
 
 typedef struct _GJQueue{
-    unsigned long inPointer;  //尾
-    unsigned long outPointer; //头
-    unsigned int capacity;
-    unsigned int allocSize;
-    unsigned int minCacheSize;
-    void** queue;
-    bool pushEnable;
-    bool popEnable;
+    GUInt32 inPointer;  //尾
+    GUInt32 outPointer; //头
+    GUInt32 capacity;
+    GUInt32 allocSize;
+    GUInt32 minCacheSize;
+    GVoid** queue;
+    GBool pushEnable;
+    GBool popEnable;
     pthread_cond_t inCond;
     pthread_cond_t outCond;
     pthread_mutex_t pushLock;
     pthread_mutex_t popLock;
-    bool autoResize;//是否支持自动增长，当为YES时，push永远不会等待，只会重新申请内存,默认为false
-    bool atomic;//是否多线程；,false时不会等待
+    GBool autoResize;//是否支持自动增长，当为YES时，push永远不会等待，只会重新申请内存,默认为GFalse
+    GBool atomic;//是否多线程；,GFalse时不会等待
 }GJQueue;
 
 //大于0为真，<= 0 为假
@@ -67,8 +63,8 @@ typedef struct _GJQueue{
  @param atomic 是否支持多线程
  @return return value description
  */
-bool queueCreate(GJQueue** outQ,unsigned int capacity,bool atomic QUEUE_DEFAULT(true),bool autoResize QUEUE_DEFAULT(false));
-bool queueFree(GJQueue** inQ);
+GBool queueCreate(GJQueue** outQ,GUInt32 capacity,GBool atomic QUEUE_DEFAULT(GTrue),GBool autoResize QUEUE_DEFAULT(GFalse));
+GBool queueFree(GJQueue** inQ);
 
 /**
  清空queue，同时释放所有pop和push，当outbuffer不为空时赋值给outbuffer.但是inoutCount小于剩余的大小则失败
@@ -78,18 +74,18 @@ bool queueFree(GJQueue** inQ);
  @param inoutCount inoutCount 返回实际pop的数据
  @return return value description
  */
-bool queueClean(GJQueue*q, void** outBuffer QUEUE_DEFAULT(NULL),long* inoutCount QUEUE_DEFAULT(0));
-bool queuePop(GJQueue* q,void** temBuffer,unsigned int ms QUEUE_DEFAULT(500));
-bool queuePush(GJQueue* q,void* temBuffer,unsigned int ms QUEUE_DEFAULT(500));
-long queueGetLength(GJQueue* q);
+GBool queueClean(GJQueue*q, GVoid** outBuffer QUEUE_DEFAULT(NULL),GInt32* inoutCount QUEUE_DEFAULT(0));
+GBool queuePop(GJQueue* q,GVoid** temBuffer,GUInt32 ms QUEUE_DEFAULT(500));
+GBool queuePush(GJQueue* q,GVoid* temBuffer,GUInt32 ms QUEUE_DEFAULT(500));
+GInt32 queueGetLength(GJQueue* q);
 
-//enable为false时，push和pop后无论什么情况不阻塞，直接返回失败.但是原来等待的继续等待。
-void queueEnablePop(GJQueue* q,bool enable);
-void queueEnablePush(GJQueue* q,bool enable);
+//enable为GFalse时，push和pop后无论什么情况不阻塞，直接返回失败.但是原来等待的继续等待。
+GVoid queueEnablePop(GJQueue* q,GBool enable);
+GVoid queueEnablePush(GJQueue* q,GBool enable);
     
 //小于该大小不能出栈。可用于缓冲
-void queueSetMinCacheSize(GJQueue* q,unsigned int cacheSize);
-unsigned int queueGetMinCacheSize(GJQueue* q);
+GVoid queueSetMinCacheSize(GJQueue* q,GUInt32 cacheSize);
+GUInt32 queueGetMinCacheSize(GJQueue* q);
 
     
 /**
@@ -100,7 +96,7 @@ unsigned int queueGetMinCacheSize(GJQueue* q);
  @param value value description
  @return return value description
  */
-bool queuePeekValue(GJQueue* q,const long index,void** value);
+GBool queuePeekValue(GJQueue* q,const GInt32 index,GVoid** value);
 
     
 /**
@@ -112,17 +108,17 @@ bool queuePeekValue(GJQueue* q,const long index,void** value);
  @param ms ms description
  @return return value description
  */
-bool queuePeekWaitValue(GJQueue* q,const long index,void** value,unsigned int ms QUEUE_DEFAULT(500));
+GBool queuePeekWaitValue(GJQueue* q,const GInt32 index,GVoid** value,GUInt32 ms QUEUE_DEFAULT(500));
 
 
-bool queueUnLockPop(GJQueue* q);
-bool queueLockPush(GJQueue* q);
-bool queueUnLockPush(GJQueue* q);
-bool queueLockPop(GJQueue* q);
-bool queueBroadcastPop(GJQueue* queue);
-bool queueBroadcastPush(GJQueue* queue);
-bool queueWaitPush(GJQueue* queue,unsigned int ms);
-bool queueWaitPop(GJQueue* queue,unsigned int ms);
+GBool queueUnLockPop(GJQueue* q);
+GBool queueLockPush(GJQueue* q);
+GBool queueUnLockPush(GJQueue* q);
+GBool queueLockPop(GJQueue* q);
+GBool queueBroadcastPop(GJQueue* queue);
+GBool queueBroadcastPush(GJQueue* queue);
+GBool queueWaitPush(GJQueue* queue,GUInt32 ms);
+GBool queueWaitPop(GJQueue* queue,GUInt32 ms);
 #ifdef __cplusplus
 }
 #endif

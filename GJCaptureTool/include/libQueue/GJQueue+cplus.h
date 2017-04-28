@@ -14,6 +14,8 @@
 #include <pthread.h>
 #include <assert.h>
 #include <sys/time.h>
+#include "GJPlatformHeader.h"
+
 #ifdef DEBUG
 #define GJQueueLOG(format, ...) printf(format,##__VA_ARGS__)
 #else
@@ -29,26 +31,26 @@ template <class T> class GJQueue{
     
 private:
     T *buffer;
-    long _inPointer;  //尾
-    long _outPointer; //头
-    int _capacity;
-    int _allocSize;
+    GInt32 _inPointer;  //尾
+    GInt32 _outPointer; //头
+    GInt32 _capacity;
+    GInt32 _allocSize;
     
     pthread_cond_t _inCond;
     pthread_cond_t _outCond;
     pthread_mutex_t _pushLock;
     pthread_mutex_t _popLock;
     
-    bool _mutexInit();
-    bool _mutexDestory();
-    bool _condWait(pthread_cond_t* _cond,pthread_mutex_t* mutex,int ms = DEFAULT_TIME);
-    bool _condSignal(pthread_cond_t* _cond);
-    bool _condBroadcast(pthread_cond_t* _cond);
+    GBool _mutexInit();
+    GBool _mutexDestory();
+    GBool _condWait(pthread_cond_t* _cond,pthread_mutex_t* mutex,GInt32 ms = DEFAULT_TIME);
+    GBool _condSignal(pthread_cond_t* _cond);
+    GBool _condBroadcast(pthread_cond_t* _cond);
     
-    bool _lock(pthread_mutex_t* mutex);
-    bool _unLock(pthread_mutex_t* mutex);
-    void _init();
-    void _resize();
+    GBool _lock(pthread_mutex_t* mutex);
+    GBool _unLock(pthread_mutex_t* mutex);
+    GVoid _init();
+    GVoid _resize();
 public:
     ~GJQueue(){
         _mutexDestory();
@@ -57,25 +59,25 @@ public:
     
 #pragma mark DELEGATE
     //没有数据时是否支持等待，当为autoResize 为YES时，push永远不会等待
-    bool autoResize;//是否支持自动增长，当为YES时，push永远不会等待，只会重新申请内存,默认为false
+    GBool autoResize;//是否支持自动增长，当为YES时，push永远不会等待，只会重新申请内存,默认为GFalse
     
     
-    bool queuePop(T* temBuffer,int ms=DEFAULT_TIME);
-    bool queuePush(T temBuffer,int ms=DEFAULT_TIME);
-    int currentLenth();
+    GBool queuePop(T* temBuffer,GInt32 ms=DEFAULT_TIME);
+    GBool queuePush(T temBuffer,GInt32 ms=DEFAULT_TIME);
+    GInt32 currentLenth();
     
     //根据index获得vause,当超过_inPointer和_outPointer范围则失败，用于遍历数组，不会产生压出队列作用
-    bool peekValueWithIndex(const long index,T* value);
-    GJQueue(int capacity);
+    GBool peekValueWithIndex(const GInt32 index,T* value);
+    GJQueue(GInt32 capacity);
     GJQueue();
-    void clean();
+    GVoid clean();
     
 };
 
 template<class T>
-int GJQueue<T>::currentLenth(){
+GInt32 GJQueue<T>::currentLenth(){
     
-    return (int)(_outPointer - _inPointer);
+    return (GInt32)(_outPointer - _inPointer);
 }
 template<class T>
 GJQueue<T>::GJQueue()
@@ -84,7 +86,7 @@ GJQueue<T>::GJQueue()
     _init();
 }
 template<class T>
-GJQueue<T>::GJQueue(int capacity)
+GJQueue<T>::GJQueue(GInt32 capacity)
 {
     _capacity = capacity;
     if (capacity <=0) {
@@ -94,23 +96,23 @@ GJQueue<T>::GJQueue(int capacity)
 };
 
 template<class T>
-void GJQueue<T>::_init()
+GVoid GJQueue<T>::_init()
 {
     buffer = (T*)malloc(sizeof(T)*_capacity);
     _allocSize = _capacity;
-    autoResize = true;
+    autoResize = GTrue;
     _inPointer = 0;
     _outPointer = 0;
     _mutexInit();
 }
 template<class T>
-bool GJQueue<T>::peekValueWithIndex(const long index,T* value){
+GBool GJQueue<T>::peekValueWithIndex(const GInt32 index,T* value){
     if (index < _outPointer || index >= _inPointer) {
-        return false;
+        return GFalse;
     }
-    long current = index%_allocSize;
+    GInt32 current = index%_allocSize;
     *value = buffer[current];
-    return true;
+    return GTrue;
 }
 /**
  *  深拷贝
@@ -120,30 +122,30 @@ bool GJQueue<T>::peekValueWithIndex(const long index,T* value){
  *  @return 结果
  */
 template<class T>
-bool GJQueue<T>::queuePop(T* temBuffer,int ms){
+GBool GJQueue<T>::queuePop(T* temBuffer,GInt32 ms){
     _lock(&_popLock);
     if (_inPointer <= _outPointer) {
         GJQueueLOG("begin Wait in ----------\n");
         if (!_condWait(&_outCond,&_popLock,ms)) {
             GJQueueLOG("fail Wait in ----------\n");
             _unLock(&_popLock);
-            return false;
+            return GFalse;
         }
-        GJQueueLOG("after Wait in.  incount:%ld  outcount:%ld----------\n",_inPointer,_outPointer);
+        GJQueueLOG("after Wait in.  incount:%d  outcount:%d----------\n",_inPointer,_outPointer);
     }
-    int index = _outPointer%_allocSize;
+    GInt32 index = _outPointer%_allocSize;
     *temBuffer = buffer[index];
     memset(&buffer[index], 0, sizeof(T));//防止在oc里的引用一直不释放；
     
     _outPointer++;
     _condSignal(&_inCond);
-    GJQueueLOG("after signal out.  incount:%ld  outcount:%ld----------\n",_inPointer,_outPointer);
+    GJQueueLOG("after signal out.  incount:%d  outcount:%d----------\n",_inPointer,_outPointer);
     _unLock(&_popLock);
 //    assert(*temBuffer);
-    return true;
+    return GTrue;
 }
 template<class T>
-bool GJQueue<T>::queuePush(T temBuffer,int ms){
+GBool GJQueue<T>::queuePush(T temBuffer,GInt32 ms){
     _lock(&_pushLock);
     if ((_inPointer % _allocSize == _outPointer % _allocSize && _inPointer > _outPointer)) {
         if (autoResize) {
@@ -154,23 +156,23 @@ bool GJQueue<T>::queuePush(T temBuffer,int ms){
             if (!_condWait(&_inCond,&_pushLock,ms)) {
                 GJQueueLOG("fail begin Wait out ----------\n");
                 _unLock(&_pushLock);
-                return false;
+                return GFalse;
             }
-            GJQueueLOG("after Wait out.  incount:%ld  outcount:%ld----------\n",_inPointer,_outPointer);
+            GJQueueLOG("after Wait out.  incount:%d  outcount:%d----------\n",_inPointer,_outPointer);
         }
     }
     buffer[_inPointer%_allocSize] = temBuffer;
     _inPointer++;
     _condSignal(&_outCond);
-    GJQueueLOG("after signal in. incount:%ld  outcount:%ld----------\n",_inPointer,_outPointer);
+    GJQueueLOG("after signal in. incount:%d  outcount:%d----------\n",_inPointer,_outPointer);
     _unLock(&_pushLock);
 //    assert(temBuffer);
 
-    return true;
+    return GTrue;
 }
 
 template<class T>
-void GJQueue<T>::clean(){
+GVoid GJQueue<T>::clean(){
     _lock(&_popLock);
     _condBroadcast(&_inCond);//确保可以锁住下一个
     _lock(&_pushLock);
@@ -184,7 +186,7 @@ void GJQueue<T>::clean(){
 }
 
 template<class T>
-bool GJQueue<T>::_mutexInit()
+GBool GJQueue<T>::_mutexInit()
 {
 
     
@@ -195,11 +197,11 @@ bool GJQueue<T>::_mutexInit()
     pthread_mutex_init(&_popLock, NULL);
     pthread_mutex_init(&_pushLock, NULL);
 
-    return true;
+    return GTrue;
 }
 
 template<class T>
-bool GJQueue<T>::_mutexDestory()
+GBool GJQueue<T>::_mutexDestory()
 {
 
     pthread_cond_destroy(&_inCond);
@@ -207,10 +209,10 @@ bool GJQueue<T>::_mutexDestory()
     pthread_mutex_destroy(&_popLock);
     pthread_mutex_destroy(&_pushLock);
 
-    return true;
+    return GTrue;
 }
 template<class T>
-bool GJQueue<T>::_condWait(pthread_cond_t* _cond,pthread_mutex_t* mutex,int ms)
+GBool GJQueue<T>::_condWait(pthread_cond_t* _cond,pthread_mutex_t* mutex,GInt32 ms)
 {
 
     struct timespec ts;
@@ -220,41 +222,41 @@ bool GJQueue<T>::_condWait(pthread_cond_t* _cond,pthread_mutex_t* mutex,int ms)
     ms += tv.tv_usec / 1000;
     ts.tv_sec = tv.tv_sec + ms / 1000;
     ts.tv_nsec = ms % 1000 * 1000000;
-    int ret = pthread_cond_timedwait(_cond, mutex, &ts);
+    GInt32 ret = pthread_cond_timedwait(_cond, mutex, &ts);
     printf("ret:%d,,%d\n",ret,!ret);
     return !ret;
 }
 
 template<class T>
-bool GJQueue<T>::_condSignal(pthread_cond_t* _cond)
+GBool GJQueue<T>::_condSignal(pthread_cond_t* _cond)
 {
    
     return !pthread_cond_signal(_cond);
 }
 
 template<class T>
-bool GJQueue<T>::_condBroadcast(pthread_cond_t* _cond)
+GBool GJQueue<T>::_condBroadcast(pthread_cond_t* _cond)
 {
     
     return !pthread_cond_broadcast(_cond);
 }
 
 template<class T>
-bool GJQueue<T>::_lock(pthread_mutex_t* mutex){
+GBool GJQueue<T>::_lock(pthread_mutex_t* mutex){
 
     return !pthread_mutex_lock(mutex);
 }
 
 template<class T>
-bool GJQueue<T>::_unLock(pthread_mutex_t* mutex){
+GBool GJQueue<T>::_unLock(pthread_mutex_t* mutex){
 
     return !pthread_mutex_unlock(mutex);
 }
 template<class T>
-void GJQueue<T>::_resize(){
+GVoid GJQueue<T>::_resize(){
     
     T* temBuffer = (T*)malloc(sizeof(T)*(_allocSize + (_allocSize/_capacity)*_capacity));
-    for (long i = _outPointer,j =0; i<_inPointer; i++,j++) {
+    for (GInt32 i = _outPointer,j =0; i<_inPointer; i++,j++) {
         temBuffer[j] = buffer[i%_allocSize];
     }
     free(buffer);
