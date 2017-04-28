@@ -215,12 +215,12 @@
     }];
     _fristFrameDate = [NSDate date];
     [_audioRecoder startRecodeAudio];
-    __weak GJLivePush* wkSelf = self;
-    wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
-        CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
-        int pts = [[NSDate date]timeIntervalSinceDate:wkSelf.fristFrameDate]*1000;
-        [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:pts fourceKey:false];
-    };
+//    __weak GJLivePush* wkSelf = self;
+//    wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
+//        CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
+//        int pts = [[NSDate date]timeIntervalSinceDate:wkSelf.fristFrameDate]*1000;
+//        [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:pts fourceKey:false];
+//    };
 }
 
 - (void)stopStreamPush{

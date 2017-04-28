@@ -210,8 +210,13 @@ static const int mpeg4audio_sample_rates[16] = {
     _destMaxOutSize = 0;
     status = AudioConverterGetProperty(_decodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
     _destMaxOutSize *= AAC_FRAME_PER_PACKET;
-    if (_bufferPool) {
-        GJRetainBufferPoolCleanAndFree(&_bufferPool);
+    if (_bufferPool != NULL) {
+        __block GJRetainBufferPool* pool = _bufferPool;
+        _bufferPool = NULL;
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+            GJRetainBufferPoolClean(pool, true);
+            GJRetainBufferPoolFree(&pool);
+        });
     }
     GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true);
     
@@ -265,6 +270,10 @@ static const int mpeg4audio_sample_rates[16] = {
     AudioConverterDispose(_decodeConvert);
     if (_prePacket) {
         retainBufferUnRetain(&_prePacket->retain);
+    }
+    if (_bufferPool) {
+        GJRetainBufferPoolClean(_bufferPool, true);
+        GJRetainBufferPoolFree(&_bufferPool);
     }
     GJLOG(GJ_LOGDEBUG, "gjpcmdecodeformaac delloc");
 }

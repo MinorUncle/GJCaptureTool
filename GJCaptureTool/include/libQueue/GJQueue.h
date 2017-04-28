@@ -68,14 +68,14 @@ typedef struct _GJQueue{
  @return return value description
  */
 bool queueCreate(GJQueue** outQ,unsigned int capacity,bool atomic QUEUE_DEFAULT(true),bool autoResize QUEUE_DEFAULT(false));
-bool queueCleanAndFree(GJQueue** inQ);
+bool queueFree(GJQueue** inQ);
 
 /**
- 清空queue，当outbuffer不为空时赋值给outbuffer.但是inoutCount小于剩余的大小则失败
+ 清空queue，同时释放所有pop和push，当outbuffer不为空时赋值给outbuffer.但是inoutCount小于剩余的大小则失败
 
  @param q q description
  @param outBuffer outBuffer description
- @param inoutCount inoutCount description
+ @param inoutCount inoutCount 返回实际pop的数据
  @return return value description
  */
 bool queueClean(GJQueue*q, void** outBuffer QUEUE_DEFAULT(NULL),long* inoutCount QUEUE_DEFAULT(0));

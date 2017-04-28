@@ -240,7 +240,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
 }
 #pragma -mark =======ADTS=======
-- (void)adtsDataForPacketLength:(NSUInteger)packetLength data:(char*)packet
+- (void)adtsDataForPacketLength:(NSUInteger)packetLength data:(uint8_t*)packet
 {
     /*=======adts=======
      7字节

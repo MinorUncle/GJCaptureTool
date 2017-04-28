@@ -37,21 +37,17 @@ static void* pullRunloop(void* parm){
     int ret = RTMP_SetupURL(pull->rtmp, pull->pullUrl);
     if (!ret && pull->messageCallback) {
         errType = GJRTMPPullMessageType_urlPraseError;
-        pull->messageCallback(pull,GJRTMPPullMessageType_urlPraseError,pull->messageCallbackParm,NULL);
         goto ERROR;
     }
     pull->rtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
     
     ret = RTMP_Connect(pull->rtmp, NULL);
     if (!ret && pull->messageCallback) {
-        RTMP_Close(pull->rtmp);
         errType = GJRTMPPullMessageType_connectError;
         goto ERROR;
     }
     ret = RTMP_ConnectStream(pull->rtmp, 0);
     if (!ret && pull->messageCallback) {
-        RTMP_Close(pull->rtmp);
-        
         errType = GJRTMPPullMessageType_connectError;
         goto ERROR;
     }else{
@@ -166,6 +162,7 @@ static void* pullRunloop(void* parm){
     }
     errType = GJRTMPPullMessageType_closeComplete;
 ERROR:
+    RTMP_Close(pull->rtmp);
     pull->messageCallback(pull, errType,pull->messageCallbackParm,errParm);
     
     bool shouldDelloc = false;

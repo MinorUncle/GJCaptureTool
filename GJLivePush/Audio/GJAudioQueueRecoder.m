@@ -334,9 +334,14 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
     }
 }
 -(void)dealloc{
-    AudioQueueDispose(_mAudioQueue, true);
-    GJBufferPoolClean(_bufferPool);
-    GJBufferPoolDealloc(&_bufferPool);
+    if (_mAudioQueue) {
+        AudioQueueDispose(_mAudioQueue, true);
+    }
+    if (_bufferPool) {
+        GJBufferPoolClean(_bufferPool,true);
+        GJBufferPoolFree(&_bufferPool);
+    }
+
 
 }
 @end

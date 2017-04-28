@@ -148,8 +148,8 @@ RETRY:
         __block GJBufferPool* pool = _bufferPool;
         _bufferPool = NULL;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-            GJBufferPoolClean(pool);
-            GJBufferPoolDealloc(&pool);
+            GJBufferPoolClean(pool,true);
+            GJBufferPoolFree(&pool);
         });
     }
     GJBufferPoolCreate(&_bufferPool,1, true);
@@ -473,8 +473,10 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 -(void)dealloc{
     _stopRequest = YES;
     if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
-    GJBufferPoolClean(_bufferPool);
-    GJBufferPoolDealloc(&_bufferPool);
+    if (_bufferPool) {
+        GJBufferPoolClean(_bufferPool,true);
+        GJBufferPoolFree(&_bufferPool);
+    }
 }
 //-(void)restart{
 //

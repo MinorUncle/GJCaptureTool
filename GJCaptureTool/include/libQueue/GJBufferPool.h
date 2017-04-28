@@ -33,9 +33,15 @@ typedef struct _GJBufferPool{
 bool GJBufferPoolCreate(GJBufferPool** pool,uint minSize,bool atomic);
 //小数据最好多用默认的，大数据最好不要用默认的
 GJBufferPool* defauleBufferPool();
-void GJBufferPoolDealloc(GJBufferPool** pool);
-//可能会产生阻塞等待
-void GJBufferPoolClean(GJBufferPool* p);
+void GJBufferPoolFree(GJBufferPool** pool);
+
+/**
+ 清除内容，当complete为yes时表示彻底清除，可能会产生阻塞等待
+
+ @param p p description
+ @param complete 是否彻底清除
+ */
+void GJBufferPoolClean(GJBufferPool* p,bool complete);
 uint8_t* GJBufferPoolGetData(GJBufferPool* p);
 uint8_t* GJBufferPoolGetSizeData(GJBufferPool* p,int size);
 bool GJBufferPoolSetData(GJBufferPool* p,uint8_t* data);

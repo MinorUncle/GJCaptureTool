@@ -40,6 +40,8 @@
 #define VIDEO_MAX_CACHE_COUNT 300 //缓存空间，不能小于VIDEO_MAX_CACHE_DUR的帧数
 #define AUDIO_MAX_CACHE_COUNT 400
 
+#define FRIST_BUFFER_TIME 200
+
 
 typedef struct _GJImageBuffer{
     CVImageBufferRef image;
@@ -165,6 +167,7 @@ static void* playVideoRunLoop(void* parm){
     cImageBuf = NULL;
     
     GJLOG(GJ_LOGDEBUG, "start play runloop");
+    _syncControl->videoInfo.startTime = getTime() / 1000;
     while ((_playControl->status != kPlayStatusStop)) {
         if (queuePop(_playControl->imageQueue, (void**)&cImageBuf,_playControl->status == kPlayStatusBuffering?INT_MAX:0)) {
             if (_playControl->status == kPlayStatusStop){
@@ -474,10 +477,10 @@ ERROR:
 }
 -(GJTrafficStatus)getAudioCache{
    
-    return _syncControl.videoInfo.trafficStatus;
+    return _syncControl.audioInfo.trafficStatus;
 }
 -(GJTrafficStatus)getVideoCache{
-    return _syncControl.audioInfo.trafficStatus;
+    return _syncControl.videoInfo.trafficStatus;
 }
 #ifdef NETWORK_DELAY
 -(long)getNetWorkDelay{
@@ -576,7 +579,11 @@ ERROR:
         pthread_mutex_unlock(&_playControl.oLock);
     }
     
-    if (_playControl.playVideoThread == NULL && _playControl.status != kPlayStatusStop) {
+    if(_playControl.status == kPlayStatusStop){
+        GJLOG(GJ_LOGWARNING, "播放器stop状态收到视频帧，直接丢帧");
+        return NO;
+    }
+    if (_playControl.playVideoThread == NULL) {
 #ifndef UIIMAGE_SHOW
         if (_imageInput == nil) {
             OSType type = CVPixelBufferGetPixelFormatType(imageData);
@@ -588,10 +595,12 @@ ERROR:
             [_imageInput addTarget:(GPUImageView*)_displayView];
         }
 #endif
-        pthread_create(&_playControl.playVideoThread, NULL, playVideoRunLoop, (__bridge void *)(self));
-        _syncControl.videoInfo.startPts = (long)pts;
-        _syncControl.videoInfo.startTime = getTime() / 1000;
-        _syncControl.videoInfo.trafficStatus.leave.pts = (long)pts;///防止videoInfo.startPts不为从0开始时，videocache过大，
+        if(queueGetLength(_playControl.imageQueue) == 0){
+            _syncControl.videoInfo.startPts = (long)pts;
+            _syncControl.videoInfo.trafficStatus.leave.pts = (long)pts;///防止videoInfo.startPts不为从0开始时，videocache过大，
+        }else if (_syncControl.videoInfo.trafficStatus.enter.pts - _syncControl.videoInfo.trafficStatus.leave.pts > FRIST_BUFFER_TIME){
+            pthread_create(&_playControl.playVideoThread, NULL, playVideoRunLoop, (__bridge void *)(self));
+        }
     }
     
     GJImageBuffer* imageBuffer  = (GJImageBuffer*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJImageBuffer));
@@ -641,6 +650,7 @@ ERROR:
 }
 
 -(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(int64_t)pts{
+    return YES;
 #ifdef GJAUDIOQUEUEPLAY
     if (_audioTestPlayer == nil) {
         if (_audioFormat.mFormatID <=0) {
@@ -672,6 +682,7 @@ ERROR:
     return YES;
 #endif
     GJLOG(GJ_LOGALL, "收到音频 PTS:%lld",pts);
+    BOOL result = YES;
     if (pts < _syncControl.audioInfo.trafficStatus.leave.pts) {
         pthread_mutex_lock(&_playControl.oLock);
         GJLOG(GJ_LOGWARNING, "音频pts不递增，抛弃之前的音频帧：%ld帧",queueGetLength(_playControl.audioQueue));
@@ -689,6 +700,12 @@ ERROR:
 
     }
     
+    
+    if (_playControl.status == kPlayStatusStop) {
+        GJLOG(GJ_LOGWARNING, "播放器stop状态收到视音频，直接丢帧");
+        result =  NO;
+        goto END;
+    }
     if (_syncControl.syncType != kTimeSYNCAudio) {
         GJLOG(GJ_LOGWARNING, "加入音频，切换到音频同步");
         changeSyncType(&_syncControl, kTimeSYNCAudio);
@@ -696,14 +713,25 @@ ERROR:
     }
     
     
-    if (_audioPlayer == nil && _playControl.status != kPlayStatusStop) {
-        if (_audioFormat.mFormatID != kAudioFormatLinearPCM) {
-            GJLOG(GJ_LOGWARNING, "音频格式不支持");
-        }else{
-            _audioPlayer = [[GJAudioQueueDrivePlayer alloc]initWithSampleRate:_audioFormat.mSampleRate channel:_audioFormat.mChannelsPerFrame formatID:_audioFormat.mFormatID];
-            _audioPlayer.delegate = self;
-            [_audioPlayer start];
-            
+    if (_audioPlayer == nil) {
+        
+        if(queueGetLength(_playControl.audioQueue) == 0){
+            _syncControl.audioInfo.startPts = (long)pts;
+            _syncControl.audioInfo.trafficStatus.leave.pts = (long)pts;///防止audioInfo.startPts不为从0开始时，audiocache过大，
+            //防止视频先到，导致时差特别大
+            _syncControl.audioInfo.cPTS = (long)pts;
+            _syncControl.audioInfo.clock = getTime()/1000;
+        }else if (_syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts > FRIST_BUFFER_TIME){
+            if (_audioFormat.mFormatID != kAudioFormatLinearPCM) {
+                GJLOG(GJ_LOGWARNING, "音频格式不支持");
+                result =  NO;
+                goto END;
+            }else{
+                _audioPlayer = [[GJAudioQueueDrivePlayer alloc]initWithSampleRate:_audioFormat.mSampleRate channel:_audioFormat.mChannelsPerFrame formatID:_audioFormat.mFormatID];
+                _audioPlayer.delegate = self;
+                [_audioPlayer start];
+                _syncControl.audioInfo.startTime = getTime()/1000.0;
+            }
         }
     }
     
@@ -734,7 +762,8 @@ ERROR:
                 GJLOG(GJ_LOGERROR,"player audio data push error");
                 retainBufferUnRetain(audioData);
                 GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
-                return NO;
+                result = NO;
+                goto END;
             }else{
                 _syncControl.audioInfo.trafficStatus.enter.pts = (long)audioBuffer->pts;
                 _syncControl.audioInfo.trafficStatus.enter.count++;
@@ -743,15 +772,27 @@ ERROR:
                 _syncControl.networkDelay = date - _syncControl.audioInfo.trafficStatus.enter.pts;
 #endif
                 [self checkBufferingAndWater];
-                return YES;
+                result = YES;
+                goto END;
             }
         }else{
             GJLOG(GJ_LOGERROR,"full player audio queue pop error");
             retainBufferUnRetain(audioData);
             GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
-            return NO;
+            result = NO;
+            goto END;
         }
     }
+    
+END:
+    {
+    GJAudioBuffer* audioBuffer ;
+    if (queuePop(_playControl.audioQueue, (void**)&audioBuffer, 0)) {
+        retainBufferUnRetain(audioData);
+        GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
+    }
+    }
+    return result;
 }
 
 
@@ -781,7 +822,7 @@ ERROR:
 }
 -(void)dealloc{
 
-    queueCleanAndFree(&_playControl.audioQueue);
-    queueCleanAndFree(&_playControl.imageQueue);
+    queueFree(&_playControl.audioQueue);
+    queueFree(&_playControl.imageQueue);
 }
 @end

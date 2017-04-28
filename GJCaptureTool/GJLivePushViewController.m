@@ -262,9 +262,9 @@ static char* url = "rtmp://10.0.1.126/live/room";
                 break;
             }
         }
-        if (pull == NULL) {
-            assert(0);
-        }
+//        if (pull == NULL) {
+//            assert(0);
+//        }
         
         if (btn.selected) {
             [pull startStreamPullWithUrl:url];
@@ -296,7 +296,7 @@ static char* url = "rtmp://10.0.1.126/live/room";
             return show;
         }
     }
-    assert(0);
+    return 0;
 }
 -(void)livePush:(GJLivePush *)livePush errorType:(GJLiveErrorType)type infoDesc:(id)infoDesc{
     switch (type) {
@@ -406,7 +406,7 @@ static char* url = "rtmp://10.0.1.126/live/room";
         _livePush = nil;
         [_pulls removeAllObjects];
         NSLog(@"释放完成");
-        GJBufferPoolClean(defauleBufferPool());
+        GJBufferPoolClean(defauleBufferPool(),false);
     }
 }
 /*
