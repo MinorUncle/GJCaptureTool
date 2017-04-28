@@ -94,6 +94,7 @@
     }
 }
 -(void)stop{
+    GJLOG(GJ_LOGINFO, "AACDecode stop");
     _running = NO;
     GInt32 length = queueGetLength(_resumeQueue);
     queueBroadcastPop(_resumeQueue);
@@ -149,7 +150,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
 -(void)decodePacket:(R_GJAACPacket*)packet{
     retainBufferRetain(&packet->retain);
-    if(!queuePush(_resumeQueue, packet,1000)) {
+    if(!_running || !queuePush(_resumeQueue, packet,0)) {
         retainBufferUnRetain(&packet->retain);
         GJLOG(GJ_LOGWARNING,"aac decode to pcm queuePush faile");
     }

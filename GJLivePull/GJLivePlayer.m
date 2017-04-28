@@ -648,9 +648,13 @@ ERROR:
         }
     }
 }
-
+#ifdef GJAUDIOQUEUEPLAY
+static const int mpeg4audio_sample_rates[16] = {
+    96000, 88200, 64000, 48000, 44100, 32000,
+    24000, 22050, 16000, 12000, 11025, 8000, 7350
+};
+#endif
 -(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(int64_t)pts{
-    return YES;
 #ifdef GJAUDIOQUEUEPLAY
     if (_audioTestPlayer == nil) {
         if (_audioFormat.mFormatID <=0) {
@@ -669,11 +673,7 @@ ERROR:
             _audioFormat.mFramesPerPacket = 1024;
             _audioFormat.mFormatID = kAudioFormatMPEG4AAC;
         }
-        if (_audioFormat.mFormatID == kAudioFormatLinearPCM) {
-            _audioOffset = 0;
-        }else if (_audioFormat.mFormatID == kAudioFormatMPEG4AAC){
-            _audioOffset = 7;
-        }
+
         _audioTestPlayer = [[GJAudioQueuePlayer alloc]initWithSampleRate:_audioFormat.mSampleRate channel:_audioFormat.mChannelsPerFrame formatID:_audioFormat.mFormatID];
         [_audioTestPlayer start];
     }
@@ -750,10 +750,9 @@ ERROR:
         _syncControl.networkDelay = date - _syncControl.audioInfo.trafficStatus.enter.pts;
 #endif
         [self checkBufferingAndWater];
-
-        return YES;
+        result =  YES;
     }else{
-        GJLOG(GJ_LOGWARNING, "audio player queue full,update oldest frame");
+        GJLOG(GJ_LOGWARNING, "audio player queue full,update oldest frame   ，不可能出现的case");
         GJAudioBuffer* oldBuffer = NULL;
         if (queuePop(_playControl.audioQueue, (void**)&oldBuffer, 0)) {
             retainBufferUnRetain(oldBuffer->audioData);
@@ -785,13 +784,13 @@ ERROR:
     }
     
 END:
-    {
-    GJAudioBuffer* audioBuffer ;
-    if (queuePop(_playControl.audioQueue, (void**)&audioBuffer, 0)) {
-        retainBufferUnRetain(audioData);
-        GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
-    }
-    }
+//    {
+//    GJAudioBuffer* audioBuffer ;
+//    if (queuePop(_playControl.audioQueue, (void**)&audioBuffer, 0)) {
+//        retainBufferUnRetain(audioData);
+//        GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
+//    }
+//    }
     return result;
 }
 
@@ -806,7 +805,7 @@ END:
         _syncControl.audioInfo.trafficStatus.leave.count++;
         _syncControl.audioInfo.cPTS = (long)audioBuffer->pts;
         _syncControl.audioInfo.clock = getTime()/1000;
-        GJLOG(GJ_LOGALL,"audio play pts:%d size:%d",_syncControl.audioInfo.cPTS,*size);
+        GJLOG(GJ_LOGDEBUG,"audio play pts:%d size:%d",_syncControl.audioInfo.cPTS,*size);
         retainBufferUnRetain(audioBuffer->audioData);
         GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
         return YES;
@@ -821,7 +820,7 @@ END:
     }
 }
 -(void)dealloc{
-
+    GJLOG(GJ_LOGDEBUG, "GJPlivePlayer dealloc");
     queueFree(&_playControl.audioQueue);
     queueFree(&_playControl.imageQueue);
 }
