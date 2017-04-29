@@ -152,7 +152,7 @@ static void handleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuffer
 
 //        static int count ;
 //        NSLog(@"send num:%d:%@",count++,[NSData dataWithBytes:buffer->data+7 length:buffer->size-7]);
-//        NSLog(@"audio size:%d",inBuffer->mAudioDataByteSize);
+        NSLog(@"recode audio size:%d",inBuffer->mAudioDataByteSize);
         [tempSelf.delegate GJAudioQueueRecoder:tempSelf streamPacket:packet];
         retainBufferUnRetain(retainBuffer);
         AudioQueueEnqueueBuffer (tempSelf.mAudioQueue,inBuffer,0,NULL);

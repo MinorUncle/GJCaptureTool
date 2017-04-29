@@ -266,6 +266,10 @@ static const int MCAudioQueueBufferCount = 3;
 
         return NO;
     }
+    GJRetainBuffer* buffer = NULL;
+    while (queuePop(_reusableQueue, (void*)&buffer, 0)) {
+        retainBufferUnRetain(buffer);
+    }
     return YES;
 }
 
@@ -341,7 +345,8 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
          memcpy(inBuffer->mAudioData, bufferData->data, bufferData->size);
         inBuffer->mAudioDataByteSize = bufferData->size;
         retainBufferUnRetain(bufferData);
-        
+        NSLog(@"AudioQueueEnqueueBuffer SIZE:%D",(int)inBuffer->mAudioDataByteSize);
+
     }else{
         if (player.status != kPlayARunningStatus) {
             AudioQueueFreeBuffer(inAQ, inBuffer);

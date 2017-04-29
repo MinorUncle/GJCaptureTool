@@ -99,24 +99,17 @@
     GInt32 length = queueGetLength(_resumeQueue);
     queueBroadcastPop(_resumeQueue);
     if (length>0) {
-        R_GJAACPacket** packet = (R_GJAACPacket**)malloc(sizeof(R_GJAACPacket*)*length);
-        if (queueClean(_resumeQueue,(void**)packet,&length)) {
-            for (int i = 0 ; i<length; i++) {
-                retainBufferUnRetain(&packet[i]->retain);
-            }
-        }else{
-            GJLOG(GJ_LOGERROR, "queueClean error");
+        
+        R_GJAACPacket* packet = NULL;
+        while (queuePop(_resumeQueue, (GVoid**)&packet, 0)) {
+            retainBufferUnRetain(&packet->retain);
         }
-        free(packet);
-
     }
 }
 //编码输入
 static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData,AudioStreamPacketDescription **outDataPacketDescription, void *inUserData)
 {
-   
     GJPCMDecodeFromAAC* decode =(__bridge GJPCMDecodeFromAAC*)inUserData;
-    
     if (decode->_prePacket) {
         retainBufferUnRetain(&decode->_prePacket->retain);
         decode->_prePacket = NULL;
@@ -184,6 +177,7 @@ static const int mpeg4audio_sample_rates[16] = {
             _sourceFormat.mSampleRate = sampleRate;
             _sourceFormat.mFramesPerPacket = 1024;
         }else{
+            GJLOG(GJ_LOGERROR,"aac decode queuePeekWaitValue faile");
             return false;
         }
     }
@@ -202,11 +196,10 @@ static const int mpeg4audio_sample_rates[16] = {
     UInt32 size = sizeof(AudioStreamBasicDescription);
     AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormat);
     AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_sourceFormat);
-    
-
     OSStatus status = AudioConverterNew(&_sourceFormat, &_destFormat, &_decodeConvert);
     if (status != noErr) {
         GJLOG(GJ_LOGERROR, "AudioConverterNew error:%d",status);
+        return NO;
     }
     _destMaxOutSize = 0;
     status = AudioConverterGetProperty(_decodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
@@ -234,10 +227,11 @@ static const int mpeg4audio_sample_rates[16] = {
 
 
 -(void)_converterStart{
+    GJLOG(GJ_LOGDEBUG, "_converterStart");
+
     _isRunning = YES;
     AudioStreamPacketDescription packetDesc;
     AudioBufferList outCacheBufferList;
-    UInt32 numPackets = AAC_FRAME_PER_PACKET;
     while (_isRunning) {
         memset(&packetDesc, 0, sizeof(packetDesc));
         memset(&outCacheBufferList, 0, sizeof(AudioBufferList));
@@ -247,7 +241,8 @@ static const int mpeg4audio_sample_rates[16] = {
         outCacheBufferList.mBuffers[0].mNumberChannels = 1;
         outCacheBufferList.mBuffers[0].mData = buffer->data;
         outCacheBufferList.mBuffers[0].mDataByteSize = AAC_FRAME_PER_PACKET * _destFormat.mBytesPerPacket;
-        
+        UInt32 numPackets = AAC_FRAME_PER_PACKET;
+
         OSStatus status = AudioConverterFillComplexBuffer(_decodeConvert, encodeInputDataProc, (__bridge void*)self, &numPackets, &outCacheBufferList, &packetDesc);
         // assert(!status);
         if (status != noErr || status == -1) {
