@@ -22,7 +22,9 @@ typedef enum _RecoderStatus{
 @protocol GJAudioQueueRecoderDelegate <NSObject>
 @optional
 
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamPacket:(R_GJAACPacket*)packet;
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder aacPacket:(R_GJAACPacket*)packet;
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder pcmPacket:(R_GJPCMPacket*)packet;
+
 
 @end
 @interface GJAudioQueueRecoder : NSObject

@@ -15,7 +15,27 @@
 
 #define GTrue 1
 #define GFalse 0
+#define GNULL NULL
 
+#define GINT8_MAX 127
+#define GINT8_MIN -127
+#define GUINT8_MAX 255
+#define GUINT8_MIN 0
+
+#define GINT16_MAX 32767
+#define GINT16_MIN -32767
+#define GUINT16_MAX 65535
+#define GUINT16_MIN 0
+
+#define GINT32_MAX 2147483647
+#define GINT32_MIN -2147483647
+#define GUINT32_MAX 4294967296
+#define GUINT32_MIN 0
+
+#define GINT64_MAX 9223372036854775807LL
+#define GINT64_MIN -9223372036854775807LL
+#define GUINT64_MAX GINT64_MAX*2+1
+#define GUINT64_MIN 0
 
 typedef uint8_t             GUInt8;
 typedef int8_t              GInt8;
@@ -31,9 +51,16 @@ typedef float               GFloat32;
 typedef double              GFloat64;
 typedef GInt8               GBool;
 typedef char                GChar;
-
 typedef void                GVoid;
 typedef void*               GHandle;
 
+
+
+
+#if defined( __cplusplus )
+#   define QUEUE_DEFAULT(x) =x
+#else
+#   define QUEUE_DEFAULT(x)
+#endif
 
 #endif /* GJPlatformHeader_h */

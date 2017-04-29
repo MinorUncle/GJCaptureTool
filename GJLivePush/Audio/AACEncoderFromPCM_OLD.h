@@ -9,12 +9,12 @@
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import <CoreMedia/CoreMedia.h>
-#import "GJLiveDefine+internal.h"
+#import "GJRetainBuffer.h"
 
 #define MAX_PCM_LENTH 2048+10
 @class AACEncoderFromPCM;
 @protocol AACEncoderFromPCMDelegate<NSObject>
--(void)AACEncoderFromPCM:(AACEncoderFromPCM*)encoder completeBuffer:(R_GJAACPacket*)buffer;
+-(void)AACEncoderFromPCM:(AACEncoderFromPCM*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer packetDesc:(AudioStreamPacketDescription*)packet;
 @end
 @interface AACEncoderFromPCM : NSObject
 @property(nonatomic,assign,readonly)AudioStreamBasicDescription destFormat;
@@ -24,11 +24,8 @@
 
 @property(nonatomic,weak)id<AACEncoderFromPCMDelegate>delegate;
 
-
--(BOOL)start;
--(BOOL)stop;
--(void)encodeWithPacket:(R_GJPCMPacket*)packet;
-- (instancetype)initWithSourceForamt:(const AudioStreamBasicDescription*)sFormat DestDescription:(const AudioStreamBasicDescription*)dFormat;
+-(void)encodeWithBuffer:(CMSampleBufferRef)buffer;
+- (instancetype)initWithDestDescription:(AudioStreamBasicDescription)description;
 
 - (NSData *)fetchMagicCookie;
 

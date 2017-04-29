@@ -186,7 +186,7 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
         livePull.unitAPacketCount ++;
         if (livePull.fristAudioDate == nil) {
             livePull.fristAudioDate = [NSDate date];
-            uint8_t* adts = streamPacket.packet.aacPacket->adts;
+            uint8_t* adts = streamPacket.packet.aacPacket->adtsOffset+streamPacket.packet.aacPacket->retain.data;
             uint8_t sampleIndex = adts[2] << 2;
             sampleIndex = sampleIndex>>4;
             int sampleRate = mpeg4audio_sample_rates[sampleIndex];

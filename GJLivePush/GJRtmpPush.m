@@ -274,12 +274,12 @@ bool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
     
     RTMPPacket* sendPacket = &pushPacket->packet;
     RTMPPacket_Reset(sendPacket);
-    if (buffer->adts - buffer->retain.data < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
+    if (buffer->adtsOffset+buffer->retain.frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
         GJAssert(0, "预留内存不够");
 //        retainBufferSetFrontSize(buffer, preSize);
     }
 
-    sendPacket->m_body = (char*)buffer->adts - preSize;
+    sendPacket->m_body = (char*)(buffer->adtsOffset +buffer->retain.data - preSize);
     sendPacket->m_nBodySize = buffer->adtsSize+buffer->aacSize+preSize;
 
     body = (unsigned char *)sendPacket->m_body;

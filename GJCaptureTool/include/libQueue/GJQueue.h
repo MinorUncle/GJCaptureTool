@@ -14,14 +14,7 @@
 
 
 /* exploit C++ ability of default values for function parameters */
-#ifndef QUEUE_DEFAULT
-#if defined( __cplusplus )
-#   define QUEUE_DEFAULT(x) =x
-#else
-#   define QUEUE_DEFAULT(x)
 
-#endif
-#endif
 
 
 #ifdef __cplusplus

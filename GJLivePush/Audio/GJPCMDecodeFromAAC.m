@@ -119,7 +119,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     R_GJAACPacket* packet;    
     if (decode.running && queuePop(param,(void**)&packet,INT_MAX)) {
         retainBuffer = &packet->retain;
-        ioData->mBuffers[0].mData = (uint8_t*)packet->aac;
+        ioData->mBuffers[0].mData = packet->retain.data + packet->aacOffset;
         ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
         ioData->mBuffers[0].mDataByteSize = packet->aacSize;
         *ioNumberDataPackets = 1;
@@ -164,7 +164,7 @@ static const int mpeg4audio_sample_rates[16] = {
     // get audio format
         R_GJAACPacket* packet;
         if (queuePeekWaitValue(_resumeQueue, 0,(void**)&packet, INT_MAX) && _running) {
-            uint8_t* adts = packet->adts;
+            uint8_t* adts = packet->adtsOffset+packet->retain.data;
             uint8_t sampleIndex = adts[2] << 2;
             sampleIndex = sampleIndex>>4;
             int sampleRate = mpeg4audio_sample_rates[sampleIndex];
@@ -212,7 +212,7 @@ static const int mpeg4audio_sample_rates[16] = {
             GJRetainBufferPoolFree(&pool);
         });
     }
-    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true);
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,GNULL,GNULL);
     
     AudioConverterGetProperty(_decodeConvert, kAudioConverterCurrentInputStreamDescription, &size, &_sourceFormat);
     

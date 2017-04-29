@@ -9,6 +9,7 @@
 #ifndef GJLiveDefine_internal_h
 #define GJLiveDefine_internal_h
 #include "GJRetainBuffer.h"
+#include "GJRetainBufferPool.h"
 
 //#define SEND_SEI
 #define TEST
@@ -36,11 +37,18 @@ typedef struct H264Packet{
 typedef struct AACPacket{
     GJRetainBuffer retain;
     GInt64 pts;
-    GUInt8* adts;
+    GLong adtsOffset;
     GInt32 adtsSize;
-    GUInt8* aac;
+    GLong aacOffset;
     GInt32 aacSize;
 }R_GJAACPacket;
+
+typedef struct PCMPacket{
+    GJRetainBuffer retain;
+    GInt64 pts;
+    GLong pcmOffset;
+    GInt32 pcmSize;
+}R_GJPCMPacket;
 
 typedef enum _GJMediaType{
     GJVideoType,
@@ -54,6 +62,9 @@ typedef struct _GJStreamPacket{
         R_GJH264Packet* h264Packet;
     }packet;
 }GJStreamPacket;
+
+GJRetainBuffer* R_GJAACPacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
+GJRetainBuffer* R_GJPCMPacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
 
 GBool R_RetainBufferRelease(GJRetainBuffer* buffer);
 #endif /* GJLiveDefine_internal_h */

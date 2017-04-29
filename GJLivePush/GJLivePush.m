@@ -13,11 +13,12 @@
 #import "GJH264Encoder.h"
 #import "GJAudioQueueRecoder.h"
 #import "Mp4Writer.h"
+#import "AACEncoderFromPCM.h"
 //#define GJPUSHAUDIOQUEUEPLAY_TEST
 #ifdef GJPUSHAUDIOQUEUEPLAY_TEST
 #import "GJAudioQueuePlayer.h"
 #endif
-@interface GJLivePush()<GJH264EncoderDelegate,GJAudioQueueRecoderDelegate>
+@interface GJLivePush()<GJH264EncoderDelegate,GJAudioQueueRecoderDelegate,AACEncoderFromPCMDelegate>
 {
     GPUImageVideoCamera* _videoCamera;
     NSString* _sessionPreset;
@@ -26,6 +27,7 @@
     GPUImageOutput* _lastFilter;
     GPUImageCropFilter* _cropFilter;
     GJAudioQueueRecoder* _audioRecoder;
+    AACEncoderFromPCM* _audioEncoder;
     Mp4WriterContext *_mp4Recoder;
     NSTimer*        _timer;
     
@@ -183,9 +185,18 @@
 
 -(BOOL)setupMicrophoneWithSampleRate:(int)sampleRate channel:(int)channel{
     if (_audioRecoder != nil || _audioRecoder.format.mChannelsPerFrame != channel || _audioRecoder.format.mSampleRate != sampleRate){
-        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:sampleRate channel:channel formatID:kAudioFormatMPEG4AAC];
+        _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:sampleRate channel:channel formatID:kAudioFormatLinearPCM];
         _audioRecoder.delegate = self;
     
+        AudioStreamBasicDescription source = _audioRecoder.format;
+        AudioStreamBasicDescription desc = {0};
+        desc.mFormatID = kAudioFormatMPEG4AAC;
+        desc.mChannelsPerFrame = source.mChannelsPerFrame;
+        desc.mFramesPerPacket = 1024;
+        desc.mSampleRate = source.mSampleRate;
+        _audioEncoder = [[AACEncoderFromPCM alloc]initWithSourceForamt:&source DestDescription:&desc];
+        _audioEncoder.delegate = self;
+        [_audioEncoder start];
     }
     if (_audioRecoder) {
         GJLOG(GJ_LOGINFO, "GJAudioQueueRecoder 初始化成功");
@@ -232,6 +243,7 @@
         
         [_lastFilter removeTarget:_videoStreamFilter];
         [_audioRecoder stop];
+        [_audioEncoder stop];
         [_videoEncoder flush];
         [_timer invalidate];
         _timer = nil;
@@ -332,12 +344,10 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
     _pushSessionStatus.netWorkQuarity = (GJNetworkQuality)quality;
 }
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamPacket:(R_GJAACPacket *)packet{
-//    static int times =0;
-//    NSData* audio = [NSData dataWithBytes:packet->aac length:MIN(packet->aacSize,10)];
-//    NSData* adts = [NSData dataWithBytes:packet->adts length:packet->adtsSize];
-//    NSLog(@"pushaudio times:%d ,adts%@,audio:%@,audioSize:%d",times++,adts,audio,packet->aacSize);
-    
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder pcmPacket:(R_GJPCMPacket *)packet{
+    [_audioEncoder encodeWithPacket:packet];
+}
+-(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder completeBuffer:(R_GJAACPacket *)packet{
 #ifdef GJPUSHAUDIOQUEUEPLAY_TEST
     if (_audioTestPlayer == nil) {
         _audioTestPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:recoder.format maxBufferSize:2000 macgicCookie:nil];
@@ -347,11 +357,18 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
         [_audioTestPlayer playData:dataBuffer packetDescriptions:packetDescriptions];
     }
 #else
-    packet->pts = (int64_t)([[NSDate date]timeIntervalSinceDate:_fristFrameDate]*1000);
-
-     GJRtmpPush_SendAACData(_videoPush, packet);
+    GJRtmpPush_SendAACData(_videoPush, packet);
 #endif
+
 }
+
+//-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamPacket:(R_GJAACPacket *)packet{
+////    static int times =0;
+////    NSData* audio = [NSData dataWithBytes:packet->aac length:MIN(packet->aacSize,10)];
+////    NSData* adts = [NSData dataWithBytes:packet->adts length:packet->adtsSize];
+////    NSLog(@"pushaudio times:%d ,adts%@,audio:%@,audioSize:%d",times++,adts,audio,packet->aacSize);
+//
+//}
 -(void)dealloc{
     if (_videoPush) {
         GJRtmpPush_Release(_videoPush);

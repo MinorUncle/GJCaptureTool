@@ -15,3 +15,9 @@ GBool R_RetainBufferRelease(GJRetainBuffer* buffer){
     free(buffer);
     return GTrue;
 }
+GJRetainBuffer* R_GJAACPacketMalloc(GJRetainBufferPool* pool,GHandle userdata){
+    return (GJRetainBuffer*)malloc(sizeof(R_GJAACPacket));
+}
+GJRetainBuffer* R_GJPCMPacketMalloc(GJRetainBufferPool* pool,GHandle userdata){
+    return (GJRetainBuffer*)malloc(sizeof(R_GJPCMPacket));
+}
