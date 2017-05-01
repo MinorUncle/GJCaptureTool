@@ -138,7 +138,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     
     AudioConverterGetProperty(_encodeConvert, kAudioConverterCurrentOutputStreamDescription, &size, &_destFormat);
     
-    if (_destFormat.mBytesPerPacket == kAudioFormatMPEG4AAC) {//VCR
+    if (_destFormat.mFormatID == kAudioFormatMPEG4AAC) {//VCR
         UInt32 size;
        OSStatus status = AudioConverterGetProperty(_encodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
         _destMaxOutSize += PUSH_AAC_PACKET_PRE_SIZE + 7;//7字节aac头
@@ -205,6 +205,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         outCacheBufferList.mBuffers[0].mDataByteSize = _destMaxOutSize;
         R_GJAACPacket* packet = (R_GJAACPacket*)GJRetainBufferPoolGetData(_bufferPool);
         GJRetainBuffer* audioBuffer = &packet->retain;
+        retainBufferMoveDataPoint(audioBuffer, PUSH_AAC_PACKET_PRE_SIZE);
         outCacheBufferList.mBuffers[0].mData = audioBuffer->data+7;
 
         OSStatus status = AudioConverterFillComplexBuffer(_encodeConvert, encodeInputDataProc, (__bridge void*)self, &outputDataPacketSize, &outCacheBufferList, &packetDesc);
@@ -220,7 +221,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 //        AACEncoderFromPCM_DEBUG("datalenth:%ld",[data length]);
        
         audioBuffer->size = outCacheBufferList.mBuffers[0].mDataByteSize+7;
-
+        GJAssert(audioBuffer->size+audioBuffer->frontSize <= audioBuffer->capacity, "ratainbuffer内存管理错误");
         [self adtsDataForPacketLength:audioBuffer->size data:audioBuffer->data];
         packet->adtsOffset = 0;
         packet->adtsSize = 7;
