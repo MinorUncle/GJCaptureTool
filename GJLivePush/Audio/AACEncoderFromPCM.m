@@ -160,8 +160,14 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         AudioConverterGetProperty(_encodeConvert, kAudioConverterEncodeBitRate, &propSize, &outputBitRate);
         GJLOG(@"AAC Encode Bitrate: %u\n", (unsigned int)outputBitRate);
     }
-    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJAACPacketMalloc,GNULL);
-    
+    if (_bufferPool) {
+        __block GJRetainBufferPool* tempPool = _bufferPool;
+        _bufferPool = NULL;
+        GUInt32 maxOutSize = _destMaxOutSize;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJRetainBufferPoolCreate(&tempPool, maxOutSize,true,R_GJAACPacketMalloc,GNULL);
+        });
+    }
 //    [self performSelectorInBackground:@selector(_converterStart) withObject:nil];
     dispatch_async(_encoderQueue, ^{
         [self _converterStart];
@@ -229,7 +235,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         packet->aacSize = outCacheBufferList.mBuffers[0].mDataByteSize;
         packet->pts = _currentPts;
         _currentPts = -1;
-        [self.delegate AACEncoderFromPCM:self completeBuffer:packet];
+//        [self.delegate AACEncoderFromPCM:self completeBuffer:packet];
         retainBufferUnRetain(audioBuffer);
     }
 }
@@ -332,8 +338,11 @@ int get_f_index(unsigned int sampling_frequency)
 }
 -(void)dealloc{
     queueFree(&(_resumeQueue));
-    GJRetainBufferPoolClean(_bufferPool, GTrue);
-    GJRetainBufferPoolFree(&_bufferPool);
+    if (_bufferPool) {
+        GJRetainBufferPoolClean(_bufferPool, GTrue);
+        GJRetainBufferPoolFree(&_bufferPool);
+    }
+
 
     
 }

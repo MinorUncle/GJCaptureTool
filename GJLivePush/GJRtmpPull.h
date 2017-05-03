@@ -14,7 +14,6 @@
 #include "GJRetainBuffer.h"
 #include "rtmp.h"
 #include "GJRetainBufferPool.h"
-#include "GJQueue.h"
 #include "GJLiveDefine+internal.h"
 
 typedef enum _GJRTMPPullMessageType{
@@ -63,10 +62,9 @@ typedef struct _GJRtmpPull{
 
 //所有不阻塞
 GVoid GJRtmpPull_Create(GJRtmpPull** pull,PullMessageCallback callback,GHandle rtmpPullParm);
-GVoid GJRtmpPull_Close(GJRtmpPull* pull);
-GVoid GJRtmpPull_Release(GJRtmpPull* pull);
+GVoid GJRtmpPull_CloseAndRelease(GJRtmpPull* pull);
 
-GVoid GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHandle callbackParm,const GChar* pullUrl);
+GBool GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHandle callbackParm,const GChar* pullUrl);
 GJTrafficUnit GJRtmpPull_GetVideoPullInfo(GJRtmpPull* pull);
 GJTrafficUnit GJRtmpPull_GetAudioPullInfo(GJRtmpPull* pull);
 

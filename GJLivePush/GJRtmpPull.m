@@ -35,23 +35,25 @@ static GHandle pullRunloop(GHandle parm){
     GJRTMPPullMessageType errType = GJRTMPPullMessageType_connectError;
     GHandle errParm = NULL;
     GInt32 ret = RTMP_SetupURL(pull->rtmp, pull->pullUrl);
-    if (!ret && pull->messageCallback) {
+    if (!ret) {
         errType = GJRTMPPullMessageType_urlPraseError;
         goto ERROR;
     }
     pull->rtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
     
     ret = RTMP_Connect(pull->rtmp, NULL);
-    if (!ret && pull->messageCallback) {
+    if (!ret) {
         errType = GJRTMPPullMessageType_connectError;
         goto ERROR;
     }
     ret = RTMP_ConnectStream(pull->rtmp, 0);
-    if (!ret && pull->messageCallback) {
+    if (!ret) {
         errType = GJRTMPPullMessageType_connectError;
         goto ERROR;
     }else{
-        pull->messageCallback(pull, GJRTMPPullMessageType_connectSuccess,pull->messageCallbackParm,NULL);
+        if(pull->messageCallback){
+            pull->messageCallback(pull, GJRTMPPullMessageType_connectSuccess,pull->messageCallbackParm,NULL);
+        }
     }
 
     
@@ -163,8 +165,9 @@ static GHandle pullRunloop(GHandle parm){
     errType = GJRTMPPullMessageType_closeComplete;
 ERROR:
     RTMP_Close(pull->rtmp);
-    pull->messageCallback(pull, errType,pull->messageCallbackParm,errParm);
-    
+    if (pull->messageCallback) {
+        pull->messageCallback(pull, errType,pull->messageCallbackParm,errParm);
+    }
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
     pull->pullThread = NULL;
@@ -193,7 +196,6 @@ GVoid GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,GHandle 
     pull->messageCallbackParm = rtmpPullParm;
     pull->stopRequest = GFalse;
     pthread_mutex_init(&pull->mutex, NULL);
-
     *pullP = pull;
 }
 
@@ -201,19 +203,19 @@ GVoid GJRtmpPull_Delloc(GJRtmpPull* pull){
     if (pull) {
         RTMP_Free(pull->rtmp);
         free(pull);
-        GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Delloc");
+        GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Delloc:%p",pull);
     }else{
         GJLOG(GJ_LOGWARNING, "GJRtmpPull_Delloc NULL PULL");
     }
 }
 GVoid GJRtmpPull_Close(GJRtmpPull* pull){
-    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Close");
-
+    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Close:%p",pull);
     pull->stopRequest = GTrue;
+
 }
 GVoid GJRtmpPull_Release(GJRtmpPull* pull){
-    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Release");
-
+    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Release:%p",pull);
+    pull->messageCallback = NULL;
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
     pull->releaseRequest = GTrue;
@@ -225,10 +227,13 @@ GVoid GJRtmpPull_Release(GJRtmpPull* pull){
         GJRtmpPull_Delloc(pull);
     }
 }
+GVoid GJRtmpPull_CloseAndRelease(GJRtmpPull* pull){
+    GJRtmpPull_Close(pull);
+    GJRtmpPull_Release(pull);
+}
 
-
-GVoid GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHandle callbackParm,const GChar* pullUrl){
-    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_StartConnect");
+GBool GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHandle callbackParm,const GChar* pullUrl){
+    GJLOG(GJ_LOGDEBUG, "GJRtmpPull_StartConnect:%p",pull);
 
     if (pull->pullThread != NULL) {
         GJRtmpPull_Close(pull);
@@ -241,6 +246,7 @@ GVoid GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHa
     pull->dataCallback = dataCallback;
     pull->dataCallbackParm = callbackParm;
     pthread_create(&pull->pullThread, NULL, pullRunloop, pull);
+    return GTrue;
 }
 GJTrafficUnit GJRtmpPull_GetVideoPullInfo(GJRtmpPull* pull){
     return pull->videoPullInfo;

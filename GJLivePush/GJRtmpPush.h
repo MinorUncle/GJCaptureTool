@@ -65,8 +65,7 @@ void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmp
  */
 bool GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data);
 bool GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data);
-void GJRtmpPush_Close(GJRtmpPush* push);
-void GJRtmpPush_Release(GJRtmpPush* push);
+void GJRtmpPush_CloseAndRelease(GJRtmpPush* push);
 void GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);
 float GJRtmpPush_GetBufferRate(GJRtmpPush* push);
 GJTrafficStatus GJRtmpPush_GetVideoBufferCacheInfo(GJRtmpPush* push);

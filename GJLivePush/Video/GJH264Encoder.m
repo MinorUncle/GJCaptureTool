@@ -267,8 +267,8 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         size_t spsppsSize = 4+4+sparameterSetSize+pparameterSetSize;
         int needSize = (int)(spsppsSize+totalLength+needPreSize);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
-
-        uint8_t* data = retainBuffer->data+needPreSize;
+        retainBufferMoveDataPoint(retainBuffer, needPreSize);
+        uint8_t* data = retainBuffer->data;
         memcpy(&data[0], "\x00\x00\x00\x01", 4);
 //        memcpy(&data[0], &sparameterSetSize, 4);
         memcpy(&data[4], sparameterSet, sparameterSetSize);
@@ -282,20 +282,11 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //        拷贝keyframe;
         memcpy(data+spsppsSize, inDataPointer, totalLength);
         inDataPointer = data + spsppsSize;
-        
-        //sei
-//        NSData* dt = [NSData dataWithBytes:dataPointer length:MIN(totalLength, 100)];
-//        NSLog(@"t:%@",dt);
-//        uint32_t seiLength = 0;
-//        memcpy(&seiLength, dataPointer, 4);
-//        seiLength = CFSwapInt32BigToHost(seiLength);
-//        
-//        dataPointer += seiLength + 4;
-//        totalLength -= seiLength + 4;
     }else{
         int needSize = (int)(totalLength+needPreSize);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
-        uint8_t* rDate = retainBuffer->data+needPreSize;
+        retainBufferMoveDataPoint(retainBuffer, needPreSize);
+        uint8_t* rDate = retainBuffer->data;
         memcpy(rDate, inDataPointer, totalLength);
         inDataPointer = rDate;
     }
@@ -322,12 +313,9 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     }
     
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
-
-    GJAssert(bufferOffset == totalLength, "数据出错\n");
+    GJAssert(pushPacket->retain.capacity >= pushPacket->seiSize+pushPacket->spsSize+pushPacket->ppSize+pushPacket->ppsSize, "数据出错\n");
     pushPacket->pts = pts.value;
 
- 
-    
 #if 0
     CMTime ptd = CMSampleBufferGetDuration(sample);
     CMTime opts = CMSampleBufferGetOutputPresentationTimeStamp(sample);

@@ -24,7 +24,7 @@ typedef struct _GJRTMP_Packet {
 }GJRTMP_Packet;
 void GJRtmpPush_Release(GJRtmpPush* push);
 void GJRtmpPush_Delloc(GJRtmpPush* push);
-
+void GJRtmpPush_Close(GJRtmpPush* push);
 static void* sendRunloop(void* parm){
     pthread_setname_np("rtmpPushLoop");
     GJRtmpPush* push = (GJRtmpPush*)parm;
@@ -33,7 +33,6 @@ static void* sendRunloop(void* parm){
     int ret = RTMP_SetupURL(push->rtmp, push->pushUrl);
     if (!ret && push->messageCallback) {
         errType = GJRTMPPushMessageType_urlPraseError;
-        push->messageCallback(push, GJRTMPPushMessageType_urlPraseError,push->rtmpPushParm,NULL);
         goto ERROR;
     }
     GJLOG(GJ_LOGINFO, "RTMP_SetupURL success");
@@ -42,7 +41,7 @@ static void* sendRunloop(void* parm){
     push->rtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
     
     ret = RTMP_Connect(push->rtmp, NULL);
-    if (!ret && push->messageCallback) {
+    if (!ret) {
         GJLOG(GJ_LOGERROR, "RTMP_Connect error");
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
@@ -50,13 +49,15 @@ static void* sendRunloop(void* parm){
     GJLOG(GJ_LOGINFO, "RTMP_Connect success");
 
     ret = RTMP_ConnectStream(push->rtmp, 0);
-    if (!ret && push->messageCallback) {
+    if (!ret ) {
         GJLOG(GJ_LOGERROR, "RTMP_ConnectStream error");
 
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }else{
-        push->messageCallback(push, GJRTMPPushMessageType_connectSuccess,push->rtmpPushParm,NULL);
+        if(push->messageCallback){
+            push->messageCallback(push, GJRTMPPushMessageType_connectSuccess,push->rtmpPushParm,NULL);
+        }
     }
     GJLOG(GJ_LOGINFO, "RTMP_ConnectStream success");
     GJRTMP_Packet* packet;
@@ -93,9 +94,10 @@ static void* sendRunloop(void* parm){
     errType = GJRTMPPushMessageType_closeComplete;
 ERROR:
     
+    if (push->messageCallback) {
+        push->messageCallback(push, errType,push->rtmpPushParm,errParm);
+    }
     RTMP_Close(push->rtmp);
-    push->messageCallback(push, errType,push->rtmpPushParm,errParm);
-
     bool shouldDelloc = false;
     pthread_mutex_lock(&push->mutex);
     push->sendThread = NULL;
@@ -134,10 +136,6 @@ void GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,void* rt
 
 
 bool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
-
-//    static int time1 = 0;
-//    NSData* data1 = [NSData dataWithBytes:buffer->data length:buffer->size];
-//    NSLog(@"push%d:%@",time1++,data1);
     bool isKey = false;
     uint8_t *sps = packet->sps,*pps = packet->pps,*pp = packet->pp;
     int spsSize = packet->spsSize,ppsSize = packet->ppsSize,ppSize = packet->ppSize;
@@ -173,12 +171,14 @@ bool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     }else{
         GJAssert(0, "没有pp");
     }
+
+    if (pp-packet->retain.data < ppPreSize+sps_ppsPreSize+RTMP_MAX_HEADER_SIZE+spsSize+ppsSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
+        retainBufferSetFrontSize(&packet->retain, RTMP_MAX_HEADER_SIZE+spsSize+ppsSize);
+        GJLOG(GJ_LOGDEBUG, "预留位置过小,扩大");
+    }
+//    使用pp做参考点，防止sei不发送的情况，导致pp移动，产生消耗
     sendPacket->m_body = (char*)pp - ppPreSize - sps_ppsPreSize - spsSize - ppsSize;
     sendPacket->m_nBodySize = ppSize+spsSize+ppsSize+ppPreSize+sps_ppsPreSize;
-    if (pp-packet->retain.data < ppPreSize+sps_ppsPreSize+RTMP_MAX_HEADER_SIZE+spsSize+ppsSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
-        GJAssert(0, "预留位置过小");
-    }
-
     body = (unsigned char *)sendPacket->m_body;
     sendPacket->m_packetType = RTMP_PACKET_TYPE_VIDEO;
     sendPacket->m_nChannel = 0x04;
@@ -308,7 +308,7 @@ bool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
 }
 
 void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
-    GJLOG(GJ_LOGINFO,"GJRtmpPush_StartConnect");
+    GJLOG(GJ_LOGINFO,"GJRtmpPush_StartConnect:%p",sender);
 
     size_t length = strlen(sendUrl);
     GJAssert(length <= MAX_URL_LENGTH-1, "sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
@@ -332,14 +332,19 @@ void GJRtmpPush_Delloc(GJRtmpPush* push){
     }
     queueFree(&push->sendBufferQueue);
     free(push);
-    GJLOG(GJ_LOGDEBUG, "GJRtmpPush_Delloc");
+    GJLOG(GJ_LOGDEBUG, "GJRtmpPush_Delloc:%p",push);
 
 }
-
+void GJRtmpPush_CloseAndRelease(GJRtmpPush* push){
+    
+    GJRtmpPush_Close(push);
+    GJRtmpPush_Release(push);
+}
 void GJRtmpPush_Release(GJRtmpPush* push){
-    GJLOG(GJ_LOGINFO,"GJRtmpPush_Release");
+    GJLOG(GJ_LOGINFO,"GJRtmpPush_Release::%p",push);
     
     bool shouldDelloc = false;
+    push->messageCallback = NULL;
     pthread_mutex_lock(&push->mutex);
     push->releaseRequest = true;
     if (push->sendThread == NULL) {
@@ -351,9 +356,15 @@ void GJRtmpPush_Release(GJRtmpPush* push){
     }
 }
 void GJRtmpPush_Close(GJRtmpPush* sender){
-    GJLOG(GJ_LOGINFO,"GJRtmpPush_Close");
-    sender->stopRequest = true;
-    queueBroadcastPop(sender->sendBufferQueue);
+    if (sender->stopRequest) {
+        GJLOG(GJ_LOGINFO,"GJRtmpPush_Close：%p  重复关闭",sender);
+
+    }else{
+        GJLOG(GJ_LOGINFO,"GJRtmpPush_Close:%p",sender);
+        sender->stopRequest = true;
+        queueBroadcastPop(sender->sendBufferQueue);
+
+    }
 }
 
 

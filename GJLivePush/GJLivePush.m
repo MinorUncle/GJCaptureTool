@@ -170,7 +170,7 @@
     }
     _pushUrl = [NSString stringWithUTF8String:config.pushUrl];
     if (_videoPush != nil) {
-        GJRtmpPush_Release(_videoPush);
+        GJRtmpPush_CloseAndRelease(_videoPush);
         _videoPush = NULL;
     }
     GJRtmpPush_Create(&_videoPush, rtmpCallback, (__bridge void *)(self));
@@ -196,7 +196,7 @@
         desc.mSampleRate = source.mSampleRate;
         _audioEncoder = [[AACEncoderFromPCM alloc]initWithSourceForamt:&source DestDescription:&desc];
         _audioEncoder.delegate = self;
-        [_audioEncoder start];
+//        [_audioEncoder start];
     }
     if (_audioRecoder) {
         GJLOG(GJ_LOGINFO, "GJAudioQueueRecoder 初始化成功");
@@ -248,8 +248,8 @@
         [_timer invalidate];
         _timer = nil;
         
-        GJRtmpPush_Close(_videoPush);
-        GJRtmpPush_Release(_videoPush);
+        GJRtmpPush_CloseAndRelease(_videoPush);
+
         _videoPush = NULL;
         memset(&_videoInfo, 0, sizeof(_videoInfo));
         memset(&_audioInfo, 0, sizeof(_audioInfo));
@@ -371,7 +371,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 //}
 -(void)dealloc{
     if (_videoPush) {
-        GJRtmpPush_Release(_videoPush);
+        GJRtmpPush_CloseAndRelease(_videoPush);
     }
 }
 @end

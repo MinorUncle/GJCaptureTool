@@ -214,7 +214,7 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
 -(BOOL)_initWithSampleRate:(Float64)sampleRate channel:(UInt32)channel formatID:(UInt32)formatID{
     AudioStreamBasicDescription format = {0};
     format.mFormatID         = formatID;
-    AudioQueueInputCallback callback;
+    AudioQueueInputCallback callback = pcmHandleInputBuffer;
     switch (formatID) {
         case kAudioFormatLinearPCM:
         {
@@ -238,6 +238,7 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
             break;
         }
         default:
+            GJAssert(0, "录制格式不支持");
             break;
     }
     UInt32 size = sizeof(AudioStreamBasicDescription);
