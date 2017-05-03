@@ -97,7 +97,25 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     NSData * data = [NSData dataWithBytesNoCopy:magic length:size freeWhenDone:YES];
     return data;
 }
-
+-(void)encodeWithBuffer:(CMSampleBufferRef)sampleBuffer{
+    
+    AudioBufferList inBufferList;
+    CMBlockBufferRef bufferRef;
+    
+    OSStatus status = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sampleBuffer, nil, &inBufferList, sizeof(inBufferList), NULL, NULL, 0, &bufferRef);
+    assert(!status);
+    if (status != noErr) {
+        NSLog(@"CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer error:%d",(int)status);
+        return;
+    }
+    size_t lenth;
+    char* point;
+    CMBlockBufferGetDataPointer(bufferRef, 0, NULL, &lenth, &point);
+    R_GJPCMPacket* packet = (R_GJPCMPacket*)malloc(sizeof(R_GJPCMPacket));
+    [self encodeWithPacket:packet];
+    retainBufferUnRetain(&packet->retain);
+}
+    
 -(void)encodeWithPacket:(R_GJPCMPacket*)packet{
     retainBufferRetain(&packet->retain);
     if (!_isRunning || !queuePush(_resumeQueue, packet, 0)) {

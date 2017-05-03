@@ -137,7 +137,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     [_lock lock];
     _fristAudioDate = _fristVideoDate = _connentDate = _fristDecodeVideoDate = nil;
     if (_videoPull != nil) {
-        GJRtmpPull_Release(_videoPull);
+        GJRtmpPull_CloseAndRelease(_videoPull);
     }
     GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
     GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
@@ -153,8 +153,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     [_audioDecoder stop];
     [_player stop];
     if (_videoPull) {
-        GJRtmpPull_Close(_videoPull);
-        GJRtmpPull_Release(_videoPull);
+        GJRtmpPull_CloseAndRelease(_videoPull);
         _videoPull = NULL;
     }
     [_timer invalidate];
@@ -279,7 +278,7 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
 }
 -(void)dealloc{
     if (_videoPull) {
-        GJRtmpPull_Release(_videoPull);
+        GJRtmpPull_CloseAndRelease(_videoPull);
     }
 }
 @end
