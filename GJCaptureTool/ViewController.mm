@@ -28,6 +28,7 @@
 #import "GJRetainBuffer.h"
 #import "GJImagePixelImageInput.h"
 #import "GJImageView.h"
+#import "AudioUnitCapture.h"
 GJQueue* _mp4VideoQueue;
 GJQueue* _mp4AudioQueue;
 BOOL _recodeState;
@@ -48,10 +49,9 @@ BOOL _recodeState;
     NSDate* _beginDate;
     MPMoviePlayerViewController* _player;
     GJAudioQueueRecoder* _audioRecoder;
-    AudioUnitCapture* _unitAudioRecoder;
     
     GJImagePixelImageInput* _imageInput;
-}
+    }
 
 @property (strong, nonatomic) UIView *topView;
 @property (strong, nonatomic) UIView *bottomView;
@@ -169,16 +169,17 @@ BOOL _recodeState;
 
 }
 
-#define CAPTURE_ON
-//#define AUDIOQUEUE_ON
+//#define CAPTURE_ON
+#define AUDIOQUEUE_ON
 
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;
     if (btn.selected) {
 #ifdef AUDIOQUEUE_ON
-        [_audioRecoder startRecodeAudio];
-        [_audioDecoder start];
+        
+//        [_audioRecoder startRecodeAudio];
+//        [_audioDecoder start];
 #endif
         
 #ifdef CAPTURE_ON
@@ -225,10 +226,13 @@ BOOL _recodeState;
     _gjEncoder.deleagte = self;
 }
 -(void)audioqueueInit{
-    _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:1 formatID:kAudioFormatMPEG4AAC];
-    _audioRecoder.delegate = self;
     
-#if 1
+    _audioUnitCapture = [[AudioUnitCapture alloc]initWithSamplerate:44100];
+    
+//    _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:1 formatID:kAudioFormatMPEG4AAC];
+//    _audioRecoder.delegate = self;
+    
+#if 0
     AudioStreamBasicDescription destFormat = {0};
     destFormat.mChannelsPerFrame = _audioRecoder.format.mChannelsPerFrame;
     destFormat.mSampleRate = _audioRecoder.format.mSampleRate;
@@ -416,13 +420,9 @@ BOOL _recodeState;
         
         uint8_t* planeAdd1 = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 1);
         
-        
         uint8_t* planeAdd0 = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 0);
         
         NSLog(@"sd:%ld,add:%ld",planeAdd1-planeAdd0,planeAdd0 - baseAdd);
-        
-        
-        
         
         // Get the number of bytes per row for the plane pixel buffer
         void *baseAddress = CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 0);

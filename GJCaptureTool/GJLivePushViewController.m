@@ -232,14 +232,14 @@
     
        // Do any additional setup after loading the view.
 }
-static char* url = "rtmp://10.0.1.126/live/room";
+static char* url = "rtmp://10.0.1.230/live/room";
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;rtmp://10.0.1.126/live/room
     if (btn == _pushButton) {
         if (btn.selected) {
             GJPushConfig config;
-            config.channel = 1;
+            config.channel = 2;
             config.audioSampleRate = 44100;
             config.pushSize = CGSizeMake(360, 640);
             config.videoBitRate = 8*80*1024;
@@ -249,11 +249,9 @@ static char* url = "rtmp://10.0.1.126/live/room";
             path = [path stringByAppendingPathComponent:@"test.mp4"];
 //            [_livePush videoRecodeWithPath:path];
             [_livePush startStreamPushWithConfig:config];
-            
         }else{
              [_livePush stopStreamPush];
         }
-      
     }else{
         GJLivePull* pull = NULL;
         for (PullShow* show in _pulls) {

@@ -308,6 +308,8 @@ bool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
 }
 
 void  GJRtmpPush_StartConnect(GJRtmpPush* sender,const char* sendUrl){
+//    char* p = "GJRtmpPush_StartConnect__test";
+//    GJ_Log(GJ_LOGINFO,p,p);
     GJLOG(GJ_LOGINFO,"GJRtmpPush_StartConnect:%p",sender);
 
     size_t length = strlen(sendUrl);

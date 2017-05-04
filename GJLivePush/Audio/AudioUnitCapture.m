@@ -27,8 +27,6 @@ static OSStatus playbackCallback(void *inRefCon,
 #define kOutputBus  0
 #define kInputBus   1
 
-
-
 @interface AudioUnitCapture ()
 @property (copy,nonatomic)  void(^recDataBlock)(uint8_t* pcmData, int size);
 @property (copy,nonatomic)  void(^playDataBlock)(uint8_t* playBuffer, int size);

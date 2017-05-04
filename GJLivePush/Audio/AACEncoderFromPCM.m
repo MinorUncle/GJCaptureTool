@@ -181,11 +181,12 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (_bufferPool) {
         __block GJRetainBufferPool* tempPool = _bufferPool;
         _bufferPool = NULL;
-        GUInt32 maxOutSize = _destMaxOutSize;
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            GJRetainBufferPoolCreate(&tempPool, maxOutSize,true,R_GJAACPacketMalloc,GNULL);
+            GJRetainBufferPoolClean(tempPool, true);
+            GJRetainBufferPoolFree(&tempPool);
         });
     }
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJAACPacketMalloc,GNULL);
 //    [self performSelectorInBackground:@selector(_converterStart) withObject:nil];
     dispatch_async(_encoderQueue, ^{
         [self _converterStart];
@@ -253,6 +254,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         packet->aacSize = outCacheBufferList.mBuffers[0].mDataByteSize;
         packet->pts = _currentPts;
         _currentPts = -1;
+        NSLog(@"packet size:%d pts:%lld",packet->aacSize+packet->adtsSize,packet->pts);
 //        [self.delegate AACEncoderFromPCM:self completeBuffer:packet];
         retainBufferUnRetain(audioBuffer);
     }

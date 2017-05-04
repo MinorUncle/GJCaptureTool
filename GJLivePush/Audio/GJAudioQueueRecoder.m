@@ -137,6 +137,7 @@ static void pcmHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
         retainBuffer->pcmSize = inBuffer->mAudioDataByteSize;
         retainBuffer->pts = [[NSDate date]timeIntervalSince1970]*1000;
         [tempSelf.delegate GJAudioQueueRecoder:tempSelf pcmPacket:retainBuffer];
+        NSLog(@"pcm recode size:%d",inBuffer->mAudioDataByteSize);
         retainBufferUnRetain(&retainBuffer->retain);
         AudioQueueEnqueueBuffer (tempSelf.mAudioQueue,inBuffer,0,NULL);
     }else{
@@ -145,7 +146,7 @@ static void pcmHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
 };
 
 static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBufferRef inBuffer,const AudioTimeStamp *inStartTime,UInt32 inNumPackets, const AudioStreamPacketDescription  *inPacketDesc){
-    GJAudioQueueRecoder* tempSelf = (__bridge GJAudioQueueRecoder*)aqData;
+//    GJAudioQueueRecoder* tempSelf = (__bridge GJAudioQueueRecoder*)aqData;
     
 //    if (tempSelf.status == kRecoderRunningStatus){
 //        GJRetainBuffer* retainBuffer = GJRetainBufferPoolGetData(tempSelf.bufferPool);

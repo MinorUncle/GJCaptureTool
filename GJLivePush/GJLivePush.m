@@ -196,7 +196,7 @@
         desc.mSampleRate = source.mSampleRate;
         _audioEncoder = [[AACEncoderFromPCM alloc]initWithSourceForamt:&source DestDescription:&desc];
         _audioEncoder.delegate = self;
-//        [_audioEncoder start];
+        [_audioEncoder start];
     }
     if (_audioRecoder) {
         GJLOG(GJ_LOGINFO, "GJAudioQueueRecoder 初始化成功");

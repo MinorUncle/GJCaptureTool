@@ -46,7 +46,6 @@
 		04D15F971E7FB615005F6DDD /* GJLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 04D15F961E7FB615005F6DDD /* GJLog.h */; };
 		6A0E86EC1E84BED7002A2A2D /* librtmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E21E84BE3F002A2A2D /* librtmp.a */; };
 		6A1E57551EA84238008F7D21 /* GJImagePixelImageInput.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A1E57541EA84238008F7D21 /* GJImagePixelImageInput.h */; };
-		6A1E57581EA85548008F7D21 /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6A6668131EB3254700CE8C17 /* GJPlatformHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A6668121EB3254700CE8C17 /* GJPlatformHeader.h */; };
 		6A7D08731E8A46BA008CE0E5 /* sps_decode.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A0E86E91E84BE8A002A2A2D /* sps_decode.c */; };
 		6A7D08741E8A46BA008CE0E5 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = 044018EC1E6CF4E400DEBF98 /* GJLivePull.m */; };
@@ -54,6 +53,8 @@
 		6A7D08761E8A46BA008CE0E5 /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440189F1E6CF13F00DEBF98 /* GJRtmpPull.m */; };
 		6A7D08AD1E8B85EA008CE0E5 /* GJAudioQueuePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 0440188B1E6CF13F00DEBF98 /* GJAudioQueuePlayer.m */; };
 		6A94E83E1E94D6F200B73901 /* GJLiveDefine+internal.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A94E83D1E94D6F200B73901 /* GJLiveDefine+internal.c */; };
+		6AA71EE41EB9B77300F2E8DB /* AudioUnitCapture.m in Sources */ = {isa = PBXBuildFile; fileRef = 044018891E6CF13F00DEBF98 /* AudioUnitCapture.m */; };
+		6AA71EEB1EBABDF000F2E8DB /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6ABD5B661E88B73B00404A6B /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E61E84BE3F002A2A2D /* libcrypto.a */; };
 		6ABD5B671E88B73B00404A6B /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E41E84BE3F002A2A2D /* libopenssl.a */; };
 		AE54E2D01EB4ABE500D2FE18 /* AACEncoderFromPCM.h in Headers */ = {isa = PBXBuildFile; fileRef = AE54E2CE1EB4ABE500D2FE18 /* AACEncoderFromPCM.h */; };
@@ -1518,6 +1519,7 @@
 				6A7D08AD1E8B85EA008CE0E5 /* GJAudioQueuePlayer.m in Sources */,
 				044018CB1E6CF13F00DEBF98 /* GJLivePush+advanced.m in Sources */,
 				044018CD1E6CF14000DEBF98 /* GJLivePush.m in Sources */,
+				6AA71EE41EB9B77300F2E8DB /* AudioUnitCapture.m in Sources */,
 				044018BC1E6CF13F00DEBF98 /* GJAudioQueueRecoder.m in Sources */,
 				044018D41E6CF14000DEBF98 /* GJH264Decoder.m in Sources */,
 				044018D11E6CF14000DEBF98 /* GJRtmpPush.m in Sources */,
@@ -1533,7 +1535,7 @@
 				C561ACB51D51D3DC00113453 /* main.m in Sources */,
 				AE7B77CC1E9A8C5E00D5203D /* GJCaptureTool.m in Sources */,
 				C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */,
-				6A1E57581EA85548008F7D21 /* GJLivePushViewController.m in Sources */,
+				6AA71EEB1EBABDF000F2E8DB /* GJLivePushViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

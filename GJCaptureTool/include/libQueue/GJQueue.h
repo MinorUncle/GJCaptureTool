@@ -16,7 +16,6 @@
 /* exploit C++ ability of default values for function parameters */
 
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -60,7 +59,7 @@ GBool queueCreate(GJQueue** outQ,GUInt32 capacity,GBool atomic QUEUE_DEFAULT(GTr
 GBool queueFree(GJQueue** inQ);
 
 /**
- 清空queue，同时释放所有pop和push，当outbuffer不为空时赋值给outbuffer.但是inoutCount小于剩余的大小则失败
+ 清空queue,不考虑minCache，同时释放所有pop和push，当outbuffer不为空时赋值给outbuffer.但是inoutCount小于剩余的大小则失败
 
  @param q q description
  @param outBuffer outBuffer description
@@ -68,8 +67,19 @@ GBool queueFree(GJQueue** inQ);
  @return return value description
  */
 GBool queueClean(GJQueue*q, GVoid** outBuffer QUEUE_DEFAULT(NULL),GInt32* inoutCount QUEUE_DEFAULT(0));
-GBool queuePop(GJQueue* q,GVoid** temBuffer,GUInt32 ms QUEUE_DEFAULT(500));
-GBool queuePush(GJQueue* q,GVoid* temBuffer,GUInt32 ms QUEUE_DEFAULT(500));
+    
+/**
+ 类似queueClean，但是会考虑minCache;
+
+ @param q q description
+ @param outBuffer 接受内存
+ @param count 出栈个数
+ @param ms 等待时间
+ @return return value description
+ */
+GBool queuePopSerial(GJQueue*q, GVoid** outBuffer ,GInt32 count,GUInt32 ms QUEUE_DEFAULT(0));
+GBool queuePop(GJQueue* q,GVoid** temBuffer,GUInt32 ms QUEUE_DEFAULT(0));
+GBool queuePush(GJQueue* q,GVoid* temBuffer,GUInt32 ms QUEUE_DEFAULT(0));
 GInt32 queueGetLength(GJQueue* q);
 
 //enable为GFalse时，push和pop后无论什么情况不阻塞，直接返回失败.但是原来等待的继续等待。
