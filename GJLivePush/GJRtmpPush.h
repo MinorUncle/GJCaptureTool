@@ -31,28 +31,20 @@ typedef void(*PullMessageCallback)(struct _GJRtmpPush* rtmpPush, GJRTMPPushMessa
 
 #define MAX_URL_LENGTH 100
 typedef struct _GJRtmpPush{
-    RTMP*               rtmp;
-    GJQueue*            sendBufferQueue;
-    char                pushUrl[MAX_URL_LENGTH];
+    RTMP*                   rtmp;
+    GJQueue*                sendBufferQueue;
+    char                    pushUrl[MAX_URL_LENGTH];
     
-    pthread_t           sendThread;
-    pthread_mutex_t     mutex;
-//    int                 sendPacketCount;
-//    int                 dropPacketCount;//不能丢帧
-//    int                 sendByte;
-    PullMessageCallback messageCallback;
-    void*               rtmpPushParm;
-    int                 stopRequest;
-    int                 releaseRequest;
-    
-    GJTrafficStatus        audioStatus;
-    GJTrafficStatus        videoStatus;
-//    long                inVPts;
-//    long                outVPts;
-//
-//    long                inAPts;
-//    long                outAPts;
+    pthread_t                sendThread;
+    pthread_mutex_t          mutex;
 
+    PullMessageCallback      messageCallback;
+    void*                   rtmpPushParm;
+    int                     stopRequest;
+    int                     releaseRequest;
+    
+    GJTrafficStatus         audioStatus;
+    GJTrafficStatus         videoStatus;
 }GJRtmpPush;
 
 void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmpPushParm);
@@ -63,10 +55,10 @@ void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmp
  @param push push description
  @param data data description
  */
-bool GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data);
-bool GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data);
+GBool GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data);
+GBool GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data);
 void GJRtmpPush_CloseAndRelease(GJRtmpPush* push);
 void GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);
-float GJRtmpPush_GetBufferRate(GJRtmpPush* push);
+GFloat32 GJRtmpPush_GetBufferRate(GJRtmpPush* push);
 GJTrafficStatus GJRtmpPush_GetVideoBufferCacheInfo(GJRtmpPush* push);
 GJTrafficStatus GJRtmpPush_GetAudioBufferCacheInfo(GJRtmpPush* push);

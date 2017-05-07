@@ -82,12 +82,12 @@ static GHandle pullRunloop(GHandle parm){
 
                 GJRetainBuffer* retainBuffer = &aacPacket->retain;
                 retainBufferPack(&retainBuffer, body - RTMP_MAX_HEADER_SIZE, RTMP_MAX_HEADER_SIZE+packet.m_nBodySize, packetBufferRelease, NULL);
-
+//                retainBufferMoveDataToPoint(retainBuffer, RTMP_MAX_HEADER_SIZE, GFalse);
                 aacPacket->pts = packet.m_nTimeStamp;
                 aacPacket->adtsOffset = body+2-aacPacket->retain.data;
                 aacPacket->adtsSize = 7;
                 aacPacket->aacOffset = aacPacket->adtsOffset+7;
-                aacPacket->aacSize = (GInt32)(packet.m_nBodySize-aacPacket->aacOffset);
+                aacPacket->aacSize = (GInt32)(packet.m_nBodySize -aacPacket->adtsSize - 2);
                 streamPacket.packet.aacPacket = aacPacket;
                 packet.m_body=NULL;
                 pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);

@@ -357,6 +357,12 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
         [_audioTestPlayer playData:dataBuffer packetDescriptions:packetDescriptions];
     }
 #else
+    
+//    static int times;
+//    NSData* audio = [NSData dataWithBytes:packet->aacOffset+packet->retain.data length:MIN(packet->aacSize,10)];
+//    NSData* adts = [NSData dataWithBytes:packet->adtsOffset+packet->retain.data length:packet->adtsSize];
+//    NSLog(@"pushaudio times:%d ,adts%@,audio:%@,audioSize:%d",times++,adts,audio,packet->aacSize);
+
     GJRtmpPush_SendAACData(_videoPush, packet);
 #endif
 

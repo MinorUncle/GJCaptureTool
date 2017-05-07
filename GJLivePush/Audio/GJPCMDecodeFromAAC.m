@@ -89,9 +89,7 @@
 -(void)start{
     GJLOG(GJ_LOGINFO, "AACDecode Start");
     _running = YES;
-    if (_decodeConvert == NULL) {
-        [self _createEncodeConverter];
-    }
+    [self _createEncodeConverter];
 }
 -(void)stop{
     GJLOG(GJ_LOGINFO, "AACDecode stop");
@@ -123,7 +121,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
         ioData->mBuffers[0].mDataByteSize = packet->aacSize;
         *ioNumberDataPackets = 1;
-//        NSLog(@"decode adtssize:%d size:%d",packet->adtsSize,packet->aacSize);
+        NSLog(@"decode adtssize:%d size:%d",packet->adtsSize,packet->aacSize);
     }else{
         *ioNumberDataPackets = 0;
         return -1;
@@ -249,7 +247,12 @@ static const int mpeg4audio_sample_rates[16] = {
             
             retainBufferUnRetain(buffer);
             char* codeChar = (char*)&status;
-            GJLOG(GJ_LOGDEBUG, "AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
+            if (_isRunning) {
+                GJLOG(GJ_LOGERROR, "AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
+            }else{
+                _isRunning = GFalse;
+                GJLOG(GJ_LOGERROR,"停止导致解码错误");
+            }
             break;
         }
         

@@ -267,7 +267,9 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         size_t spsppsSize = 4+4+sparameterSetSize+pparameterSetSize;
         int needSize = (int)(spsppsSize+totalLength+needPreSize);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
-        retainBufferMoveDataPoint(retainBuffer, needPreSize);
+        if (retainBuffer->frontSize < needPreSize) {
+            retainBufferMoveDataToPoint(retainBuffer, needPreSize,GFalse);
+        }
         uint8_t* data = retainBuffer->data;
         memcpy(&data[0], "\x00\x00\x00\x01", 4);
 //        memcpy(&data[0], &sparameterSetSize, 4);
@@ -285,7 +287,9 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     }else{
         int needSize = (int)(totalLength+needPreSize);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
-        retainBufferMoveDataPoint(retainBuffer, needPreSize);
+        if (retainBuffer->frontSize < needPreSize) {
+            retainBufferMoveDataToPoint(retainBuffer, needPreSize,GFalse);
+        }
         uint8_t* rDate = retainBuffer->data;
         memcpy(rDate, inDataPointer, totalLength);
         inDataPointer = rDate;
@@ -313,7 +317,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     }
     
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
-    GJAssert(pushPacket->retain.capacity >= pushPacket->seiSize+pushPacket->spsSize+pushPacket->ppSize+pushPacket->ppsSize, "数据出错\n");
+//    GJAssert(pushPacket->retain.capacity >= pushPacket->seiSize+pushPacket->spsSize+pushPacket->ppSize+pushPacket->ppsSize, "数据出错\n");
     pushPacket->pts = pts.value;
 
 #if 0

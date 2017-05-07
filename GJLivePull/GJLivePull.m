@@ -197,6 +197,10 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
             sourceformat.mSampleRate = sampleRate;
             sourceformat.mFramesPerPacket = 1024;
 
+            if (channel>2) {
+                GJLOG(GJ_LOGERROR, "音频channel不支持");
+            }
+            
             AudioStreamBasicDescription destformat = {0};
             destformat.mFormatID = kAudioFormatLinearPCM;
             destformat.mSampleRate       = sourceformat.mSampleRate;               // 3
@@ -215,8 +219,8 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
         
 //        R_GJAACPacket* packet = streamPacket.packet.aacPacket;
 //        static int times;
-//        NSData* audio = [NSData dataWithBytes:packet->aac length:MIN(packet->aacSize,10)];
-//        NSData* adts = [NSData dataWithBytes:packet->adts length:packet->adtsSize];
+//        NSData* audio = [NSData dataWithBytes:packet->aacOffset+packet->retain.data length:MIN(packet->aacSize,10)];
+//        NSData* adts = [NSData dataWithBytes:packet->adtsOffset+packet->retain.data length:packet->adtsSize];
 //        NSLog(@"pullaudio times:%d ,adts%@,audio:%@,audioSize:%d",times++,adts,audio,packet->aacSize);
         
         [livePull.audioDecoder decodePacket:streamPacket.packet.aacPacket];

@@ -443,7 +443,7 @@ ERROR:
             _syncControl.lastPauseFlag = 0;
             GJLOG(GJ_LOGINFO, "buffing times:%d,totalduring:%ld",_syncControl.bufferTimes,_syncControl.bufferTotalDuration);
         }else{
-            GJAssert(0, "暂停管理出现问题");
+            GJLOG(GJ_LOGERROR, "暂停管理出现问题");
         }
         [_audioPlayer resume];
         GJLOG(GJ_LOGDEBUG,"buffer total:%d\n",_syncControl.lastBufferDuration);
@@ -589,7 +589,7 @@ ERROR:
             OSType type = CVPixelBufferGetPixelFormatType(imageData);
             _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:type];
             if (_imageInput == nil) {
-                GJAssert(0,"GJImagePixelImageInput 创建失败！");
+                GJLOG(GJ_LOGERROR, "GJImagePixelImageInput 创建失败！");
                 return NO;
             }
             [_imageInput addTarget:(GPUImageView*)_displayView];

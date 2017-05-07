@@ -51,6 +51,8 @@ typedef float               GFloat32;
 typedef double              GFloat64;
 typedef GInt8               GBool;
 typedef char                GChar;
+typedef unsigned char       GUChar;
+
 typedef void                GVoid;
 typedef void*               GHandle;
 
