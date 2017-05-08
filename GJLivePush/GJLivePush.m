@@ -18,6 +18,10 @@
 #ifdef GJPUSHAUDIOQUEUEPLAY_TEST
 #import "GJAudioQueuePlayer.h"
 #endif
+//#define GJPCMDecodeFromAAC_TEST
+#ifdef GJPCMDecodeFromAAC_TEST
+#import "GJPCMDecodeFromAAC.h"
+#endif
 @interface GJLivePush()<GJH264EncoderDelegate,GJAudioQueueRecoderDelegate,AACEncoderFromPCMDelegate>
 {
     GPUImageVideoCamera* _videoCamera;
@@ -38,6 +42,9 @@
     NSLock*          _pushLock;
 #ifdef GJPUSHAUDIOQUEUEPLAY_TEST
     GJAudioQueuePlayer* _audioTestPlayer;
+#endif
+#ifdef GJPCMDecodeFromAAC_TEST
+    GJPCMDecodeFromAAC* _audioDecode;
 #endif
 }
 @property(strong,nonatomic)GJH264Encoder* videoEncoder;
@@ -197,6 +204,10 @@
         _audioEncoder = [[AACEncoderFromPCM alloc]initWithSourceForamt:&source DestDescription:&desc];
         _audioEncoder.delegate = self;
         [_audioEncoder start];
+#ifdef GJPCMDecodeFromAAC_TEST
+        _audioDecode = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&source SourceDescription:&desc];
+        [_audioDecode start];
+#endif
     }
     if (_audioRecoder) {
         GJLOG(GJ_LOGINFO, "GJAudioQueueRecoder 初始化成功");
@@ -328,7 +339,6 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
             size = packet->ppSize;
         }
         mp4WriterAddVideo(_mp4Recoder, frame, size, (double)packet->pts);
-
     }
     
     if(!GJRtmpPush_SendH264Data(_videoPush, packet)){
@@ -356,15 +366,19 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
         retainBufferMoveDataPoint(dataBuffer, 7);
         [_audioTestPlayer playData:dataBuffer packetDescriptions:packetDescriptions];
     }
-#else
+    return;
+#endif
     
 //    static int times;
-//    NSData* audio = [NSData dataWithBytes:packet->aacOffset+packet->retain.data length:MIN(packet->aacSize,10)];
+//    NSData* audio = [NSData dataWithBytes:packet->aacOffset+packet->retain.data length:packet->aacSize];
 //    NSData* adts = [NSData dataWithBytes:packet->adtsOffset+packet->retain.data length:packet->adtsSize];
-//    NSLog(@"pushaudio times:%d ,adts%@,audio:%@,audioSize:%d",times++,adts,audio,packet->aacSize);
+//    NSLog(@"pushaudio times:%d,audioSize:%d,adts%@,audio:%@",times++,packet->aacSize,adts,audio);
 
-    GJRtmpPush_SendAACData(_videoPush, packet);
+#ifdef GJPCMDecodeFromAAC_TEST
+    [_audioDecode decodePacket:packet];
+    return;
 #endif
+    GJRtmpPush_SendAACData(_videoPush, packet);
 
 }
 

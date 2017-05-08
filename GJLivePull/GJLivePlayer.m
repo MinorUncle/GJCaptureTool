@@ -683,7 +683,6 @@ static const int mpeg4audio_sample_rates[16] = {
         GJAudioBuffer* audioBuffer = NULL;
 
         queueBroadcastPop(_playControl.audioQueue);//other lock
-        queueLockPop(_playControl.audioQueue);
         while (queuePop(_playControl.audioQueue, (void **)audioBuffer, 0)) {
             retainBufferUnRetain(audioBuffer->audioData);
             GJBufferPoolSetData(defauleBufferPool(), (uint8_t*)audioBuffer);
@@ -751,7 +750,7 @@ RETRY:
         [self checkBufferingAndWater];
         result =  YES;
     }else if(_playControl.status == kPlayStatusStop){
-        GJLOG(GJ_LOGERROR,"player audio data push while stop");
+        GJLOG(GJ_LOGWARNING,"player audio data push while stop");
         retainBufferUnRetain(audioData);
         GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
         result = NO;

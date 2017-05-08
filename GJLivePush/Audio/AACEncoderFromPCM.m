@@ -16,7 +16,6 @@
     AudioConverterRef _encodeConvert;
     GJQueue* _resumeQueue;
 
-    BOOL _isRunning;//状态，是否运行
     dispatch_queue_t _encoderQueue;
     AudioStreamPacketDescription _sourcePCMPacketDescription;
     R_GJPCMPacket* _preBlockBuffer;
@@ -24,6 +23,8 @@
     GJRetainBufferPool* _bufferPool;
     GInt64 _currentPts;
 }
+@property (nonatomic,assign) BOOL isRunning;
+
 @end
 
 @implementation AACEncoderFromPCM
@@ -71,7 +72,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     GJQueue* blockQueue =   encoder->_resumeQueue;
     R_GJPCMPacket* buffer;
-    if (queuePop(blockQueue, (void**)&buffer,GINT32_MAX)) {
+    if (encoder.isRunning && queuePop(blockQueue, (void**)&buffer,GINT32_MAX)) {
         
         ioData->mBuffers[0].mData = buffer->retain.data+buffer->pcmOffset;
         ioData->mBuffers[0].mNumberChannels =encoder.sourceFormat.mChannelsPerFrame;
@@ -122,19 +123,26 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
 }
 -(BOOL)start{
+    _isRunning = YES;
     [self _createEncodeConverter];
     _currentPts = -1;
     return YES;
 }
 -(BOOL)stop{
     _isRunning = NO;
-    if (_preBlockBuffer) {
-        retainBufferUnRetain(&_preBlockBuffer->retain);
-    }
+
     queueBroadcastPop(_resumeQueue);
+    if(_encodeConvert){
+        AudioConverterDispose(_encodeConvert);
+        _encodeConvert = nil;
+    }
     GJRetainBuffer* buffer;
     while (queuePop(_resumeQueue, (void**)&buffer, 0)) {
         retainBufferUnRetain(buffer);
+    }
+    if (_preBlockBuffer) {
+        retainBufferUnRetain(&_preBlockBuffer->retain);
+        _preBlockBuffer = NULL;
     }
     return YES;
 }
@@ -224,7 +232,6 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
 -(void)_converterStart{
     GJLOG(GJ_LOGDEBUG,"_converterStart");
-    _isRunning = YES;
     UInt32 outputDataPacketSize               = 1;
     AudioStreamPacketDescription packetDesc;
     AudioBufferList outCacheBufferList;
@@ -251,16 +258,14 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
                 _isRunning = NO;
             }else{
                 GJLOG(GJ_LOGWARNING, "stop导致编码错误");
-
             }
             break;
         }
         
         
-        GJLOG(GJ_LOGINFO, "encode adtssize:7 size:%d",outCacheBufferList.mBuffers[0].mDataByteSize);
 
         audioBuffer->size = outCacheBufferList.mBuffers[0].mDataByteSize+7;
-        [self adtsDataForPacketLength:audioBuffer->size data:audioBuffer->data];
+        adtsDataForPacketLength(outCacheBufferList.mBuffers[0].mDataByteSize, audioBuffer->data, _destFormat.mSampleRate, _destFormat.mChannelsPerFrame);
         packet->adtsOffset = 0;
         packet->adtsSize = 7;
         packet->aacOffset = 7;
@@ -272,7 +277,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
 }
 #pragma -mark =======ADTS=======
-- (void)adtsDataForPacketLength:(NSUInteger)packetLength data:(uint8_t*)packet
+static void adtsDataForPacketLength(int packetLength, uint8_t*packet,int sampleRate, int channel)
 {
     /*=======adts=======
      7字节
@@ -299,27 +304,8 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
      3-------保留
      */
     int profile = 0;
-    /*
-     sampling_frequency_index：表示使用的采样率下标，通过这个下标在 Sampling Frequencies[ ]数组中查找得知采样率的值。
-     There are 13 supported frequencies:
-     0: 96000 Hz
-     1: 88200 Hz
-     2: 64000 Hz
-     3: 48000 Hz
-     4: 44100 Hz
-     5: 32000 Hz
-     6: 24000 Hz
-     7: 22050 Hz
-     8: 16000 Hz
-     9: 12000 Hz
-     10: 11025 Hz
-     11: 8000 Hz
-     12: 7350 Hz
-     13: Reserved
-     14: Reserved
-     15: frequency is written explictly
-     */
-    int freqIdx = get_f_index(_destFormat.mSampleRate);//11
+    
+    int freqIdx = get_f_index(sampleRate);//11
     /*
      channel_configuration: 表示声道数
      0: Defined in AOT Specifc Config
@@ -332,20 +318,33 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
      7: 8 channels: front-center, front-left, front-right, side-left, side-right, back-left, back-right, LFE-channel
      8-15: Reserved
      */
-    int chanCfg = 1;
+    int chanCfg = channel;
     NSUInteger fullLength = adtsLength + packetLength;
     packet[0] = (char)0xFF;	// 11111111  	= syncword
     packet[1] = (char)0xF1;	   // 1111 0 00 1 = syncword+id(MPEG-4) + Layer + absent
-    //00 1000 0000
-    //          01 0000
-    //                    0001
-    //==============
-    //      1001 0000
-    packet[2] = (char)(((profile)<<6) + (freqIdx<<4) +(chanCfg>>2));// profile(2)+sampling(4)+privatebit(1)+channel_config(1)
+    
+    packet[2] = (char)(((profile)<<6) + (freqIdx<<2) +(chanCfg>>2));// profile(2)+sampling(4)+privatebit(1)+channel_config(1)
     packet[3] = (char)(((chanCfg&3)<<6) + (fullLength>>11));
     packet[4] = (char)((fullLength&0x7FF) >> 3);
     packet[5] = (char)(((fullLength&7)<<5) + 0x1F);
     packet[6] = (char)0xFC;
+    
+    
+    
+#if 0
+    static const int mpeg4audio_sample_rates[16] = {
+        96000, 88200, 64000, 48000, 44100, 32000,
+        24000, 22050, 16000, 12000, 11025, 8000, 7350
+    };
+    uint8_t* adts = packet;
+    uint8_t sampleIndex = adts[2] << 2;
+    sampleIndex = sampleIndex>>4;
+    int rsampleRate = mpeg4audio_sample_rates[sampleIndex];
+    uint8_t rchannel = adts[2] & 0x1 <<2;
+    rchannel += (adts[3] & 0xc0)>>6;
+    printf("samplerate:%d,channel:%d",rsampleRate,rchannel);
+    
+#endif
 }
 
 int get_f_index(unsigned int sampling_frequency)

@@ -217,16 +217,9 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
             livePull.player.audioFormat = destformat;
         }
         
-//        R_GJAACPacket* packet = streamPacket.packet.aacPacket;
-//        static int times;
-//        NSData* audio = [NSData dataWithBytes:packet->aacOffset+packet->retain.data length:MIN(packet->aacSize,10)];
-//        NSData* adts = [NSData dataWithBytes:packet->adtsOffset+packet->retain.data length:packet->adtsSize];
-//        NSLog(@"pullaudio times:%d ,adts%@,audio:%@,audioSize:%d",times++,adts,audio,packet->aacSize);
+ 
         
         [livePull.audioDecoder decodePacket:streamPacket.packet.aacPacket];
-        
-     
-        
     }else if (streamPacket.type == GJVideoType) {
         GJRetainBuffer* buffer = &streamPacket.packet.h264Packet->retain;
         livePull.pullVByte += buffer->size;

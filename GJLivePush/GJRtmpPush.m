@@ -68,6 +68,7 @@ static GHandle sendRunloop(GHandle parm){
     }
 #endif
     while (!push->stopRequest && queuePop(push->sendBufferQueue, (GHandle*)&packet, INT32_MAX)) {
+        GUInt32 sendPts = packet->packet.m_nTimeStamp;
 #ifndef NETWORK_DELAY
         packet->packet.m_nTimeStamp -= startPts;
 #endif
@@ -76,11 +77,11 @@ static GHandle sendRunloop(GHandle parm){
             if (packet->packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
                 push->videoStatus.leave.byte+=packet->packet.m_nBodySize;
                 push->videoStatus.leave.count++;
-                push->videoStatus.leave.pts = packet->packet.m_nTimeStamp;
+                push->videoStatus.leave.pts = sendPts;
             }else{
                 push->audioStatus.leave.byte+=packet->packet.m_nBodySize;
                 push->audioStatus.leave.count++;
-                push->audioStatus.leave.pts = packet->packet.m_nTimeStamp;
+                push->audioStatus.leave.pts = sendPts;
             }
             retainBufferUnRetain(packet->retainBuffer);
             GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);
@@ -141,6 +142,9 @@ GVoid GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,GHandle
 
 
 GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
+    if (sender == NULL) {
+        return GFalse;
+    }
     GBool isKey = GFalse;
     GUInt8 *sps = packet->sps,*pps = packet->pps,*pp = packet->pp;
     GInt32 spsSize = packet->spsSize,ppsSize = packet->ppsSize,ppSize = packet->ppSize;
@@ -270,6 +274,9 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
 }
 
 GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
+    if (sender == NULL) {
+        return GFalse;
+    }
     GUChar * body;
     GInt32 preSize = 2;
     GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
