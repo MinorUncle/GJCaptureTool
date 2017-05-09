@@ -53,7 +53,6 @@ typedef struct _GJAudioBuffer{
 }GJAudioBuffer;
 
 
-
 typedef enum _TimeSYNCType{
     kTimeSYNCAudio,
     kTimeSYNCVideo,
@@ -343,8 +342,8 @@ ERROR:
         queueEnablePush(_playControl.audioQueue, GFalse);
         queueEnablePush(_playControl.imageQueue, GFalse);
         
-        queueBroadcastPop(_playControl.imageQueue);
-        queueBroadcastPop(_playControl.audioQueue);
+//        queueBroadcastPop(_playControl.imageQueue);
+//        queueBroadcastPop(_playControl.audioQueue);
         pthread_mutex_unlock(&_playControl.oLock);
 
         pthread_join(_playControl.playVideoThread, NULL);
@@ -680,15 +679,19 @@ static const int mpeg4audio_sample_rates[16] = {
     if (pts < _syncControl.audioInfo.trafficStatus.leave.pts) {
         pthread_mutex_lock(&_playControl.oLock);
         GJLOG(GJ_LOGWARNING, "音频pts不递增，抛弃之前的音频帧：%ld帧",queueGetLength(_playControl.audioQueue));
-        GJAudioBuffer* audioBuffer = NULL;
 
         queueBroadcastPop(_playControl.audioQueue);//other lock
-        while (queuePop(_playControl.audioQueue, (void **)audioBuffer, 0)) {
-            retainBufferUnRetain(audioBuffer->audioData);
-            GJBufferPoolSetData(defauleBufferPool(), (uint8_t*)audioBuffer);
+        GInt32 qLength = queueGetLength(_playControl.audioQueue);
+        GJAudioBuffer** audioBuffer = (GJAudioBuffer**)malloc(qLength*sizeof(GJAudioBuffer*));
+
+        queueClean(_playControl.audioQueue, (GVoid**)audioBuffer, &qLength);//用clean，防止播放断同时也在读
+        for (int i = 0; i<qLength; i++) {
+            _syncControl.audioInfo.trafficStatus.leave.count++;
+            _syncControl.audioInfo.trafficStatus.leave.byte += audioBuffer[i]->audioData->size;
+            retainBufferUnRetain(audioBuffer[i]->audioData);
+            GJBufferPoolSetData(defauleBufferPool(), (uint8_t*)audioBuffer[i]);
         }
         _syncControl.audioInfo.trafficStatus.leave.pts = (long)pts;
-   
         pthread_mutex_unlock(&_playControl.oLock);
 
     }
@@ -704,10 +707,7 @@ static const int mpeg4audio_sample_rates[16] = {
         changeSyncType(&_syncControl, kTimeSYNCAudio);
         _syncControl.audioInfo.trafficStatus.leave.pts = (long)pts;///防止audioInfo.startPts不为从0开始时，audiocache过大，
     }
-    
-    
     if (_audioPlayer == nil) {
-        
         if(queueGetLength(_playControl.audioQueue) == 0){
             _syncControl.audioInfo.startPts = (long)pts;
             _syncControl.audioInfo.trafficStatus.leave.pts = (long)pts;///防止audioInfo.startPts不为从0开始时，audiocache过大，
@@ -742,6 +742,7 @@ RETRY:
     if(queuePush(_playControl.audioQueue, audioBuffer, 0)){
         _syncControl.audioInfo.trafficStatus.enter.pts = (long)audioBuffer->pts;
         _syncControl.audioInfo.trafficStatus.enter.count++;
+        _syncControl.audioInfo.trafficStatus.enter.byte += audioBuffer->audioData->size;
 
 #ifdef NETWORK_DELAY
         int date = [[NSDate date]timeIntervalSince1970]*1000;

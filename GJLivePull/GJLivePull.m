@@ -23,10 +23,11 @@
     
     
     
-    NSRecursiveLock* _lock;
+   
 }
 @property(strong,nonatomic)GJH264Decoder* videoDecoder;
 @property(strong,nonatomic)GJPCMDecodeFromAAC* audioDecoder;
+@property(strong,nonatomic) NSRecursiveLock* lock;
 
 @property(strong,nonatomic)GJLivePlayer* player;
 @property(assign,nonatomic)long pullVByte;
@@ -141,7 +142,6 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     }
     GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
     GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
-    [_audioDecoder start];
     [_player start];    
     _startPullDate = [NSDate date];
     [_lock unlock];
@@ -210,11 +210,12 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
             destformat.mBytesPerFrame   = destformat.mChannelsPerFrame * destformat.mBitsPerChannel/8;
             destformat.mFramesPerPacket = destformat.mBytesPerFrame * destformat.mFramesPerPacket ;
             destformat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
+            [livePull.lock lock];
             livePull.audioDecoder = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&destformat SourceDescription:&sourceformat];
             livePull.audioDecoder.delegate = livePull;
             [livePull.audioDecoder start];
-            
             livePull.player.audioFormat = destformat;
+            [livePull.lock unlock];
         }
         
  

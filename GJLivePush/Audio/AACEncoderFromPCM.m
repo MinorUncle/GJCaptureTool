@@ -59,7 +59,7 @@
     queueCreate(&_resumeQueue, 10,true,false);
 
 
-    _encoderQueue = dispatch_queue_create("audioEncodeQueue", DISPATCH_QUEUE_CONCURRENT);
+    _encoderQueue = dispatch_queue_create("audioEncodeQueue", DISPATCH_QUEUE_SERIAL);
 }
 //编码输入
 static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData,AudioStreamPacketDescription **outDataPacketDescription, void *inUserData)
@@ -86,6 +86,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         return noErr;
     }else{
         *ioNumberDataPackets = 0;
+        GJLOG(GJ_LOGWARNING, "encodeInputDataProc 0 faile");
         return -1;
     }
 }
@@ -186,12 +187,9 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u\n", (unsigned int)outputBitRate);
     }
     if (_bufferPool) {
-        __block GJRetainBufferPool* tempPool = _bufferPool;
+        GJRetainBufferPoolClean(_bufferPool, true);
+        GJRetainBufferPoolFree(&_bufferPool);
         _bufferPool = NULL;
-        dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            GJRetainBufferPoolClean(tempPool, true);
-            GJRetainBufferPoolFree(&tempPool);
-        });
     }
     GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJAACPacketMalloc,GNULL);
 //    [self performSelectorInBackground:@selector(_converterStart) withObject:nil];
@@ -374,7 +372,7 @@ int get_f_index(unsigned int sampling_frequency)
         GJRetainBufferPoolFree(&_bufferPool);
     }
 
-
+    GJLOG(GJ_LOGINFO, "AACEncoderFromPCM");
     
 }
 #pragma mark - mutex

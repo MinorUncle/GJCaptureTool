@@ -133,7 +133,7 @@
     [super viewDidLoad];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGINFO);
-    RTMP_LogSetLevel(RTMP_LOGDEBUG);
+//    RTMP_LogSetLevel(RTMP_LOGDEBUG);
     
     _livePush = [[GJLivePush alloc]init];
     _livePush.delegate = self;
@@ -381,8 +381,6 @@ static char* url = "rtmp://10.0.1.230/live/room";
         show.playerBufferLab.text = [NSString stringWithFormat:@"buffer：%0.2f  %ld ms",percent,duration];
             
     });
-
-
 }
 
 -(void)livePull:(GJLivePull *)livePull networkDelay:(long)delay{

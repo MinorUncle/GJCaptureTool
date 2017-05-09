@@ -87,7 +87,6 @@ static GHandle sendRunloop(GHandle parm){
             GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);
         }else{
             GJLOG(GJ_LOGERROR, "error send video FRAME");
-//            GJAssert(iRet, "error send video FRAME\n");
             errType = GJRTMPPushMessageType_sendPacketError;
             retainBufferUnRetain(packet->retainBuffer);
             GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);

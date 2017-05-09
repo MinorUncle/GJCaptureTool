@@ -219,7 +219,7 @@
 }
 
 -(void)pushRun{
-
+    if(_timer){[_timer invalidate];}
     _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency repeats:YES block:^(NSTimer * _Nonnull timer) {
         GJTrafficStatus vInfo = GJRtmpPush_GetVideoBufferCacheInfo(_videoPush);
         GJTrafficStatus aInfo = GJRtmpPush_GetAudioBufferCacheInfo(_videoPush);
@@ -393,5 +393,6 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
     if (_videoPush) {
         GJRtmpPush_CloseAndRelease(_videoPush);
     }
+    GJLOG(GJ_LOGDEBUG, "GJLivePush");
 }
 @end
