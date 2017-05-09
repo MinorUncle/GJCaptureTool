@@ -26,7 +26,7 @@
 
 
 
-#define VIDEO_PTS_PRECISION   400
+#define VIDEO_PTS_PRECISION   1000
 #define AUDIO_PTS_PRECISION   100
 
 
@@ -270,6 +270,7 @@ static void* playVideoRunLoop(void* parm){
             });
         }
 #else
+        GJLOG(GJ_LOGINFO, "image show pts:%d",cImageBuf->pts);
         [player.imageInput updateDataWithImageBuffer:cImageBuf->image timestamp: CMTimeMake(cImageBuf->pts, 1000)];
         
 #endif
@@ -692,6 +693,7 @@ static const int mpeg4audio_sample_rates[16] = {
             GJBufferPoolSetData(defauleBufferPool(), (uint8_t*)audioBuffer[i]);
         }
         _syncControl.audioInfo.trafficStatus.leave.pts = (long)pts;
+        free(audioBuffer);
         pthread_mutex_unlock(&_playControl.oLock);
 
     }

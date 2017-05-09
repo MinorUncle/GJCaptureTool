@@ -51,7 +51,6 @@ static GHandle sendRunloop(GHandle parm){
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret ) {
         GJLOG(GJ_LOGERROR, "RTMP_ConnectStream error");
-
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }else{
@@ -93,8 +92,6 @@ static GHandle sendRunloop(GHandle parm){
             goto ERROR;
         };
     }
-    
-  
 
     errType = GJRTMPPushMessageType_closeComplete;
 ERROR:
@@ -145,7 +142,7 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         return GFalse;
     }
     GBool isKey = GFalse;
-    GUInt8 *sps = packet->sps,*pps = packet->pps,*pp = packet->pp;
+    GUInt8 *sps = packet->spsOffset + packet->retain.data,*pps = packet->ppsOffset + packet->retain.data,*pp = packet->ppOffset+packet->retain.data;
     GInt32 spsSize = packet->spsSize,ppsSize = packet->ppsSize,ppSize = packet->ppSize;
     
     GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
@@ -159,10 +156,10 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     GInt32 sps_ppsPreSize = 0,ppPreSize = 0,ppHasPreSize=9;//flv tag前置预留大小大小
    
 
-    if (packet->sps) {
+    if (packet->spsSize>0) {
         sps_ppsPreSize = 16;
     }
-    if (packet->pp) {
+    if (packet->ppSize>0) {
  
         ppPreSize = 9;
         
@@ -174,15 +171,18 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
                 ppSize += packet->seiSize;
             }
 #endif
-            ppHasPreSize -= packet->pp - packet->pps - packet->ppsSize;
+            ppHasPreSize -= packet->ppOffset - packet->ppsOffset - packet->ppsSize;
         }
     }else{
         GJAssert(0, "没有pp");
     }
 
-    if (pp-packet->retain.data < ppPreSize+sps_ppsPreSize+RTMP_MAX_HEADER_SIZE+spsSize+ppsSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
-        retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+spsSize+ppsSize, GTrue);
+    if (pp-packet->retain.data + packet->retain.frontSize < ppPreSize+sps_ppsPreSize+RTMP_MAX_HEADER_SIZE+spsSize+ppsSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
         GJLOG(GJ_LOGDEBUG, "预留位置过小,扩大");
+        retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+spsSize+ppsSize, GTrue);
+        sps = packet->spsOffset + packet->retain.data;
+        pps = packet->ppsOffset + packet->retain.data;
+        pp = packet->ppOffset+packet->retain.data;
     }
 //    使用pp做参考点，防止sei不发送的情况，导致pp移动，产生消耗
     sendPacket->m_body = (GChar*)pp - ppPreSize - sps_ppsPreSize - spsSize - ppsSize;

@@ -72,10 +72,7 @@ void decodeOutputCallback(
 
 
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
-    if ([decoder.delegate respondsToSelector:@selector(GJH264Decoder:decodeCompleteImageData:pts:)]) {
-        [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:presentationTimeStamp.value*1000/presentationTimeStamp.timescale];
-    }
-    
+    [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:presentationTimeStamp.value*1000/presentationTimeStamp.timescale];
 }
 
 -(uint8_t*)startCodeIndex:(uint8_t*)sour size:(long)size codeSize:(uint8_t*)codeSize{
@@ -106,8 +103,8 @@ void decodeOutputCallback(
     CMSampleBufferRef sampleBuffer = NULL;
     CMBlockBufferRef blockBuffer = NULL;
     
-    if (packet->sps && packet->pps) {
-        uint8_t*  parameterSetPointers[2] = {packet->sps+4, packet->pps+4};
+    if (packet->spsSize > 0) {
+        uint8_t*  parameterSetPointers[2] = {packet->spsOffset+packet->retain.data+4, packet->ppsOffset+packet->retain.data+4};
         size_t parameterSetSizes[2] = {packet->spsSize-4, packet->ppsSize-4};
         
         CMVideoFormatDescriptionRef  desc;
@@ -161,9 +158,9 @@ void decodeOutputCallback(
 
     }
     
-    if (packet->pp) {
+    if (packet->ppsSize>0) {
         blockLength = (int)(packet->ppSize);
-        void* data = packet->pp;
+        void* data = packet->ppOffset+packet->retain.data;
         uint32_t dataLength32 = htonl (blockLength - 4);
         memcpy (data, &dataLength32, sizeof (uint32_t));
         status = CMBlockBufferCreateWithMemoryBlock(NULL, data,
@@ -213,7 +210,7 @@ RETRY:
                     VTDecompressionSessionInvalidate(_decompressionSession);
                     _decompressionSession = nil;
                     GJLOG(GJ_LOGERROR, "解码错误  kVTInvalidSessionErr");
-                    if (packet->sps) {
+                    if (packet->spsSize>0) {
                         GJLOG(GJ_LOGERROR, "解码错误后关键帧，重新解码");
                         [self createDecompSession];
                         goto RETRY;

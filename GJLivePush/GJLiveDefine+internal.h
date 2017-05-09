@@ -25,13 +25,13 @@ typedef struct TrafficStatus{
 typedef struct H264Packet{
     GJRetainBuffer retain;
     GInt64 pts;
-    GUInt8* sps;
+    GLong spsOffset;
     GInt32 spsSize;
-    GUInt8* pps;
+    GLong ppsOffset;
     GInt32 ppsSize;
-    GUInt8* pp;
+    GLong ppOffset;
     GInt32 ppSize;
-    GUInt8* sei;
+    GLong seiOffset;
     GInt32 seiSize;
 }R_GJH264Packet;
 typedef struct AACPacket{

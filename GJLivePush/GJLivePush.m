@@ -22,6 +22,10 @@
 #ifdef GJPCMDecodeFromAAC_TEST
 #import "GJPCMDecodeFromAAC.h"
 #endif
+
+#ifdef GJVIDEODECODE_TEST
+#import "GJH264Decoder.h"
+#endif
 @interface GJLivePush()<GJH264EncoderDelegate,GJAudioQueueRecoderDelegate,AACEncoderFromPCMDelegate>
 {
     GPUImageVideoCamera* _videoCamera;
@@ -45,6 +49,9 @@
 #endif
 #ifdef GJPCMDecodeFromAAC_TEST
     GJPCMDecodeFromAAC* _audioDecode;
+#endif
+#ifdef GJVIDEODECODE_TEST
+    GJH264Decoder* _videoDecode;
 #endif
 }
 @property(strong,nonatomic)GJH264Encoder* videoEncoder;
@@ -236,13 +243,13 @@
         [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
     }];
     _fristFrameDate = [NSDate date];
-    [_audioRecoder startRecodeAudio];
-//    __weak GJLivePush* wkSelf = self;
-//    wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
-//        CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
-//        int pts = [[NSDate date]timeIntervalSinceDate:wkSelf.fristFrameDate]*1000;
-//        [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:pts fourceKey:false];
-//    };
+//    [_audioRecoder startRecodeAudio];
+    __weak GJLivePush* wkSelf = self;
+    wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
+        CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
+        int pts = [[NSDate date]timeIntervalSinceDate:wkSelf.fristFrameDate]*1000;
+        [wkSelf.videoEncoder encodeImageBuffer:pixel_buffer pts:pts fourceKey:false];
+    };
 }
 
 - (void)stopStreamPush{
@@ -260,7 +267,6 @@
         _timer = nil;
         
         GJRtmpPush_CloseAndRelease(_videoPush);
-
         _videoPush = NULL;
         memset(&_videoInfo, 0, sizeof(_videoInfo));
         memset(&_audioInfo, 0, sizeof(_audioInfo));
@@ -322,8 +328,44 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 }
 
 #pragma mark delegate
+#ifdef GJVIDEODECODE_TEST
+-(GJLivePlayer *)player{
+    if (_player == nil) {
+        _player = [[GJLivePlayer alloc]init];
+        [_player start];
+    }
+    return _player;
+}
+-(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts{
+    if (_player == nil) {
+        _player = [[GJLivePlayer alloc]init];
+    }
+    GJLOG(GJ_LOGALL, "encode complete pts:%lld",pts);
+    [_player addVideoDataWith:imageBuffer pts:pts];
+}
+#endif
+GJQueue* h264Queue ;
 -(float)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet{
-
+#ifdef GJVIDEODECODE_TEST
+    if (_videoDecode == nil) {
+        _videoDecode = [[GJH264Decoder alloc]init];
+        _videoDecode.delegate = self;
+        
+        queueCreate(&h264Queue, 100, GTrue, GTrue);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            while (_videoDecode) {
+                R_GJH264Packet* hPacket;
+                if (queuePop(h264Queue, (void**)&hPacket, GINT8_MAX)) {
+                    [_videoDecode decodePacket:packet];
+                    retainBufferUnRetain(&hPacket->retain);
+                }
+            }
+        });
+    }
+    retainBufferRetain(&packet->retain);
+    queuePush(h264Queue, packet, 0);
+    return 0.0;
+#endif
 //    static int times;
 //    NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
 //    NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
@@ -331,11 +373,11 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 
     if (_mp4Recoder) {
         uint8_t* frame;long size=0;
-        if (packet->sps) {
-            frame = packet->sps;
-            size = packet->pp+packet->ppSize - packet->sps;
+        if (packet->spsSize > 0) {
+            frame = packet->spsOffset + packet->retain.data;
+            size = packet->ppsSize+packet->ppSize + packet->spsSize + packet->seiSize;
         }else{
-            frame = packet->pp;
+            frame = packet->ppOffset + packet->retain.data;
             size = packet->ppSize;
         }
         mp4WriterAddVideo(_mp4Recoder, frame, size, (double)packet->pts);

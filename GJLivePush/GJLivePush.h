@@ -45,9 +45,9 @@ enum AVCaptureDevicePosition;
 @property(nonatomic,assign,readonly)NSInteger captureFps;
 
 @property(nonatomic,weak)id<GJLivePushDelegate> delegate;
-
+#ifdef GJVIDEODECODE_TEST
 @property(strong,nonatomic)GJLivePlayer* player;
-
+#endif
 //push status,
 #define kLIVEPUSH_CONNECT 1<<0
 #define kLIVEPUSH_PREVIEW 1<<1

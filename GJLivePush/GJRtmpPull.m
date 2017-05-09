@@ -131,13 +131,13 @@ static GHandle pullRunloop(GHandle parm){
                 GJRetainBuffer* retainBuffer = &h264Packet->retain;
                 retainBufferPack(&retainBuffer, packet.m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet.m_nBodySize,packetBufferRelease, NULL);
                
-                h264Packet->sps = sps;
+                h264Packet->spsOffset = sps - retainBuffer->data;
                 h264Packet->spsSize = spsSize;
-                h264Packet->pps = pps;
+                h264Packet->ppsOffset = pps - retainBuffer->data;
                 h264Packet->ppsSize = ppsSize;
-                h264Packet->pp = pp;
+                h264Packet->ppOffset = pp - retainBuffer->data;
                 h264Packet->ppSize = ppSize;
-                h264Packet->sei = sei;
+                h264Packet->seiOffset = sei - retainBuffer->data;
                 h264Packet->seiSize = seiSize;
                 h264Packet->pts = packet.m_nTimeStamp;
                 streamPacket.packet.h264Packet = h264Packet;
