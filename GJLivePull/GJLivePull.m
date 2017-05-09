@@ -227,13 +227,7 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
         livePull.unitVByte += buffer->size;
         livePull.unitVPacketCount ++;
 
-//        static int times;
-//        R_GJH264Packet* packet = streamPacket.packet.h264Packet;
-//        NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
-//        NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
-////        NSData* pp = [NSData dataWithBytes:packet->pp length:30];
-////
-//        NSLog(@"dece:%d,sps%@,pps%@,pp%d,pts:%lld",times++,sps,pps,streamPacket.packet.h264Packet->ppSize,streamPacket.packet.h264Packet->pts);
+
 
         [livePull.videoDecoder decodePacket:streamPacket.packet.h264Packet];
     }

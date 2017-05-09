@@ -74,10 +74,12 @@ static GHandle sendRunloop(GHandle parm){
         GInt32 iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
         if (iRet) {
             if (packet->packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
+                GJLOG(GJ_LOGALL, "send video pts:%d",packet->packet.m_nTimeStamp);
                 push->videoStatus.leave.byte+=packet->packet.m_nBodySize;
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.pts = sendPts;
             }else{
+                GJLOG(GJ_LOGALL, "send audio pts:%d",packet->packet.m_nTimeStamp);
                 push->audioStatus.leave.byte+=packet->packet.m_nBodySize;
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.pts = sendPts;
@@ -183,6 +185,12 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         sps = packet->spsOffset + packet->retain.data;
         pps = packet->ppsOffset + packet->retain.data;
         pp = packet->ppOffset+packet->retain.data;
+#ifdef SEND_SEI
+        if (packet->sei) {
+            pp = packet->sei;
+            ppSize += packet->seiSize;
+        }
+#endif
     }
 //    使用pp做参考点，防止sei不发送的情况，导致pp移动，产生消耗
     sendPacket->m_body = (GChar*)pp - ppPreSize - sps_ppsPreSize - spsSize - ppsSize;
@@ -195,7 +203,7 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
     sendPacket->m_nTimeStamp = (uint32_t)packet->pts;
   
-    if (sps && pps) {
+    if (packet->ppsSize > 0 && packet->spsSize > 0) {
 
         //先移动，防止被填充:[13]sps,[13+spsSize+3]pps
         if (ppHasPreSize<0) {//右移动
@@ -224,7 +232,8 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         body[iIndex++]   = 0xe1;
         body[iIndex++] = (spsSize >> 8) & 0xff;
         body[iIndex++] = spsSize & 0xff;
-        
+        GJAssert(body+iIndex == sps, "位置不对");
+
 //        memmove(&body[iIndex],sps,spsSize);
         iIndex +=  spsSize;
 
@@ -233,9 +242,10 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         body[iIndex++] = ((ppsSize) >> 8) & 0xff;
         body[iIndex++] = (ppsSize) & 0xff;
 //        memmove(&body[iIndex], pps, ppsSize);
+        GJAssert(body+iIndex == pps, "位置不对");
         iIndex +=  ppsSize;
     }
-    if (pp) {
+    if (packet->ppSize > 0) {
 
         if(isKey)
         {
@@ -255,6 +265,8 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         body[iIndex++] = ppSize>>16 &0xff;
         body[iIndex++] = ppSize>>8 &0xff;
         body[iIndex++] = ppSize    &0xff;
+        GJAssert(body+iIndex == pp, "位置不对");
+
         // NALU data
 //        memcpy(&body[iIndex],pp,ppSize);   //不需要移动
     }

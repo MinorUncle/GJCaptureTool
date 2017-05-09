@@ -107,7 +107,7 @@ RETRY:
             return YES;
         }else{
             if (status == kVTInvalidSessionErr) {
-                GJLOG(GJ_LOGERROR,"编码失败 kVTInvalidSessionErr,重新编码");
+                GJLOG(GJ_LOGWARNING,"编码失败 kVTInvalidSessionErr,重新编码");
                 VTCompressionSessionInvalidate(_enCodeSession);
                 _enCodeSession = nil;
                 goto RETRY;

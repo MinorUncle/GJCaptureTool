@@ -12,7 +12,7 @@
 #include "GJRetainBufferPool.h"
 
 //#define SEND_SEI
-#define TEST
+//#define TEST
 typedef struct TrafficUnit{
     GLong pts;//ms
     GLong count;

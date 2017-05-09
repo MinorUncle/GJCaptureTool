@@ -71,6 +71,7 @@ static GHandle pullRunloop(GHandle parm){
             RTMP_ClientPacket(pull->rtmp, &packet);
             
             if (packet.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
+                GJLOG(GJ_LOGALL, "receive audio pts:%d",packet.m_nTimeStamp);
                 streamPacket.type = GJAudioType;
                 pull->audioPullInfo.pts = packet.m_nTimeStamp;
                 pull->audioPullInfo.count++;
@@ -94,9 +95,8 @@ static GHandle pullRunloop(GHandle parm){
                 retainBufferUnRetain(retainBuffer);
                 
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
+                GJLOG(GJ_LOGALL, "receive audio pts:%d",packet.m_nTimeStamp);
                 streamPacket.type = GJVideoType;
-
-
                 GUInt8 *body = (GUInt8*)packet.m_body;
                 GUInt8 *pbody = body;
                 GInt32 isKey = 0;
@@ -131,6 +131,7 @@ static GHandle pullRunloop(GHandle parm){
                 GJRetainBuffer* retainBuffer = &h264Packet->retain;
                 retainBufferPack(&retainBuffer, packet.m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet.m_nBodySize,packetBufferRelease, NULL);
                
+                
                 h264Packet->spsOffset = sps - retainBuffer->data;
                 h264Packet->spsSize = spsSize;
                 h264Packet->ppsOffset = pps - retainBuffer->data;

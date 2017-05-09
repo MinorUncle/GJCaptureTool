@@ -66,13 +66,14 @@ void decodeOutputCallback(
 //    NSLog(@"decodeOutputCallback:%@",[NSThread currentThread]);
     
     if (status != 0) {
-        GJLOG(GJ_LOGERROR,"解码error1:%d",(int)status);
+        GJLOG(GJ_LOGWARNING,"解码error1:%d",(int)status);
         return;
     }
-
+    GInt64 pts = presentationTimeStamp.value*1000/presentationTimeStamp.timescale;
+    GJLOG(GJ_LOGALL, "decode packet output pts:%lld",pts);
 
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
-    [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:presentationTimeStamp.value*1000/presentationTimeStamp.timescale];
+    [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:pts];
 }
 
 -(uint8_t*)startCodeIndex:(uint8_t*)sour size:(long)size codeSize:(uint8_t*)codeSize{
@@ -97,7 +98,7 @@ void decodeOutputCallback(
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     
-
+    GJLOG(GJ_LOGALL, "decode packet input pts:%lld",packet->pts);
     OSStatus status;
     long blockLength = 0;
     CMSampleBufferRef sampleBuffer = NULL;
@@ -158,7 +159,7 @@ void decodeOutputCallback(
 
     }
     
-    if (packet->ppsSize>0) {
+    if (packet->ppSize>0) {
         blockLength = (int)(packet->ppSize);
         void* data = packet->ppOffset+packet->retain.data;
         uint32_t dataLength32 = htonl (blockLength - 4);
@@ -189,6 +190,7 @@ void decodeOutputCallback(
                 goto ERROR;
             }
         }else{
+            GJLOG(GJ_LOGERROR, "CMBlockBufferCreateWithMemoryBlock error:%d",status);
             goto ERROR;
         }
         
@@ -209,14 +211,12 @@ RETRY:
                 if(kVTInvalidSessionErr == status){
                     VTDecompressionSessionInvalidate(_decompressionSession);
                     _decompressionSession = nil;
-                    GJLOG(GJ_LOGERROR, "解码错误  kVTInvalidSessionErr");
-                    if (packet->spsSize>0) {
-                        GJLOG(GJ_LOGERROR, "解码错误后关键帧，重新解码");
-                        [self createDecompSession];
-                        goto RETRY;
-                    }
+                    GJLOG(GJ_LOGWARNING, "解码错误  kVTInvalidSessionErr");
+                    [self createDecompSession];
+                    goto RETRY;
+                }else{
+                    GJLOG(GJ_LOGERROR, "解码错误0：%d  ,format:%p",status,_formatDesc);
                 }
-                GJLOG(GJ_LOGERROR, "解码错误0：%d  ,format:%p",status,_formatDesc);
                 //                    [self createDecompSession];
                 //                    status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
                 //                    if (status < 0) {
@@ -228,6 +228,9 @@ RETRY:
             CFRelease(sampleBuffer);
             CFRelease(blockBuffer);
         }
+    }else{
+        GJLOG(GJ_LOGERROR, "帧没有pp");
+
     }
     
 ERROR:
