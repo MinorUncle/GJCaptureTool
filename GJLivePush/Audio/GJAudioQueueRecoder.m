@@ -249,7 +249,7 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
     status = AudioQueueNewInput ( &format, callback, (__bridge void * _Nullable)(self),  NULL, 0, 0, &_mAudioQueue);
     if (status != 0) {
         char *formatName = (char *)&(status);
-        GJLOG(GJ_LOGERROR, "AudioQueueNewInput error:%d: %c%c%c%c---------", formatName[3], formatName[2], formatName[1], formatName[0]);
+        GJLOG(GJ_LOGFORBID, "AudioQueueNewInput error:%d: %c%c%c%c---------", formatName[3], formatName[2], formatName[1], formatName[0]);
         _mAudioQueue = NULL;
         
         return NO;
@@ -305,16 +305,16 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
     NSError* error;
     [[AVAudioSession sharedInstance]setCategory:AVAudioSessionCategoryPlayAndRecord error:&error];
     if (error) {
-        GJLOG(GJ_LOGERROR,"AVAudioSession setCategory error:%s",error.localizedDescription);
+        GJLOG(GJ_LOGFORBID,"AVAudioSession setCategory error:%s",error.localizedDescription);
     }
     error = NULL;
 //    [[AVAudioSession sharedInstance]overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker  error:NULL];
 //    if (error) {
-//        GJLOG(GJ_LOGERROR,"AVAudioSession overrideOutputAudioPort error:%s",error.localizedDescription);
+//        GJLOG(GJ_LOGFORBID,"AVAudioSession overrideOutputAudioPort error:%s",error.localizedDescription);
 //    }
     [[AVAudioSession sharedInstance]setActive:YES error:&error];
     if (error) {
-        GJLOG(GJ_LOGERROR,"AVAudioSession setActive error:%s",error.localizedDescription);
+        GJLOG(GJ_LOGFORBID,"AVAudioSession setActive error:%s",error.localizedDescription);
     }
     NSArray<AVAudioSessionPortDescription*>* inputs = [AVAudioSession sharedInstance].availableInputs;
     for (AVAudioSessionPortDescription* input in inputs) {//设置非内置麦克风
@@ -327,12 +327,12 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
     for (int i = 0; i < NUMBER_BUFFERS; ++i) {           // 1
         OSStatus  status = AudioQueueAllocateBuffer (_mAudioQueue,_maxOutSize,&_mAudioBuffers[i]);
         if (status < 0) {
-            GJLOG(GJ_LOGERROR,"AudioQueueAllocateBuffer error:%d",status);
+            GJLOG(GJ_LOGFORBID,"AudioQueueAllocateBuffer error:%d",status);
             return NO;
         }
         status = AudioQueueEnqueueBuffer (_mAudioQueue,_mAudioBuffers[i],0,NULL);
         if (status < 0) {
-            GJLOG(GJ_LOGERROR,"AudioQueueEnqueueBuffer error:%d",status);
+            GJLOG(GJ_LOGFORBID,"AudioQueueEnqueueBuffer error:%d",status);
             return NO;
         }
     }
@@ -340,7 +340,7 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
     
     OSStatus status = AudioQueueStart(_mAudioQueue,NULL);
     if (status < 0) {
-        GJLOG(GJ_LOGERROR,"AudioQueueStart error:%d",status);
+        GJLOG(GJ_LOGFORBID,"AudioQueueStart error:%d",status);
         return NO;
     }else{
         _status = kRecoderRunningStatus;

@@ -64,7 +64,7 @@ enum AVCaptureDevicePosition;
 
 - (void)stopPreview;
 
-- (bool)startStreamPushWithConfig:(GJPushConfig)config;
+- (bool)startStreamPushWithConfig:(const GJPushConfig*)config;
 
 - (void)stopStreamPush;
 

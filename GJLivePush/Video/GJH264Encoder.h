@@ -32,7 +32,7 @@ typedef enum _GJEncodeQuality{
 
  @return 可以理解为下一级数据缓存的比例，用于动态编码。
  */
--(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompletePacket:(R_GJH264Packet*)packet;
+-(GLong)GJH264Encoder:(GJH264Encoder*)encoder encodeCompletePacket:(R_GJH264Packet*)packet;
 
 /**
  编码质量回调
@@ -64,9 +64,9 @@ typedef enum _GJEncodeQuality{
 
 
 /**
- 网络差时允许最小丢帧的步伐，即隔allowDropStep帧丢一帧。当allowDropStep 小于0时表示不允许丢帧调码率，否则必须大于0，会导致码率小于allowMinBitRate，但是视频质量不下降，且该丢帧为隔帧丢帧，不会大程度影响流畅度。建议和默认是1，即最多为隔一帧丢帧，
+ 表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
  */
-@property(assign,nonatomic) int allowDropStep;
+@property(assign,nonatomic) GRational allowDropStep;
 
 
 /**

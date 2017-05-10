@@ -43,7 +43,9 @@
     GJTrafficStatus        _audioInfo;
     GJTrafficStatus        _videoInfo;
 
-    NSLock*          _pushLock;
+    BOOL                    _isReStart;
+    NSRecursiveLock*          _pushLock;
+    GJPushConfig _pushConfig;
 #ifdef GJPUSHAUDIOQUEUEPLAY_TEST
     GJAudioQueuePlayer* _audioTestPlayer;
 #endif
@@ -75,7 +77,7 @@
     self = [super init];
     if (self) {
         _gaterFrequency = 2.0;
-
+        _pushLock = [[NSRecursiveLock alloc]init];
     }
     return self;
 }
@@ -133,8 +135,23 @@
     _status &= !kLIVEPUSH_PREVIEW;
 
 }
+- (bool)startStreamPushWithConfig:(const GJPushConfig*)config{
+    return [self startStreamPushWithConfig:config reStart:NO];
+}
+- (bool)startStreamPushWithConfig:(const GJPushConfig*)config reStart:(BOOL)isReStart{
+    [_pushLock lock];
+    
+    _isReStart = isReStart;
+    if (config != &_pushConfig) {
+        if (_pushConfig.pushUrl != NULL) {
+            free(_pushConfig.pushUrl);
+            _pushConfig.pushUrl = NULL;
+        }
+        _pushConfig = *config;
+        _pushConfig.pushUrl = (char*)malloc(strlen(config->pushUrl)+1);
+        memcpy(_pushConfig.pushUrl, config->pushUrl, strlen(config->pushUrl)+1);
+    }
 
-- (bool)startStreamPushWithConfig:(GJPushConfig)config{
     if (_cropFilter) {
         if (_cropFilter == _videoStreamFilter) {
             _videoStreamFilter = nil;
@@ -148,19 +165,19 @@
         _videoStreamFilter = nil;
     }
   
-    if (!CGSizeEqualToSize(config.pushSize, _captureSize)) {
-        float scaleX = config.pushSize.width / _captureSize.width;
-        float scaleY = config.pushSize.height / _captureSize.height;
+    if (!CGSizeEqualToSize(_pushConfig.pushSize, _captureSize)) {
+        float scaleX = _pushConfig.pushSize.width / _captureSize.width;
+        float scaleY = _pushConfig.pushSize.height / _captureSize.height;
         if (scaleY - scaleX < -0.00001 || scaleY - scaleX > 0.00001) {//比例不相同，先裁剪，
             float scale = MIN(scaleX, scaleY);
             CGSize scaleSize = CGSizeMake(_captureSize.width * scale, _captureSize.height * scale);
             CGRect region =CGRectZero;
             if (scaleX > scaleY) {
                 region.origin.x = 0;
-                region.origin.y = (scaleSize.height - config.pushSize.height)*0.5;
+                region.origin.y = (scaleSize.height - _pushConfig.pushSize.height)*0.5;
             }else{
                 region.origin.y = 0;
-                region.origin.x = (scaleSize.width - config.pushSize.width)*0.5;
+                region.origin.x = (scaleSize.width - _pushConfig.pushSize.width)*0.5;
             }
 
             _cropFilter = [[GPUImageCropFilter alloc]initWithCropRegion:region];
@@ -177,23 +194,24 @@
     
     if (_videoEncoder == nil) {
         H264Format format = [GJH264Encoder defaultFormat];
-        format.baseFormat.bitRate = config.videoBitRate;
+        format.baseFormat.bitRate = _pushConfig.videoBitRate;
         _videoEncoder = [[GJH264Encoder alloc]initWithFormat:format];
         _videoEncoder.allowMinBitRate = format.baseFormat.bitRate * 0.6;
         _videoEncoder.deleagte = self;
     }
-    _pushUrl = [NSString stringWithUTF8String:config.pushUrl];
+    _pushUrl = [NSString stringWithUTF8String:_pushConfig.pushUrl];
     if (_videoPush != nil) {
         GJRtmpPush_CloseAndRelease(_videoPush);
         _videoPush = NULL;
     }
     GJRtmpPush_Create(&_videoPush, rtmpCallback, (__bridge void *)(self));
-    [_videoStreamFilter forceProcessingAtSize:config.pushSize];
+    [_videoStreamFilter forceProcessingAtSize:_pushConfig.pushSize];
     _videoStreamFilter.frameProcessingCompletionBlock = nil;
     
     _startPushDate = [NSDate date];
     GJRtmpPush_StartConnect(self.videoPush, self.pushUrl.UTF8String);
-    [self setupMicrophoneWithSampleRate:config.audioSampleRate channel:config.channel];
+    [self setupMicrophoneWithSampleRate:_pushConfig.audioSampleRate channel:_pushConfig.channel];
+    [_pushLock unlock];
     return true;
 }
 
@@ -220,7 +238,7 @@
         GJLOG(GJ_LOGINFO, "GJAudioQueueRecoder 初始化成功");
         return YES;
     }else{
-        GJLOG(GJ_LOGERROR, "GJAudioQueueRecoder CREATE ERROR");
+        GJLOG(GJ_LOGFORBID, "GJAudioQueueRecoder CREATE ERROR");
         return NO;
     }
 }
@@ -253,6 +271,7 @@
 }
 
 - (void)stopStreamPush{
+    [_pushLock lock];
     if (_videoPush) {
         if (_mp4Recoder) {
             mp4WriterClose(&(_mp4Recoder));
@@ -274,6 +293,7 @@
     }else{
         GJLOG(GJ_LOGWARNING, "推流重复停止");
     }
+    [_pushLock unlock];
 }
 
 -(UIView *)getPreviewView{
@@ -340,12 +360,12 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
     if (_player == nil) {
         _player = [[GJLivePlayer alloc]init];
     }
-    GJLOG(GJ_LOGALL, "encode complete pts:%lld",pts);
+    GJLOGFREQ("encode complete pts:%lld",pts);
     [_player addVideoDataWith:imageBuffer pts:pts];
 }
 #endif
 GJQueue* h264Queue ;
--(float)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet{
+-(GLong)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet{
 #ifdef GJVIDEODECODE_TEST
     if (_videoDecode == nil) {
         _videoDecode = [[GJH264Decoder alloc]init];
@@ -384,9 +404,20 @@ GJQueue* h264Queue ;
     }
     
     if(!GJRtmpPush_SendH264Data(_videoPush, packet)){
-        return 1;
+        return -1;
     }else{
-        return GJRtmpPush_GetBufferRate(_videoPush);
+        GJTrafficStatus status = GJRtmpPush_GetVideoBufferCacheInfo(_videoPush);
+        GLong cache = status.enter.pts - status.leave.pts;
+        if(cache > MAX_SEND_DELAY){
+            dispatch_async(dispatch_get_global_queue(0, 0), ^{
+                GJLOG(GJ_LOGWARNING, "推送缓存过多，导致重连");
+                [_pushLock lock];
+                [self stopStreamPush];
+                [self startStreamPushWithConfig:&_pushConfig reStart:YES];
+                [_pushLock unlock];
+            });
+        }
+        return cache;
     }
 }
 
@@ -434,6 +465,10 @@ GJQueue* h264Queue ;
 -(void)dealloc{
     if (_videoPush) {
         GJRtmpPush_CloseAndRelease(_videoPush);
+    }
+    if (_pushConfig.pushUrl != NULL) {
+        free(_pushConfig.pushUrl);
+        _pushConfig.pushUrl = NULL;
     }
     GJLOG(GJ_LOGDEBUG, "GJLivePush");
 }

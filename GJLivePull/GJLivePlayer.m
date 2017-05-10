@@ -208,7 +208,7 @@ static void* playVideoRunLoop(void* parm){
                         goto DROP;
                     }else{
                         long oDelay = delay;
-                        GJLOG(GJ_LOGERROR, "视频PTS很可能错误，连续两帧需要长时间等待");
+                        GJLOG(GJ_LOGFORBID, "视频PTS很可能错误，连续两帧需要长时间等待");
                         while (delay>20) {
                             if (_playControl->status == kPlayStatusStop) {
                                 goto DROP;
@@ -246,7 +246,7 @@ static void* playVideoRunLoop(void* parm){
         }
     DISPLAY:
         if (delay > 20) {
-            GJLOG(GJ_LOGALL,"play wait:%d, video pts:%ld",delay,_syncControl->videoInfo.cPTS);
+            GJLOGFREQ("play wait:%d, video pts:%ld",delay,_syncControl->videoInfo.cPTS);
             usleep((unsigned int)delay * 1000);
         }
         
@@ -270,7 +270,7 @@ static void* playVideoRunLoop(void* parm){
             });
         }
 #else
-        GJLOG(GJ_LOGINFO, "image show pts:%d",cImageBuf->pts);
+        GJLOGFREQ("image show pts:%d",cImageBuf->pts);
         [player.imageInput updateDataWithImageBuffer:cImageBuf->image timestamp: CMTimeMake(cImageBuf->pts, 1000)];
         
 #endif
@@ -434,7 +434,6 @@ ERROR:
         queueBroadcastPop(_playControl.imageQueue);
         queueSetMinCacheSize(_playControl.audioQueue, 0);
         queueBroadcastPop(_playControl.audioQueue);
-
         
         if (_syncControl.lastPauseFlag != 0) {
             _syncControl.lastBufferDuration = getTime() / 1000 - _syncControl.lastPauseFlag;
@@ -443,10 +442,10 @@ ERROR:
             _syncControl.lastPauseFlag = 0;
             GJLOG(GJ_LOGINFO, "buffing times:%d,totalduring:%ld",_syncControl.bufferTimes,_syncControl.bufferTotalDuration);
         }else{
-            GJLOG(GJ_LOGERROR, "暂停管理出现问题");
+            GJLOG(GJ_LOGFORBID, "暂停管理出现问题");
         }
         [_audioPlayer resume];
-        GJLOG(GJ_LOGDEBUG,"buffer total:%d\n",_syncControl.lastBufferDuration);
+        GJLOG(GJ_LOGDEBUG,"buffer total during:%dms",_syncControl.lastBufferDuration);
 
     }else{
         GJLOG(GJ_LOGDEBUG, "stopBuffering when status not buffering");
@@ -559,7 +558,7 @@ ERROR:
 }
 
 -(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(int64_t)pts{
-    GJLOG(GJ_LOGALL, "收到音频 PTS:%lld",pts);
+    GJLOGFREQ("收到音频 PTS:%lld",pts);
     if (pts < _syncControl.videoInfo.trafficStatus.enter.pts) {
         pthread_mutex_lock(&_playControl.oLock);
         GInt32 length = queueGetLength(_playControl.imageQueue);
@@ -589,7 +588,7 @@ ERROR:
             OSType type = CVPixelBufferGetPixelFormatType(imageData);
             _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:type];
             if (_imageInput == nil) {
-                GJLOG(GJ_LOGERROR, "GJImagePixelImageInput 创建失败！");
+                GJLOG(GJ_LOGFORBID, "GJImagePixelImageInput 创建失败！");
                 return NO;
             }
             [_imageInput addTarget:(GPUImageView*)_displayView];
@@ -624,7 +623,7 @@ RETRY:
         [self checkBufferingAndWater];
         result = YES;
     }else if(_playControl.status == kPlayStatusStop){
-        GJLOG(GJ_LOGERROR,"player video data push while stop");
+        GJLOG(GJ_LOGFORBID,"player video data push while stop");
         result = NO;
     }else{
         GJLOG(GJ_LOGWARNING, "video player queue full,update oldest frame");
@@ -634,7 +633,7 @@ RETRY:
             GJBufferPoolSetData(defauleBufferPool(), (void*)oldBuffer);
             goto RETRY;
         }else{
-            GJLOG(GJ_LOGERROR,"full player audio queue pop error");
+            GJLOG(GJ_LOGFORBID,"full player audio queue pop error");
             CVPixelBufferRelease(imageData);
             GJBufferPoolSetData(defauleBufferPool(), (uint8_t*)imageBuffer);
             result = NO;
@@ -675,7 +674,7 @@ static const int mpeg4audio_sample_rates[16] = {
     [_audioTestPlayer playData:audioData packetDescriptions:nil];
     return YES;
 #endif
-    GJLOG(GJ_LOGALL, "收到音频 PTS:%lld",pts);
+    GJLOGFREQ("收到音频 PTS:%lld",pts);
     BOOL result = YES;
     if (pts < _syncControl.audioInfo.trafficStatus.leave.pts) {
         pthread_mutex_lock(&_playControl.oLock);
@@ -765,7 +764,7 @@ RETRY:
             GJBufferPoolSetData(defauleBufferPool(), (void*)oldBuffer);
             goto RETRY;
         }else{
-            GJLOG(GJ_LOGERROR,"full player audio queue pop error");
+            GJLOG(GJ_LOGFORBID,"full player audio queue pop error");
             retainBufferUnRetain(audioData);
             GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
             result = NO;

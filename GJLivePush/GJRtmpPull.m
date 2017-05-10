@@ -71,7 +71,7 @@ static GHandle pullRunloop(GHandle parm){
             RTMP_ClientPacket(pull->rtmp, &packet);
             
             if (packet.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
-                GJLOG(GJ_LOGALL, "receive audio pts:%d",packet.m_nTimeStamp);
+                GJLOGFREQ("receive audio pts:%d",packet.m_nTimeStamp);
                 streamPacket.type = GJAudioType;
                 pull->audioPullInfo.pts = packet.m_nTimeStamp;
                 pull->audioPullInfo.count++;
@@ -95,7 +95,7 @@ static GHandle pullRunloop(GHandle parm){
                 retainBufferUnRetain(retainBuffer);
                 
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
-                GJLOG(GJ_LOGALL, "receive audio pts:%d",packet.m_nTimeStamp);
+                GJLOGFREQ("receive audio pts:%d",packet.m_nTimeStamp);
                 streamPacket.type = GJVideoType;
                 GUInt8 *body = (GUInt8*)packet.m_body;
                 GUInt8 *pbody = body;
@@ -152,7 +152,7 @@ static GHandle pullRunloop(GHandle parm){
                 retainBufferUnRetain(retainBuffer);
                 packet.m_body=NULL;
             }else{
-                GJLOG(GJ_LOGWARNING,"not media Packet:%p type:%d \n",packet,packet.m_packetType);
+                GJLOG(GJ_LOGWARNING,"not media Packet:%p type:%d",packet,packet.m_packetType);
                 RTMPPacket_Free(&packet);
                 break;
             }

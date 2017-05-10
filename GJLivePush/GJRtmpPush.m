@@ -42,7 +42,7 @@ static GHandle sendRunloop(GHandle parm){
     
     ret = RTMP_Connect(push->rtmp, GNULL);
     if (!ret) {
-        GJLOG(GJ_LOGERROR, "RTMP_Connect error");
+        GJLOG(GJ_LOGFORBID, "RTMP_Connect error");
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }
@@ -50,7 +50,7 @@ static GHandle sendRunloop(GHandle parm){
 
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret ) {
-        GJLOG(GJ_LOGERROR, "RTMP_ConnectStream error");
+        GJLOG(GJ_LOGFORBID, "RTMP_ConnectStream error");
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }else{
@@ -74,12 +74,12 @@ static GHandle sendRunloop(GHandle parm){
         GInt32 iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
         if (iRet) {
             if (packet->packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
-                GJLOG(GJ_LOGALL, "send video pts:%d",packet->packet.m_nTimeStamp);
+                GJLOGFREQ("send video pts:%d",packet->packet.m_nTimeStamp);
                 push->videoStatus.leave.byte+=packet->packet.m_nBodySize;
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.pts = sendPts;
             }else{
-                GJLOG(GJ_LOGALL, "send audio pts:%d",packet->packet.m_nTimeStamp);
+                GJLOGFREQ("send audio pts:%d",packet->packet.m_nTimeStamp);
                 push->audioStatus.leave.byte+=packet->packet.m_nBodySize;
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.pts = sendPts;
@@ -87,7 +87,7 @@ static GHandle sendRunloop(GHandle parm){
             retainBufferUnRetain(packet->retainBuffer);
             GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);
         }else{
-            GJLOG(GJ_LOGERROR, "error send video FRAME");
+            GJLOG(GJ_LOGFORBID, "error send video FRAME");
             errType = GJRTMPPushMessageType_sendPacketError;
             retainBufferUnRetain(packet->retainBuffer);
             GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);
@@ -128,13 +128,12 @@ GVoid GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,GHandle
     push->rtmp = RTMP_Alloc();
     RTMP_Init(push->rtmp);
     
-    queueCreate(&push->sendBufferQueue, BUFFER_CACHE_SIZE, GTrue, GFalse);
+    queueCreate(&push->sendBufferQueue, BUFFER_CACHE_SIZE, GTrue, GTrue);
     push->messageCallback = callback;
     push->rtmpPushParm = rtmpPushParm;
     push->stopRequest = GFalse;
     push->releaseRequest = GFalse;
     pthread_mutex_init(&push->mutex, GNULL);
-
     *sender = push;
 }
 
@@ -202,7 +201,6 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     sendPacket->m_headerType = RTMP_PACKET_SIZE_LARGE;
     sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
     sendPacket->m_nTimeStamp = (uint32_t)packet->pts;
-  
     if (packet->ppsSize > 0 && packet->spsSize > 0) {
 
         //先移动，防止被填充:[13]sps,[13+spsSize+3]pps

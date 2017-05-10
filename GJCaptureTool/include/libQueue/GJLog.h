@@ -31,43 +31,44 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/* Enable this to get full debugging */
-/* #define _DEBUG */
-
+    /* Enable this to get full debugging */
+    /* #define _DEBUG */
+    
 #define GJ_DEBUG
-
-
-typedef enum
-{
-    GJ_LOGNONE,
-    GJ_LOGERROR,
-    GJ_LOGWARNING,
-    GJ_LOGDEBUG,
-    GJ_LOGINFO,
-    GJ_LOGALL
-} GJ_LogLevel;
-
-extern GJ_LogLevel GJ_debuglevel;
-
-typedef GVoid (GJ_LogCallback)(GInt32 level, const char *pre, const char *fmt, va_list);
-
-//小于GJ_debuglevel则显示
-GVoid GJ_LogSetLevel(GJ_LogLevel lvl);
+    
+#define GJ_DEBUG_FREQUENTLY
+    
+    typedef enum
+    {
+        GJ_LOGFORBID,
+        GJ_LOGERROR,
+        GJ_LOGWARNING,
+        GJ_LOGDEBUG,
+        GJ_LOGINFO,
+        GJ_LOGALL
+    } GJ_LogLevel;
+    
+    extern GJ_LogLevel GJ_debuglevel;
+    
+    typedef GVoid (GJ_LogCallback)(GJ_LogLevel level, const char *pre, const char *fmt, va_list);
+    
+    //小于GJ_debuglevel则显示
+    GVoid GJ_LogSetLevel(GJ_LogLevel lvl);
     
     
     
     
-GVoid GJ_LogSetCallback(GJ_LogCallback *cb);
-GVoid GJ_LogSetOutput(FILE *file);
+    GVoid GJ_LogSetCallback(GJ_LogCallback *cb);
+    GVoid GJ_LogSetOutput(FILE *file);
     
-GVoid GJ_Log(GJ_LogLevel level,const char *pre,const char *format, ...);
-GVoid GJ_LogHex(GInt32 level, const GUInt8 *data, GUInt32 len);
-GVoid GJ_LogHexString(GInt32 level, const GUInt8 *data, GUInt32 len);
-
-//所有等级都会打印，但是大于GJ_LOGDEBUG模式会产生中断
-GVoid GJ_LogAssert(GInt32 isTrue,const char *pre,const char *format, ...);
-
-GJ_LogLevel GJ_LogGetLevel(GVoid);
+    GVoid GJ_Log(GJ_LogLevel level,const char *pre,const char *format, ...);
+    GVoid GJ_LogHex(GJ_LogLevel level, const GUInt8 *data, GUInt32 len);
+    GVoid GJ_LogHexString(GJ_LogLevel level, const GUInt8 *data, GUInt32 len);
+    
+    //所有等级都会打印，但是大于GJ_LOGDEBUG模式会产生中断
+    GVoid GJ_LogAssert(GInt32 isTrue,const char *pre,const char *format, ...);
+    
+    GJ_LogLevel GJ_LogGetLevel(GVoid);
     
     
     
@@ -75,11 +76,20 @@ GJ_LogLevel GJ_LogGetLevel(GVoid);
 #ifdef GJ_DEBUG
 #define GJLOG(level,format, ...) GJ_Log(level,__func__,format,##__VA_ARGS__)
 #define GJAssert(isTrue, format, ...) GJ_LogAssert(isTrue,__func__,format,##__VA_ARGS__)
+    
+#ifdef GJ_DEBUG_FREQUENTLY
+#define GJLOGFREQ(format, ...) GJ_Log(GJ_LOGALL,__func__,format,##__VA_ARGS__)
+#else
+#define GJLOGFREQ(level,format, ...)
+#endif
+    
 #else
 #define GJLOG(level, format, ...)
 #define GJAssert(isTrue, format, ...)
+#define GJLOGFREQ(level,format, ...)
 #endif
-
+    
+    
 #ifdef __cplusplus
 }
 #endif

@@ -11,8 +11,19 @@
 #include "GJRetainBuffer.h"
 #include "GJRetainBufferPool.h"
 
+#define DEFAULT_MAX_DROP_STEP 5
+#define MAX_SEND_DELAY 15000  //重启
+#define SEND_DELAY_LINE 400
+
 //#define SEND_SEI
 //#define TEST
+
+typedef struct GRational{
+    GInt32 num; ///< numerator
+    GInt32 den; ///< denominator
+} GRational;
+#define GRationalMake(num,den) (GRational){(GInt32)(num),(GInt32)(den)}
+#define GRationalValue(rational) (GFloat32)(rational).num*1.0/(rational).den
 typedef struct TrafficUnit{
     GLong pts;//ms
     GLong count;

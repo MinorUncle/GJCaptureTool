@@ -70,7 +70,7 @@ void decodeOutputCallback(
         return;
     }
     GInt64 pts = presentationTimeStamp.value*1000/presentationTimeStamp.timescale;
-    GJLOG(GJ_LOGALL, "decode packet output pts:%lld",pts);
+    GJLOGFREQ("decode packet output pts:%lld",pts);
 
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
     [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:pts];
@@ -98,7 +98,7 @@ void decodeOutputCallback(
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     
-    GJLOG(GJ_LOGALL, "decode packet input pts:%lld",packet->pts);
+    GJLOGFREQ("decode packet input pts:%lld",packet->pts);
     OSStatus status;
     long blockLength = 0;
     CMSampleBufferRef sampleBuffer = NULL;
@@ -153,7 +153,7 @@ void decodeOutputCallback(
         }
     }else{
         if (_decompressionSession == NULL) {
-            GJLOG(GJ_LOGERROR, "解码器为空，且缺少关键帧，丢帧");
+            GJLOG(GJ_LOGFORBID, "解码器为空，且缺少关键帧，丢帧");
             goto ERROR;
         }
 
@@ -186,11 +186,11 @@ void decodeOutputCallback(
             
             
             if (status != 0) {
-                GJLOG(GJ_LOGERROR, "CMSampleBufferCreate：%d",status);
+                GJLOG(GJ_LOGFORBID, "CMSampleBufferCreate：%d",status);
                 goto ERROR;
             }
         }else{
-            GJLOG(GJ_LOGERROR, "CMBlockBufferCreateWithMemoryBlock error:%d",status);
+            GJLOG(GJ_LOGFORBID, "CMBlockBufferCreateWithMemoryBlock error:%d",status);
             goto ERROR;
         }
         
@@ -215,12 +215,12 @@ RETRY:
                     [self createDecompSession];
                     goto RETRY;
                 }else{
-                    GJLOG(GJ_LOGERROR, "解码错误0：%d  ,format:%p",status,_formatDesc);
+                    GJLOG(GJ_LOGFORBID, "解码错误0：%d  ,format:%p",status,_formatDesc);
                 }
                 //                    [self createDecompSession];
                 //                    status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
                 //                    if (status < 0) {
-                //                        GJLOG(GJ_LOGERROR, "解码错误：%d  丢帧",status);
+                //                        GJLOG(GJ_LOGFORBID, "解码错误：%d  丢帧",status);
                 //                        _shouldRestart = YES;
                 //                    }
             }
@@ -229,7 +229,7 @@ RETRY:
             CFRelease(blockBuffer);
         }
     }else{
-        GJLOG(GJ_LOGERROR, "帧没有pp");
+        GJLOG(GJ_LOGFORBID, "帧没有pp");
 
     }
     

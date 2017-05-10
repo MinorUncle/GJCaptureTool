@@ -179,7 +179,7 @@ static const int mpeg4audio_sample_rates[16] = {
             _sourceFormat.mSampleRate = sampleRate;
             _sourceFormat.mFramesPerPacket = 1024;
         }else{
-            GJLOG(GJ_LOGERROR,"aac decode queuePeekWaitValue faile");
+            GJLOG(GJ_LOGFORBID,"aac decode queuePeekWaitValue faile");
             return false;
         }
     }
@@ -198,7 +198,7 @@ static const int mpeg4audio_sample_rates[16] = {
     AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_sourceFormat);
     OSStatus status = AudioConverterNew(&_sourceFormat, &_destFormat, &_decodeConvert);
     if (status != noErr) {
-        GJLOG(GJ_LOGERROR, "AudioConverterNew error:%d",status);
+        GJLOG(GJ_LOGFORBID, "AudioConverterNew error:%d",status);
         return NO;
     }
     _destMaxOutSize = 0;
@@ -246,7 +246,7 @@ static const int mpeg4audio_sample_rates[16] = {
             queueEnablePop(_resumeQueue, GTrue);
             char* codeChar = (char*)&status;
             if (_running) {
-                GJLOG(GJ_LOGERROR, "AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
+                GJLOG(GJ_LOGFORBID, "AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
             }else{
                 _running = GFalse;
                 GJLOG(GJ_LOGDEBUG,"停止导致解码错误:%p",self);

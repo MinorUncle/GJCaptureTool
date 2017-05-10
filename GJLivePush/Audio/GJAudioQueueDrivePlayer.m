@@ -117,7 +117,7 @@
             callBack = aacAudioQueueOutputCallback;
             break;
         default:
-            GJLOG(GJ_LOGERROR, "_createAudioOutputQueue format not support");
+            GJLOG(GJ_LOGFORBID, "_createAudioOutputQueue format not support");
             return;
             break;
     }
@@ -188,7 +188,7 @@
                     _status = kPlayAStopStatus;
                     AudioQueueDispose(_audioQueue, YES);
                     _audioQueue = NULL;
-                    GJLOG(GJ_LOGERROR,"AudioQueueAllocateBuffer faile");
+                    GJLOG(GJ_LOGFORBID,"AudioQueueAllocateBuffer faile");
                     assert(!status);
                     return false;
                 }
@@ -203,7 +203,7 @@
                     buffer->mAudioDataByteSize = size;
                 }else{
                     _status = kPlayAStopStatus;
-                    GJLOG(GJ_LOGERROR,"audio player get aac faile");
+                    GJLOG(GJ_LOGFORBID,"audio player get aac faile");
                     return NO;
                 };
                 AudioStreamPacketDescription packet = {0};
@@ -217,7 +217,7 @@
                     _status = kPlayAStopStatus;
                     AudioQueueDispose(_audioQueue, YES);
                     _audioQueue = NULL;
-                    GJLOG(GJ_LOGERROR,"AudioQueueAllocateBuffer faile");
+                    GJLOG(GJ_LOGFORBID,"AudioQueueAllocateBuffer faile");
                     assert(!status);
                     return false;
                 }
@@ -230,7 +230,7 @@
             char* codeChar = (char*)&status;
             _status = kPlayAStopStatus;
             AudioQueueDispose(_audioQueue, false);
-            GJLOG(GJ_LOGERROR,"播放失败 Error：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
+            GJLOG(GJ_LOGFORBID,"播放失败 Error：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
             return NO;
         }
     }
@@ -244,7 +244,7 @@
         OSStatus status = AudioQueueStart(_audioQueue, NULL);
         if (status != 0) {
             char* codeChar = (char*)&status;
-            GJLOG(GJ_LOGERROR,"AudioQueueStartError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
+            GJLOG(GJ_LOGFORBID,"AudioQueueStartError：%c%c%c%c CODE:%d",codeChar[3],codeChar[2],codeChar[1],codeChar[0],status);
             _status = kPlayAPauseStatus;
             return NO;
         }
@@ -258,7 +258,7 @@
         _status = kPlayAPauseStatus;
         OSStatus status = AudioQueuePause(_audioQueue);
         if (status != noErr) {
-            GJLOG(GJ_LOGERROR,"pause error:%d",status);
+            GJLOG(GJ_LOGFORBID,"pause error:%d",status);
             return NO;
         }
     }
@@ -270,7 +270,7 @@
     GJLOG(GJ_LOGDEBUG,"AudioQueuereset");
     OSStatus status = AudioQueueReset(_audioQueue);
     if (status != noErr) {
-        GJLOG(GJ_LOGERROR,"AudioQueueReset error:%d",status);
+        GJLOG(GJ_LOGFORBID,"AudioQueueReset error:%d",status);
         return NO;
     }
     return YES;
@@ -281,7 +281,7 @@
     GJLOG(GJ_LOGDEBUG,"AudioQueueFlush");
     OSStatus status = AudioQueueFlush(_audioQueue);
     if (status != noErr) {
-        GJLOG(GJ_LOGERROR,"AudioQueueFlush error:%d",status);
+        GJLOG(GJ_LOGFORBID,"AudioQueueFlush error:%d",status);
         return NO;
     }
     return YES;
@@ -295,7 +295,7 @@
     _status = kPlayAStopStatus;
     OSStatus status = AudioQueueStop(_audioQueue, immediately);
     if (status != noErr) {
-        GJLOG(GJ_LOGERROR,"AudioQueueStop error:%d",status);
+        GJLOG(GJ_LOGFORBID,"AudioQueueStop error:%d",status);
         _status = pre;
         
         return NO;
@@ -366,7 +366,7 @@
         error = AudioQueueSetParameter(_audioQueue, kAudioQueueParam_PlayRate, speed);
     }
     if (error != noErr) {
-        GJLOG(GJ_LOGERROR, "audio speed set error:%d",error);
+        GJLOG(GJ_LOGFORBID, "audio speed set error:%d",error);
     }else{
         _speed = speed;
     }
@@ -394,7 +394,7 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
     }
     OSStatus status = AudioQueueEnqueueBuffer(inAQ, inBuffer, 0, NULL);
     if (status < 0) {
-        GJLOG(GJ_LOGERROR,"AudioQueueEnqueueBuffer error:%d",(int)status);
+        GJLOG(GJ_LOGFORBID,"AudioQueueEnqueueBuffer error:%d",(int)status);
         AudioQueueFreeBuffer(inAQ, inBuffer);
     }
 }
@@ -423,7 +423,7 @@ static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
     OSStatus status = AudioQueueEnqueueBuffer(inAQ, inBuffer, 1, &packet);
     if (status < 0) {
         AudioQueueFreeBuffer(inAQ, inBuffer);
-        GJLOG(GJ_LOGERROR,"AudioQueueEnqueueBuffer error:%d",(int)status);
+        GJLOG(GJ_LOGFORBID,"AudioQueueEnqueueBuffer error:%d",(int)status);
     }
 }
 

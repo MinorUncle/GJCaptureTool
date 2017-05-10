@@ -203,14 +203,14 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     UInt32 audioClassSize;
     OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_Encoders, sizeof(type), &type, &audioClassSize);
     if (status != noErr) {
-        GJLOG(GJ_LOGERROR, "AudioFormatGetPropertyInfo error:%d",status);
+        GJLOG(GJ_LOGFORBID, "AudioFormatGetPropertyInfo error:%d",status);
         return status;
     }
     int count = audioClassSize / sizeof(AudioClassDescription);
     AudioClassDescription audioList[count];
     status = AudioFormatGetProperty(kAudioFormatProperty_Encoders, sizeof(type), &type, &audioClassSize, audioList);
     if (status != noErr) {
-        GJLOG(GJ_LOGERROR, "AudioFormatGetPropertyInfo error2:%d",status);
+        GJLOG(GJ_LOGFORBID, "AudioFormatGetPropertyInfo error2:%d",status);
         return status;
     }
     int i = 0;
@@ -221,7 +221,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         }
     }
     if (i >= count) {
-        GJLOG(GJ_LOGERROR, "not find audio encoder");
+        GJLOG(GJ_LOGFORBID, "not find audio encoder");
 
     }
     
@@ -252,7 +252,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         if (status != noErr ) {
             retainBufferUnRetain(audioBuffer);
             if(_isRunning){
-                GJLOG(GJ_LOGERROR, "running状态编码错误");
+                GJLOG(GJ_LOGFORBID, "running状态编码错误");
                 _isRunning = NO;
             }else{
                 GJLOG(GJ_LOGWARNING, "stop导致编码错误");

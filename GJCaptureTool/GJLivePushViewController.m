@@ -232,10 +232,10 @@
     
        // Do any additional setup after loading the view.
 }
-static char* url = "rtmp://192.168.18.21/live/room";
+static char* url = "rtmp://10.0.1.230/live/room";
 
 -(void)takeSelect:(UIButton*)btn{
-    btn.selected = !btn.selected;rtmp://10.0.1.126/live/room
+    btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
     if (btn == _pushButton) {
         if (btn.selected) {
             GJPushConfig config;
@@ -248,7 +248,7 @@ static char* url = "rtmp://192.168.18.21/live/room";
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
             path = [path stringByAppendingPathComponent:@"test.mp4"];
 //            [_livePush videoRecodeWithPath:path];
-            [_livePush startStreamPushWithConfig:config];
+            [_livePush startStreamPushWithConfig:&config];
         }else{
              [_livePush stopStreamPush];
         }

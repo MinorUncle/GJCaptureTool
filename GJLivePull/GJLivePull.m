@@ -72,12 +72,12 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         switch (messageType) {
             case GJRTMPPullMessageType_connectError:
             case GJRTMPPullMessageType_urlPraseError:
-                GJLOG(GJ_LOGERROR, "pull connect error:%d",messageType);
+                GJLOG(GJ_LOGFORBID, "pull connect error:%d",messageType);
                 [livePull.delegate livePull:livePull errorType:kLivePullConnectError infoDesc:@"连接错误"];
                 [livePull stopStreamPull];
                 break;
             case GJRTMPPullMessageType_sendPacketError:
-                GJLOG(GJ_LOGERROR, "pull sendPacket error:%d",messageType);
+                GJLOG(GJ_LOGFORBID, "pull sendPacket error:%d",messageType);
                 [livePull.delegate livePull:livePull errorType:kLivePullReadPacketError infoDesc:@"读取失败"];
                 [livePull stopStreamPull];
                 break;
@@ -100,7 +100,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
             }
                 break;
             default:
-                GJLOG(GJ_LOGERROR,"not catch info：%d",messageType);
+                GJLOG(GJ_LOGFORBID,"not catch info：%d",messageType);
                 break;
         }
     });
@@ -198,7 +198,7 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
             sourceformat.mFramesPerPacket = 1024;
 
             if (channel>2) {
-                GJLOG(GJ_LOGERROR, "音频channel不支持");
+                GJLOG(GJ_LOGFORBID, "音频channel不支持");
             }
             
             AudioStreamBasicDescription destformat = {0};
