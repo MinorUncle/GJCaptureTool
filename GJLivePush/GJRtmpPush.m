@@ -12,6 +12,7 @@
 //extern "C"{
 #include "sps_decode.h"
 //}
+#include "GJUtil.h"
 #include <pthread.h>
 
 #define RTMP_RECEIVE_TIMEOUT    3
@@ -60,15 +61,11 @@ static GHandle sendRunloop(GHandle parm){
     }
     GJLOG(GJ_LOGINFO, "RTMP_ConnectStream success");
     GJRTMP_Packet* packet;
-#ifndef NETWORK_DELAY
-    GUInt32 startPts = 0;
-    if(!push->stopRequest && queuePeekWaitValue(push->sendBufferQueue,0, (GHandle*)&packet, INT32_MAX)){
-        startPts = packet->packet.m_nTimeStamp;
-    }
+#ifdef NETWORK_DELAY
+    GUInt32 startPts = (GUInt32)(GJ_Gettime()/1000);
 #endif
     while (!push->stopRequest && queuePop(push->sendBufferQueue, (GHandle*)&packet, INT32_MAX)) {
-        GUInt32 sendPts = packet->packet.m_nTimeStamp;
-#ifndef NETWORK_DELAY
+#ifdef NETWORK_DELAY
         packet->packet.m_nTimeStamp -= startPts;
 #endif
         GInt32 iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
@@ -77,12 +74,12 @@ static GHandle sendRunloop(GHandle parm){
                 GJLOGFREQ("send video pts:%d",packet->packet.m_nTimeStamp);
                 push->videoStatus.leave.byte+=packet->packet.m_nBodySize;
                 push->videoStatus.leave.count++;
-                push->videoStatus.leave.pts = sendPts;
+                push->videoStatus.leave.pts = packet->packet.m_nTimeStamp;
             }else{
                 GJLOGFREQ("send audio pts:%d",packet->packet.m_nTimeStamp);
                 push->audioStatus.leave.byte+=packet->packet.m_nBodySize;
                 push->audioStatus.leave.count++;
-                push->audioStatus.leave.pts = sendPts;
+                push->audioStatus.leave.pts = packet->packet.m_nTimeStamp;
             }
             retainBufferUnRetain(packet->retainBuffer);
             GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);

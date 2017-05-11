@@ -261,7 +261,7 @@
         [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
     }];
     _fristFrameDate = [NSDate date];
-//    [_audioRecoder startRecodeAudio];
+    [_audioRecoder startRecodeAudio];
     __weak GJLivePush* wkSelf = self;
     wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
         CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;
@@ -410,7 +410,7 @@ GJQueue* h264Queue ;
         GLong cache = status.enter.pts - status.leave.pts;
         if(cache > MAX_SEND_DELAY){
             dispatch_async(dispatch_get_global_queue(0, 0), ^{
-                GJLOG(GJ_LOGWARNING, "推送缓存过多，导致重连");
+                GJLOG(GJ_LOGFORBID, "推送缓存过多，导致重连");
                 [_pushLock lock];
                 [self stopStreamPush];
                 [self startStreamPushWithConfig:&_pushConfig reStart:YES];
@@ -428,6 +428,7 @@ GJQueue* h264Queue ;
     _pushSessionStatus.netWorkQuarity = (GJNetworkQuality)quality;
 }
 -(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder pcmPacket:(R_GJPCMPacket *)packet{
+    packet->pts = [[NSDate date]timeIntervalSinceDate:_fristFrameDate] * 1000;
     [_audioEncoder encodeWithPacket:packet];
 }
 -(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder completeBuffer:(R_GJAACPacket *)packet{

@@ -150,13 +150,14 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
 
 - (void)stopStreamPull{
     [_lock lock];
-    [_audioDecoder stop];
-    [_player stop];
+    [_timer invalidate];
     if (_videoPull) {
         GJRtmpPull_CloseAndRelease(_videoPull);
         _videoPull = NULL;
     }
-    [_timer invalidate];
+    [_player stop];
+    [_audioDecoder stop];
+    _audioDecoder = nil;
     GJLOG(GJ_LOGINFO, "NSTimer invalidate:%s",[NSString stringWithFormat:@"%@",_timer].UTF8String);
     [_lock unlock];
 }

@@ -14,6 +14,7 @@
 //默认i帧是p帧的I_P_RATE+1倍。越小丢帧时码率降低越大
 #define I_P_RATE 4
 
+#define DEFAULT_CHECK_DELAY 1000
 @interface GJH264Encoder()
 {
     GRational _dropStep;//每den帧丢num帧
@@ -22,7 +23,7 @@
 @property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
 @property(nonatomic,assign)GJBufferPool* bufferPool;
 @property(nonatomic,assign)GInt32 currentBitRate;//当前码率
-@property(nonatomic,assign)int currentDelayCount;//调整之后要过几帧才能反应，所以要延迟几帧再做检测调整；
+@property(nonatomic,assign)GInt64 preCheckPts;//调整之后要过DEFAULT_CHECK_DELAY ms才能反应，所以要延迟做检测调整；
 @property(nonatomic,assign)GLong preBufferCache;//上一次敏感检测状态
 
 @property(nonatomic,assign)BOOL shouldRestart;
@@ -348,13 +349,13 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //    NSLog(@"encode frame:%d",pushPacket->ppSize);
     GLong bufferCache = [encoder.deleagte GJH264Encoder:encoder encodeCompletePacket:pushPacket];
     GLong difference = bufferCache - encoder.preBufferCache;
-    if (encoder.currentDelayCount==0) {//1s一次常规不敏感检测，但是最准确
+    if (pushPacket->pts - encoder.preCheckPts >= DEFAULT_CHECK_DELAY) {//DEFAULT_CHECK_DELAY ms一次常规不敏感检测，但是最准确
         if (bufferCache > SEND_DELAY_LINE) {
             [encoder reduceQualityWithStep:1 allowStop:NO];
         }else if(bufferCache  < 100 && encoder.currentBitRate < encoder.destFormat.baseFormat.bitRate){
             [encoder appendQualityWithStep:1];
         }
-        encoder.currentDelayCount = encoder.destFormat.baseFormat.fps;
+        encoder.preCheckPts = pushPacket->pts;
     }else if(difference > 2000.0/encoder.destFormat.baseFormat.fps){//降低质量敏感检测,丢帧时有误差
         GJLOG(GJ_LOGINFO, "敏感检测出降低视频质量");
         [encoder reduceQualityWithStep:difference*10 allowStop:NO];
@@ -362,7 +363,6 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         GJLOG(GJ_LOGINFO, "敏感检测出降低音频质量");
         [encoder appendQualityWithStep:(-difference-0.1)*10];
     }
-    encoder.currentDelayCount--;
     encoder.preBufferCache = bufferCache;
     retainBufferUnRetain(retainBuffer);
 }
@@ -455,17 +455,17 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
             bitrate += bitrate/_destFormat.baseFormat.fps*(1-GRationalValue(_dropStep))*I_P_RATE;
             quality = GJEncodeQualitybad;
-            GJLOG(GJ_LOGINFO, "reduceQuality by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
+            GJLOG(GJ_LOGINFO, "reduceQuality1 by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
 
         }
     }
-    if (leftStep > 0 && GRationalValue(_dropStep) <= 0.50001){
+    if (leftStep > 0){
         _dropStep.num += leftStep;
         _dropStep.den += leftStep;
         bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
         bitrate += bitrate/_destFormat.baseFormat.fps*(1-GRationalValue(_dropStep))*I_P_RATE;
         quality = GJEncodeQualitybad;
-        GJLOG(GJ_LOGINFO, "reduceQuality by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
+        GJLOG(GJ_LOGINFO, "reduceQuality2 by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
     }
     self.currentBitRate = bitrate;
     if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {

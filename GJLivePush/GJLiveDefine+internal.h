@@ -13,7 +13,7 @@
 
 #define DEFAULT_MAX_DROP_STEP 5
 #define MAX_SEND_DELAY 15000  //重启
-#define SEND_DELAY_LINE 400
+#define SEND_DELAY_LINE 600
 
 //#define SEND_SEI
 //#define TEST

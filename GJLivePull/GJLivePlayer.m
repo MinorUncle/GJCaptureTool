@@ -13,9 +13,8 @@
 #import "GJQueue.h"
 #import <pthread.h>
 #import "GJLog.h"
-#import <sys/time.h>
 #import "GJBufferPool.h"
-
+#include "GJUtil.h"
 //#define GJAUDIOQUEUEPLAY
 #ifdef GJAUDIOQUEUEPLAY
 #import "GJAudioQueuePlayer.h"
@@ -34,23 +33,23 @@
 #define VIDEO_MAX_CACHE_DUR 3000
 #define AUDIO_MAX_CACHE_DUR 3000
 
-#define VIDEO_MIN_CACHE_DUR 400
-#define AUDIO_MIN_CACHE_DUR 400
+#define VIDEO_MIN_CACHE_DUR 200
+#define AUDIO_MIN_CACHE_DUR 200
 
-#define VIDEO_MAX_CACHE_COUNT 300 //缓存空间，不能小于VIDEO_MAX_CACHE_DUR的帧数
-#define AUDIO_MAX_CACHE_COUNT 400
+#define VIDEO_MAX_CACHE_COUNT 100 //缓存空间，不能小于VIDEO_MAX_CACHE_DUR的帧数
+#define AUDIO_MAX_CACHE_COUNT 200
 
-#define FRIST_BUFFER_TIME 200
 
 
 typedef struct _GJImageBuffer{
     CVImageBufferRef image;
-    int64_t           pts;
+    GInt64           pts;
 }GJImageBuffer;
 typedef struct _GJAudioBuffer{
     GJRetainBuffer* audioData;
-    int64_t           pts;
+    GInt64           pts;
 }GJAudioBuffer;
+
 
 
 typedef enum _TimeSYNCType{
@@ -59,10 +58,10 @@ typedef enum _TimeSYNCType{
 }TimeSYNCType;
 
 typedef struct CacheControl{
-    int                         lowAudioWaterFlag;
-    int                         highAudioWaterFlag;
-    int                         lowVideoWaterFlag;
-    int                         highVideoWaterFlag;
+    GUInt32                         lowAudioWaterFlag;
+    GUInt32                         highAudioWaterFlag;
+    GUInt32                         lowVideoWaterFlag;
+    GUInt32                         highVideoWaterFlag;
 }GJCacheControl;
 typedef struct PlayControl{
     GJPlayStatus         status;
@@ -72,29 +71,37 @@ typedef struct PlayControl{
     GJQueue*             imageQueue;
     GJQueue*             audioQueue;
 }GJPlayControl;
+typedef struct _GJNetShakeControl{
+    GInt32 collectStartClock;
+    GInt32 collectUnitStartClock;
+    GInt32 collectUnitEndClock;
+    GInt32 collectUnitCache;
+    GInt32 maxCache;
+    GInt32 minCache;
+}GJNetShakeControl;
 typedef struct _SyncInfo{
-    long                 clock;
-    long                 cPTS;
+    GLong                 clock;
+    GLong                 cPTS;
 
-    long                 startTime;
-    long                 startPts;
-//    long                 trafficStatus.enter.pts;
-//    long                 trafficStatus.leave.pts;
+    GLong                 startTime;
+    GLong                 startPts;
+//    GLong                 trafficStatus.enter.pts;
+//    GLong                 trafficStatus.leave.pts;
 
     GJTrafficStatus     trafficStatus;
 }SyncInfo;
 typedef struct SyncControl{
     SyncInfo videoInfo;
     SyncInfo audioInfo;
-    float                speed;
-    long                 speedTotalDuration;
-    long                 bufferTotalDuration;
-    long                 lastBufferDuration;
-    long                 bufferTimes;
-    long                 lastPauseFlag;
+    GFloat32                speed;
+    GLong                 speedTotalDuration;
+    GLong                 bufferTotalDuration;
+    GLong                 lastBufferDuration;
+    GLong                 bufferTimes;
+    GLong                 lastPauseFlag;
     TimeSYNCType          syncType;
 #ifdef NETWORK_DELAY
-    long                 networkDelay;
+    GLong                 networkDelay;
 #endif
 }GJSyncControl;
 @interface GJLivePlayer()<GJAudioQueueDrivePlayerDelegate>{
@@ -114,36 +121,26 @@ typedef struct SyncControl{
 @property(assign,nonatomic)GJSyncControl       syncControl;
 @property(assign,nonatomic)GJPlayControl       playControl;
 @property(assign,nonatomic)GJCacheControl      cacheControl;
-
+@property(assign,nonatomic)GJNetShakeControl   shakeControl;
 @end
 @implementation GJLivePlayer
 
-long getTime(){
-#ifdef USE_CLOCK
-    static clockd =  CLOCKS_PER_SEC /1000000 ;
-    return clock() / clockd;
-#endif
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return (long)tv.tv_sec * 1000000 + tv.tv_usec;
-}
 
-long getClockLine(GJSyncControl* sync){
+
+GLong getClockLine(GJSyncControl* sync){
     if (sync->syncType == kTimeSYNCAudio) {
-        long time = getTime() / 1000;
-        long  timeDiff = time - sync->audioInfo.clock;
+        GLong time = GJ_Gettime() / 1000;
+        GLong  timeDiff = time - sync->audioInfo.clock;
         return sync->audioInfo.cPTS+timeDiff;
     }else{
-        long time = getTime() / 1000;
-    
-        long timeDiff = time - sync->videoInfo.startTime;
+        GLong time = GJ_Gettime() / 1000;
+        GLong timeDiff = time - sync->videoInfo.startTime;
         return timeDiff + sync->videoInfo.startPts - sync->bufferTotalDuration + sync->speedTotalDuration;
-
     }
 }
-static void resetSyncToStartPts(GJSyncControl* sync,long startPts){
+static void resetSyncToStartPts(GJSyncControl* sync,GLong startPts){
     sync->videoInfo.startPts = sync->audioInfo.startPts = startPts;
-    sync->videoInfo.startTime = sync->audioInfo.startTime = getTime() / 1000.0;
+    sync->videoInfo.startTime = sync->audioInfo.startTime = GJ_Gettime() / 1000.0;
     sync->speedTotalDuration = sync->bufferTotalDuration = 0;
 }
 static void changeSyncType(GJSyncControl* sync,TimeSYNCType syncType){
@@ -156,40 +153,44 @@ static void changeSyncType(GJSyncControl* sync,TimeSYNCType syncType){
     }
 
 }
-static void* playVideoRunLoop(void* parm){
+static GHandle playVideoRunLoop(GHandle parm){
     pthread_setname_np("playVideoRunLoop");
     GJLivePlayer* player = (__bridge GJLivePlayer *)(parm);
     GJPlayControl* _playControl = &(player->_playControl);
     GJSyncControl* _syncControl = &(player->_syncControl);
     GJImageBuffer* cImageBuf;
   
-    cImageBuf = NULL;
+    cImageBuf = GNULL;
     
     GJLOG(GJ_LOGDEBUG, "start play runloop");
-    _syncControl->videoInfo.startTime = getTime() / 1000;
+    GJImageBuffer watiBuffer[2] = {0};
+    queuePeekWaitValue(_playControl->imageQueue, 2, (GHandle*)&watiBuffer, GINT32_MAX);///等待至少两帧
+    _syncControl->videoInfo.startTime = GJ_Gettime() / 1000;
     while ((_playControl->status != kPlayStatusStop)) {
-        if (queuePop(_playControl->imageQueue, (void**)&cImageBuf,_playControl->status == kPlayStatusBuffering?INT_MAX:0)) {
+        if (queuePop(_playControl->imageQueue, (GHandle*)&cImageBuf,_playControl->status == kPlayStatusBuffering?INT_MAX:0)) {
             if (_playControl->status == kPlayStatusStop){
                CVPixelBufferRelease(cImageBuf->image);
-               GJBufferPoolSetData(defauleBufferPool(), (void*)cImageBuf);
-               cImageBuf = NULL;
+               GJBufferPoolSetData(defauleBufferPool(), (GHandle)cImageBuf);
+               cImageBuf = GNULL;
                break;
             }
         }else{
             if (_playControl->status == kPlayStatusStop) {
                 break;
             }else if (_playControl->status == kPlayStatusRunning){
-                GJLOG(GJ_LOGDEBUG, "video play queue empty");
                 if(_syncControl->syncType == kTimeSYNCVideo){
+                    GJLOG(GJ_LOGDEBUG, "video play queue empty when kTimeSYNCVideo,start buffer");
                     [player buffering];
+                }else{
+                    GJLOG(GJ_LOGWARNING, "video play queue empty when kTimeSYNCAudio,do not buffer");
                 }
             }
             usleep(16*1000);
             continue;
         }
         
-        long timeStandards = getClockLine(_syncControl);
-        long delay = (long)cImageBuf->pts - timeStandards;
+        GLong timeStandards = getClockLine(_syncControl);
+        GLong delay = (GLong)cImageBuf->pts - timeStandards;
 
         if(delay > VIDEO_PTS_PRECISION) {
             if (_playControl->status == kPlayStatusStop) {
@@ -197,24 +198,24 @@ static void* playVideoRunLoop(void* parm){
             }
             if(_syncControl->syncType == kTimeSYNCVideo){
                 GJLOG(GJ_LOGWARNING, "视频等待视频时间过长 delay:%ld PTS:%ld clock:%ld,重置同步管理",delay,cImageBuf->pts,timeStandards);
-                resetSyncToStartPts(_syncControl, (long)cImageBuf->pts);
+                resetSyncToStartPts(_syncControl, (GLong)cImageBuf->pts);
                 delay = 0;
             }else{
                 GJLOG(GJ_LOGWARNING, "视频等待音频时间过长 delay:%ld PTS:%ld clock:%ld，等待下一帧做判断处理",delay,cImageBuf->pts,timeStandards);
-                GJImageBuffer* nextBuffer = NULL;
-                if( queuePeekWaitValue(_playControl->imageQueue, 0, (void**)&nextBuffer, VIDEO_PTS_PRECISION)){
+                GJImageBuffer* nextBuffer = GNULL;
+                if( queuePeekWaitValue(_playControl->imageQueue, 0, (GHandle*)&nextBuffer, VIDEO_PTS_PRECISION)){
                     if(nextBuffer->pts < cImageBuf->pts){
                         GJLOG(GJ_LOGWARNING, "视频PTS重新开始，直接丢帧");
                         goto DROP;
                     }else{
-                        long oDelay = delay;
-                        GJLOG(GJ_LOGFORBID, "视频PTS很可能错误，连续两帧需要长时间等待");
+                        GLong oDelay = delay;
+                        GJLOG(GJ_LOGWARNING, "视频PTS很可能错误，连续两帧需要长时间等待");
                         while (delay>20) {
                             if (_playControl->status == kPlayStatusStop) {
                                 goto DROP;
                             }else{
                                 GJLOG(GJ_LOGWARNING, "视频等待音频：%ld ms",oDelay - delay);
-                                usleep((unsigned int)delay * 1000);
+                                usleep((GUInt32)delay * 1000);
                                 delay -= VIDEO_PTS_PRECISION;
                             }
                         }
@@ -234,29 +235,29 @@ static void* playVideoRunLoop(void* parm){
         if (delay < -VIDEO_PTS_PRECISION){
             if(_syncControl->syncType == kTimeSYNCVideo){
                 GJLOG(GJ_LOGWARNING, "视频落后视频严重，delay：%ld, PTS:%ld clock:%ld，重置同步管理",delay,cImageBuf->pts,timeStandards);
-                resetSyncToStartPts(_syncControl, (long)cImageBuf->pts);
+                resetSyncToStartPts(_syncControl, (GLong)cImageBuf->pts);
                 delay = 0;
             }else{
                 GJLOG(GJ_LOGWARNING, "视频落后音频严重，delay：%ld, PTS:%ld clock:%ld，丢视频帧",delay,cImageBuf->pts,timeStandards);
-                _syncControl->videoInfo.cPTS = (long)cImageBuf->pts;
-                _syncControl->videoInfo.trafficStatus.leave.pts = (long)cImageBuf->pts;
-                _syncControl->videoInfo.clock = getTime() / 1000;
+                _syncControl->videoInfo.cPTS = (GLong)cImageBuf->pts;
+                _syncControl->videoInfo.trafficStatus.leave.pts = (GLong)cImageBuf->pts;
+                _syncControl->videoInfo.clock = GJ_Gettime() / 1000;
                 goto DROP;
             }
         }
     DISPLAY:
         if (delay > 20) {
             GJLOGFREQ("play wait:%d, video pts:%ld",delay,_syncControl->videoInfo.cPTS);
-            usleep((unsigned int)delay * 1000);
+            usleep((GUInt32)delay * 1000);
         }
         
         if (_syncControl->speed > 1.0) {
-            _syncControl->speedTotalDuration += (_syncControl->speed - 1.0)*(getTime() / 1000.0-_syncControl->videoInfo.clock);
+            _syncControl->speedTotalDuration += (_syncControl->speed - 1.0)*(GJ_Gettime() / 1000.0-_syncControl->videoInfo.clock);
         }
         
-        _syncControl->videoInfo.clock = getTime() / 1000;
-        _syncControl->videoInfo.trafficStatus.leave.pts = (long)cImageBuf->pts;
-        _syncControl->videoInfo.cPTS = (long)cImageBuf->pts;
+        _syncControl->videoInfo.clock = GJ_Gettime() / 1000;
+        _syncControl->videoInfo.trafficStatus.leave.pts = (GLong)cImageBuf->pts;
+        _syncControl->videoInfo.cPTS = (GLong)cImageBuf->pts;
         
 
 
@@ -278,14 +279,14 @@ static void* playVideoRunLoop(void* parm){
         _syncControl->videoInfo.trafficStatus.leave.count++;
         CVPixelBufferRelease(cImageBuf->image);
 
-        GJBufferPoolSetData(defauleBufferPool(), (void*)cImageBuf);
-        cImageBuf = NULL;
+        GJBufferPoolSetData(defauleBufferPool(), (GHandle)cImageBuf);
+        cImageBuf = GNULL;
     }
 ERROR:
     GJLOG(GJ_LOGINFO, "playRunLoop out");
     _playControl->status = kPlayStatusStop;
     _playControl->playVideoThread = nil;
-    return NULL;
+    return GNULL;
 }
 - (instancetype)init
 {
@@ -302,15 +303,15 @@ ERROR:
         _cacheControl.highVideoWaterFlag = VIDEO_MAX_CACHE_DUR;
         _syncControl.syncType = kTimeSYNCVideo;
 
-        pthread_mutex_init(&_playControl.oLock, NULL);
+        pthread_mutex_init(&_playControl.oLock, GNULL);
         
 #ifdef UIIMAGE_SHOW
         _displayView = (GJImageView*)[[UIImageView alloc]init];
 #else
     _displayView = [[GJImageView alloc]init];
 #endif
-        queueCreate(&_playControl.imageQueue, VIDEO_MAX_CACHE_COUNT, true, false);//150为暂停时视频最大缓冲
-        queueCreate(&_playControl.audioQueue, AUDIO_MAX_CACHE_COUNT, true, false);
+        queueCreate(&_playControl.imageQueue, VIDEO_MAX_CACHE_COUNT, GTrue, GTrue);//150为暂停时视频最大缓冲
+        queueCreate(&_playControl.audioQueue, AUDIO_MAX_CACHE_COUNT, GTrue, GTrue);
     }
     return self;
 }
@@ -323,6 +324,7 @@ ERROR:
     GJLOG(GJ_LOGINFO, "GJLivePlayer start");
     _playControl.status = kPlayStatusRunning;
     _syncControl.videoInfo.startPts = _syncControl.audioInfo.startPts = LONG_MIN;
+    memset(&_shakeControl, 0, sizeof(_shakeControl));
     queueEnablePush(_playControl.imageQueue, GTrue);
     queueEnablePush(_playControl.audioQueue, GTrue);
 
@@ -338,16 +340,17 @@ ERROR:
 -(void)stop{
     [self stopBuffering];
     if(_playControl.status != kPlayStatusStop){
+        GJLOG(GJ_LOGINFO, "gjliveplayer stop start");
         pthread_mutex_lock(&_playControl.oLock);
         _playControl.status = kPlayStatusStop;
         queueEnablePush(_playControl.audioQueue, GFalse);
         queueEnablePush(_playControl.imageQueue, GFalse);
         
-//        queueBroadcastPop(_playControl.imageQueue);
-//        queueBroadcastPop(_playControl.audioQueue);
+        queueBroadcastPop(_playControl.imageQueue);
+        queueBroadcastPop(_playControl.audioQueue);
         pthread_mutex_unlock(&_playControl.oLock);
 
-        pthread_join(_playControl.playVideoThread, NULL);
+        pthread_join(_playControl.playVideoThread, GNULL);
 
         pthread_mutex_lock(&_playControl.oLock);
         [_audioPlayer stop:true];
@@ -356,22 +359,36 @@ ERROR:
         GInt32 alength = queueGetLength(_playControl.audioQueue);
         
         if (vlength > 0) {
-            GJImageBuffer* imageBuffer = NULL;
-            while (queuePop(_playControl.imageQueue, (GVoid**)&imageBuffer, 0)) {
-                CVPixelBufferRelease(imageBuffer->image);
-                GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)imageBuffer);
+            GJImageBuffer** imageBuffer = (GJImageBuffer**)malloc(sizeof(GJImageBuffer*)*vlength);
+            //不能用queuePop，因为已经enable false;
+            if (queueClean(_playControl.imageQueue, (GHandle*)imageBuffer, &vlength)) {
+                for (GInt32 i = 0; i < vlength; i++) {
+                    CVPixelBufferRelease(imageBuffer[i]->image);
+                    GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)imageBuffer[i]);
+                }
+            }else{
+                GJLOG(GJ_LOGFORBID, "videoClean Error");
             }
+            free(imageBuffer);
+//            while (queuePop(_playControl.imageQueue, (GVoid**)&imageBuffer, 0)) {
+//                CVPixelBufferRelease(imageBuffer->image);
+//                GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)imageBuffer);
+//            }
         }
+        GJLOG(GJ_LOGDEBUG, "video player queue clean over");
         if (alength > 0) {
-            GJAudioBuffer* audioBuffer = NULL;
-            while (queuePop(_playControl.audioQueue, (GVoid**)&audioBuffer, 0)) {
-                retainBufferUnRetain(audioBuffer->audioData);
-                GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)audioBuffer);
+            GJAudioBuffer** audioBuffer = (GJAudioBuffer**)malloc(sizeof(GJAudioBuffer*)*alength);
+            if (queueClean(_playControl.audioQueue, (GHandle*)audioBuffer, &alength)) {
+                for (GInt32 i = 0; i < alength; i++) {
+                    retainBufferUnRetain(audioBuffer[i]->audioData);
+                    GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)audioBuffer[i]);
+                }
+            }else{
+                GJLOG(GJ_LOGFORBID, "audioClean Error");
             }
+            free(audioBuffer);
         }
-        GJLOG(GJ_LOGINFO, "gjliveplayer stop end");
-
-     
+        GJLOG(GJ_LOGDEBUG, "audio player queue clean over");
         pthread_mutex_unlock(&_playControl.oLock);
         
     }else{
@@ -414,7 +431,7 @@ ERROR:
     if(_playControl.status == kPlayStatusRunning){
         GJLOG(GJ_LOGDEBUG, "start buffing");
         _playControl.status = kPlayStatusBuffering;
-        _syncControl.lastPauseFlag = getTime() / 1000;
+        _syncControl.lastPauseFlag = GJ_Gettime() / 1000;
         [_audioPlayer pause];
         if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
             [self.delegate livePlayer:self bufferUpdatePercent:0.0 duration:0.0];
@@ -436,17 +453,15 @@ ERROR:
         queueBroadcastPop(_playControl.audioQueue);
         
         if (_syncControl.lastPauseFlag != 0) {
-            _syncControl.lastBufferDuration = getTime() / 1000 - _syncControl.lastPauseFlag;
+            _syncControl.lastBufferDuration = GJ_Gettime() / 1000 - _syncControl.lastPauseFlag;
             _syncControl.bufferTotalDuration += _syncControl.lastBufferDuration;
             _syncControl.bufferTimes++;
             _syncControl.lastPauseFlag = 0;
-            GJLOG(GJ_LOGINFO, "buffing times:%d,totalduring:%ld",_syncControl.bufferTimes,_syncControl.bufferTotalDuration);
         }else{
             GJLOG(GJ_LOGFORBID, "暂停管理出现问题");
         }
         [_audioPlayer resume];
-        GJLOG(GJ_LOGDEBUG,"buffer total during:%dms",_syncControl.lastBufferDuration);
-
+        GJLOG(GJ_LOGINFO, "buffing times:%d useDuring:%d",_syncControl.bufferTimes,_syncControl.lastBufferDuration);
     }else{
         GJLOG(GJ_LOGDEBUG, "stopBuffering when status not buffering");
     }
@@ -482,19 +497,19 @@ ERROR:
     return _syncControl.videoInfo.trafficStatus;
 }
 #ifdef NETWORK_DELAY
--(long)getNetWorkDelay{
+-(GLong)getNetWorkDelay{
     return _syncControl.networkDelay;
 }
 #endif
 
 -(void)checkBufferingAndWater{
-//    long alength = queueGetLength(_playControl.audioQueue);
-//    long vlength = queueGetLength(_playControl.imageQueue);
+//    GLong alength = queueGetLength(_playControl.audioQueue);
+//    GLong vlength = queueGetLength(_playControl.imageQueue);
 
     if(_syncControl.syncType == kTimeSYNCAudio){
         if (_playControl.status == kPlayStatusBuffering){
-            long vCache = _syncControl.videoInfo.trafficStatus.leave.pts - _syncControl.videoInfo.trafficStatus.leave.pts;
-            long aCache = _syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts;
+            GLong vCache = _syncControl.videoInfo.trafficStatus.leave.pts - _syncControl.videoInfo.trafficStatus.leave.pts;
+            GLong aCache = _syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts;
             
             if ((aCache == 0 && vCache >= _cacheControl.lowVideoWaterFlag) || vCache >= _cacheControl.highVideoWaterFlag-300) {
                 GJLOG(GJ_LOGWARNING, "音频缓冲过程中，音频为空视频足够、或者视频足够大于音频。切换到视频同步");
@@ -502,21 +517,21 @@ ERROR:
                 changeSyncType(&_syncControl, kTimeSYNCVideo);
                 return;
             }
-            long duration = (long)(getTime()/1000) - _syncControl.lastPauseFlag;
+            GLong duration = (GLong)(GJ_Gettime()/1000) - _syncControl.lastPauseFlag;
             if (aCache < _cacheControl.lowAudioWaterFlag){
                 if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
-                    GJLOG(GJ_LOGINFO, "buffer percent:%f",aCache*1.0/_cacheControl.lowAudioWaterFlag);
+                    GJLOG(GJ_LOGINFO, "buffer percent:%f A cacheTime:%ld",aCache*1.0/_cacheControl.lowAudioWaterFlag,aCache);
                     [self.delegate livePlayer:self bufferUpdatePercent:aCache*1.0/_cacheControl.lowAudioWaterFlag duration:duration];
                 }
             }else{
                 if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
-                    GJLOG(GJ_LOGINFO, "buffer percent:%f",1.0);
+                    GJLOG(GJ_LOGINFO, "buffer percent:%f A cacheTime:%ld",1.0,aCache);
                     [self.delegate livePlayer:self bufferUpdatePercent:1.0 duration:duration];
                 }
                 [self stopBuffering];
             }
         }else if (_playControl.status == kPlayStatusRunning){
-            long aCache = _syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts;
+            GLong aCache = _syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts;
             if (aCache > _cacheControl.highAudioWaterFlag ) {
                 if (_syncControl.speed <= 1.0) {
                     [self dewatering];
@@ -528,17 +543,17 @@ ERROR:
             }
         }
     }else{
-        long vCache = _syncControl.videoInfo.trafficStatus.enter.pts - _syncControl.videoInfo.trafficStatus.leave.pts;
+        GLong vCache = _syncControl.videoInfo.trafficStatus.enter.pts - _syncControl.videoInfo.trafficStatus.leave.pts;
         if (_playControl.status == kPlayStatusBuffering){
-            long duration = (long)(getTime()/1000) - _syncControl.lastPauseFlag;
+            GLong duration = (GLong)(GJ_Gettime()/1000) - _syncControl.lastPauseFlag;
             if (vCache < _cacheControl.lowVideoWaterFlag){
                 if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
-                    GJLOG(GJ_LOGINFO, "buffer percent:%f",vCache*1.0/_cacheControl.lowVideoWaterFlag);
+                    GJLOG(GJ_LOGINFO, "buffer percent:%f V cacheTime:%d",vCache*1.0/_cacheControl.lowVideoWaterFlag,vCache);
                     [self.delegate livePlayer:self bufferUpdatePercent:vCache*1.0/_cacheControl.lowVideoWaterFlag duration:duration];
                 }
             }else{
                 if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
-                    GJLOG(GJ_LOGINFO, "buffer percent:%f",1.0);
+                    GJLOG(GJ_LOGINFO, "buffer percent:%f V cacheTime:%d",1.0,vCache);
                     [self.delegate livePlayer:self bufferUpdatePercent:1.0 duration:duration];
                 }
                 [self stopBuffering];
@@ -557,7 +572,7 @@ ERROR:
     }
 }
 
--(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(int64_t)pts{
+-(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(GInt64)pts{
     GJLOGFREQ("收到音频 PTS:%lld",pts);
     if (pts < _syncControl.videoInfo.trafficStatus.enter.pts) {
         pthread_mutex_lock(&_playControl.oLock);
@@ -565,8 +580,8 @@ ERROR:
         GJLOG(GJ_LOGWARNING, "视频pts不递增，抛弃之前的视频帧：%ld帧",length);
         GJImageBuffer** imageBuffer = (GJImageBuffer**)malloc(length*sizeof(GJImageBuffer*));
         queueBroadcastPop(_playControl.imageQueue);//other lock
-        if(queueClean(_playControl.imageQueue, (void**)imageBuffer, &length)){
-            for (int i = 0; i<length; i++) {
+        if(queueClean(_playControl.imageQueue, (GHandle*)imageBuffer, &length)){
+            for (GUInt32 i = 0; i<length; i++) {
                 CVPixelBufferRelease(imageBuffer[i]->image);
                 GJBufferPoolSetData(defauleBufferPool(), (uint8_t*)imageBuffer[i]);
             }
@@ -574,7 +589,7 @@ ERROR:
         if (imageBuffer) {
             free(imageBuffer);
         }
-        _syncControl.videoInfo.trafficStatus.leave.pts = (long)pts;
+        _syncControl.videoInfo.trafficStatus.leave.pts = (GLong)pts;
         pthread_mutex_unlock(&_playControl.oLock);
     }
     
@@ -582,7 +597,7 @@ ERROR:
         GJLOG(GJ_LOGWARNING, "播放器stop状态收到视频帧，直接丢帧");
         return NO;
     }
-    if (_playControl.playVideoThread == NULL) {
+    if (_playControl.playVideoThread == GNULL) {
 #ifndef UIIMAGE_SHOW
         if (_imageInput == nil) {
             OSType type = CVPixelBufferGetPixelFormatType(imageData);
@@ -594,17 +609,14 @@ ERROR:
             [_imageInput addTarget:(GPUImageView*)_displayView];
         }
 #endif
-        if(queueGetLength(_playControl.imageQueue) == 0){
-            _syncControl.videoInfo.startPts = (long)pts;
-            _syncControl.videoInfo.trafficStatus.leave.pts = (long)pts;///防止videoInfo.startPts不为从0开始时，videocache过大，
-        }else if (_syncControl.videoInfo.trafficStatus.enter.pts - _syncControl.videoInfo.trafficStatus.leave.pts > FRIST_BUFFER_TIME){
+            _syncControl.videoInfo.startPts = (GLong)pts;
+            _syncControl.videoInfo.trafficStatus.leave.pts = (GLong)pts;///防止videoInfo.startPts不为从0开始时，videocache过大，
+      
             pthread_mutex_lock(&_playControl.oLock);
             if (_playControl.status != kPlayStatusStop) {
-                pthread_create(&_playControl.playVideoThread, NULL, playVideoRunLoop, (__bridge void *)(self));
+                pthread_create(&_playControl.playVideoThread, GNULL, playVideoRunLoop, (__bridge void *)(self));
             }
             pthread_mutex_unlock(&_playControl.oLock);
-
-        }
     }
     
     GJImageBuffer* imageBuffer  = (GJImageBuffer*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJImageBuffer));
@@ -614,23 +626,23 @@ ERROR:
     BOOL result = YES;
 RETRY:
     if (queuePush(_playControl.imageQueue, imageBuffer, 0)) {
-        _syncControl.videoInfo.trafficStatus.enter.pts = (long)imageBuffer->pts;
+        _syncControl.videoInfo.trafficStatus.enter.pts = (GLong)imageBuffer->pts;
         _syncControl.videoInfo.trafficStatus.enter.count++;
 #ifdef NETWORK_DELAY
-        int date = [[NSDate date]timeIntervalSince1970]*1000;
+        GUInt32 date = [[NSDate date]timeIntervalSince1970]*1000;
         _syncControl.networkDelay = date - _syncControl.videoInfo.trafficStatus.enter.pts;
 #endif
         [self checkBufferingAndWater];
         result = YES;
     }else if(_playControl.status == kPlayStatusStop){
-        GJLOG(GJ_LOGFORBID,"player video data push while stop");
+        GJLOG(GJ_LOGWARNING,"player video data push while stop,drop");
         result = NO;
     }else{
         GJLOG(GJ_LOGWARNING, "video player queue full,update oldest frame");
-        GJImageBuffer* oldBuffer = NULL;
-        if (queuePop(_playControl.imageQueue, (void**)&oldBuffer, 0)) {
+        GJImageBuffer* oldBuffer = GNULL;
+        if (queuePop(_playControl.imageQueue, (GHandle*)&oldBuffer, 0)) {
             CVPixelBufferRelease(oldBuffer->image);
-            GJBufferPoolSetData(defauleBufferPool(), (void*)oldBuffer);
+            GJBufferPoolSetData(defauleBufferPool(), (GHandle)oldBuffer);
             goto RETRY;
         }else{
             GJLOG(GJ_LOGFORBID,"full player audio queue pop error");
@@ -642,23 +654,23 @@ RETRY:
     return result;
 }
 #ifdef GJAUDIOQUEUEPLAY
-static const int mpeg4audio_sample_rates[16] = {
+static const GUInt32 mpeg4audio_sample_rates[16] = {
     96000, 88200, 64000, 48000, 44100, 32000,
     24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
 #endif
--(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(int64_t)pts{
+-(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(GInt64)pts{
 #ifdef GJAUDIOQUEUEPLAY
     if (_audioTestPlayer == nil) {
         if (_audioFormat.mFormatID <=0) {
             queueSetMinCacheSize(_playControl.audioQueue, 0);
-            if (((uint64_t*)audioData->data) && 0xFFF0 != 0xFFF0) {
+            if (((uGInt64*)audioData->data) && 0xFFF0 != 0xFFF0) {
                 NSAssert(0, @"音频格式不支持");
             }
             uint8_t* adts = audioData->data;
             uint8_t sampleIndex = adts[2] << 2;
             sampleIndex = sampleIndex>>4;
-            int sampleRate = mpeg4audio_sample_rates[sampleIndex];
+            GUInt32 sampleRate = mpeg4audio_sample_rates[sampleIndex];
             uint8_t channel = adts[2] & 0x1 <<2;
             channel += (adts[3] & 0xb0)>>6;
             _audioFormat.mChannelsPerFrame = channel;
@@ -682,17 +694,19 @@ static const int mpeg4audio_sample_rates[16] = {
 
         queueBroadcastPop(_playControl.audioQueue);//other lock
         GInt32 qLength = queueGetLength(_playControl.audioQueue);
-        GJAudioBuffer** audioBuffer = (GJAudioBuffer**)malloc(qLength*sizeof(GJAudioBuffer*));
-
-        queueClean(_playControl.audioQueue, (GVoid**)audioBuffer, &qLength);//用clean，防止播放断同时也在读
-        for (int i = 0; i<qLength; i++) {
-            _syncControl.audioInfo.trafficStatus.leave.count++;
-            _syncControl.audioInfo.trafficStatus.leave.byte += audioBuffer[i]->audioData->size;
-            retainBufferUnRetain(audioBuffer[i]->audioData);
-            GJBufferPoolSetData(defauleBufferPool(), (uint8_t*)audioBuffer[i]);
+        if(qLength > 0){
+            GJAudioBuffer** audioBuffer = (GJAudioBuffer**)malloc(qLength*sizeof(GJAudioBuffer*));
+            
+            queueClean(_playControl.audioQueue, (GVoid**)audioBuffer, &qLength);//用clean，防止播放断同时也在读
+            for (GUInt32 i = 0; i<qLength; i++) {
+                _syncControl.audioInfo.trafficStatus.leave.count++;
+                _syncControl.audioInfo.trafficStatus.leave.byte += audioBuffer[i]->audioData->size;
+                retainBufferUnRetain(audioBuffer[i]->audioData);
+                GJBufferPoolSetData(defauleBufferPool(), (uint8_t*)audioBuffer[i]);
+            }
+            free(audioBuffer);
         }
-        _syncControl.audioInfo.trafficStatus.leave.pts = (long)pts;
-        free(audioBuffer);
+        _syncControl.audioInfo.trafficStatus.leave.pts = (GLong)pts;//防止此时获得audioCache时误差太大，
         pthread_mutex_unlock(&_playControl.oLock);
 
     }
@@ -706,30 +720,32 @@ static const int mpeg4audio_sample_rates[16] = {
     if (_syncControl.syncType != kTimeSYNCAudio) {
         GJLOG(GJ_LOGWARNING, "加入音频，切换到音频同步");
         changeSyncType(&_syncControl, kTimeSYNCAudio);
-        _syncControl.audioInfo.trafficStatus.leave.pts = (long)pts;///防止audioInfo.startPts不为从0开始时，audiocache过大，
+        _syncControl.audioInfo.trafficStatus.leave.pts = (GLong)pts;///防止audioInfo.startPts不为从0开始时，audiocache过大，
+    }
+    {
+        //收集网络抖动
+        GLong clock = GJ_Gettime()/1000;
+        
     }
     if (_audioPlayer == nil) {
-        if(queueGetLength(_playControl.audioQueue) == 0){
-            _syncControl.audioInfo.startPts = (long)pts;
-            _syncControl.audioInfo.trafficStatus.leave.pts = (long)pts;///防止audioInfo.startPts不为从0开始时，audiocache过大，
-            //防止视频先到，导致时差特别大
-            _syncControl.audioInfo.cPTS = (long)pts;
-            _syncControl.audioInfo.clock = getTime()/1000 + FRIST_BUFFER_TIME;
-        }else if (_syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts > FRIST_BUFFER_TIME){
-            if (_audioFormat.mFormatID != kAudioFormatLinearPCM) {
-                GJLOG(GJ_LOGWARNING, "音频格式不支持");
-                result =  NO;
-                goto END;
-            }else{
-                pthread_mutex_lock(&_playControl.oLock);
-                if (_playControl.status != kPlayStatusStop) {
-                    _audioPlayer = [[GJAudioQueueDrivePlayer alloc]initWithSampleRate:_audioFormat.mSampleRate channel:_audioFormat.mChannelsPerFrame formatID:_audioFormat.mFormatID];
-                    _audioPlayer.delegate = self;
-                    [_audioPlayer start];
-                    _syncControl.audioInfo.startTime = getTime()/1000.0;
-                }
-                pthread_mutex_unlock(&_playControl.oLock);
+        _syncControl.audioInfo.startPts = (GLong)pts;
+        _syncControl.audioInfo.trafficStatus.leave.pts = (GLong)pts;///防止audioInfo.startPts不为从0开始时，audiocache过大，
+        //防止视频先到，导致时差特别大
+        _syncControl.audioInfo.cPTS = (GLong)pts;
+        _syncControl.audioInfo.clock = GJ_Gettime()/1000;
+        if (_audioFormat.mFormatID != kAudioFormatLinearPCM) {
+            GJLOG(GJ_LOGWARNING, "音频格式不支持");
+            result =  NO;
+            goto END;
+        }else{
+            pthread_mutex_lock(&_playControl.oLock);//此时禁止开启和停止
+            if (_playControl.status != kPlayStatusStop) {
+                _audioPlayer = [[GJAudioQueueDrivePlayer alloc]initWithSampleRate:_audioFormat.mSampleRate channel:_audioFormat.mChannelsPerFrame formatID:_audioFormat.mFormatID];
+                _audioPlayer.delegate = self;
+                [_audioPlayer start];
+                _syncControl.audioInfo.startTime = GJ_Gettime()/1000.0;
             }
+            pthread_mutex_unlock(&_playControl.oLock);
         }
     }
     
@@ -741,32 +757,32 @@ static const int mpeg4audio_sample_rates[16] = {
     retainBufferRetain(audioData);
 RETRY:
     if(queuePush(_playControl.audioQueue, audioBuffer, 0)){
-        _syncControl.audioInfo.trafficStatus.enter.pts = (long)audioBuffer->pts;
+        _syncControl.audioInfo.trafficStatus.enter.pts = (GLong)audioBuffer->pts;
         _syncControl.audioInfo.trafficStatus.enter.count++;
         _syncControl.audioInfo.trafficStatus.enter.byte += audioBuffer->audioData->size;
 
 #ifdef NETWORK_DELAY
-        int date = [[NSDate date]timeIntervalSince1970]*1000;
+        GUInt32 date = [[NSDate date]timeIntervalSince1970]*1000;
         _syncControl.networkDelay = date - _syncControl.audioInfo.trafficStatus.enter.pts;
 #endif
         [self checkBufferingAndWater];
         result =  YES;
     }else if(_playControl.status == kPlayStatusStop){
-        GJLOG(GJ_LOGWARNING,"player audio data push while stop");
+        GJLOG(GJ_LOGWARNING,"player audio data push while stop,drop");
         retainBufferUnRetain(audioData);
-        GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
+        GJBufferPoolSetData(defauleBufferPool(), (GHandle)audioBuffer);
         result = NO;
     }else{
         GJLOG(GJ_LOGWARNING, "audio player queue full,update oldest frame   ，正常情况不可能出现的case");
-        GJAudioBuffer* oldBuffer = NULL;
-        if (queuePop(_playControl.audioQueue, (void**)&oldBuffer, 0)) {
+        GJAudioBuffer* oldBuffer = GNULL;
+        if (queuePop(_playControl.audioQueue, (GHandle*)&oldBuffer, 0)) {
             retainBufferUnRetain(oldBuffer->audioData);
-            GJBufferPoolSetData(defauleBufferPool(), (void*)oldBuffer);
+            GJBufferPoolSetData(defauleBufferPool(), (GHandle)oldBuffer);
             goto RETRY;
         }else{
             GJLOG(GJ_LOGFORBID,"full player audio queue pop error");
             retainBufferUnRetain(audioData);
-            GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
+            GJBufferPoolSetData(defauleBufferPool(), (GHandle)audioBuffer);
             result = NO;
         }
     }
@@ -774,9 +790,9 @@ RETRY:
 END:
 //    {
 //    GJAudioBuffer* audioBuffer ;
-//    if (queuePop(_playControl.audioQueue, (void**)&audioBuffer, 0)) {
+//    if (queuePop(_playControl.audioQueue, (GHandle*)&audioBuffer, 0)) {
 //        retainBufferUnRetain(audioData);
-//        GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
+//        GJBufferPoolSetData(defauleBufferPool(), (GHandle)audioBuffer);
 //    }
 //    }
     return result;
@@ -784,18 +800,18 @@ END:
 
 
 
--(BOOL)GJAudioQueueDrivePlayer:(GJAudioQueueDrivePlayer *)player outAudioData:(void *)data outSize:(int *)size{
+-(BOOL)GJAudioQueueDrivePlayer:(GJAudioQueueDrivePlayer *)player outAudioData:(void *)data outSize:(GInt32 *)size{
     GJAudioBuffer* audioBuffer;
-    if (_playControl.status == kPlayStatusRunning && queuePop(_playControl.audioQueue, (void**)&audioBuffer, 0)) {
+    if (_playControl.status == kPlayStatusRunning && queuePop(_playControl.audioQueue, (GHandle*)&audioBuffer, 0)) {
         *size = audioBuffer->audioData->size;
         memcpy(data, audioBuffer->audioData->data, *size);
-        _syncControl.audioInfo.trafficStatus.leave.pts = (long)audioBuffer->pts;
+        _syncControl.audioInfo.trafficStatus.leave.pts = (GLong)audioBuffer->pts;
         _syncControl.audioInfo.trafficStatus.leave.count++;
-        _syncControl.audioInfo.cPTS = (long)audioBuffer->pts;
-        _syncControl.audioInfo.clock = getTime()/1000;
+        _syncControl.audioInfo.cPTS = (GLong)audioBuffer->pts;
+        _syncControl.audioInfo.clock = GJ_Gettime()/1000;
 //        GJLOG(GJ_LOGDEBUG,"audio play pts:%d size:%d",_syncControl.audioInfo.cPTS,*size);
         retainBufferUnRetain(audioBuffer->audioData);
-        GJBufferPoolSetData(defauleBufferPool(), (void*)audioBuffer);
+        GJBufferPoolSetData(defauleBufferPool(), (GHandle)audioBuffer);
         return YES;
     }else{
         if (_playControl.status == kPlayStatusRunning) {

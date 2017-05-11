@@ -270,6 +270,10 @@ static const int mpeg4audio_sample_rates[16] = {
     if (_bufferPool) {
         GJRetainBufferPoolClean(_bufferPool, true);
         GJRetainBufferPoolFree(&_bufferPool);
+//        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+//            GJRetainBufferPoolClean(_bufferPool, true);
+//            GJRetainBufferPoolFree(&_bufferPool);
+//        });
     }
     if (_resumeQueue) {
         queueFree(&(_resumeQueue));
