@@ -136,9 +136,7 @@ GVoid GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,GHandle
 
 
 GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
-    if (sender == NULL) {
-        return GFalse;
-    }
+
     GBool isKey = GFalse;
     GUInt8 *sps = packet->spsOffset + packet->retain.data,*pps = packet->ppsOffset + packet->retain.data,*pp = packet->ppOffset+packet->retain.data;
     GInt32 spsSize = packet->spsSize,ppsSize = packet->ppsSize,ppSize = packet->ppSize;
@@ -273,6 +271,7 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         sender->videoStatus.enter.byte += pushPacket->packet.m_nBodySize;
         return GTrue;
     }else{
+        GJLOG(GJ_LOGFORBID, "不可能出现的错误");
         retainBufferUnRetain(retainBuffer);
         GJBufferPoolSetData(defauleBufferPool(), (GHandle)pushPacket);
         return GFalse;
@@ -280,9 +279,7 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
 }
 
 GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
-    if (sender == NULL) {
-        return GFalse;
-    }
+   
     GUChar * body;
     GInt32 preSize = 2;
     GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
@@ -320,6 +317,7 @@ GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
         sender->audioStatus.enter.byte += pushPacket->packet.m_nBodySize;
         return GTrue;
     }else{
+        GJLOG(GJ_LOGFORBID, "不可能出现的错误");
         retainBufferUnRetain(retainBuffer);
         GJBufferPoolSetData(defauleBufferPool(), (GHandle)pushPacket);
         return GFalse;
@@ -346,10 +344,18 @@ GVoid  GJRtmpPush_StartConnect(GJRtmpPush* sender,const GChar* sendUrl){
 GVoid GJRtmpPush_Delloc(GJRtmpPush* push){
 
     RTMP_Free(push->rtmp);
-    GJRTMP_Packet* packet;
-    while (queuePop(push->sendBufferQueue, (GHandle*)&packet, 0)) {
-        retainBufferUnRetain(packet->retainBuffer);
-        GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);
+    GInt32 length = queueGetLength(push->sendBufferQueue);
+    if (length>0) {
+        GJRTMP_Packet** packet = (GJRTMP_Packet**)malloc(sizeof(GJRTMP_Packet*)*length);
+        //queuepop已经关闭
+        if (queueClean(push->sendBufferQueue, (GHandle*)packet, &length)) {
+            for (GInt32 i = 0; i<length; i++) {
+                retainBufferUnRetain(packet[i]->retainBuffer);
+                GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet[i]);
+            }
+            
+        }
+        free(packet);
     }
     queueFree(&push->sendBufferQueue);
     free(push);
@@ -379,10 +385,10 @@ GVoid GJRtmpPush_Release(GJRtmpPush* push){
 GVoid GJRtmpPush_Close(GJRtmpPush* sender){
     if (sender->stopRequest) {
         GJLOG(GJ_LOGINFO,"GJRtmpPush_Close：%p  重复关闭",sender);
-
     }else{
         GJLOG(GJ_LOGINFO,"GJRtmpPush_Close:%p",sender);
         sender->stopRequest = GTrue;
+        queueEnablePush(sender->sendBufferQueue, GFalse);
         queueBroadcastPop(sender->sendBufferQueue);
 
     }

@@ -365,7 +365,7 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
 }
 #endif
 GJQueue* h264Queue ;
--(GLong)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet{
+-(GJTrafficStatus)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet{
 #ifdef GJVIDEODECODE_TEST
     if (_videoDecode == nil) {
         _videoDecode = [[GJH264Decoder alloc]init];
@@ -386,11 +386,6 @@ GJQueue* h264Queue ;
     queuePush(h264Queue, packet, 0);
     return 0.0;
 #endif
-//    static int times;
-//    NSData* sps = [NSData dataWithBytes:packet->sps length:packet->spsSize];
-//    NSData* pps = [NSData dataWithBytes:packet->pps length:packet->ppsSize];
-//    NSLog(@"encd:%d,sps%@,pps%@,pp%d,pts:%lld",times++,sps,pps,packet->ppSize,packet->pts);
-
     if (_mp4Recoder) {
         uint8_t* frame;long size=0;
         if (packet->spsSize > 0) {
@@ -403,22 +398,20 @@ GJQueue* h264Queue ;
         mp4WriterAddVideo(_mp4Recoder, frame, size, (double)packet->pts);
     }
     
-    if(!GJRtmpPush_SendH264Data(_videoPush, packet)){
-        return -1;
-    }else{
-        GJTrafficStatus status = GJRtmpPush_GetVideoBufferCacheInfo(_videoPush);
-        GLong cache = status.enter.pts - status.leave.pts;
-        if(cache > MAX_SEND_DELAY){
-            dispatch_async(dispatch_get_global_queue(0, 0), ^{
-                GJLOG(GJ_LOGFORBID, "推送缓存过多，导致重连");
-                [_pushLock lock];
-                [self stopStreamPush];
-                [self startStreamPushWithConfig:&_pushConfig reStart:YES];
-                [_pushLock unlock];
-            });
-        }
-        return cache;
+    GJRtmpPush_SendH264Data(_videoPush, packet);
+    
+    GJTrafficStatus status = GJRtmpPush_GetVideoBufferCacheInfo(_videoPush);
+    GLong cache = status.enter.pts - status.leave.pts;
+    if(cache > MAX_SEND_DELAY){
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJLOG(GJ_LOGFORBID, "推送缓存过多，导致重连");
+            [_pushLock lock];
+            [self stopStreamPush];
+            [self startStreamPushWithConfig:&_pushConfig reStart:YES];
+            [_pushLock unlock];
+        });
     }
+    return status;
 }
 
 //-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(int64_t)pts{

@@ -23,8 +23,7 @@
 @property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
 @property(nonatomic,assign)GJBufferPool* bufferPool;
 @property(nonatomic,assign)GInt32 currentBitRate;//当前码率
-@property(nonatomic,assign)GInt64 preCheckPts;//调整之后要过DEFAULT_CHECK_DELAY ms才能反应，所以要延迟做检测调整；
-@property(nonatomic,assign)GLong preBufferCache;//上一次敏感检测状态
+@property(nonatomic,assign)GJTrafficStatus preBufferStatus;//上一次敏感检测状态
 
 @property(nonatomic,assign)BOOL shouldRestart;
 @property(nonatomic,assign)BOOL stopRequest;//防止下一帧满时一直等待
@@ -347,35 +346,39 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //        static int i = 0;
 //        NSLog(@"encodecount:%d,lenth:%d,pts:%lld \n",i++,pushPacket->ppsSize+pushPacket->spsSize+pushPacket->ppSize,pts.value);
 //    NSLog(@"encode frame:%d",pushPacket->ppSize);
-    GLong bufferCache = [encoder.deleagte GJH264Encoder:encoder encodeCompletePacket:pushPacket];
-    GLong difference = bufferCache - encoder.preBufferCache;
-    if (pushPacket->pts - encoder.preCheckPts >= DEFAULT_CHECK_DELAY) {//DEFAULT_CHECK_DELAY ms一次常规不敏感检测，但是最准确
-        if (bufferCache > SEND_DELAY_LINE) {
-            [encoder reduceQualityWithStep:1 allowStop:NO];
-        }else if(bufferCache  < 100 && encoder.currentBitRate < encoder.destFormat.baseFormat.bitRate){
+    GJTrafficStatus bufferStatus = [encoder.deleagte GJH264Encoder:encoder encodeCompletePacket:pushPacket];
+  
+    if (bufferStatus.enter.count % 5 == 0) {//DEFAULT_CHECK_DELAY ms一次常规不敏感检测，但是最准确
+        GLong cacheInCount = bufferStatus.enter.count - bufferStatus.leave.count;
+        if(cacheInCount == 1 && encoder.currentBitRate < encoder.destFormat.baseFormat.bitRate){
+            GJLOG(GJ_LOGINFO, "宏观检测出提高视频质量");
             [encoder appendQualityWithStep:1];
+        }else{
+            GLong diffInCount = bufferStatus.leave.count - encoder.preBufferStatus.leave.count;
+            if(diffInCount <= 3){//降低质量敏感检测,丢帧时有误差
+                GJLOG(GJ_LOGINFO, "敏感检测出降低视频质量");
+                [encoder reduceQualityWithStep:4 - diffInCount];
+            }else if(diffInCount >= 7){//提高质量敏感检测,丢帧时有误差
+                GJLOG(GJ_LOGINFO, "敏感检测出提高音频质量");
+                [encoder appendQualityWithStep:diffInCount-4];
+            }
         }
-        encoder.preCheckPts = pushPacket->pts;
-    }else if(difference > 2000.0/encoder.destFormat.baseFormat.fps){//降低质量敏感检测,丢帧时有误差
-        GJLOG(GJ_LOGINFO, "敏感检测出降低视频质量");
-        [encoder reduceQualityWithStep:difference*10 allowStop:NO];
-    }else if(difference < -2000.0/encoder.destFormat.baseFormat.fps){//提高质量敏感检测,丢帧时有误差
-        GJLOG(GJ_LOGINFO, "敏感检测出降低音频质量");
-        [encoder appendQualityWithStep:(-difference-0.1)*10];
+        encoder.preBufferStatus = bufferStatus;
     }
-    encoder.preBufferCache = bufferCache;
     retainBufferUnRetain(retainBuffer);
 }
 
 
 //快降慢升
--(void)appendQualityWithStep:(int)step{
-    int leftStep = step;
+-(void)appendQualityWithStep:(GLong)step{
+    GLong leftStep = step;
     GJEncodeQuality quality = GJEncodeQualityGood;
     int32_t bitrate = _currentBitRate;
     GJLOG(GJ_LOGINFO, "appendQualityWithStep：%d",step);
     if (leftStep > 0 && GRationalValue(_dropStep) > 0.5) {
 //        _dropStep += _allowDropStep-1+leftStep;
+        GJAssert(_dropStep.den - _dropStep.num == 1, "管理错误1");
+
         _dropStep.num -= leftStep;
         _dropStep.den -= leftStep;
         leftStep = 0;
@@ -385,12 +388,13 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         }else{
             bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
             bitrate += _allowMinBitRate/_destFormat.baseFormat.fps*I_P_RATE;
-            quality = GJEncodeQualitybad;
+            quality = GJEncodeQualityTerrible;
             GJLOG(GJ_LOGINFO, "appendQuality by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
         }
     }
-    if (leftStep > 0 && GRationalValue(_dropStep) <= 0.50001) {
+    if (leftStep > 0 && _dropStep.num != 0) {
         //        _dropStep += _allowDropStep-1+leftStep;
+        GJAssert(_dropStep.num == 1, "管理错误2");
         _dropStep.num = 1;
         _dropStep.den += leftStep;
         leftStep = 0;
@@ -398,7 +402,6 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             leftStep = DEFAULT_MAX_DROP_STEP - _dropStep.den;
             _dropStep = GRationalMake(0,DEFAULT_MAX_DROP_STEP);
             bitrate = _allowMinBitRate;
-            quality = GJEncodeQualityGood;
         }else{
             bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
             bitrate += bitrate/_destFormat.baseFormat.fps*(1-GRationalValue(_dropStep))*I_P_RATE;
@@ -425,8 +428,8 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     }
  
 }
--(void)reduceQualityWithStep:(GLong)step allowStop:(BOOL)allowStop{
-    int leftStep = step;
+-(void)reduceQualityWithStep:(GLong)step{
+    GLong leftStep = step;
     int currentBitRate = _currentBitRate;
     GJEncodeQuality quality = GJEncodeQualityGood;
     int32_t bitrate = _currentBitRate;
@@ -464,7 +467,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         _dropStep.den += leftStep;
         bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
         bitrate += bitrate/_destFormat.baseFormat.fps*(1-GRationalValue(_dropStep))*I_P_RATE;
-        quality = GJEncodeQualitybad;
+        quality = GJEncodeQualityTerrible;
         GJLOG(GJ_LOGINFO, "reduceQuality2 by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
     }
     self.currentBitRate = bitrate;

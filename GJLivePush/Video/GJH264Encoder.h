@@ -32,7 +32,7 @@ typedef enum _GJEncodeQuality{
 
  @return 可以理解为下一级数据缓存的比例，用于动态编码。
  */
--(GLong)GJH264Encoder:(GJH264Encoder*)encoder encodeCompletePacket:(R_GJH264Packet*)packet;
+-(GJTrafficStatus)GJH264Encoder:(GJH264Encoder*)encoder encodeCompletePacket:(R_GJH264Packet*)packet;
 
 /**
  编码质量回调
