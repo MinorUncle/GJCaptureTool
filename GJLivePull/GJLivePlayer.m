@@ -24,19 +24,16 @@
 //#define UIIMAGE_SHOW
 
 
-
 #define VIDEO_PTS_PRECISION   1000
 #define AUDIO_PTS_PRECISION   100
 
 
 
-#define VIDEO_MAX_CACHE_DUR 3000
-#define AUDIO_MAX_CACHE_DUR 3000
+#define MAX_CACHE_DUR 3000
 
-#define VIDEO_MIN_CACHE_DUR 200
-#define AUDIO_MIN_CACHE_DUR 200
+#define MIN_CACHE_DUR 200
 
-#define VIDEO_MAX_CACHE_COUNT 100 //缓存空间，不能小于VIDEO_MAX_CACHE_DUR的帧数
+#define VIDEO_MAX_CACHE_COUNT 100 //初始化缓存空间
 #define AUDIO_MAX_CACHE_COUNT 200
 
 
@@ -76,8 +73,8 @@ typedef struct _GJNetShakeControl{
     GInt32 collectUnitStartClock;
     GInt32 collectUnitEndClock;
     GInt32 collectUnitCache;
-    GInt32 maxCache;
-    GInt32 minCache;
+    GInt32 maxShake;
+    GInt32 minShake;
 }GJNetShakeControl;
 typedef struct _SyncInfo{
     GLong                 clock;
@@ -151,7 +148,6 @@ static void changeSyncType(GJSyncControl* sync,TimeSYNCType syncType){
         sync->syncType = kTimeSYNCAudio;
         resetSyncToStartPts(sync, sync->audioInfo.cPTS);
     }
-
 }
 static GHandle playVideoRunLoop(GHandle parm){
     pthread_setname_np("playVideoRunLoop");
@@ -297,12 +293,13 @@ ERROR:
         _syncControl.speed = 1.0;
         _playControl.status = kPlayStatusStop;
         
-        _cacheControl.lowAudioWaterFlag = AUDIO_MIN_CACHE_DUR;
-        _cacheControl.lowVideoWaterFlag = VIDEO_MIN_CACHE_DUR;
-        _cacheControl.highAudioWaterFlag = AUDIO_MAX_CACHE_DUR;
-        _cacheControl.highVideoWaterFlag = VIDEO_MAX_CACHE_DUR;
+        _cacheControl.lowAudioWaterFlag = MIN_CACHE_DUR;
+        _cacheControl.lowVideoWaterFlag = MIN_CACHE_DUR;
+        _cacheControl.highAudioWaterFlag = MAX_CACHE_DUR;
+        _cacheControl.highVideoWaterFlag = MAX_CACHE_DUR;
         _syncControl.syncType = kTimeSYNCVideo;
 
+        memset(&_shakeControl, 0, sizeof(_shakeControl));
         pthread_mutex_init(&_playControl.oLock, GNULL);
         
 #ifdef UIIMAGE_SHOW
@@ -659,6 +656,8 @@ static const GUInt32 mpeg4audio_sample_rates[16] = {
     24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
 #endif
+
+
 -(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(GInt64)pts{
 #ifdef GJAUDIOQUEUEPLAY
     if (_audioTestPlayer == nil) {
@@ -710,8 +709,6 @@ static const GUInt32 mpeg4audio_sample_rates[16] = {
         pthread_mutex_unlock(&_playControl.oLock);
 
     }
-    
-    
     if (_playControl.status == kPlayStatusStop) {
         GJLOG(GJ_LOGWARNING, "播放器stop状态收到视音频，直接丢帧");
         result =  NO;
@@ -724,7 +721,45 @@ static const GUInt32 mpeg4audio_sample_rates[16] = {
     }
     {
         //收集网络抖动
-        GLong clock = GJ_Gettime()/1000;
+        GInt32 clock = (GInt32)(GJ_Gettime()/1000);
+        GInt32 unitClockDif = clock - _shakeControl.collectUnitEndClock;
+        GInt32 unitPtsDif = (GInt32)(pts - _syncControl.audioInfo.trafficStatus.enter.pts);
+        if ((unitPtsDif - unitClockDif) * (_shakeControl.collectUnitCache - _shakeControl.collectUnitEndClock + _shakeControl.collectUnitStartClock) >=0) {
+            _shakeControl.collectUnitEndClock = clock;
+            _shakeControl.collectUnitCache += unitPtsDif;
+        }else{
+            GInt32 shake = _shakeControl.collectUnitCache - (_shakeControl.collectUnitEndClock - _shakeControl.collectUnitStartClock);
+            GJLOG(GJ_LOGINFO, "pull net shake:%d",shake);
+            if (_shakeControl.maxShake < shake) {
+                _shakeControl.maxShake = shake;
+            }else if (_shakeControl.minShake > shake){
+                _shakeControl.minShake = shake;
+                _cacheControl.lowAudioWaterFlag = MAX(MIN_CACHE_DUR,-shake);
+                _cacheControl.highAudioWaterFlag = MIN(MAX_CACHE_DUR, -shake*3);
+                if (_cacheControl.lowAudioWaterFlag > _cacheControl.highAudioWaterFlag) {
+                    GJLOG(GJ_LOGFORBID, "lowAudioWaterFlag 大于 highAudioWaterFlag怎么可能！！！");
+                    _cacheControl.highAudioWaterFlag = _cacheControl.lowAudioWaterFlag;
+                }
+                GJLOG(GJ_LOGWARNING, "update delay to shake low:%d high:%d",_cacheControl.lowAudioWaterFlag,_cacheControl.highAudioWaterFlag);
+            }else{
+                GJLOG(GJ_LOGINFO, "pull net shake:%d,but not affect",shake);
+            }
+            _shakeControl.collectUnitStartClock = _shakeControl.collectUnitEndClock;
+            _shakeControl.collectUnitEndClock = clock;
+            _shakeControl.collectUnitCache = unitPtsDif;
+            
+            if (clock - _shakeControl.collectStartClock >= MAX_CACHE_DUR) {
+                if (shake > 0) {
+                    _shakeControl.maxShake = shake;
+                    _shakeControl.minShake = 0;
+                }else{
+                    _shakeControl.minShake = shake;
+                    _shakeControl.maxShake = 0;
+                }
+                _shakeControl.collectStartClock = clock;
+            }
+        }
+        
         
     }
     if (_audioPlayer == nil) {
@@ -797,6 +832,7 @@ END:
 //    }
     return result;
 }
+
 
 
 

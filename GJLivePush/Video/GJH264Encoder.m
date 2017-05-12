@@ -366,6 +366,12 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             }else if(diffInCount > encoder.dynamicAlgorithm.den + encoder.dynamicAlgorithm.num){//提高质量敏感检测,丢帧时有误差
                 GJLOG(GJ_LOGINFO, "敏感检测出提高音频质量");
                 [encoder appendQualityWithStep:diffInCount - encoder.dynamicAlgorithm.den - encoder.dynamicAlgorithm.num];
+            }else{
+                GLong cacheInPts = bufferStatus.enter.pts - bufferStatus.leave.pts;
+                if (diffInCount < encoder.dynamicAlgorithm.den && cacheInPts > SEND_DELAY_TIME && cacheInCount > SEND_DELAY_COUNT) {
+                    GJLOG(GJ_LOGWARNING, "宏观检测出降低视频质量 (很少可能会出现)");
+                    [encoder reduceQualityWithStep:encoder.dynamicAlgorithm.den - diffInCount];
+                }
             }
         }
         encoder.preBufferStatus = bufferStatus;
