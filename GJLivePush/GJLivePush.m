@@ -404,7 +404,7 @@ GJQueue* h264Queue ;
     GLong cache = status.enter.pts - status.leave.pts;
     if(cache > MAX_SEND_DELAY){
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            GJLOG(GJ_LOGFORBID, "推送缓存过多，导致重连");
+            GJLOG(GJ_LOGERROR, "推送缓存过多，导致重连");
             [_pushLock lock];
             [self stopStreamPush];
             [self startStreamPushWithConfig:&_pushConfig reStart:YES];

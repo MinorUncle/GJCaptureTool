@@ -43,7 +43,7 @@ static GHandle sendRunloop(GHandle parm){
     
     ret = RTMP_Connect(push->rtmp, GNULL);
     if (!ret) {
-        GJLOG(GJ_LOGFORBID, "RTMP_Connect error");
+        GJLOG(GJ_LOGERROR, "RTMP_Connect error");
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }
@@ -51,7 +51,7 @@ static GHandle sendRunloop(GHandle parm){
 
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret ) {
-        GJLOG(GJ_LOGFORBID, "RTMP_ConnectStream error");
+        GJLOG(GJ_LOGERROR, "RTMP_ConnectStream error");
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }else{
@@ -330,6 +330,8 @@ GVoid  GJRtmpPush_StartConnect(GJRtmpPush* sender,const GChar* sendUrl){
     GJLOG(GJ_LOGINFO,"GJRtmpPush_StartConnect:%p",sender);
 
     size_t length = strlen(sendUrl);
+    memset(&sender->videoStatus, 0, sizeof(GJTrafficStatus));
+    memset(&sender->audioStatus, 0, sizeof(GJTrafficStatus));
     GJAssert(length <= MAX_URL_LENGTH-1, "sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
     memcpy(sender->pushUrl, sendUrl, length+1);
     if (sender->sendThread) {

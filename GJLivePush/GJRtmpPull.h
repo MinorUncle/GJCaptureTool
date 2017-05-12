@@ -23,7 +23,7 @@ typedef enum _GJRTMPPullMessageType{
     
     GJRTMPPullMessageType_connectError,
     GJRTMPPullMessageType_urlPraseError,
-    GJRTMPPullMessageType_sendPacketError,
+    GJRTMPPullMessageType_receivePacketError
 }GJRTMPPullMessageType;
 
 

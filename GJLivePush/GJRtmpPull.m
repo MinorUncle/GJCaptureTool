@@ -37,6 +37,7 @@ static GHandle pullRunloop(GHandle parm){
     GInt32 ret = RTMP_SetupURL(pull->rtmp, pull->pullUrl);
     if (!ret) {
         errType = GJRTMPPullMessageType_urlPraseError;
+        GJLOG(GJ_LOGERROR, "RTMP_SetupURL error");
         goto ERROR;
     }
     pull->rtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
@@ -44,13 +45,16 @@ static GHandle pullRunloop(GHandle parm){
     ret = RTMP_Connect(pull->rtmp, NULL);
     if (!ret) {
         errType = GJRTMPPullMessageType_connectError;
+        GJLOG(GJ_LOGERROR, "RTMP_Connect error");
         goto ERROR;
     }
     ret = RTMP_ConnectStream(pull->rtmp, 0);
     if (!ret) {
         errType = GJRTMPPullMessageType_connectError;
+        GJLOG(GJ_LOGERROR, "RTMP_ConnectStream error");
         goto ERROR;
     }else{
+        GJLOG(GJ_LOGDEBUG, "RTMP_Connect success");
         if(pull->messageCallback){
             pull->messageCallback(pull, GJRTMPPullMessageType_connectSuccess,pull->messageCallbackParm,NULL);
         }
@@ -59,7 +63,8 @@ static GHandle pullRunloop(GHandle parm){
     
     while(!pull->stopRequest){
         RTMPPacket packet = {0};
-        while (RTMP_ReadPacket(pull->rtmp, &packet)) {
+        GBool rResult = GFalse;
+        while ((rResult = RTMP_ReadPacket(pull->rtmp, &packet))) {
             GUInt8 *sps = NULL,*pps = NULL,*pp = NULL,*sei = NULL;
             GInt32 spsSize = 0,ppsSize = 0,ppSize = 0,seiSize=0;
             GJStreamPacket streamPacket;
@@ -158,9 +163,14 @@ static GHandle pullRunloop(GHandle parm){
             }
             break;
         }
-        if (packet.m_body) {
-            RTMPPacket_Free(&packet);
-//            GJAssert(0, "读取数据错误\n");
+//        if (packet.m_body) {
+//            RTMPPacket_Free(&packet);
+////            GJAssert(0, "读取数据错误\n");
+//        }
+        if (rResult == GFalse) {
+            errType = GJRTMPPullMessageType_receivePacketError;
+            GJLOG(GJ_LOGWARNING,"pull Read Packet Error");
+            goto ERROR;
         }
     }
     errType = GJRTMPPullMessageType_closeComplete;

@@ -70,6 +70,11 @@ typedef enum _GJEncodeQuality{
 
 
 /**
+ .den帧中丢.num帧或多发.num帧则出发敏感算法默认（4，8）
+ */
+@property(assign,nonatomic) GRational dynamicAlgorithm;
+
+/**
  自定义输出格式，如果直接走init()则配置默认格式.输出图像像素大小等于输入图像大小。
 
  @param format 格式

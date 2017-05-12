@@ -133,7 +133,7 @@
     [super viewDidLoad];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGINFO);
-//    RTMP_LogSetLevel(RTMP_LOGDEBUG);
+    RTMP_LogSetLevel(RTMP_LOGERROR);
     
     _livePush = [[GJLivePush alloc]init];
     _livePush.delegate = self;
@@ -232,7 +232,7 @@
     
        // Do any additional setup after loading the view.
 }
-static char* url = "rtmp://192.168.18.21/live/room";
+static char* url = "rtmp://10.0.1.203/live/room";
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room

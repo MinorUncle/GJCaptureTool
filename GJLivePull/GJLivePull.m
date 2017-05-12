@@ -72,12 +72,12 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
         switch (messageType) {
             case GJRTMPPullMessageType_connectError:
             case GJRTMPPullMessageType_urlPraseError:
-                GJLOG(GJ_LOGFORBID, "pull connect error:%d",messageType);
+                GJLOG(GJ_LOGERROR, "pull connect error:%d",messageType);
                 [livePull.delegate livePull:livePull errorType:kLivePullConnectError infoDesc:@"连接错误"];
                 [livePull stopStreamPull];
                 break;
-            case GJRTMPPullMessageType_sendPacketError:
-                GJLOG(GJ_LOGFORBID, "pull sendPacket error:%d",messageType);
+            case GJRTMPPullMessageType_receivePacketError:
+                GJLOG(GJ_LOGERROR, "pull sendPacket error:%d",messageType);
                 [livePull.delegate livePull:livePull errorType:kLivePullReadPacketError infoDesc:@"读取失败"];
                 [livePull stopStreamPull];
                 break;
