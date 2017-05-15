@@ -54,51 +54,47 @@ typedef enum _TimeSYNCType{
     kTimeSYNCVideo,
 }TimeSYNCType;
 
-typedef struct CacheControl{
-    GUInt32                         lowAudioWaterFlag;
-    GUInt32                         highAudioWaterFlag;
-    GUInt32                         lowVideoWaterFlag;
-    GUInt32                         highVideoWaterFlag;
-}GJCacheControl;
+typedef struct CacheInfo{
+    GUInt32                         lowWaterFlag;
+    GUInt32                         highWaterFlag;
+    GInt32                          speedTotalDuration;
+    GInt32                          bufferTotalDuration;
+    GInt32                          lastBufferDuration;
+    GInt32                          bufferTimes;
+    GInt32                          lastPauseFlag;
+}GJCacheInfo;
 typedef struct PlayControl{
     GJPlayStatus         status;
     pthread_mutex_t      oLock;
     pthread_t            playVideoThread;
-
     GJQueue*             imageQueue;
     GJQueue*             audioQueue;
 }GJPlayControl;
-typedef struct _GJNetShakeControl{
+typedef struct _GJNetShakeInfo{
     GInt32 collectStartClock;
     GInt32 collectUnitStartClock;
     GInt32 collectUnitEndClock;
     GInt32 collectUnitCache;
     GInt32 maxShake;
     GInt32 minShake;
-}GJNetShakeControl;
+}GJNetShakeInfo;
 typedef struct _SyncInfo{
-    GLong                 clock;
-    GLong                 cPTS;
-
-    GLong                 startTime;
-    GLong                 startPts;
-//    GLong                 trafficStatus.enter.pts;
-//    GLong                 trafficStatus.leave.pts;
-
-    GJTrafficStatus     trafficStatus;
+    GInt32                 clock;
+    GLong                  cPTS;
+    GInt32                 startTime;
+    GLong                  startPts;
+    GJTrafficStatus        trafficStatus;
 }SyncInfo;
 typedef struct SyncControl{
-    SyncInfo videoInfo;
-    SyncInfo audioInfo;
-    GFloat32                speed;
-    GLong                 speedTotalDuration;
-    GLong                 bufferTotalDuration;
-    GLong                 lastBufferDuration;
-    GLong                 bufferTimes;
-    GLong                 lastPauseFlag;
-    TimeSYNCType          syncType;
+    SyncInfo                videoInfo;
+    SyncInfo                audioInfo;
+    GJCacheInfo             bufferInfo;
+    TimeSYNCType            syncType;
+    GJNetShakeInfo          netShake;
+    GFloat32                        speed;
+
 #ifdef NETWORK_DELAY
-    GLong                 networkDelay;
+    GLong                   networkDelay;
 #endif
 }GJSyncControl;
 @interface GJLivePlayer()<GJAudioQueueDrivePlayerDelegate>{
@@ -117,8 +113,7 @@ typedef struct SyncControl{
 
 @property(assign,nonatomic)GJSyncControl       syncControl;
 @property(assign,nonatomic)GJPlayControl       playControl;
-@property(assign,nonatomic)GJCacheControl      cacheControl;
-@property(assign,nonatomic)GJNetShakeControl   shakeControl;
+//@property(assign,nonatomic)GJNetShakeControl   shakeControl;
 @end
 @implementation GJLivePlayer
 
@@ -132,13 +127,13 @@ GLong getClockLine(GJSyncControl* sync){
     }else{
         GLong time = GJ_Gettime() / 1000;
         GLong timeDiff = time - sync->videoInfo.startTime;
-        return timeDiff + sync->videoInfo.startPts - sync->bufferTotalDuration + sync->speedTotalDuration;
+        return timeDiff + sync->videoInfo.startPts - sync->bufferInfo.bufferTotalDuration + sync->bufferInfo.speedTotalDuration;
     }
 }
 static void resetSyncToStartPts(GJSyncControl* sync,GLong startPts){
     sync->videoInfo.startPts = sync->audioInfo.startPts = startPts;
     sync->videoInfo.startTime = sync->audioInfo.startTime = GJ_Gettime() / 1000.0;
-    sync->speedTotalDuration = sync->bufferTotalDuration = 0;
+    sync->bufferInfo.speedTotalDuration = sync->bufferInfo.bufferTotalDuration = 0;
 }
 static void changeSyncType(GJSyncControl* sync,TimeSYNCType syncType){
     if (syncType == kTimeSYNCVideo) {
@@ -148,6 +143,10 @@ static void changeSyncType(GJSyncControl* sync,TimeSYNCType syncType){
         sync->syncType = kTimeSYNCAudio;
         resetSyncToStartPts(sync, sync->audioInfo.cPTS);
     }
+    sync->netShake.collectStartClock = sync->netShake.collectUnitStartClock = GJ_Gettime()/1000;
+    sync->netShake.maxShake = MAX_CACHE_DUR;
+    sync->netShake.minShake = MIN_CACHE_DUR;
+
 }
 static GHandle playVideoRunLoop(GHandle parm){
     pthread_setname_np("playVideoRunLoop");
@@ -248,7 +247,7 @@ static GHandle playVideoRunLoop(GHandle parm){
         }
         
         if (_syncControl->speed > 1.0) {
-            _syncControl->speedTotalDuration += (_syncControl->speed - 1.0)*(GJ_Gettime() / 1000.0-_syncControl->videoInfo.clock);
+            _syncControl->bufferInfo.speedTotalDuration += (_syncControl->speed - 1.0)*(GJ_Gettime() / 1000.0-_syncControl->videoInfo.clock);
         }
         
         _syncControl->videoInfo.clock = GJ_Gettime() / 1000;
@@ -290,16 +289,10 @@ ERROR:
     if (self) {
         memset(&_audioFormat, 0, sizeof(_audioFormat));
  
-        _syncControl.speed = 1.0;
         _playControl.status = kPlayStatusStop;
         
-        _cacheControl.lowAudioWaterFlag = MIN_CACHE_DUR;
-        _cacheControl.lowVideoWaterFlag = MIN_CACHE_DUR;
-        _cacheControl.highAudioWaterFlag = MAX_CACHE_DUR;
-        _cacheControl.highVideoWaterFlag = MAX_CACHE_DUR;
-        _syncControl.syncType = kTimeSYNCVideo;
 
-        memset(&_shakeControl, 0, sizeof(_shakeControl));
+
         pthread_mutex_init(&_playControl.oLock, GNULL);
         
 #ifdef UIIMAGE_SHOW
@@ -319,19 +312,18 @@ ERROR:
 -(void)start{
     pthread_mutex_lock(&_playControl.oLock);
     GJLOG(GJ_LOGINFO, "GJLivePlayer start");
+    memset(&_syncControl, 0, sizeof(_syncControl));
+
     _playControl.status = kPlayStatusRunning;
-    _syncControl.videoInfo.startPts = _syncControl.audioInfo.startPts = LONG_MIN;
-    memset(&_shakeControl, 0, sizeof(_shakeControl));
+    
+    _syncControl.videoInfo.startPts = _syncControl.audioInfo.startPts = LONG_MAX;
+    _syncControl.speed = 1.0;
+    _syncControl.bufferInfo.lowWaterFlag = MIN_CACHE_DUR;
+    _syncControl.bufferInfo.highWaterFlag = MAX_CACHE_DUR;
+    _syncControl.syncType = kTimeSYNCVideo;
+    
     queueEnablePush(_playControl.imageQueue, GTrue);
     queueEnablePush(_playControl.audioQueue, GTrue);
-
-//    if (_playControl.playVideoThread == nil) {
-//        _playControl.status = kPlayStatusRunning;
-////        _playVideoThread = [[NSThread alloc]initWithTarget:self selector:@selector(playRunLoop) object:nil];
-////        [_playVideoThread start];
-//    }else{
-//        GJLOG(GJ_LOGWARNING, "重复播放");
-//    }
     pthread_mutex_unlock(&_playControl.oLock);
 }
 -(void)stop{
@@ -428,7 +420,7 @@ ERROR:
     if(_playControl.status == kPlayStatusRunning){
         GJLOG(GJ_LOGDEBUG, "start buffing");
         _playControl.status = kPlayStatusBuffering;
-        _syncControl.lastPauseFlag = GJ_Gettime() / 1000;
+        _syncControl.bufferInfo.lastPauseFlag = GJ_Gettime() / 1000;
         [_audioPlayer pause];
         if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
             [self.delegate livePlayer:self bufferUpdatePercent:0.0 duration:0.0];
@@ -448,17 +440,16 @@ ERROR:
         queueBroadcastPop(_playControl.imageQueue);
         queueSetMinCacheSize(_playControl.audioQueue, 0);
         queueBroadcastPop(_playControl.audioQueue);
-        
-        if (_syncControl.lastPauseFlag != 0) {
-            _syncControl.lastBufferDuration = GJ_Gettime() / 1000 - _syncControl.lastPauseFlag;
-            _syncControl.bufferTotalDuration += _syncControl.lastBufferDuration;
-            _syncControl.bufferTimes++;
-            _syncControl.lastPauseFlag = 0;
+        if (_syncControl.bufferInfo.lastPauseFlag != 0) {
+            _syncControl.bufferInfo.lastBufferDuration = GJ_Gettime() / 1000 - _syncControl.bufferInfo.lastPauseFlag;
+            _syncControl.bufferInfo.bufferTotalDuration += _syncControl.bufferInfo.lastBufferDuration;
+            _syncControl.bufferInfo.bufferTimes++;
+            _syncControl.bufferInfo.lastPauseFlag = 0;
         }else{
             GJLOG(GJ_LOGFORBID, "暂停管理出现问题");
         }
         [_audioPlayer resume];
-        GJLOG(GJ_LOGINFO, "buffing times:%d useDuring:%d",_syncControl.bufferTimes,_syncControl.lastBufferDuration);
+        GJLOG(GJ_LOGINFO, "buffing times:%d useDuring:%d",_syncControl.bufferInfo.bufferTimes,_syncControl.bufferInfo.lastBufferDuration);
     }else{
         GJLOG(GJ_LOGDEBUG, "stopBuffering when status not buffering");
     }
@@ -502,71 +493,117 @@ ERROR:
 -(void)checkBufferingAndWater{
 //    GLong alength = queueGetLength(_playControl.audioQueue);
 //    GLong vlength = queueGetLength(_playControl.imageQueue);
-
-    if(_syncControl.syncType == kTimeSYNCAudio){
-        if (_playControl.status == kPlayStatusBuffering){
+    GLong cache;
+    if (_playControl.status == kPlayStatusBuffering) {
+        if(_syncControl.syncType == kTimeSYNCAudio){
             GLong vCache = _syncControl.videoInfo.trafficStatus.leave.pts - _syncControl.videoInfo.trafficStatus.leave.pts;
             GLong aCache = _syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts;
-            
-            if ((aCache == 0 && vCache >= _cacheControl.lowVideoWaterFlag) || vCache >= _cacheControl.highVideoWaterFlag-300) {
+            cache = aCache;
+            if ((aCache == 0 && vCache >= _syncControl.bufferInfo.lowWaterFlag) || vCache >= _syncControl.bufferInfo.highWaterFlag-300) {
                 GJLOG(GJ_LOGWARNING, "音频缓冲过程中，音频为空视频足够、或者视频足够大于音频。切换到视频同步");
-                [self stopBuffering];
                 changeSyncType(&_syncControl, kTimeSYNCVideo);
+                [self stopBuffering];
                 return;
             }
-            GLong duration = (GLong)(GJ_Gettime()/1000) - _syncControl.lastPauseFlag;
-            if (aCache < _cacheControl.lowAudioWaterFlag){
-                if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
-                    GJLOG(GJ_LOGINFO, "buffer percent:%f A cacheTime:%ld",aCache*1.0/_cacheControl.lowAudioWaterFlag,aCache);
-                    [self.delegate livePlayer:self bufferUpdatePercent:aCache*1.0/_cacheControl.lowAudioWaterFlag duration:duration];
-                }
-            }else{
-                if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
-                    GJLOG(GJ_LOGINFO, "buffer percent:%f A cacheTime:%ld",1.0,aCache);
-                    [self.delegate livePlayer:self bufferUpdatePercent:1.0 duration:duration];
-                }
-                [self stopBuffering];
-            }
-        }else if (_playControl.status == kPlayStatusRunning){
-            GLong aCache = _syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts;
-            if (aCache > _cacheControl.highAudioWaterFlag ) {
-                if (_syncControl.speed <= 1.0) {
-                    [self dewatering];
-                }
-            }else if (aCache < _cacheControl.lowAudioWaterFlag ){
-                if (_syncControl.speed >1.0) {
-                    [self stopDewatering];
-                }
-            }
+            GJLOG(GJ_LOGDEBUG, "开始音频缓冲");
+        }else{
+            cache = _syncControl.videoInfo.trafficStatus.enter.pts - _syncControl.videoInfo.trafficStatus.leave.pts;
+            GJLOG(GJ_LOGDEBUG, "开始视频缓冲");
         }
-    }else{
-        GLong vCache = _syncControl.videoInfo.trafficStatus.enter.pts - _syncControl.videoInfo.trafficStatus.leave.pts;
-        if (_playControl.status == kPlayStatusBuffering){
-            GLong duration = (GLong)(GJ_Gettime()/1000) - _syncControl.lastPauseFlag;
-            if (vCache < _cacheControl.lowVideoWaterFlag){
-                if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
-                    GJLOG(GJ_LOGINFO, "buffer percent:%f V cacheTime:%d",vCache*1.0/_cacheControl.lowVideoWaterFlag,vCache);
-                    [self.delegate livePlayer:self bufferUpdatePercent:vCache*1.0/_cacheControl.lowVideoWaterFlag duration:duration];
-                }
-            }else{
-                if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
-                    GJLOG(GJ_LOGINFO, "buffer percent:%f V cacheTime:%d",1.0,vCache);
-                    [self.delegate livePlayer:self bufferUpdatePercent:1.0 duration:duration];
-                }
-                [self stopBuffering];
+        GLong duration = (GLong)(GJ_Gettime()/1000) - _syncControl.bufferInfo.lastPauseFlag;
+        if (cache < _syncControl.bufferInfo.lowWaterFlag){
+            if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
+                GJLOG(GJ_LOGINFO, "buffer percent:%f A cacheTime:%ld",cache*1.0/_syncControl.bufferInfo.lowWaterFlag,cache);
+                [self.delegate livePlayer:self bufferUpdatePercent:cache*1.0/_syncControl.bufferInfo.lowWaterFlag duration:duration];
             }
-        }else if (_playControl.status == kPlayStatusRunning){
-            if (vCache > _cacheControl.highVideoWaterFlag ) {
-                if (_syncControl.speed <= 1.0) {
-                    [self dewatering];
-                }
-            }else if (vCache < _cacheControl.lowVideoWaterFlag ){
-                if (_syncControl.speed >1.0) {
-                    [self stopDewatering];
-                }
+        }else{
+            if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
+                GJLOG(GJ_LOGINFO, "buffer percent:%f A cacheTime:%ld",1.0,cache);
+                [self.delegate livePlayer:self bufferUpdatePercent:1.0 duration:duration];
+            }
+            [self stopBuffering];
+        }
+    }else if (_playControl.status == kPlayStatusRunning){
+        if(_syncControl.syncType == kTimeSYNCAudio){
+            cache = _syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts;
+        }else{
+            cache = _syncControl.videoInfo.trafficStatus.leave.pts - _syncControl.videoInfo.trafficStatus.leave.pts;
+        }
+        if (cache > _syncControl.bufferInfo.highWaterFlag ) {
+            if (_syncControl.speed <= 1.0) {
+                [self dewatering];
+            }
+        }else if (cache < _syncControl.bufferInfo.lowWaterFlag ){
+            if (_syncControl.speed >1.0) {
+                [self stopDewatering];
             }
         }
     }
+
+//    if(_syncControl.syncType == kTimeSYNCAudio){
+//        if (_playControl.status == kPlayStatusBuffering){
+//            GLong vCache = _syncControl.videoInfo.trafficStatus.leave.pts - _syncControl.videoInfo.trafficStatus.leave.pts;
+//            GLong aCache = _syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts;
+//            
+//            if ((aCache == 0 && vCache >= _syncControl.bufferInfo.lowWaterFlag) || vCache >= _syncControl.bufferInfo.highWaterFlag-300) {
+//                GJLOG(GJ_LOGWARNING, "音频缓冲过程中，音频为空视频足够、或者视频足够大于音频。切换到视频同步");
+//                [self stopBuffering];
+//                changeSyncType(&_syncControl, kTimeSYNCVideo);
+//                return;
+//            }
+//            GLong duration = (GLong)(GJ_Gettime()/1000) - _syncControl.bufferInfo.lastPauseFlag;
+//            if (aCache < _syncControl.bufferInfo.lowWaterFlag){
+//                if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
+//                    GJLOG(GJ_LOGINFO, "buffer percent:%f A cacheTime:%ld",aCache*1.0/_syncControl.bufferInfo.lowWaterFlag,aCache);
+//                    [self.delegate livePlayer:self bufferUpdatePercent:aCache*1.0/_syncControl.bufferInfo.lowWaterFlag duration:duration];
+//                }
+//            }else{
+//                if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
+//                    GJLOG(GJ_LOGINFO, "buffer percent:%f A cacheTime:%ld",1.0,aCache);
+//                    [self.delegate livePlayer:self bufferUpdatePercent:1.0 duration:duration];
+//                }
+//                [self stopBuffering];
+//            }
+//        }else if (_playControl.status == kPlayStatusRunning){
+//            GLong aCache = _syncControl.audioInfo.trafficStatus.enter.pts - _syncControl.audioInfo.trafficStatus.leave.pts;
+//            if (aCache > _syncControl.bufferInfo.highWaterFlag ) {
+//                if (_syncControl.speed <= 1.0) {
+//                    [self dewatering];
+//                }
+//            }else if (aCache < _syncControl.bufferInfo.lowWaterFlag ){
+//                if (_syncControl.speed >1.0) {
+//                    [self stopDewatering];
+//                }
+//            }
+//        }
+//    }else{
+//        GLong vCache = _syncControl.videoInfo.trafficStatus.enter.pts - _syncControl.videoInfo.trafficStatus.leave.pts;
+//        if (_playControl.status == kPlayStatusBuffering){
+//            GLong duration = (GLong)(GJ_Gettime()/1000) - _syncControl.bufferInfo.lastPauseFlag;
+//            if (vCache < _syncControl.bufferInfo.lowWaterFlag){
+//                if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
+//                    GJLOG(GJ_LOGINFO, "buffer percent:%f V cacheTime:%d",vCache*1.0/_syncControl.bufferInfo.lowWaterFlag,vCache);
+//                    [self.delegate livePlayer:self bufferUpdatePercent:vCache*1.0/_syncControl.bufferInfo.lowWaterFlag duration:duration];
+//                }
+//            }else{
+//                if ([self.delegate respondsToSelector:@selector(livePlayer:bufferUpdatePercent:duration:)]) {
+//                    GJLOG(GJ_LOGINFO, "buffer percent:%f V cacheTime:%d",1.0,vCache);
+//                    [self.delegate livePlayer:self bufferUpdatePercent:1.0 duration:duration];
+//                }
+//                [self stopBuffering];
+//            }
+//        }else if (_playControl.status == kPlayStatusRunning){
+//            if (vCache > _syncControl.bufferInfo.highWaterFlag ) {
+//                if (_syncControl.speed <= 1.0) {
+//                    [self dewatering];
+//                }
+//            }else if (vCache < _syncControl.bufferInfo.lowWaterFlag ){
+//                if (_syncControl.speed >1.0) {
+//                    [self stopDewatering];
+//                }
+//            }
+//        }
+//    }
 }
 
 -(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(GInt64)pts{
@@ -721,42 +758,44 @@ static const GUInt32 mpeg4audio_sample_rates[16] = {
     }
     {
         //收集网络抖动
-        GInt32 clock = (GInt32)(GJ_Gettime()/1000);
-        GInt32 unitClockDif = clock - _shakeControl.collectUnitEndClock;
+        GInt32 clock = GJ_Gettime()/1000;
+        GInt32 unitClockDif = clock - _syncControl.netShake.collectUnitEndClock;
         GInt32 unitPtsDif = (GInt32)(pts - _syncControl.audioInfo.trafficStatus.enter.pts);
-        if ((unitPtsDif - unitClockDif) * (_shakeControl.collectUnitCache - _shakeControl.collectUnitEndClock + _shakeControl.collectUnitStartClock) >=0) {
-            _shakeControl.collectUnitEndClock = clock;
-            _shakeControl.collectUnitCache += unitPtsDif;
+        GInt32 collectDif = _syncControl.netShake.collectUnitCache - _syncControl.netShake.collectUnitEndClock + _syncControl.netShake.collectUnitStartClock;
+        GInt32 ptsDif = unitPtsDif - unitClockDif;
+        if (ptsDif > 0.0001 && collectDif > 0.0001) {
+            _syncControl.netShake.collectUnitEndClock = clock;
+            _syncControl.netShake.collectUnitCache += unitPtsDif;
         }else{
-            GInt32 shake = _shakeControl.collectUnitCache - (_shakeControl.collectUnitEndClock - _shakeControl.collectUnitStartClock);
+            GInt32 shake = _syncControl.netShake.collectUnitCache - (_syncControl.netShake.collectUnitEndClock - _syncControl.netShake.collectUnitStartClock);
             GJLOG(GJ_LOGINFO, "pull net shake:%d",shake);
-            if (_shakeControl.maxShake < shake) {
-                _shakeControl.maxShake = shake;
-            }else if (_shakeControl.minShake > shake){
-                _shakeControl.minShake = shake;
-                _cacheControl.lowAudioWaterFlag = MAX(MIN_CACHE_DUR,-shake);
-                _cacheControl.highAudioWaterFlag = MIN(MAX_CACHE_DUR, -shake*3);
-                if (_cacheControl.lowAudioWaterFlag > _cacheControl.highAudioWaterFlag) {
+            if (_syncControl.netShake.maxShake < shake) {
+                _syncControl.netShake.maxShake = shake;
+            }else if (_syncControl.netShake.minShake > shake){
+                _syncControl.netShake.minShake = shake;
+                _syncControl.bufferInfo.lowWaterFlag = MAX(MIN_CACHE_DUR,-shake);
+                _syncControl.bufferInfo.highWaterFlag = MIN(MAX_CACHE_DUR, -shake*3);
+                if (_syncControl.bufferInfo.lowWaterFlag > _syncControl.bufferInfo.highWaterFlag) {
                     GJLOG(GJ_LOGFORBID, "lowAudioWaterFlag 大于 highAudioWaterFlag怎么可能！！！");
-                    _cacheControl.highAudioWaterFlag = _cacheControl.lowAudioWaterFlag;
+                    _syncControl.bufferInfo.highWaterFlag = _syncControl.bufferInfo.lowWaterFlag;
                 }
-                GJLOG(GJ_LOGWARNING, "update delay to shake low:%d high:%d",_cacheControl.lowAudioWaterFlag,_cacheControl.highAudioWaterFlag);
+                GJLOG(GJ_LOGWARNING, "update delay to shake low:%d high:%d",_syncControl.bufferInfo.lowWaterFlag,_syncControl.bufferInfo.highWaterFlag);
             }else{
                 GJLOG(GJ_LOGINFO, "pull net shake:%d,but not affect",shake);
             }
-            _shakeControl.collectUnitStartClock = _shakeControl.collectUnitEndClock;
-            _shakeControl.collectUnitEndClock = clock;
-            _shakeControl.collectUnitCache = unitPtsDif;
+            _syncControl.netShake.collectUnitStartClock = _syncControl.netShake.collectUnitEndClock;
+            _syncControl.netShake.collectUnitEndClock = clock;
+            _syncControl.netShake.collectUnitCache = unitPtsDif;
             
-            if (clock - _shakeControl.collectStartClock >= MAX_CACHE_DUR) {
+            if (clock - _syncControl.netShake.collectStartClock >= MAX_CACHE_DUR) {
                 if (shake > 0) {
-                    _shakeControl.maxShake = shake;
-                    _shakeControl.minShake = 0;
+                    _syncControl.netShake.maxShake = shake;
+                    _syncControl.netShake.minShake = 0;
                 }else{
-                    _shakeControl.minShake = shake;
-                    _shakeControl.maxShake = 0;
+                    _syncControl.netShake.minShake = shake;
+                    _syncControl.netShake.maxShake = 0;
                 }
-                _shakeControl.collectStartClock = clock;
+                _syncControl.netShake.collectStartClock = clock;
             }
         }
         
