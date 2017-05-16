@@ -9,15 +9,12 @@
 #ifndef GJLiveDefine_h
 #define GJLiveDefine_h
 #import <CoreGraphics/CGGeometry.h>
-#import <UIKit/UIView.h>
 #import "GJRetainBuffer.h"
 
 //网络延迟收集，只有在同一收集同时推拉流才准确
 //#define NETWORK_DELAY
 
 //#define GJVIDEODECODE_TEST
-
-#define GJView UIView
 
 typedef struct GJPushConfig {
     //    video 。videoFps;等于采集的fps,pushSize与capturesize不同时会保留最大裁剪缩放
