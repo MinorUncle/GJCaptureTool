@@ -47,9 +47,6 @@ typedef struct _GJRtmpPull{
     GJTrafficUnit           videoPullInfo;
     GJTrafficUnit           audioPullInfo;
 
-//    int                     pullPacketCount;
-//    int                     dropPacketCount;
-//    int                     pullByte;
     PullMessageCallback     messageCallback;
     PullDataCallback        dataCallback;
     GHandle                   messageCallbackParm;
