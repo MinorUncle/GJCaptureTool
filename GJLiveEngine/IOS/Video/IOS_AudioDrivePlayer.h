@@ -1,0 +1,13 @@
+//
+//  IOS_AudioDrivePlayer.h
+//  GJCaptureTool
+//
+//  Created by 未成年大叔 on 2017/5/17.
+//  Copyright © 2017年 MinorUncle. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface IOS_AudioDrivePlayer : NSObject
+
+@end

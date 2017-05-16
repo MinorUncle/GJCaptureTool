@@ -8,7 +8,7 @@
 
 #ifndef Formats_h
 #define Formats_h
-
+#include "GJPlatformHeader.h"
 typedef enum GJType{
     VideoType,
     AudooType,
@@ -79,10 +79,12 @@ typedef struct H264Format{
     
 }H264Format;
 
-typedef struct _GJAudioFormat{
-    uint32_t width;
-    uint32_t height;
-}GJAudioFormat;
+typedef struct _GJPCMFormat{
+    GUInt32             mSampleRate;
+    GUInt32             mFormatFlags;
+    GUInt32             mChannelsPerFrame;
+    GUInt32             mBitsPerChannel;
+}GJPCMFormat;
 
 
 typedef struct GJPacket{

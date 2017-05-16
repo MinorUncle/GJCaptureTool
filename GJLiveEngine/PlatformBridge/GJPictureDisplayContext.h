@@ -11,6 +11,8 @@
 #include "GJLiveDefine.h"
 #include <stdio.h>
 typedef struct _GJPictureDisplayContext{
-
+    GHandle obaque;
+    GBool (*displayInit) (struct _GJPictureDisplayContext* context,GJPixelFormat format);
+    GVoid (*displayView) (struct _GJPictureDisplayContext* context,GHandle image);
 }GJPictureDisplayContext;
 #endif /* GJPictureDisplayContext_h */

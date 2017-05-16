@@ -123,5 +123,12 @@ typedef struct _PullFristFrameInfo{
     CGSize size;
 }GJPullFristFrameInfo;
 
+typedef enum {
+    GJPixelFormat_32BGRA                   ,
+    GJPixelFormat_YpCbCr8Planar            ,                  //yyyyyyyyuuvv
+    GJPixelFormat_YpCbCr8BiPlanar          ,      //yyyyyyyyuvuv
+    GJPixelFormat_YpCbCr8Planar_Full       ,         //yyyyyyyyuuvv
+    GJPixelFormat_YpCbCr8BiPlanar_Full     ,       //yyyyyyyyuvuv
+} GJPixelFormat;
 
 #endif /* GJLiveDefine_h */
