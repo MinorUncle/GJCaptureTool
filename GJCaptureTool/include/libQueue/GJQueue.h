@@ -101,7 +101,8 @@ GUInt32 queueGetMinCacheSize(GJQueue* q);
  */
 GBool queuePeekValue(GJQueue* q,const GInt32 index,GVoid** value);
 
-    
+GBool queuePeekWaitCopyValue(GJQueue* q,const GInt32 index,GHandle value,GInt32 vauleSize,GUInt32 ms QUEUE_DEFAULT(500));
+
 /**
  与上一个函数类似，当是会等待
 

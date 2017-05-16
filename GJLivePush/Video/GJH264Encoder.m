@@ -352,18 +352,17 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //    NSLog(@"encode frame:%d",pushPacket->ppSize);
     GJTrafficStatus bufferStatus = [encoder.deleagte GJH264Encoder:encoder encodeCompletePacket:pushPacket];
   
-    if (bufferStatus.enter.count % encoder.dynamicAlgorithm.den == 0) {//DEFAULT_CHECK_DELAY ms一次常规不敏感检测，但是最准确
+    if (bufferStatus.enter.count % encoder.dynamicAlgorithm.den == 0) {
         GLong cacheInCount = bufferStatus.enter.count - bufferStatus.leave.count;
-  
         if(cacheInCount == 1 && encoder.currentBitRate < encoder.destFormat.baseFormat.bitRate){
             GJLOG(GJ_LOGINFO, "宏观检测出提高视频质量");
             [encoder appendQualityWithStep:1];
         }else{
             GLong diffInCount = bufferStatus.leave.count - encoder.preBufferStatus.leave.count;
-            if(diffInCount <= encoder.dynamicAlgorithm.num){//降低质量敏感检测,丢帧时有误差
+            if(diffInCount <= encoder.dynamicAlgorithm.num){//降低质量敏感检测
                 GJLOG(GJ_LOGINFO, "敏感检测出降低视频质量");
                 [encoder reduceQualityWithStep:encoder.dynamicAlgorithm.num - diffInCount+1];
-            }else if(diffInCount > encoder.dynamicAlgorithm.den + encoder.dynamicAlgorithm.num){//提高质量敏感检测,丢帧时有误差
+            }else if(diffInCount > encoder.dynamicAlgorithm.den + encoder.dynamicAlgorithm.num){//提高质量敏感检测
                 GJLOG(GJ_LOGINFO, "敏感检测出提高音频质量");
                 [encoder appendQualityWithStep:diffInCount - encoder.dynamicAlgorithm.den - encoder.dynamicAlgorithm.num];
             }else{

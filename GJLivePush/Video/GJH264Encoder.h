@@ -70,7 +70,7 @@ typedef enum _GJEncodeQuality{
 
 
 /**
- .den帧中丢.num帧或多发.num帧则出发敏感算法默认（4，8）
+ .den帧中丢.num帧或多发.num帧则出发敏感算法默认（4，8）,给了den帧数据，但是只发送了小于nun帧，则主动降低质量
  */
 @property(assign,nonatomic) GRational dynamicAlgorithm;
 
