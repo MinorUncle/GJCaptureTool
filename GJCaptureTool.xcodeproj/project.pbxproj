@@ -60,6 +60,8 @@
 		AE70A55B1ECB56FD0009E49A /* IOS_PictureDisplay.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A5591ECB56FD0009E49A /* IOS_PictureDisplay.m */; };
 		AE70A55E1ECB60F60009E49A /* IOS_AudioDrivePlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A55C1ECB60F60009E49A /* IOS_AudioDrivePlayer.h */; };
 		AE70A55F1ECB60F60009E49A /* IOS_AudioDrivePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A55D1ECB60F60009E49A /* IOS_AudioDrivePlayer.m */; };
+		AE70A5681ECCA95E0009E49A /* GJLivePullContext.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A5661ECCA95E0009E49A /* GJLivePullContext.c */; };
+		AE70A5691ECCA95E0009E49A /* GJLivePullContext.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A5671ECCA95E0009E49A /* GJLivePullContext.h */; };
 		AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */; };
 		C54FA8C91D2103AA00A0D3C3 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C54FA8C81D2103AA00A0D3C3 /* OpenAL.framework */; };
 		C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C561ABEB1D51D3DC00113453 /* AppDelegate.m */; };
@@ -483,6 +485,8 @@
 		AE70A5591ECB56FD0009E49A /* IOS_PictureDisplay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_PictureDisplay.m; sourceTree = "<group>"; };
 		AE70A55C1ECB60F60009E49A /* IOS_AudioDrivePlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_AudioDrivePlayer.h; sourceTree = "<group>"; };
 		AE70A55D1ECB60F60009E49A /* IOS_AudioDrivePlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_AudioDrivePlayer.m; sourceTree = "<group>"; };
+		AE70A5661ECCA95E0009E49A /* GJLivePullContext.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJLivePullContext.c; sourceTree = "<group>"; };
+		AE70A5671ECCA95E0009E49A /* GJLivePullContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePullContext.h; sourceTree = "<group>"; };
 		AEEA477A1DC3AB770075EE63 /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		AEEA477B1DC3AB770075EE63 /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
 		AEEA477C1DC3AB770075EE63 /* asn1_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
@@ -989,6 +993,8 @@
 				AE70A4F11ECB4DFE0009E49A /* GJLivePlayer.m */,
 				AE70A4F21ECB4DFE0009E49A /* GJLivePull.h */,
 				AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */,
+				AE70A5661ECCA95E0009E49A /* GJLivePullContext.c */,
+				AE70A5671ECCA95E0009E49A /* GJLivePullContext.h */,
 				AE70A4F41ECB4DFE0009E49A /* GJLivePush+advanced.h */,
 				AE70A4F51ECB4DFE0009E49A /* GJLivePush+advanced.m */,
 				AE70A4F61ECB4DFE0009E49A /* GJLivePush.h */,
@@ -1287,6 +1293,7 @@
 				AE70A5371ECB4DFE0009E49A /* GJLivePull.h in Headers */,
 				AE70A5271ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h in Headers */,
 				AE70A51F1ECB4DFE0009E49A /* AACEncoderFromPCM.h in Headers */,
+				AE70A5691ECCA95E0009E49A /* GJLivePullContext.h in Headers */,
 				AE70A55A1ECB56FD0009E49A /* IOS_PictureDisplay.h in Headers */,
 				6A7873D21ECC794A00555F5B /* IOS_AACDecode.h in Headers */,
 				AE70A53D1ECB4DFE0009E49A /* GJH264Decoder.h in Headers */,
@@ -1533,6 +1540,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AE70A5681ECCA95E0009E49A /* GJLivePullContext.c in Sources */,
 				AE70A5191ECB4DFE0009E49A /* GJUtil.c in Sources */,
 				AE70A5161ECB4DFE0009E49A /* GJRtmpPull.m in Sources */,
 				AE70A51B1ECB4DFE0009E49A /* sps_decode.c in Sources */,

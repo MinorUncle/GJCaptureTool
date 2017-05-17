@@ -20,10 +20,6 @@
     GJRtmpPull* _videoPull;
     NSThread*  _playThread;
     GJPullSessionStatus _pullSessionStatus;
-    
-    
-    
-   
 }
 @property(strong,nonatomic)GJH264Decoder* videoDecoder;
 @property(strong,nonatomic)GJPCMDecodeFromAAC* audioDecoder;
@@ -49,6 +45,8 @@
 
 @end
 @implementation GJLivePull
+
+
 - (instancetype)init
 {
     self = [super init];
