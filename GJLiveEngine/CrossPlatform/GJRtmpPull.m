@@ -77,7 +77,7 @@ static GHandle pullRunloop(GHandle parm){
             
             if (packet.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
                 GJLOGFREQ("receive audio pts:%d",packet.m_nTimeStamp);
-                streamPacket.type = GJAudioType;
+                streamPacket.type = GJMediaType_Audio;
                 pull->audioPullInfo.pts = packet.m_nTimeStamp;
                 pull->audioPullInfo.count++;
                 pull->audioPullInfo.byte += packet.m_nBodySize;
@@ -101,7 +101,7 @@ static GHandle pullRunloop(GHandle parm){
                 
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
                 GJLOGFREQ("receive audio pts:%d",packet.m_nTimeStamp);
-                streamPacket.type = GJVideoType;
+                streamPacket.type = GJMediaType_Video;
                 GUInt8 *body = (GUInt8*)packet.m_body;
                 GUInt8 *pbody = body;
                 GInt32 isKey = 0;

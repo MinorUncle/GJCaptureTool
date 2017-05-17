@@ -319,7 +319,7 @@ static char* url = "rtmp://10.0.1.203/live/room";
 -(void)livePush:(GJLivePush *)livePush pushPacket:(R_GJH264Packet *)packet{
     if (_pulls.count>0) {
         GJStreamPacket ppush;
-        ppush.type = GJVideoType;
+        ppush.type = GJMediaType_Video;
         ppush.packet.h264Packet = packet;
         [_pulls[0].pull pullDataCallback:ppush];
     }

@@ -10,7 +10,7 @@
 #define GJLiveDefine_internal_h
 #include "GJRetainBuffer.h"
 #include "GJRetainBufferPool.h"
-
+#include "GJLiveDefine.h"
 #define DEFAULT_MAX_DROP_STEP 8
 #define MAX_SEND_DELAY 15000  //重启
 #define SEND_DELAY_TIME 1500
@@ -63,9 +63,15 @@ typedef struct PCMPacket{
 }R_GJPCMPacket;
 
 typedef enum _GJMediaType{
-    GJVideoType,
-    GJAudioType,
+    GJMediaType_Video,
+    GJMediaType_Audio,
 }GJMediaType;
+
+typedef struct GJFrame{
+    GJRetainBuffer retain;
+    GJMediaType mediaType;
+    GLong pts;
+}R_GJFrame;
 
 typedef struct _GJStreamPacket{
     GJMediaType type;

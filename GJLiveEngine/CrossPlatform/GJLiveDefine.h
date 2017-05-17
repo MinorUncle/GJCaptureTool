@@ -130,5 +130,17 @@ typedef enum {
     GJPixelFormat_YpCbCr8Planar_Full       ,         //yyyyyyyyuuvv
     GJPixelFormat_YpCbCr8BiPlanar_Full     ,       //yyyyyyyyuvuv
 } GJPixelFormat;
+typedef enum {
+    GJAudioFormat_AAC,
+    GJAudioFormat_PCM,
+} GJAudioType;
+typedef struct _GJAudioFormat{
+    GJAudioType         mType;
+    GUInt32             mSampleRate;
+    GUInt32             mChannelsPerFrame;
+    GUInt32             mBitsPerChannel;
+    GUInt32             mFormatFlags;
+}GJAudioFormat;
+
 
 #endif /* GJLiveDefine_h */

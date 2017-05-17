@@ -15,7 +15,7 @@
 #import <CoreImage/CoreImage.h>
 
 
-@interface GJLivePull()<GJH264DecoderDelegate,GJPCMDecodeFromAACDelegate,GJLivePlayerDeletate>
+@interface GJLivePull()<GJH264DecoderDelegate,GJPCMDecodeFromAACDelegate>
 {
     GJRtmpPull* _videoPull;
     NSThread*  _playThread;
@@ -29,7 +29,7 @@
 @property(strong,nonatomic)GJPCMDecodeFromAAC* audioDecoder;
 @property(strong,nonatomic) NSRecursiveLock* lock;
 
-@property(strong,nonatomic)GJLivePlayer* player;
+@property(assign,nonatomic)GJLivePlayContext* player;
 @property(assign,nonatomic)long pullVByte;
 @property(assign,nonatomic)int unitVByte;
 @property(assign,nonatomic)int  unitVPacketCount;
@@ -53,7 +53,7 @@
 {
     self = [super init];
     if (self) {
-        
+        GJLivePlay_Create(&_player, <#GJLivePlayCallback callback#>, <#GHandle userData#>)
         _player = [[GJLivePlayer alloc]init];
         _player.delegate = self;
         _videoDecoder = [[GJH264Decoder alloc]init];
@@ -179,7 +179,7 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
     GJLivePull* livePull = (__bridge GJLivePull *)(parm);
     
 
-    if (streamPacket.type == GJAudioType) {
+    if (streamPacket.type == GJMediaType_Audio) {
         GJRetainBuffer* buffer = &streamPacket.packet.aacPacket->retain;
         livePull.pullAByte += buffer->size;
         livePull.unitAByte += buffer->size;
@@ -222,7 +222,7 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
  
         
         [livePull.audioDecoder decodePacket:streamPacket.packet.aacPacket];
-    }else if (streamPacket.type == GJVideoType) {
+    }else if (streamPacket.type == GJMediaType_Video) {
         GJRetainBuffer* buffer = &streamPacket.packet.h264Packet->retain;
         livePull.pullVByte += buffer->size;
         livePull.unitVByte += buffer->size;
@@ -232,6 +232,10 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
 
         [livePull.videoDecoder decodePacket:streamPacket.packet.h264Packet];
     }
+}
+static GBool imageReleaseCallback(GJRetainBuffer* buffer){
+    CVPixelBufferRelease((CVImageBufferRef)buffer->data);
+    return GFalse;
 }
 -(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts{
 
@@ -243,7 +247,10 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
         info.size = CGSizeMake((float)w, (float)h);
         [self.delegate livePull:self fristFrameDecode:&info];
     }
-    [_player addVideoDataWith:imageBuffer pts:pts];
+    CVPixelBufferRetain(imageBuffer);
+    GJRetainBuffer* retainBuffer = NULL;
+    retainBufferPack(&retainBuffer, imageBuffer, sizeof(imageBuffer), imageReleaseCallback, GNULL);
+    [_player addVideoDataWith:retainBuffer pts:pts];
     return;    
 }
 #ifdef TEST
@@ -261,6 +268,7 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
 #endif
 
 -(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer pts:(int64_t)pts{
+    GJLivePlay_AddAudioData(_player, <#R_GJFrame *audioFrame#>)
     [_player addAudioDataWith:buffer pts:pts];
 }
 
@@ -268,6 +276,9 @@ static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* 
     if ([self.delegate respondsToSelector:@selector(livePull:bufferUpdatePercent:duration:)]) {
         [self.delegate livePull:self bufferUpdatePercent:percent duration:duration];
     }
+}
+GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle param){
+
 }
 -(void)dealloc{
     if (_videoPull) {

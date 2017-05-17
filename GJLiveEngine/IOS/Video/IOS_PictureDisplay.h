@@ -6,7 +6,6 @@
 //  Copyright © 2017年 MinorUncle. All rights reserved.
 //
 
-#import "GJLiveDefine.h"
-#import "GJPictureDisplayContext.h"
+#import "GJBridegContext.h"
 
-void GJ_PictureDisplayContextCreate(GJPictureDisplayContext* context);
+void GJ_PictureDisplayContextSetup(GJPictureDisplayContext* context);

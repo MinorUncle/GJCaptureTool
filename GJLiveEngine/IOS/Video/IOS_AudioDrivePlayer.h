@@ -5,9 +5,6 @@
 //  Created by 未成年大叔 on 2017/5/17.
 //  Copyright © 2017年 MinorUncle. All rights reserved.
 //
+#include "GJBridegContext.h"
+GVoid GJ_AudioPlayContextSetup(GJAudioPlayContext* context);
 
-#import <Foundation/Foundation.h>
-
-@interface IOS_AudioDrivePlayer : NSObject
-
-@end

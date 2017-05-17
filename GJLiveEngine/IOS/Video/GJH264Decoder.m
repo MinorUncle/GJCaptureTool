@@ -55,6 +55,7 @@
 }
 
 
+
 void decodeOutputCallback(
                           void * decompressionOutputRefCon,
                           void * sourceFrameRefCon,
@@ -73,6 +74,7 @@ void decodeOutputCallback(
     GJLOGFREQ("decode packet output pts:%lld",pts);
 
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
+
     [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:pts];
 }
 

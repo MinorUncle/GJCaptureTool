@@ -39,14 +39,14 @@ static GBool IOS_PictureDisplayCreate(GJPictureDisplayContext* context,GJPixelFo
     context->obaque = (__bridge GHandle)([[IOS_PictureDisplay alloc]initWithFormat:format]);
     return context->obaque != nil;
 }
-static GVoid IOS_PictureDisplayImage(GJPictureDisplayContext* context,GHandle image){
+static GVoid IOS_PictureDisplayImage(GJPictureDisplayContext* context,GJRetainBuffer* image){
     IOS_PictureDisplay* display = (__bridge IOS_PictureDisplay *)(context->obaque);
-    [display displayImage:image];
+    [display displayImage:(CVImageBufferRef)image];
 }
-void GJ_PictureDisplayContextCreate(GJPictureDisplayContext* context){
+void GJ_PictureDisplayContextSetup(GJPictureDisplayContext* context){
     if (context == NULL) {
         context = (GJPictureDisplayContext*)malloc(sizeof(GJPictureDisplayContext));
     }
-    context->displayInit = IOS_PictureDisplayCreate;
+    context->displayCreate = IOS_PictureDisplayCreate;
     context->displayView = IOS_PictureDisplayImage;
 }

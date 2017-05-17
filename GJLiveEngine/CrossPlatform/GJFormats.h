@@ -79,12 +79,8 @@ typedef struct H264Format{
     
 }H264Format;
 
-typedef struct _GJPCMFormat{
-    GUInt32             mSampleRate;
-    GUInt32             mFormatFlags;
-    GUInt32             mChannelsPerFrame;
-    GUInt32             mBitsPerChannel;
-}GJPCMFormat;
+
+
 
 
 typedef struct GJPacket{
@@ -95,13 +91,7 @@ typedef struct GJPacket{
     uint32_t dataSize;
 }GJPacket;
 
-typedef struct GJFrame{
-    GJType mediaType;
-    uint32_t timestamp;
-    uint32_t pts;
-    uint8_t* data;
-    uint32_t dataSize;
-}GJFrame;
+
 
 
 
