@@ -13,6 +13,7 @@
 		6A7873D21ECC794A00555F5B /* IOS_AACDecode.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A7873D01ECC794A00555F5B /* IOS_AACDecode.h */; };
 		6A7873D31ECC794A00555F5B /* IOS_AACDecode.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A7873D11ECC794A00555F5B /* IOS_AACDecode.m */; };
 		6AA71EEB1EBABDF000F2E8DB /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
+		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
 		6ABD5B661E88B73B00404A6B /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E61E84BE3F002A2A2D /* libcrypto.a */; };
 		6ABD5B671E88B73B00404A6B /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E41E84BE3F002A2A2D /* libopenssl.a */; };
 		AE70A5101ECB4DFE0009E49A /* GJFormats.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4C91ECB4DFE0009E49A /* GJFormats.h */; };
@@ -40,7 +41,6 @@
 		AE70A5351ECB4DFE0009E49A /* GJLivePlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4F01ECB4DFE0009E49A /* GJLivePlayer.h */; };
 		AE70A5361ECB4DFE0009E49A /* GJLivePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F11ECB4DFE0009E49A /* GJLivePlayer.m */; };
 		AE70A5371ECB4DFE0009E49A /* GJLivePull.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4F21ECB4DFE0009E49A /* GJLivePull.h */; };
-		AE70A5381ECB4DFE0009E49A /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
 		AE70A5391ECB4DFE0009E49A /* GJLivePush+advanced.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4F41ECB4DFE0009E49A /* GJLivePush+advanced.h */; };
 		AE70A53A1ECB4DFE0009E49A /* GJLivePush+advanced.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F51ECB4DFE0009E49A /* GJLivePush+advanced.m */; };
 		AE70A53B1ECB4DFE0009E49A /* GJLivePush.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4F61ECB4DFE0009E49A /* GJLivePush.h */; };
@@ -1549,13 +1549,13 @@
 				6A7873CF1ECC76D400555F5B /* IOS_H264Decoder.m in Sources */,
 				AE70A53E1ECB4DFE0009E49A /* GJH264Decoder.m in Sources */,
 				AE70A55B1ECB56FD0009E49A /* IOS_PictureDisplay.m in Sources */,
-				AE70A5381ECB4DFE0009E49A /* GJLivePull.m in Sources */,
 				AE70A53C1ECB4DFE0009E49A /* GJLivePush.m in Sources */,
 				AE70A5521ECB50630009E49A /* Mp4Writer.c in Sources */,
 				AE70A55F1ECB60F60009E49A /* IOS_AudioDrivePlayer.m in Sources */,
 				AE70A5281ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m in Sources */,
 				AE70A5201ECB4DFE0009E49A /* AACEncoderFromPCM.m in Sources */,
 				AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */,
+				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
 				AE70A5361ECB4DFE0009E49A /* GJLivePlayer.m in Sources */,
 				AE70A5401ECB4DFE0009E49A /* GJH264Encoder.m in Sources */,
 				6A7873D31ECC794A00555F5B /* IOS_AACDecode.m in Sources */,

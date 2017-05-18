@@ -33,22 +33,13 @@
 @end
 
 @implementation GJPCMDecodeFromAAC
-- (instancetype)initWithDestDescription:(AudioStreamBasicDescription*)destDescription SourceDescription:(AudioStreamBasicDescription*)sourceDescription;
+- (instancetype)initWithDestDescription:(AudioStreamBasicDescription)destDescription SourceDescription:(AudioStreamBasicDescription)sourceDescription;
 {
     self = [super init];
     if (self) {
-        
-        if (sourceDescription != NULL) {
-            _sourceFormat = *sourceDescription;
-        }else{
-            memset(&_sourceFormat, 0, sizeof(_sourceFormat));
-        }
-        
-        if (destDescription != NULL) {
-            _destFormat = *destDescription;
-        }else{
-            _destFormat = [GJPCMDecodeFromAAC defaultDestFormatDescription];
-        }
+        _sourceFormat = sourceDescription;
+        _destFormat = destDescription;
+
         [self initQueue];
     }
     return self;
@@ -57,8 +48,8 @@
 
 - (instancetype)init
 {
-   
-    return [self initWithDestDescription:nil SourceDescription:nil];
+    AudioStreamBasicDescription s = {0},d = [GJPCMDecodeFromAAC defaultDestFormatDescription];
+    return [self initWithDestDescription:d SourceDescription:s];
 }
 -(void)initQueue{
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_SERIAL);
@@ -210,7 +201,7 @@ static const int mpeg4audio_sample_rates[16] = {
         _bufferPool = NULL;
 
     }
-    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,GNULL,GNULL);
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJFrameMalloc,GNULL);
     
     AudioConverterGetProperty(_decodeConvert, kAudioConverterCurrentInputStreamDescription, &size, &_sourceFormat);
     
@@ -233,16 +224,16 @@ static const int mpeg4audio_sample_rates[16] = {
         memset(&packetDesc, 0, sizeof(packetDesc));
         memset(&outCacheBufferList, 0, sizeof(AudioBufferList));
         
-        GJRetainBuffer* buffer = GJRetainBufferPoolGetData(_bufferPool);
+        R_GJFrame* frame = (R_GJFrame*)GJRetainBufferPoolGetData(_bufferPool);
         outCacheBufferList.mNumberBuffers = 1;
         outCacheBufferList.mBuffers[0].mNumberChannels = 1;
-        outCacheBufferList.mBuffers[0].mData = buffer->data;
+        outCacheBufferList.mBuffers[0].mData = frame->retain.data;
         outCacheBufferList.mBuffers[0].mDataByteSize = AAC_FRAME_PER_PACKET * _destFormat.mBytesPerPacket;
         UInt32 numPackets = AAC_FRAME_PER_PACKET;
 
         OSStatus status = AudioConverterFillComplexBuffer(_decodeConvert, decodeInputDataProc, (__bridge void*)self, &numPackets, &outCacheBufferList, &packetDesc);
         if (status != noErr || status == -1) {
-            retainBufferUnRetain(buffer);
+            retainBufferUnRetain(&frame->retain);
             queueEnablePop(_resumeQueue, GTrue);
             char* codeChar = (char*)&status;
             if (_running) {
@@ -254,11 +245,12 @@ static const int mpeg4audio_sample_rates[16] = {
             break;
         }
         
-        buffer->size = _destFormat.mBytesPerPacket*numPackets;
-        int64_t pts = _currentPts;
+        frame->retain.size = _destFormat.mBytesPerPacket*numPackets;
+        frame->pts = _currentPts;
+        frame->mediaType = GJMediaType_Audio;
         _currentPts = -1;
-        [self.delegate pcmDecode:self completeBuffer:buffer pts:pts];
-        retainBufferUnRetain(buffer);
+        self.decodeCallback(frame);
+        retainBufferUnRetain(&frame->retain);
     }
 }
 

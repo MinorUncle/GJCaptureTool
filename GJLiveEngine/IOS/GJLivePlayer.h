@@ -6,16 +6,10 @@
 //  Copyright © 2017年 MinorUncle. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import <CoreMedia/CMTime.h>
-#import <CoreVideo/CVImageBuffer.h>
-#import <AVFoundation/AVFoundation.h>
 #import "GJRetainBuffer.h"
 #import "GJLiveDefine.h"
 #import "GJLiveDefine+internal.h"
 #import "GJBridegContext.h"
-@class UIView;
-@class GJLivePlayer;
 typedef enum _GJPlayStatus{
     kPlayStatusStop,
     kPlayStatusRunning,
@@ -92,21 +86,23 @@ typedef struct _GJLivePlayContext{
     GJPictureDisplayContext videoPlayer;
     GJAudioPlayContext      audioPlayer;
     GJAudioFormat           audioFormat;
-}GJLivePlayContext;
+}GJLivePlayer;
 
-GBool  GJLivePlay_InjectVideoPlayer(GJLivePlayContext* player,const GJPictureDisplayContext* videoPlayer);
-GBool  GJLivePlay_InjectAudioPlayer(GJLivePlayContext* player,const GJAudioPlayContext* audioPlayer,GJAudioFormat format);
+GBool  GJLivePlay_InjectVideoPlayer(GJLivePlayer* player,const GJPictureDisplayContext* videoPlayer);
+GBool  GJLivePlay_InjectAudioPlayer(GJLivePlayer* player,const GJAudioPlayContext* audioPlayer,GJAudioFormat format);
 
-GBool  GJLivePlay_Create(GJLivePlayContext* player,GJLivePlayCallback callback,GHandle userData);
-GVoid  GJLivePlay_Release(GJLivePlayContext* player);
-GBool  GJLivePlay_Start(GJLivePlayContext* player);
-GVoid  GJLivePlay_Stop(GJLivePlayContext* player);
-GBool  GJLivePlay_AddVideoData(GJLivePlayContext* player,R_GJFrame* videoFrame);
-GBool  GJLivePlay_AddAudioData(GJLivePlayContext* player,R_GJFrame* audioFrame);
-GJTrafficStatus  GJLivePlay_GetVideoCacheInfo(GJLivePlayContext* player);
-GJTrafficStatus  GJLivePlay_GetAudioCacheInfo(GJLivePlayContext* player);
+GBool  GJLivePlay_Create(GJLivePlayer* player,GJLivePlayCallback callback,GHandle userData);
+GVoid  GJLivePlay_Release(GJLivePlayer* player);
+GBool  GJLivePlay_Start(GJLivePlayer* player);
+GVoid  GJLivePlay_Stop(GJLivePlayer* player);
+GBool  GJLivePlay_AddVideoData(GJLivePlayer* player,R_GJPixelFrame* videoFrame);
+GBool  GJLivePlay_AddAudioData(GJLivePlayer* player,R_GJPCMFrame* audioFrame);
+GVoid  GJLivePlay_SetAudioFormat(GJLivePlayer* player,GJAudioFormat audioFormat);
+
+GJTrafficStatus  GJLivePlay_GetVideoCacheInfo(GJLivePlayer* player);
+GJTrafficStatus  GJLivePlay_GetAudioCacheInfo(GJLivePlayer* player);
 #ifdef NETWORK_DELAY
-GLong GJLivePlay_GetNetWorkDelay(GJLivePlayContext* player);
+GLong GJLivePlay_GetNetWorkDelay(GJLivePlayer* player);
 #endif
 
 //@protocol GJLivePlayerDeletate <NSObject>

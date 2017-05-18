@@ -55,34 +55,50 @@ typedef struct AACPacket{
     GInt32 aacSize;
 }R_GJAACPacket;
 
-typedef struct PCMPacket{
+typedef struct PCMFrame{
     GJRetainBuffer retain;
     GInt64 pts;
-    GLong pcmOffset;
-    GInt32 pcmSize;
-}R_GJPCMPacket;
+    GInt32 channel;
+}R_GJPCMFrame;
+
+typedef struct PixelFrame{
+    GJRetainBuffer retain;
+    GInt64 pts;
+    GInt32 width;
+    GInt32 height;
+}R_GJPixelFrame;
 
 typedef enum _GJMediaType{
     GJMediaType_Video,
     GJMediaType_Audio,
 }GJMediaType;
 
-typedef struct GJFrame{
-    GJRetainBuffer retain;
+typedef struct GJStreamFrame{
+    union{
+        R_GJPCMFrame* pcmFrame;
+        R_GJPixelFrame* pixelFrame;
+    }frame;
     GJMediaType mediaType;
-    GLong pts;
-}R_GJFrame;
+}R_GJStreamFrame;
 
 typedef struct _GJStreamPacket{
-    GJMediaType type;
     union{
         R_GJAACPacket* aacPacket;
         R_GJH264Packet* h264Packet;
     }packet;
-}GJStreamPacket;
+    GJMediaType type;
+}R_GJStreamPacket;
 
 GJRetainBuffer* R_GJAACPacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
-GJRetainBuffer* R_GJPCMPacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
+GJRetainBuffer* R_GJH264PacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
+
+GJRetainBuffer* R_GJPCMFrameMalloc(GJRetainBufferPool* pool,GHandle userdata);
+GJRetainBuffer* R_GJPixelFrameMalloc(GJRetainBufferPool* pool,GHandle userdata);
+
+GJRetainBuffer* R_GJStreamPacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
+GJRetainBuffer* R_GJStreamFrameMalloc(GJRetainBufferPool* pool,GHandle userdata);
+
+GJRetainBuffer* R_GJFrameMalloc(GJRetainBufferPool* pool,GHandle userdata);
 
 GBool R_RetainBufferRelease(GJRetainBuffer* buffer);
 #endif /* GJLiveDefine_internal_h */

@@ -58,7 +58,7 @@ typedef struct _GJRtmpPull{
 }GJRtmpPull;
 
 //所有不阻塞
-GVoid GJRtmpPull_Create(GJRtmpPull** pull,PullMessageCallback callback,GHandle rtmpPullParm);
+GBool GJRtmpPull_Create(GJRtmpPull** pull,PullMessageCallback callback,GHandle rtmpPullParm);
 GVoid GJRtmpPull_CloseAndRelease(GJRtmpPull* pull);
 
 GBool GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHandle callbackParm,const GChar* pullUrl);

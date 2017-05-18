@@ -13,19 +13,22 @@
 #import "GJLog.h"
 #import "GJPCMDecodeFromAAC.h"
 #import <CoreImage/CoreImage.h>
+#import "GJLivePullContext.h"
 
 
-@interface GJLivePull()<GJH264DecoderDelegate,GJPCMDecodeFromAACDelegate>
+@interface GJLivePull()
 {
     GJRtmpPull* _videoPull;
     NSThread*  _playThread;
     GJPullSessionStatus _pullSessionStatus;
+    
+    GJLivePullContext* _pullContext;
 }
 @property(strong,nonatomic)GJH264Decoder* videoDecoder;
 @property(strong,nonatomic)GJPCMDecodeFromAAC* audioDecoder;
 @property(strong,nonatomic) NSRecursiveLock* lock;
 
-@property(assign,nonatomic)GJLivePlayContext* player;
+@property(assign,nonatomic)GJLivePlayer* player;
 @property(assign,nonatomic)long pullVByte;
 @property(assign,nonatomic)int unitVByte;
 @property(assign,nonatomic)int  unitVPacketCount;
@@ -46,14 +49,13 @@
 @end
 @implementation GJLivePull
 
+static GVoid livePullCallback(GHandle userDate,GJLivePullMessageType message,GHandle param);
 
 - (instancetype)init
 {
     self = [super init];
     if (self) {
-        GJLivePlay_Create(&_player, <#GJLivePlayCallback callback#>, <#GHandle userData#>)
-        _player = [[GJLivePlayer alloc]init];
-        _player.delegate = self;
+        GJLivePull_Create(_pullContext, livePullCallback, (__bridge GHandle)(self));
         _videoDecoder = [[GJH264Decoder alloc]init];
         _videoDecoder.delegate = self;
         _enablePreview = YES;
@@ -105,8 +107,8 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
 }
 
 -(void)updateStatusCallback{
-    GJTrafficStatus vCache = [_player getVideoCache];
-    GJTrafficStatus aCache = [_player getAudioCache];
+    GJTrafficStatus vCache = GJLivePull_GetVideoTrafficStatus(_pullContext);
+    GJTrafficStatus aCache = GJLivePull_GetAudioTrafficStatus(_pullContext);
     _pullSessionStatus.videoStatus.cacheCount = vCache.enter.count - vCache.leave.count;
     _pullSessionStatus.videoStatus.cacheTime = vCache.enter.pts - vCache.leave.pts;
     _pullSessionStatus.videoStatus.bitrate = _unitVByte / _gaterFrequency;
@@ -133,31 +135,11 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
 }
 
 - (bool)startStreamPullWithUrl:(char*)url{
-    [_lock lock];
-    _fristAudioDate = _fristVideoDate = _connentDate = _fristDecodeVideoDate = nil;
-    if (_videoPull != nil) {
-        GJRtmpPull_CloseAndRelease(_videoPull);
-    }
-    GJRtmpPull_Create(&_videoPull, pullMessageCallback, (__bridge void *)(self));
-    GJRtmpPull_StartConnect(_videoPull, pullDataCallback, (__bridge void *)(self),(const char*) url);
-    [_player start];    
-    _startPullDate = [NSDate date];
-    [_lock unlock];
-    return YES;
+    return GJLivePull_StartPull(_pullContext, url);
 }
 
 - (void)stopStreamPull{
-    [_lock lock];
-    [_timer invalidate];
-    if (_videoPull) {
-        GJRtmpPull_CloseAndRelease(_videoPull);
-        _videoPull = NULL;
-    }
-    [_player stop];
-    [_audioDecoder stop];
-    _audioDecoder = nil;
-    GJLOG(GJ_LOGINFO, "NSTimer invalidate:%s",[NSString stringWithFormat:@"%@",_timer].UTF8String);
-    [_lock unlock];
+    return GJLivePull_StopPull(_pullContext);
 }
 
 -(UIView *)getPreviewView{

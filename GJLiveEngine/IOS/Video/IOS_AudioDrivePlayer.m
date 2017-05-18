@@ -8,6 +8,7 @@
 #import <Foundation/Foundation.h>
 #import "GJAudioQueueDrivePlayer.h"
 #import "IOS_AudioDrivePlayer.h"
+#import "GJLiveDefine+internal.h"
 #import "GJLog.h"
 @interface IOS_AudioDrivePlayer : NSObject
 
@@ -16,7 +17,7 @@
 
 @end
 inline static GBool audioPlayCreate (struct _GJAudioPlayContext* context,GJAudioFormat format){
-    if (format.mType != GJAudioFormat_PCM) {
+    if (format.mType != GJAudioType_PCM) {
         GJLOG(GJ_LOGFORBID, "视频格式不支持");
         return GFalse;
     }

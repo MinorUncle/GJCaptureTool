@@ -9,6 +9,13 @@
 #ifndef GJBridegContext_h
 #define GJBridegContext_h
 #include "GJLiveDefine+internal.h"
+
+typedef GVoid (*AACDecodeCompleteCallback) (GHandle userData,R_GJPCMFrame* frame);
+typedef GVoid (*AACEncodeCompleteCallback) (GHandle userData,R_GJAACPacket* packet);
+
+typedef GVoid (*H264DecodeCompleteCallback) (GHandle userData,R_GJPixelFrame* frame);
+typedef GVoid (*H264EncodeCompleteCallback) (GHandle userData,R_GJH264Packet* packet);
+
 typedef struct _GJPictureDisplayContext{
     GHandle obaque;
     GBool (*displayCreate) (struct _GJPictureDisplayContext* context,GJPixelFormat format);
@@ -32,30 +39,30 @@ typedef struct _GJEncodeToAACContext{
     GHandle obaque;
     GBool (*encodeCreate) (struct _GJEncodeToAACContext* context,GJPixelFormat format);
     GBool (*encodeRelease) (struct _GJEncodeToAACContext* context);
-    GVoid (*encodeFrame) (struct _GJEncodeToAACContext* context,R_GJFrame* frame);
-    GVoid (*encodeComplete) (struct _GJEncodeToAACContext* context,R_GJAACPacket* packet);
+    GVoid (*encodeFrame) (struct _GJEncodeToAACContext* context,R_GJPCMFrame* frame);
     GBool (*encodeSetBitrate) (struct _GJEncodeToAACContext* context,GInt32 bitrate);
+    AACEncodeCompleteCallback encodeCompleteCallback;
 }GJEncodeToAACContext;
 typedef struct _GJAACDecodeContext{
     GHandle obaque;
-    GBool (*decodeCreate) (struct _GJAACDecodeContext* context,GJPixelFormat format);
+    GBool (*decodeCreate) (struct _GJAACDecodeContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AACDecodeCompleteCallback callback,GHandle userData);
     GVoid (*decodeRelease) (struct _GJAACDecodeContext* context);
     GBool (*decodePacket) (struct _GJAACDecodeContext* context,R_GJAACPacket* packet);
-    GVoid (*decodeComplete) (struct _GJAACDecodeContext* context,R_GJFrame* frame);
+    AACDecodeCompleteCallback decodeeCompleteCallback;
 }GJAACDecodeContext;
 typedef struct _GJH264DecodeContext{
     GHandle obaque;
-    GBool (*decodeCreate) (struct _GJH264DecodeContext* context,GJPixelFormat format);
+    GBool (*decodeCreate) (struct _GJH264DecodeContext* context,GJPixelType format,H264DecodeCompleteCallback callback,GHandle userData);
     GVoid (*decodeRelease) (struct _GJH264DecodeContext* context);
     GBool (*decodePacket) (struct _GJH264DecodeContext* context,R_GJH264Packet* packet);
-    GVoid (*decodeComplete) (struct _GJH264DecodeContext* context,R_GJFrame* frame);
+    H264DecodeCompleteCallback decodeeCompleteCallback;
 }GJH264DecodeContext;
 typedef struct _GJEncodeToH264eContext{
     GHandle obaque;
     GBool (*encodeCreate) (struct _GJEncodeToH264eContext* context,GJPixelFormat format);
     GBool (*encodeRelease) (struct _GJEncodeToH264eContext* context);
     GBool (*encodePacket) (struct _GJEncodeToH264eContext* context,R_GJH264Packet* packet);
-    GVoid (*encodeComplete) (struct _GJEncodeToH264eContext* context,R_GJFrame* frame);
+    H264EncodeCompleteCallback encodeCompleteCallback;
     GBool (*encodeSetBitrate) (struct _GJEncodeToH264eContext* context,GInt32 bitrate);
 
 }GJEncodeToH264eContext;

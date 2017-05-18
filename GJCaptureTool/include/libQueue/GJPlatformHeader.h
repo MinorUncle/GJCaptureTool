@@ -56,7 +56,13 @@ typedef unsigned char       GUChar;
 typedef void                GVoid;
 typedef void*               GHandle;
 
+typedef int64_t             GTime;
+#define G_TIME_INVALID      -9223372036854775806LL
 
+typedef int32_t             GResult;
+#define GOK                 0
+#define GERR_NOMEM          1
+#define GERR_TIMEDOUT       2
 
 
 #if defined( __cplusplus )

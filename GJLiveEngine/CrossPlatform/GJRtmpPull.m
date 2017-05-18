@@ -192,7 +192,7 @@ ERROR:
     GJLOG(GJ_LOGDEBUG, "pullRunloop end");
     return NULL;
 }
-GVoid GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,GHandle rtmpPullParm){
+GBool GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,GHandle rtmpPullParm){
     GJRtmpPull* pull = NULL;
     if (*pullP == NULL) {
         pull = (GJRtmpPull*)malloc(sizeof(GJRtmpPull));
@@ -208,6 +208,7 @@ GVoid GJRtmpPull_Create(GJRtmpPull** pullP,PullMessageCallback callback,GHandle 
     pull->stopRequest = GFalse;
     pthread_mutex_init(&pull->mutex, NULL);
     *pullP = pull;
+    return GTrue;
 }
 
 GVoid GJRtmpPull_Delloc(GJRtmpPull* pull){

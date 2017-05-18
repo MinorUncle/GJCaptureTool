@@ -75,7 +75,7 @@ void decodeOutputCallback(
 
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
 
-    [decoder.delegate GJH264Decoder:decoder decodeCompleteImageData:imageBuffer pts:pts];
+    decoder.completeCallback(imageBuffer, pts);
 }
 
 -(uint8_t*)startCodeIndex:(uint8_t*)sour size:(long)size codeSize:(uint8_t*)codeSize{

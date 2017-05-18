@@ -8,9 +8,24 @@
 
 #import "IOS_H264Decoder.h"
 #import "GJH264Decoder.h"
-
-GBool decodeCreate (struct _GJH264DecodeContext* context,GJPixelFormat format){
-    context->obaque = (__bridge_retained GHandle)[[GJH264Decoder alloc]init];
+#import "GJBufferPool.h"
+GBool cvImagereleaseCallBack(GJRetainBuffer * retain){
+    CVImageBufferRef image = (CVImageBufferRef)retain->data;
+    CVPixelBufferRelease(image);
+    GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)retain);
+    return GTrue;
+}
+GBool decodeCreate (struct _GJH264DecodeContext* context,GJPixelType format,H264DecodeCompleteCallback callback,GHandle userData)
+{
+    GJH264Decoder* decode = [[GJH264Decoder alloc]init];
+    decode.completeCallback = ^(CVImageBufferRef image, int64_t pts){
+        R_GJPixelFrame* frame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
+        frame->height = (GInt32)CVPixelBufferGetHeight(image);
+        frame->width = (GInt32)CVPixelBufferGetWidth(image);
+        frame->pts = pts;
+        retainBufferPack((GJRetainBuffer**)&frame, image, sizeof(image), cvImagereleaseCallBack, GNULL);
+    };
+    context->obaque = (__bridge_retained GHandle)decode;
     return GTrue;
 }
 GVoid decodeRelease (struct _GJH264DecodeContext* context){
@@ -20,6 +35,7 @@ GVoid decodeRelease (struct _GJH264DecodeContext* context){
 GBool decodePacket (struct _GJH264DecodeContext* context,R_GJH264Packet* packet){
     GJH264Decoder* decode = (__bridge_transfer GJH264Decoder *)(context->obaque);
     [decode decodePacket:packet];
+    
     return GTrue;
 }
 
@@ -30,5 +46,5 @@ GVoid GJ_H264DecodeContextSetup(GJH264DecodeContext* context){
     context->decodeCreate = decodeCreate;
     context->decodeRelease = decodeRelease;
     context->decodePacket = decodePacket;
-    context->decodeComplete = NULL;
+    context->decodeeCompleteCallback = NULL;
 }

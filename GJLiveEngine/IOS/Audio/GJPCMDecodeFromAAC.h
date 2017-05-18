@@ -11,19 +11,16 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import "GJRetainBuffer.h"
 #import "GJLiveDefine+internal.h"
+typedef void(^DecodeComplete)(R_GJFrame* frame);
 
-@class GJPCMDecodeFromAAC;
-@protocol GJPCMDecodeFromAACDelegate <NSObject>
--(void)pcmDecode:(GJPCMDecodeFromAAC*)decoder completeBuffer:(GJRetainBuffer*)buffer pts:(int64_t)pts;
-@end
 @interface GJPCMDecodeFromAAC : NSObject
 @property (nonatomic,assign,readonly) AudioStreamBasicDescription sourceFormat;
 @property (nonatomic,assign,readonly)AudioStreamBasicDescription destFormat;
 
 
 @property (nonatomic,assign,readonly) UInt32 bitRate;
-@property (nonatomic,weak) id<GJPCMDecodeFromAACDelegate>delegate;
 @property (nonatomic,assign,readonly) UInt32 destMaxOutSize;
+@property (nonatomic,copy) DecodeComplete decodeCallback;
 
 -(void)start;
 -(void)stop;
@@ -31,5 +28,5 @@
 -(void)decodePacket:(R_GJAACPacket*)packet;
 
 
-- (instancetype)initWithDestDescription:(AudioStreamBasicDescription*)description SourceDescription:(AudioStreamBasicDescription*)sourceDescription;
+- (instancetype)initWithDestDescription:(AudioStreamBasicDescription)description SourceDescription:(AudioStreamBasicDescription)sourceDescription;
 @end

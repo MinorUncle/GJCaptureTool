@@ -124,23 +124,27 @@ typedef struct _PullFristFrameInfo{
 }GJPullFristFrameInfo;
 
 typedef enum {
-    GJPixelFormat_32BGRA                   ,
-    GJPixelFormat_YpCbCr8Planar            ,                  //yyyyyyyyuuvv
-    GJPixelFormat_YpCbCr8BiPlanar          ,      //yyyyyyyyuvuv
-    GJPixelFormat_YpCbCr8Planar_Full       ,         //yyyyyyyyuuvv
-    GJPixelFormat_YpCbCr8BiPlanar_Full     ,       //yyyyyyyyuvuv
-} GJPixelFormat;
+    GJPixelType_32BGRA                   ,
+    GJPixelType_YpCbCr8Planar            ,                  //yyyyyyyyuuvv
+    GJPixelType_YpCbCr8BiPlanar          ,      //yyyyyyyyuvuv
+    GJPixelType_YpCbCr8Planar_Full       ,         //yyyyyyyyuuvv
+    GJPixelType_YpCbCr8BiPlanar_Full     ,       //yyyyyyyyuvuv
+} GJPixelType;
 typedef enum {
-    GJAudioFormat_AAC,
-    GJAudioFormat_PCM,
-} GJAudioType;
+    GJAudioType_AAC,
+    GJAudioType_PCM,
+}GJAudioType;
 typedef struct _GJAudioFormat{
     GJAudioType         mType;
     GUInt32             mSampleRate;
     GUInt32             mChannelsPerFrame;
     GUInt32             mBitsPerChannel;
+    GUInt32             mFramePerPacket;
     GUInt32             mFormatFlags;
 }GJAudioFormat;
-
-
+typedef struct _GJPixelFormat{
+    GJPixelType         mType;
+    GUInt32             mHeight;
+    GUInt32             mWidth;
+}GJPixelFormat;
 #endif /* GJLiveDefine_h */

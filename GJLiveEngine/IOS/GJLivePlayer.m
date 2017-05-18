@@ -65,7 +65,7 @@ static void changeSyncType(GJSyncControl* sync,TimeSYNCType syncType){
     
 }
 
-static GBool GJLivePlay_StartDewatering(GJLivePlayContext* player){
+static GBool GJLivePlay_StartDewatering(GJLivePlayer* player){
     //    return;
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->playControl.status == kPlayStatusRunning) {
@@ -78,7 +78,7 @@ static GBool GJLivePlay_StartDewatering(GJLivePlayContext* player){
     pthread_mutex_unlock(&player->playControl.oLock);
     return GTrue;
 }
-static GBool GJLivePlay_StopDewatering(GJLivePlayContext* player){
+static GBool GJLivePlay_StopDewatering(GJLivePlayer* player){
     //    return;
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->syncControl.speed > 1.0) {
@@ -89,7 +89,7 @@ static GBool GJLivePlay_StopDewatering(GJLivePlayContext* player){
     pthread_mutex_unlock(&player->playControl.oLock);
     return GTrue;
 }
-static GBool  GJLivePlay_StartBuffering(GJLivePlayContext* player){
+static GBool  GJLivePlay_StartBuffering(GJLivePlayer* player){
     pthread_mutex_lock(&player->playControl.oLock);
     if(player->playControl.status == kPlayStatusRunning){
         GJLOG(GJ_LOGDEBUG, "start buffing");
@@ -106,7 +106,7 @@ static GBool  GJLivePlay_StartBuffering(GJLivePlayContext* player){
     pthread_mutex_unlock(&player->playControl.oLock);
     return GTrue;
 }
-static GVoid  GJLivePlay_StopBuffering(GJLivePlayContext* player){
+static GVoid  GJLivePlay_StopBuffering(GJLivePlayer* player){
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->playControl.status == kPlayStatusBuffering) {
         player->playControl.status = kPlayStatusRunning;
@@ -131,7 +131,7 @@ static GVoid  GJLivePlay_StopBuffering(GJLivePlayContext* player){
     pthread_mutex_unlock(&player->playControl.oLock);
     
 }
-GVoid GJLivePlay_CheckWater(GJLivePlayContext* player){
+GVoid GJLivePlay_CheckWater(GJLivePlayer* player){
 
     GJPlayControl* _playControl = &player->playControl;
     GJSyncControl* _syncControl = &player->syncControl;
@@ -175,7 +175,7 @@ GVoid GJLivePlay_CheckWater(GJLivePlayContext* player){
         }
     }
 }
-GBool GJAudioDrivePlayerCallback(GJLivePlayContext *player,void *data ,GInt32* outSize){
+GBool GJAudioDrivePlayerCallback(GJLivePlayer *player,void *data ,GInt32* outSize){
     GJPlayControl* _playControl = &player->playControl;
     GJSyncControl* _syncControl = &player->syncControl;
     R_GJFrame* audioBuffer;
@@ -202,7 +202,7 @@ GBool GJAudioDrivePlayerCallback(GJLivePlayContext *player,void *data ,GInt32* o
 }
 static GHandle GJLivePlay_VideoRunLoop(GHandle parm){
     pthread_setname_np("playVideoRunLoop");
-    GJLivePlayContext* player = parm;
+    GJLivePlayer* player = parm;
     GJPlayControl* _playControl = &(player->playControl);
     GJSyncControl* _syncControl = &(player->syncControl);
     R_GJFrame* cImageBuf;
@@ -329,19 +329,19 @@ ERROR:
 }
 
 
-GBool  GJLivePlay_InjectVideoPlayer(GJLivePlayContext* player,const GJPictureDisplayContext* videoPlayer){
+GBool  GJLivePlay_InjectVideoPlayer(GJLivePlayer* player,const GJPictureDisplayContext* videoPlayer){
     player->videoPlayer = *videoPlayer;
     return GTrue;
 }
-GBool  GJLivePlay_InjectAudioPlayer(GJLivePlayContext* player,const GJAudioPlayContext* audioPlayer,GJAudioFormat format){
+GBool  GJLivePlay_InjectAudioPlayer(GJLivePlayer* player,const GJAudioPlayContext* audioPlayer,GJAudioFormat format){
     player->audioPlayer = *audioPlayer;
     player->audioFormat = format;
     return GTrue;
 }
 
-GBool  GJLivePlay_Create(GJLivePlayContext* player,GJLivePlayCallback callback,GHandle userData){
+GBool  GJLivePlay_Create(GJLivePlayer* player,GJLivePlayCallback callback,GHandle userData){
     if (player == GNULL) {
-        player = (GJLivePlayContext*)malloc(sizeof(GJLivePlayContext));
+        player = (GJLivePlayer*)malloc(sizeof(GJLivePlayer));
     }
     player->callback = callback;
     player->userDate = userData;
@@ -351,7 +351,7 @@ GBool  GJLivePlay_Create(GJLivePlayContext* player,GJLivePlayCallback callback,G
     queueCreate(&player->playControl.audioQueue, AUDIO_MAX_CACHE_COUNT, GTrue, GTrue);
     return GTrue;
 }
-GBool  GJLivePlay_Start(GJLivePlayContext* player){
+GBool  GJLivePlay_Start(GJLivePlayer* player){
     GBool result = GTrue;
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->playControl.status != kPlayStatusStop) {
@@ -371,7 +371,7 @@ GBool  GJLivePlay_Start(GJLivePlayContext* player){
     pthread_mutex_unlock(&player->playControl.oLock);
     return result;
 }
-GVoid  GJLivePlay_Stop(GJLivePlayContext* player){
+GVoid  GJLivePlay_Stop(GJLivePlayer* player){
     GJLivePlay_StartBuffering(player);
     if(player->playControl.status != kPlayStatusStop){
         GJLOG(GJ_LOGINFO, "gjliveplayer stop start");
@@ -424,7 +424,7 @@ GVoid  GJLivePlay_Stop(GJLivePlayContext* player){
         GJLOG(GJ_LOGWARNING, "重复停止");
     }
 }
-GBool  GJLivePlay_AddVideoData(GJLivePlayContext* player,R_GJFrame* videoFrame){
+GBool  GJLivePlay_AddVideoData(GJLivePlayer* player,R_GJFrame* videoFrame){
 
     GJLOGFREQ("收到音频 PTS:%lld",videoFrame);
     if (videoFrame->pts < player->syncControl.videoInfo.trafficStatus.enter.pts) {
@@ -492,7 +492,7 @@ RETRY:
     }
     return result;
 }
-GBool  GJLivePlay_AddAudioData(GJLivePlayContext* player,R_GJFrame* audioFrame){
+GBool  GJLivePlay_AddAudioData(GJLivePlayer* player,R_GJPCMFrame* audioFrame){
     GJLOGFREQ("收到音频 PTS:%lld",audioFrame->pts);
     GJPlayControl* _playControl = &(player->playControl);
     GJSyncControl* _syncControl = &(player->syncControl);
@@ -629,13 +629,13 @@ RETRY:
 END:
     return result;
 }
-GJTrafficStatus  GJLivePlay_GetVideoCacheInfo(GJLivePlayContext* player){
+GJTrafficStatus  GJLivePlay_GetVideoCacheInfo(GJLivePlayer* player){
     return player->syncControl.videoInfo.trafficStatus;
 }
-GJTrafficStatus  GJLivePlay_GetAudioCacheInfo(GJLivePlayContext* player){
+GJTrafficStatus  GJLivePlay_GetAudioCacheInfo(GJLivePlayer* player){
     return player->syncControl.audioInfo.trafficStatus;
 }
-GVoid  GJLivePlay_Release(GJLivePlayContext* player){
+GVoid  GJLivePlay_Release(GJLivePlayer* player){
     GJLOG(GJ_LOGDEBUG, "GJPlivePlayer dealloc");
     queueFree(&player->playControl.audioQueue);
     queueFree(&player->playControl.imageQueue);
