@@ -24,6 +24,7 @@ GBool decodeCreate (struct _GJH264DecodeContext* context,GJPixelType format,H264
         frame->width = (GInt32)CVPixelBufferGetWidth(image);
         frame->pts = pts;
         retainBufferPack((GJRetainBuffer**)&frame, image, sizeof(image), cvImagereleaseCallBack, GNULL);
+        MIN(<#A#>, <#B#>)
     };
     context->obaque = (__bridge_retained GHandle)decode;
     return GTrue;

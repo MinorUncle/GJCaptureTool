@@ -46,7 +46,7 @@
 
 - (void)stopStreamPull;
 
--(void)pullDataCallback:(GJStreamPacket)streamPacket;
--(void)pullimage:(CVImageBufferRef)streamPacket time:(CMTime)pts;
+//-(void)pullDataCallback:(GJStreamPacket)streamPacket;
+//-(void)pullimage:(CVImageBufferRef)streamPacket time:(CMTime)pts;
 
 @end

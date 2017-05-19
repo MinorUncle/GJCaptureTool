@@ -23,7 +23,7 @@ typedef enum _RecoderStatus{
 @optional
 
 -(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder aacPacket:(R_GJAACPacket*)packet;
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder pcmPacket:(R_GJPCMPacket*)packet;
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder pcmPacket:(R_GJPCMFrame*)packet;
 
 
 @end

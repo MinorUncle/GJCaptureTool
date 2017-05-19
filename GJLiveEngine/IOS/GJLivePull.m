@@ -56,8 +56,6 @@ static GVoid livePullCallback(GHandle userDate,GJLivePullMessageType message,GHa
     self = [super init];
     if (self) {
         GJLivePull_Create(_pullContext, livePullCallback, (__bridge GHandle)(self));
-        _videoDecoder = [[GJH264Decoder alloc]init];
-        _videoDecoder.delegate = self;
         _enablePreview = YES;
         _gaterFrequency = 2.0;
         _lock = [[NSRecursiveLock alloc]init];
@@ -155,84 +153,12 @@ static const int mpeg4audio_sample_rates[16] = {
     24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
 
-static void pullDataCallback(GJRtmpPull* pull,GJStreamPacket streamPacket,void* parm){
-    GJLivePull* livePull = (__bridge GJLivePull *)(parm);
-    
 
-    if (streamPacket.type == GJMediaType_Audio) {
-        GJRetainBuffer* buffer = &streamPacket.packet.aacPacket->retain;
-        livePull.pullAByte += buffer->size;
-        livePull.unitAByte += buffer->size;
-        livePull.unitAPacketCount ++;
-        if (livePull.fristAudioDate == nil) {
-            livePull.fristAudioDate = [NSDate date];
-            uint8_t* adts = streamPacket.packet.aacPacket->adtsOffset+streamPacket.packet.aacPacket->retain.data;
-            uint8_t sampleIndex = adts[2] << 2;
-            sampleIndex = sampleIndex>>4;
-            int sampleRate = mpeg4audio_sample_rates[sampleIndex];
-            uint8_t channel = adts[2] & 0x1 <<2;
-            channel += (adts[3] & 0xc0)>>6;
-            AudioStreamBasicDescription sourceformat = {0};
-            sourceformat.mFormatID = kAudioFormatMPEG4AAC;
-            sourceformat.mChannelsPerFrame = channel;
-            sourceformat.mSampleRate = sampleRate;
-            sourceformat.mFramesPerPacket = 1024;
-
-            if (channel>2) {
-                GJLOG(GJ_LOGFORBID, "音频channel不支持");
-            }
-            
-            AudioStreamBasicDescription destformat = {0};
-            destformat.mFormatID = kAudioFormatLinearPCM;
-            destformat.mSampleRate       = sourceformat.mSampleRate;               // 3
-            destformat.mChannelsPerFrame = sourceformat.mChannelsPerFrame;                     // 4
-            destformat.mFramesPerPacket  = 1;                     // 7
-            destformat.mBitsPerChannel   = 16;                    // 5
-            destformat.mBytesPerFrame   = destformat.mChannelsPerFrame * destformat.mBitsPerChannel/8;
-            destformat.mFramesPerPacket = destformat.mBytesPerFrame * destformat.mFramesPerPacket ;
-            destformat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
-            [livePull.lock lock];
-            livePull.audioDecoder = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&destformat SourceDescription:&sourceformat];
-            livePull.audioDecoder.delegate = livePull;
-            [livePull.audioDecoder start];
-            livePull.player.audioFormat = destformat;
-            [livePull.lock unlock];
-        }
-        
- 
-        
-        [livePull.audioDecoder decodePacket:streamPacket.packet.aacPacket];
-    }else if (streamPacket.type == GJMediaType_Video) {
-        GJRetainBuffer* buffer = &streamPacket.packet.h264Packet->retain;
-        livePull.pullVByte += buffer->size;
-        livePull.unitVByte += buffer->size;
-        livePull.unitVPacketCount ++;
-
-
-
-        [livePull.videoDecoder decodePacket:streamPacket.packet.h264Packet];
-    }
-}
 static GBool imageReleaseCallback(GJRetainBuffer* buffer){
     CVPixelBufferRelease((CVImageBufferRef)buffer->data);
     return GFalse;
 }
--(void)GJH264Decoder:(GJH264Decoder *)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts{
 
-    if (_fristDecodeVideoDate == nil) {
-        _fristDecodeVideoDate = [NSDate date];
-       size_t w = CVPixelBufferGetWidth(imageBuffer);
-       size_t h=  CVPixelBufferGetHeight(imageBuffer);
-        GJPullFristFrameInfo info = {0};
-        info.size = CGSizeMake((float)w, (float)h);
-        [self.delegate livePull:self fristFrameDecode:&info];
-    }
-    CVPixelBufferRetain(imageBuffer);
-    GJRetainBuffer* retainBuffer = NULL;
-    retainBufferPack(&retainBuffer, imageBuffer, sizeof(imageBuffer), imageReleaseCallback, GNULL);
-    [_player addVideoDataWith:retainBuffer pts:pts];
-    return;    
-}
 #ifdef TEST
 -(void)pullimage:(CVImageBufferRef)streamPacket time:(CMTime)pts{
     static int s = 0;
@@ -247,16 +173,7 @@ static GBool imageReleaseCallback(GJRetainBuffer* buffer){
 }
 #endif
 
--(void)pcmDecode:(GJPCMDecodeFromAAC *)decoder completeBuffer:(GJRetainBuffer *)buffer pts:(int64_t)pts{
-    GJLivePlay_AddAudioData(_player, <#R_GJFrame *audioFrame#>)
-    [_player addAudioDataWith:buffer pts:pts];
-}
 
--(void)livePlayer:(GJLivePlayer *)livePlayer bufferUpdatePercent:(float)percent duration:(long)duration{
-    if ([self.delegate respondsToSelector:@selector(livePull:bufferUpdatePercent:duration:)]) {
-        [self.delegate livePull:self bufferUpdatePercent:percent duration:duration];
-    }
-}
 GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle param){
 
 }

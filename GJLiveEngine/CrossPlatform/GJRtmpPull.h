@@ -30,7 +30,8 @@ typedef enum _GJRTMPPullMessageType{
 struct _GJRtmpPull;
 
 typedef GVoid(*PullMessageCallback)(struct _GJRtmpPull* rtmpPull, GJRTMPPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm);
-typedef GVoid(*PullDataCallback)(struct _GJRtmpPull* rtmpPull,GJStreamPacket packet,GHandle rtmpPullParm);
+typedef GVoid(*PullVideoDataCallback)(struct _GJRtmpPull* rtmpPull,R_GJH264Packet* packet,GHandle rtmpPullParm);
+typedef GVoid(*PullAudioDataCallback)(struct _GJRtmpPull* rtmpPull,R_GJAACPacket* packet,GHandle rtmpPullParm);
 
 
 
@@ -48,7 +49,9 @@ typedef struct _GJRtmpPull{
     GJTrafficUnit           audioPullInfo;
 
     PullMessageCallback     messageCallback;
-    PullDataCallback        dataCallback;
+    PullVideoDataCallback        videoCallback;
+    PullAudioDataCallback        audioCallback;
+
     GHandle                   messageCallbackParm;
     GHandle                   dataCallbackParm;
 
@@ -61,7 +64,7 @@ typedef struct _GJRtmpPull{
 GBool GJRtmpPull_Create(GJRtmpPull** pull,PullMessageCallback callback,GHandle rtmpPullParm);
 GVoid GJRtmpPull_CloseAndRelease(GJRtmpPull* pull);
 
-GBool GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHandle callbackParm,const GChar* pullUrl);
+GBool GJRtmpPull_StartConnect(GJRtmpPull* pull,PullVideoDataCallback videoCallback,PullAudioDataCallback audioCallback,GHandle callbackParm,const GChar* pullUrl);
 GJTrafficUnit GJRtmpPull_GetVideoPullInfo(GJRtmpPull* pull);
 GJTrafficUnit GJRtmpPull_GetAudioPullInfo(GJRtmpPull* pull);
 

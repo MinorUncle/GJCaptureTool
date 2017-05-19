@@ -39,7 +39,7 @@
 		AE70A5311ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4EC1ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h */; };
 		AE70A5321ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4ED1ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m */; };
 		AE70A5351ECB4DFE0009E49A /* GJLivePlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4F01ECB4DFE0009E49A /* GJLivePlayer.h */; };
-		AE70A5361ECB4DFE0009E49A /* GJLivePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F11ECB4DFE0009E49A /* GJLivePlayer.m */; };
+		AE70A5361ECB4DFE0009E49A /* GJLivePlayer.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F11ECB4DFE0009E49A /* GJLivePlayer.c */; };
 		AE70A5371ECB4DFE0009E49A /* GJLivePull.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4F21ECB4DFE0009E49A /* GJLivePull.h */; };
 		AE70A5391ECB4DFE0009E49A /* GJLivePush+advanced.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4F41ECB4DFE0009E49A /* GJLivePush+advanced.h */; };
 		AE70A53A1ECB4DFE0009E49A /* GJLivePush+advanced.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F51ECB4DFE0009E49A /* GJLivePush+advanced.m */; };
@@ -458,7 +458,7 @@
 		AE70A4EE1ECB4DFE0009E49A /* GJCaptureTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJCaptureTool.h; sourceTree = "<group>"; };
 		AE70A4EF1ECB4DFE0009E49A /* GJCaptureTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJCaptureTool.m; sourceTree = "<group>"; };
 		AE70A4F01ECB4DFE0009E49A /* GJLivePlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePlayer.h; sourceTree = "<group>"; };
-		AE70A4F11ECB4DFE0009E49A /* GJLivePlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJLivePlayer.m; sourceTree = "<group>"; };
+		AE70A4F11ECB4DFE0009E49A /* GJLivePlayer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJLivePlayer.c; sourceTree = "<group>"; };
 		AE70A4F21ECB4DFE0009E49A /* GJLivePull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePull.h; sourceTree = "<group>"; };
 		AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJLivePull.m; sourceTree = "<group>"; };
 		AE70A4F41ECB4DFE0009E49A /* GJLivePush+advanced.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GJLivePush+advanced.h"; sourceTree = "<group>"; };
@@ -990,7 +990,7 @@
 				AE70A4EE1ECB4DFE0009E49A /* GJCaptureTool.h */,
 				AE70A4EF1ECB4DFE0009E49A /* GJCaptureTool.m */,
 				AE70A4F01ECB4DFE0009E49A /* GJLivePlayer.h */,
-				AE70A4F11ECB4DFE0009E49A /* GJLivePlayer.m */,
+				AE70A4F11ECB4DFE0009E49A /* GJLivePlayer.c */,
 				AE70A4F21ECB4DFE0009E49A /* GJLivePull.h */,
 				AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */,
 				AE70A5661ECCA95E0009E49A /* GJLivePullContext.c */,
@@ -1556,7 +1556,7 @@
 				AE70A5201ECB4DFE0009E49A /* AACEncoderFromPCM.m in Sources */,
 				AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
-				AE70A5361ECB4DFE0009E49A /* GJLivePlayer.m in Sources */,
+				AE70A5361ECB4DFE0009E49A /* GJLivePlayer.c in Sources */,
 				AE70A5401ECB4DFE0009E49A /* GJH264Encoder.m in Sources */,
 				6A7873D31ECC794A00555F5B /* IOS_AACDecode.m in Sources */,
 				AE70A5321ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m in Sources */,

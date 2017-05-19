@@ -420,7 +420,7 @@ GJQueue* h264Queue ;
 -(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
     _pushSessionStatus.netWorkQuarity = (GJNetworkQuality)quality;
 }
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder pcmPacket:(R_GJPCMPacket *)packet{
+-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder pcmPacket:(R_GJPCMFrame *)packet{
     packet->pts = [[NSDate date]timeIntervalSinceDate:_fristFrameDate] * 1000;
     [_audioEncoder encodeWithPacket:packet];
 }

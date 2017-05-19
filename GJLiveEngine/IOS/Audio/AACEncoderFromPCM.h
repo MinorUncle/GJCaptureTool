@@ -28,7 +28,7 @@
 -(BOOL)start;
 -(BOOL)stop;
 -(void)encodeWithBuffer:(CMSampleBufferRef)sampleBuffer;
--(void)encodeWithPacket:(R_GJPCMPacket*)packet;
+-(void)encodeWithPacket:(R_GJPCMFrame*)packet;
 - (instancetype)initWithSourceForamt:(const AudioStreamBasicDescription*)sFormat DestDescription:(const AudioStreamBasicDescription*)dFormat;
 
 - (NSData *)fetchMagicCookie;

@@ -130,11 +130,9 @@ static void pcmHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
     GJAudioQueueRecoder* tempSelf = (__bridge GJAudioQueueRecoder*)aqData;
    
     if (tempSelf.status == kRecoderRunningStatus){
-        R_GJPCMPacket* retainBuffer = (R_GJPCMPacket*)GJRetainBufferPoolGetData(tempSelf.bufferPool);
+        R_GJPCMFrame* retainBuffer = (R_GJPCMFrame*)GJRetainBufferPoolGetData(tempSelf.bufferPool);
         memcpy(retainBuffer->retain.data, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
         retainBuffer->retain.size = inBuffer->mAudioDataByteSize;
-        retainBuffer->pcmOffset = 0;
-        retainBuffer->pcmSize = inBuffer->mAudioDataByteSize;
         retainBuffer->pts = inStartTime->mHostTime;
         [tempSelf.delegate GJAudioQueueRecoder:tempSelf pcmPacket:retainBuffer];
         retainBufferUnRetain(&retainBuffer->retain);
@@ -258,7 +256,7 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
     if (format.mFormatID == kAudioFormatLinearPCM) {
 //        maxPacketSize = _format.mBytesPerFrame * _format.mSampleRate * _callbackDelay;//
         maxPacketSize = _format.mBytesPerFrame * 1024;
-        GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize, true,R_GJPCMPacketMalloc,GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize, true,R_GJPCMFrameMalloc,GNULL);
 
     }else{
         UInt32 parmSize = sizeof(maxPacketSize);

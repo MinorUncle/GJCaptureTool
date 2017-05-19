@@ -11,7 +11,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import "GJRetainBuffer.h"
 #import "GJLiveDefine+internal.h"
-typedef void(^DecodeComplete)(R_GJFrame* frame);
+typedef void(^DecodeComplete)(R_GJPCMFrame* frame);
 
 @interface GJPCMDecodeFromAAC : NSObject
 @property (nonatomic,assign,readonly) AudioStreamBasicDescription sourceFormat;

@@ -18,7 +18,7 @@
 
     dispatch_queue_t _encoderQueue;
     AudioStreamPacketDescription _sourcePCMPacketDescription;
-    R_GJPCMPacket* _preBlockBuffer;
+    R_GJPCMFrame* _preBlockBuffer;
     
     GJRetainBufferPool* _bufferPool;
     GInt64 _currentPts;
@@ -71,12 +71,12 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         encoder->_preBlockBuffer = NULL;
     }
     GJQueue* blockQueue =   encoder->_resumeQueue;
-    R_GJPCMPacket* buffer;
+    R_GJPCMFrame* buffer;
     if (encoder.isRunning && queuePop(blockQueue, (void**)&buffer,GINT32_MAX)) {
         
-        ioData->mBuffers[0].mData = buffer->retain.data+buffer->pcmOffset;
+        ioData->mBuffers[0].mData = buffer->retain.data;
         ioData->mBuffers[0].mNumberChannels =encoder.sourceFormat.mChannelsPerFrame;
-        ioData->mBuffers[0].mDataByteSize = (UInt32)buffer->pcmSize;
+        ioData->mBuffers[0].mDataByteSize = (UInt32)buffer->retain.size;
         AudioStreamBasicDescription* baseDescription = &(encoder->_sourceFormat);
         *ioNumberDataPackets = ioData->mBuffers[0].mDataByteSize / baseDescription->mBytesPerPacket;
         encoder->_preBlockBuffer = buffer;
@@ -112,12 +112,12 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     size_t lenth;
     char* point;
     CMBlockBufferGetDataPointer(bufferRef, 0, NULL, &lenth, &point);
-    R_GJPCMPacket* packet = (R_GJPCMPacket*)malloc(sizeof(R_GJPCMPacket));
+    R_GJPCMFrame* packet = (R_GJPCMFrame*)malloc(sizeof(R_GJPCMFrame));
     [self encodeWithPacket:packet];
     retainBufferUnRetain(&packet->retain);
 }
     
--(void)encodeWithPacket:(R_GJPCMPacket*)packet{
+-(void)encodeWithPacket:(R_GJPCMFrame*)packet{
     retainBufferRetain(&packet->retain);
     if (!_isRunning || !queuePush(_resumeQueue, packet, 0)) {
         retainBufferUnRetain(&packet->retain);

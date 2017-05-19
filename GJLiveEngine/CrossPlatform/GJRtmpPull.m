@@ -67,7 +67,6 @@ static GHandle pullRunloop(GHandle parm){
         while ((rResult = RTMP_ReadPacket(pull->rtmp, &packet))) {
             GUInt8 *sps = NULL,*pps = NULL,*pp = NULL,*sei = NULL;
             GInt32 spsSize = 0,ppsSize = 0,ppSize = 0,seiSize=0;
-            GJStreamPacket streamPacket;
             if (!RTMPPacket_IsReady(&packet) || !packet.m_nBodySize)
             {
                 continue;
@@ -77,7 +76,6 @@ static GHandle pullRunloop(GHandle parm){
             
             if (packet.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
                 GJLOGFREQ("receive audio pts:%d",packet.m_nTimeStamp);
-                streamPacket.type = GJMediaType_Audio;
                 pull->audioPullInfo.pts = packet.m_nTimeStamp;
                 pull->audioPullInfo.count++;
                 pull->audioPullInfo.byte += packet.m_nBodySize;
@@ -94,14 +92,12 @@ static GHandle pullRunloop(GHandle parm){
                 aacPacket->adtsSize = 7;
                 aacPacket->aacOffset = aacPacket->adtsOffset+7;
                 aacPacket->aacSize = (GInt32)(packet.m_nBodySize -aacPacket->adtsSize - 2);
-                streamPacket.packet.aacPacket = aacPacket;
                 packet.m_body=NULL;
-                pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
+                pull->audioCallback(pull,aacPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);
                 
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
                 GJLOGFREQ("receive audio pts:%d",packet.m_nTimeStamp);
-                streamPacket.type = GJMediaType_Video;
                 GUInt8 *body = (GUInt8*)packet.m_body;
                 GUInt8 *pbody = body;
                 GInt32 isKey = 0;
@@ -146,14 +142,13 @@ static GHandle pullRunloop(GHandle parm){
                 h264Packet->seiOffset = sei - retainBuffer->data;
                 h264Packet->seiSize = seiSize;
                 h264Packet->pts = packet.m_nTimeStamp;
-                streamPacket.packet.h264Packet = h264Packet;
                 
                 
                 pull->videoPullInfo.pts = packet.m_nTimeStamp;
                 pull->videoPullInfo.count++;
                 pull->videoPullInfo.byte += packet.m_nBodySize;
                 
-                pull->dataCallback(pull,streamPacket,pull->dataCallbackParm);
+                pull->videoCallback(pull,h264Packet,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);
                 packet.m_body=NULL;
             }else{
@@ -244,7 +239,7 @@ GVoid GJRtmpPull_CloseAndRelease(GJRtmpPull* pull){
     GJRtmpPull_Release(pull);
 }
 
-GBool GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHandle callbackParm,const GChar* pullUrl){
+GBool GJRtmpPull_StartConnect(GJRtmpPull* pull,PullVideoDataCallback videoCallback,PullAudioDataCallback audioCallback,GHandle callbackParm,const GChar* pullUrl){
     GJLOG(GJ_LOGDEBUG, "GJRtmpPull_StartConnect:%p",pull);
 
     if (pull->pullThread != NULL) {
@@ -255,7 +250,8 @@ GBool GJRtmpPull_StartConnect(GJRtmpPull* pull,PullDataCallback dataCallback,GHa
     GJAssert(length <= MAX_URL_LENGTH-1, "sendURL 长度不能大于：%d",MAX_URL_LENGTH-1);
     memcpy(pull->pullUrl, pullUrl, length+1);
     pull->stopRequest = GFalse;
-    pull->dataCallback = dataCallback;
+    pull->videoCallback = videoCallback;
+    pull->audioCallback = audioCallback;
     pull->dataCallbackParm = callbackParm;
     pthread_create(&pull->pullThread, NULL, pullRunloop, pull);
     return GTrue;

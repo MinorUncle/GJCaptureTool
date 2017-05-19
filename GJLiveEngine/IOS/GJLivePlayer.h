@@ -88,9 +88,6 @@ typedef struct _GJLivePlayContext{
     GJAudioFormat           audioFormat;
 }GJLivePlayer;
 
-GBool  GJLivePlay_InjectVideoPlayer(GJLivePlayer* player,const GJPictureDisplayContext* videoPlayer);
-GBool  GJLivePlay_InjectAudioPlayer(GJLivePlayer* player,const GJAudioPlayContext* audioPlayer,GJAudioFormat format);
-
 GBool  GJLivePlay_Create(GJLivePlayer* player,GJLivePlayCallback callback,GHandle userData);
 GVoid  GJLivePlay_Release(GJLivePlayer* player);
 GBool  GJLivePlay_Start(GJLivePlayer* player);
@@ -98,6 +95,7 @@ GVoid  GJLivePlay_Stop(GJLivePlayer* player);
 GBool  GJLivePlay_AddVideoData(GJLivePlayer* player,R_GJPixelFrame* videoFrame);
 GBool  GJLivePlay_AddAudioData(GJLivePlayer* player,R_GJPCMFrame* audioFrame);
 GVoid  GJLivePlay_SetAudioFormat(GJLivePlayer* player,GJAudioFormat audioFormat);
+GVoid  GJLivePlay_GetVideoDisplayView(GJLivePlayer* player);
 
 GJTrafficStatus  GJLivePlay_GetVideoCacheInfo(GJLivePlayer* player);
 GJTrafficStatus  GJLivePlay_GetAudioCacheInfo(GJLivePlayer* player);
