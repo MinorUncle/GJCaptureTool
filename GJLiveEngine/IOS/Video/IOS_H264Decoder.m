@@ -9,13 +9,13 @@
 #import "IOS_H264Decoder.h"
 #import "GJH264Decoder.h"
 #import "GJBufferPool.h"
-GBool cvImagereleaseCallBack(GJRetainBuffer * retain){
+static GBool cvImagereleaseCallBack(GJRetainBuffer * retain){
     CVImageBufferRef image = (CVImageBufferRef)retain->data;
     CVPixelBufferRelease(image);
     GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)retain);
     return GTrue;
 }
-GBool decodeCreate (struct _GJH264DecodeContext* context,GJPixelType format,H264DecodeCompleteCallback callback,GHandle userData)
+static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelType format,H264DecodeCompleteCallback callback,GHandle userData)
 {
     GJH264Decoder* decode = [[GJH264Decoder alloc]init];
     decode.completeCallback = ^(CVImageBufferRef image, int64_t pts){
@@ -24,27 +24,27 @@ GBool decodeCreate (struct _GJH264DecodeContext* context,GJPixelType format,H264
         frame->width = (GInt32)CVPixelBufferGetWidth(image);
         frame->pts = pts;
         retainBufferPack((GJRetainBuffer**)&frame, image, sizeof(image), cvImagereleaseCallBack, GNULL);
-        MIN(<#A#>, <#B#>)
     };
     context->obaque = (__bridge_retained GHandle)decode;
     return GTrue;
 }
-GVoid decodeRelease (struct _GJH264DecodeContext* context){
+static GVoid decodeRelease (struct _GJH264DecodeContext* context){
     GJH264Decoder* decode = (__bridge_transfer GJH264Decoder *)(context->obaque);
     decode = nil;
 }
-GBool decodePacket (struct _GJH264DecodeContext* context,R_GJH264Packet* packet){
+static GBool decodePacket (struct _GJH264DecodeContext* context,R_GJH264Packet* packet){
     GJH264Decoder* decode = (__bridge_transfer GJH264Decoder *)(context->obaque);
     [decode decodePacket:packet];
     
     return GTrue;
 }
 
-GVoid GJ_H264DecodeContextSetup(GJH264DecodeContext* context){
-    if (context == NULL) {
-        context = (GJH264DecodeContext*)malloc(sizeof(GJH264DecodeContext));
+GVoid GJ_H264DecodeContextCreate(GJH264DecodeContext** decodeContext){
+    if (*decodeContext == NULL) {
+        *decodeContext = (GJH264DecodeContext*)malloc(sizeof(GJH264DecodeContext));
     }
-    context->decodeCreate = decodeCreate;
+    GJH264DecodeContext* context = *decodeContext;
+    context->decodeSetup = decodeSetup;
     context->decodeRelease = decodeRelease;
     context->decodePacket = decodePacket;
     context->decodeeCompleteCallback = NULL;

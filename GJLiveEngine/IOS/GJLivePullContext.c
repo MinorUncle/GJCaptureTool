@@ -10,33 +10,35 @@
 #include "GJUtil.h"
 #include "GJLog.h"
 #include <string.h>
-static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm);
+static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm);
 static GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle param);
-static void pullVideoDataCallback(GJRtmpPull* pull,R_GJH264Packet* streamPacket,void* parm);
-static void pullAudioDataCallback(GJRtmpPull* pull,R_GJAACPacket* streamPacket,void* parm);
+static GVoid pullVideoDataCallback(GJRtmpPull* pull,R_GJH264Packet* streamPacket,GHandle parm);
+static GVoid pullAudioDataCallback(GJRtmpPull* pull,R_GJAACPacket* streamPacket,GHandle parm);
 
 static GVoid aacDecodeCompleteCallback(GHandle userData,R_GJPCMFrame* frame);
 static GVoid h264DecodeCompleteCallback(GHandle userData,R_GJPixelFrame* frame);
 
-GBool GJLivePull_Create(GJLivePullContext* context,GJLivePullCallback callback,GHandle param){
+GBool GJLivePull_Create(GJLivePullContext** pullContext,GJLivePullCallback callback,GHandle param){
     GBool result = GFalse;
     do{
-        if (context == GNULL) {
-            context = (GJLivePullContext*)calloc(1,sizeof(GJLivePullContext));
-            if (context == NULL) {
+        if (*pullContext == GNULL) {
+            *pullContext = (GJLivePullContext*)calloc(1,sizeof(GJLivePullContext));
+            if (*pullContext == GNULL) {
                 result = GFalse;
                 break;
             }
-            memset((GHandle)context, 0, sizeof(GJLivePullContext));
+            memset((GHandle)*pullContext, 0, sizeof(GJLivePullContext));
         }
-        if(!GJLivePlay_Create(context->player, livePlayCallback, context)){
+        GJLivePullContext* context = *pullContext;
+
+        if(!GJLivePlay_Create(&context->player, livePlayCallback, context)){
             result = GFalse;
             break;
         };
-        GJ_H264DecodeContextSetup(context->videoDecoder);
-        GJ_AACDecodeContextSetup(context->audioDecoder);
+        GJ_H264DecodeContextCreate(&context->videoDecoder);
+        GJ_AACDecodeContextCreate(&context->audioDecoder);
         
-        if(!context->videoDecoder->decodeCreate(context->videoDecoder,GJPixelType_YpCbCr8BiPlanar_Full,h264DecodeCompleteCallback,context)){
+        if(!context->videoDecoder->decodeSetup(context->videoDecoder,GJPixelType_YpCbCr8BiPlanar_Full,h264DecodeCompleteCallback,context)){
             result = GFalse;
             break;
         }
@@ -44,28 +46,28 @@ GBool GJLivePull_Create(GJLivePullContext* context,GJLivePullCallback callback,G
     }while (0);
     return result;
 }
-GBool GJLivePull_StartPull(GJLivePullContext* context,char* url){
+GBool GJLivePull_StartPull(GJLivePullContext* context,GChar* url){
     GBool result = GTrue;
     do{
-    pthread_mutex_lock(&context->lock);
-    context->fristAudioClock = context->fristVideoClock = context->connentClock = context->fristVideoDecodeClock = 0;
-    if (context->videoPull != GNULL) {
-        GJRtmpPull_CloseAndRelease(context->videoPull);
-    }
-    if(!GJRtmpPull_Create(&context->videoPull, pullMessageCallback, context)){
-        result = GFalse;
-        break;
-    };
-    if(!GJRtmpPull_StartConnect(context->videoPull, pullVideoDataCallback,pullAudioDataCallback,context,(const char*) url)){
-        result = GFalse;
-        break;
-    };
-    if (!GJLivePlay_Start(context->player)) {
-        result = GFalse;
-        break;
-    }
-    context->startPullClock = GJ_Gettime()/1000;
-    pthread_mutex_unlock(&context->lock);
+        pthread_mutex_lock(&context->lock);
+        context->fristAudioClock = context->fristVideoClock = context->connentClock = context->fristVideoDecodeClock = 0;
+        if (context->videoPull != GNULL) {
+            GJRtmpPull_CloseAndRelease(context->videoPull);
+        }
+        if(!GJRtmpPull_Create(&context->videoPull, pullMessageCallback, context)){
+            result = GFalse;
+            break;
+        };
+        if(!GJRtmpPull_StartConnect(context->videoPull, pullVideoDataCallback,pullAudioDataCallback,context,(const GChar*) url)){
+            result = GFalse;
+            break;
+        };
+        if (!GJLivePlay_Start(context->player)) {
+            result = GFalse;
+            break;
+        }
+        context->startPullClock = GJ_Gettime()/1000;
+        pthread_mutex_unlock(&context->lock);
     }while (0);
     return result;
 }
@@ -81,30 +83,60 @@ GVoid GJLivePull_StopPull(GJLivePullContext* context){
     context->audioDecoder = GNULL;
     pthread_mutex_unlock(&context->lock);
 }
-GVoid GJLivePull_Dealloc(GJLivePullContext* context);
+GJTrafficStatus GJLivePull_GetVideoTrafficStatus(GJLivePullContext* context){
+    return GJLivePlay_GetVideoCacheInfo(context->player);
+}
+GJTrafficStatus GJLivePull_GetAudioTrafficStatus(GJLivePullContext* context){
+    return GJLivePlay_GetAudioCacheInfo(context->player);
+}
+
+GHandle GJLivePull_GetDisplayView(GJLivePullContext* context){
+    return GJLivePlay_GetVideoDisplayView(context->player);
+}
+GVoid GJLivePull_Dealloc(GJLivePullContext* context){
+    GJLivePlay_Dealloc(context->player);
+}
 
 static GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle param){
+    GJLivePullContext* livePull = userDate;
+    GJLivePullMessageType pullMessage = GJLivePull_messageInvalid;
+    switch (message) {
+        case GJPlayMessage_BufferStart:
+            pullMessage = GJLivePull_bufferStart;
+            break;
+        case GJPlayMessage_BufferUpdate:
+            pullMessage = GJLivePull_bufferUpdate;
+            break;
+        case GJPlayMessage_BufferEnd:
+            pullMessage = GJLivePull_bufferEnd;
+            break;
+            
+        default:
+            break;
+    }
+    livePull->callback(livePull->userData,pullMessage,param);
 }
-static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm){
+static GVoid pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm){
     GJLivePullContext* livePull = rtmpPullParm;
     
         switch (messageType) {
             case GJRTMPPullMessageType_connectError:
             case GJRTMPPullMessageType_urlPraseError:
                 GJLOG(GJ_LOGERROR, "pull connect error:%d",messageType);
-                livePull->callback(livePull->userData,GJLivePullMessageType_urlPraseError,"连接错误");
+                livePull->callback(livePull->userData,GJLivePull_connectError,"连接错误");
                 GJLivePull_StopPull(livePull);
                 break;
             case GJRTMPPullMessageType_receivePacketError:
                 GJLOG(GJ_LOGERROR, "pull sendPacket error:%d",messageType);
-                livePull->callback(livePull->userData,GJLivePullMessageType_receivePacketError,"读取失败");
+                livePull->callback(livePull->userData,GJLivePull_receivePacketError,"读取失败");
                 GJLivePull_StopPull(livePull);
                 break;
             case GJRTMPPullMessageType_connectSuccess:
             {
                 GJLOG(GJ_LOGINFO, "pull connectSuccess");
                 livePull->connentClock = GJ_Gettime()/1000.0;
-                livePull->callback(livePull->userData,GJLivePullMessageType_connectSuccess,"连接成功");
+                GTime connentDur = livePull->connentClock - livePull->startPullClock;
+                livePull->callback(livePull->userData,GJLivePull_connectSuccess,&connentDur);
             }
                 break;
             case GJRTMPPullMessageType_closeComplete:{
@@ -113,7 +145,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
                 GJPullSessionInfo info = {0};
                 info.sessionDuring = GJ_Gettime()/1000 - livePull->startPullClock;
 
-                livePull->callback(livePull->userData,GJLivePullMessageType_closeComplete,(GHandle)&info);
+                livePull->callback(livePull->userData,GJLivePull_closeComplete,(GHandle)&info);
             }
                 break;
             default:
@@ -121,7 +153,7 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
                 break;
         }
 }
-static const int mpeg4audio_sample_rates[16] = {
+static const GInt32 mpeg4audio_sample_rates[16] = {
     96000, 88200, 64000, 48000, 44100, 32000,
     24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
@@ -166,7 +198,7 @@ void pullAudioDataCallback(GJRtmpPull* pull,R_GJAACPacket* aacPacket,void* parm)
         //            destformat.mFramesPerPacket = destformat.mBytesPerFrame * destformat.mFramesPerPacket ;
         //            destformat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
         pthread_mutex_lock(&livePull->lock);
-        livePull->audioDecoder->decodeCreate(livePull->audioDecoder,sourceformat,destformat,aacDecodeCompleteCallback,livePull);
+        livePull->audioDecoder->decodeSetup(livePull->audioDecoder,sourceformat,destformat,aacDecodeCompleteCallback,livePull);
         GJLivePlay_SetAudioFormat(livePull->player, destformat);
         //            livePull.audioDecoder = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&destformat SourceDescription:&sourceformat];
         //            livePull.audioDecoder.delegate = livePull;
@@ -186,7 +218,10 @@ static GVoid h264DecodeCompleteCallback(GHandle userData,R_GJPixelFrame* frame){
     if (pullContext->fristVideoClock == G_TIME_INVALID) {
         pullContext->fristVideoClock = GJ_Gettime()/1000.0;
         GJPullFristFrameInfo info = {0};
-        info.size = CGSizeMake((float)frame->width, (float)frame->height);
+        info.size.width = frame->width;//CGSizeMake((float)frame->width, (float)frame->height);
+        info.size.height = frame->height;
+        pullContext->callback(pullContext->userData,    GJLivePull_decodeFristVideoFrame,"解码成功");
+
 //        pullContext->callback();
     }
     GJLivePlay_AddVideoData(pullContext->player, frame);

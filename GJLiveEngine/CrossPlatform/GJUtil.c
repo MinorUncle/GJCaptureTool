@@ -10,12 +10,12 @@
 #import <sys/time.h>
 #include "GJUtil.h"
 #include "GJLiveDefine+internal.h"
-GInt32 GJ_Gettime(){
+GTime GJ_Gettime(){
 #ifdef USE_CLOCK
     static clockd =  CLOCKS_PER_SEC /1000000 ;
     return clock() / clockd;
 #endif
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    return (GInt32)tv.tv_sec * 1000000 + tv.tv_usec;
+    return (GTime)tv.tv_sec * 1000000 + tv.tv_usec;
 }

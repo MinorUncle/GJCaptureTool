@@ -57,12 +57,17 @@ typedef void                GVoid;
 typedef void*               GHandle;
 
 typedef int64_t             GTime;
-#define G_TIME_INVALID      -9223372036854775806LL
+#define G_TIME_INVALID             -2147483646
+
+
 
 typedef int32_t             GResult;
 #define GOK                 0
 #define GERR_NOMEM          1
 #define GERR_TIMEDOUT       2
+
+#define GMIN(A,B)	({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __a : __b; })
+#define GMAX(A,B)	({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __b : __a; })
 
 
 #if defined( __cplusplus )

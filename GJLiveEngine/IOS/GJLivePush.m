@@ -164,8 +164,9 @@
         [_lastFilter removeTarget:_videoStreamFilter];
         _videoStreamFilter = nil;
     }
-  
-    if (!CGSizeEqualToSize(_pushConfig.pushSize, _captureSize)) {
+    GFloat32 dw = _pushConfig.pushSize.width - _captureSize.width;
+    GFloat32 dh = _pushConfig.pushSize.height - _captureSize.height;
+    if (dw > 0.1 ||dw < 0.1 || dh > 0.1 ||dh < 0.1 ) {
         float scaleX = _pushConfig.pushSize.width / _captureSize.width;
         float scaleY = _pushConfig.pushSize.height / _captureSize.height;
         if (scaleY - scaleX < -0.00001 || scaleY - scaleX > 0.00001) {//比例不相同，先裁剪，
@@ -205,7 +206,10 @@
         _videoPush = NULL;
     }
     GJRtmpPush_Create(&_videoPush, rtmpCallback, (__bridge void *)(self));
-    [_videoStreamFilter forceProcessingAtSize:_pushConfig.pushSize];
+    CGSize pushSize ;
+    pushSize.height = _pushConfig.pushSize.height;
+    pushSize.width = _pushConfig.pushSize.width;
+    [_videoStreamFilter forceProcessingAtSize:pushSize];
     _videoStreamFilter.frameProcessingCompletionBlock = nil;
     
     _startPushDate = [NSDate date];

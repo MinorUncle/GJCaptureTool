@@ -201,7 +201,7 @@ static const int mpeg4audio_sample_rates[16] = {
         _bufferPool = NULL;
 
     }
-    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJFrameMalloc,GNULL);
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJPCMFrameMalloc,GNULL);
     
     AudioConverterGetProperty(_decodeConvert, kAudioConverterCurrentInputStreamDescription, &size, &_sourceFormat);
     
@@ -224,7 +224,7 @@ static const int mpeg4audio_sample_rates[16] = {
         memset(&packetDesc, 0, sizeof(packetDesc));
         memset(&outCacheBufferList, 0, sizeof(AudioBufferList));
         
-        R_GJFrame* frame = (R_GJFrame*)GJRetainBufferPoolGetData(_bufferPool);
+        R_GJPCMFrame* frame = (R_GJPCMFrame*)GJRetainBufferPoolGetData(_bufferPool);
         outCacheBufferList.mNumberBuffers = 1;
         outCacheBufferList.mBuffers[0].mNumberChannels = 1;
         outCacheBufferList.mBuffers[0].mData = frame->retain.data;
@@ -247,7 +247,6 @@ static const int mpeg4audio_sample_rates[16] = {
         
         frame->retain.size = _destFormat.mBytesPerPacket*numPackets;
         frame->pts = _currentPts;
-        frame->mediaType = GJMediaType_Audio;
         _currentPts = -1;
         self.decodeCallback(frame);
         retainBufferUnRetain(&frame->retain);

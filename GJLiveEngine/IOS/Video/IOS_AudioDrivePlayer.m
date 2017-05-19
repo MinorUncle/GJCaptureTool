@@ -16,7 +16,7 @@
 @implementation IOS_AudioDrivePlayer
 
 @end
-inline static GBool audioPlayCreate (struct _GJAudioPlayContext* context,GJAudioFormat format){
+inline static GBool audioPlaySetup (struct _GJAudioPlayContext* context,GJAudioFormat format){
     if (format.mType != GJAudioType_PCM) {
         GJLOG(GJ_LOGFORBID, "视频格式不支持");
         return GFalse;
@@ -55,11 +55,12 @@ inline static GFloat32 audioGetSpeed(struct _GJAudioPlayContext* context){
     GJAudioQueueDrivePlayer* player = (__bridge GJAudioQueueDrivePlayer *)(context->obaque);
     return player.speed;
 }
-GVoid GJ_AudioPlayContextSetup(GJAudioPlayContext* context){
-    if (context == NULL) {
-        context = (GJAudioPlayContext*)malloc(sizeof(GJAudioPlayContext));
+GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext** audioPlayContext){
+    if (*audioPlayContext == NULL) {
+        *audioPlayContext = (GJAudioPlayContext*)malloc(sizeof(GJAudioPlayContext));
     }
-    context->audioPlayCreate = audioPlayCreate;
+    GJAudioPlayContext* context = *audioPlayContext;
+    context->audioPlaySetup = audioPlaySetup;
     context->audioPlayDealloc = audioPlayDealloc;
     context->audioStart = audioStart;
     context->audioStop = audioStop;

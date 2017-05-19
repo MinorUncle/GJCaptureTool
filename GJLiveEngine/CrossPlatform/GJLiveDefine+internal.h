@@ -98,7 +98,6 @@ GJRetainBuffer* R_GJPixelFrameMalloc(GJRetainBufferPool* pool,GHandle userdata);
 GJRetainBuffer* R_GJStreamPacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
 GJRetainBuffer* R_GJStreamFrameMalloc(GJRetainBufferPool* pool,GHandle userdata);
 
-GJRetainBuffer* R_GJFrameMalloc(GJRetainBufferPool* pool,GHandle userdata);
 
 GBool R_RetainBufferRelease(GJRetainBuffer* buffer);
 #endif /* GJLiveDefine_internal_h */

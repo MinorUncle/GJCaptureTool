@@ -33,13 +33,13 @@ typedef enum _GJPlayMessage{
     GJPlayMessage_BufferEnd,
 }GJPlayMessage;
 typedef struct CacheInfo{
-    GUInt32                         lowWaterFlag;
-    GUInt32                         highWaterFlag;
-    GInt32                          speedTotalDuration;
-    GInt32                          bufferTotalDuration;
-    GInt32                          lastBufferDuration;
-    GInt32                          bufferTimes;
-    GInt32                          lastPauseFlag;
+    GTime                         lowWaterFlag;
+    GTime                         highWaterFlag;
+    GTime                          speedTotalDuration;
+    GTime                          bufferTotalDuration;
+    GTime                          lastBufferDuration;
+    GTime                          bufferTimes;
+    GTime                          lastPauseFlag;
 }GJCacheInfo;
 typedef struct PlayControl{
     GJPlayStatus         status;
@@ -49,18 +49,18 @@ typedef struct PlayControl{
     GJQueue*             audioQueue;
 }GJPlayControl;
 typedef struct _GJNetShakeInfo{
-    GInt32 collectStartClock;
-    GInt32 collectUnitStartClock;
-    GInt32 collectUnitEndClock;
-    GInt32 collectUnitPtsCache;
-    GInt32 maxShake;
-    GInt32 minShake;
+    GTime collectStartClock;
+    GTime collectUnitStartClock;
+    GTime collectUnitEndClock;
+    GTime collectUnitPtsCache;
+    GTime maxShake;
+    GTime minShake;
 }GJNetShakeInfo;
 typedef struct _SyncInfo{
-    GInt32                 clock;
-    GLong                  cPTS;
-    GInt32                 startTime;
-    GLong                  startPts;
+    GTime                 clock;
+    GTime                  cPTS;
+    GTime                 startTime;
+    GTime                  startPts;
     GJTrafficStatus        trafficStatus;
 }SyncInfo;
 typedef struct SyncControl{
@@ -83,19 +83,19 @@ typedef struct _GJLivePlayContext{
     GJSyncControl       syncControl;
     GJPlayControl       playControl;
     
-    GJPictureDisplayContext videoPlayer;
-    GJAudioPlayContext      audioPlayer;
+    GJPictureDisplayContext* videoPlayer;
+    GJAudioPlayContext*      audioPlayer;
     GJAudioFormat           audioFormat;
 }GJLivePlayer;
 
-GBool  GJLivePlay_Create(GJLivePlayer* player,GJLivePlayCallback callback,GHandle userData);
-GVoid  GJLivePlay_Release(GJLivePlayer* player);
+GBool  GJLivePlay_Create(GJLivePlayer** player,GJLivePlayCallback callback,GHandle userData);
+GVoid  GJLivePlay_Dealloc(GJLivePlayer* player);
 GBool  GJLivePlay_Start(GJLivePlayer* player);
 GVoid  GJLivePlay_Stop(GJLivePlayer* player);
 GBool  GJLivePlay_AddVideoData(GJLivePlayer* player,R_GJPixelFrame* videoFrame);
 GBool  GJLivePlay_AddAudioData(GJLivePlayer* player,R_GJPCMFrame* audioFrame);
 GVoid  GJLivePlay_SetAudioFormat(GJLivePlayer* player,GJAudioFormat audioFormat);
-GVoid  GJLivePlay_GetVideoDisplayView(GJLivePlayer* player);
+GHandle  GJLivePlay_GetVideoDisplayView(GJLivePlayer* player);
 
 GJTrafficStatus  GJLivePlay_GetVideoCacheInfo(GJLivePlayer* player);
 GJTrafficStatus  GJLivePlay_GetAudioCacheInfo(GJLivePlayer* player);

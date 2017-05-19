@@ -18,33 +18,23 @@
 
 @interface GJLivePull()
 {
-    GJRtmpPull* _videoPull;
     NSThread*  _playThread;
     GJPullSessionStatus _pullSessionStatus;
-    
     GJLivePullContext* _pullContext;
+    
 }
 @property(strong,nonatomic)GJH264Decoder* videoDecoder;
 @property(strong,nonatomic)GJPCMDecodeFromAAC* audioDecoder;
 @property(strong,nonatomic) NSRecursiveLock* lock;
 
 @property(assign,nonatomic)GJLivePlayer* player;
-@property(assign,nonatomic)long pullVByte;
-@property(assign,nonatomic)int unitVByte;
-@property(assign,nonatomic)int  unitVPacketCount;
-@property(assign,nonatomic)long pullAByte;
-@property(assign,nonatomic)int unitAByte;
-@property(assign,nonatomic)int  unitAPacketCount;
-
 @property(assign,nonatomic)float gaterFrequency;
 @property(strong,nonatomic)NSTimer * timer;
 
+@property(assign,nonatomic)GJTrafficStatus videoTraffic;
+@property(assign,nonatomic)GJTrafficStatus audioTraffic;
 
-@property(strong,nonatomic)NSDate* startPullDate;
-@property(strong,nonatomic)NSDate* connentDate;
-@property(strong,nonatomic)NSDate* fristVideoDate;
-@property(strong,nonatomic)NSDate* fristDecodeVideoDate;
-@property(strong,nonatomic)NSDate* fristAudioDate;
+
 
 @end
 @implementation GJLivePull
@@ -55,7 +45,7 @@ static GVoid livePullCallback(GHandle userDate,GJLivePullMessageType message,GHa
 {
     self = [super init];
     if (self) {
-        GJLivePull_Create(_pullContext, livePullCallback, (__bridge GHandle)(self));
+        GJLivePull_Create(&(_pullContext), livePullCallback, (__bridge GHandle)(self));
         _enablePreview = YES;
         _gaterFrequency = 2.0;
         _lock = [[NSRecursiveLock alloc]init];
@@ -63,38 +53,39 @@ static GVoid livePullCallback(GHandle userDate,GJLivePullMessageType message,GHa
     return self;
 }
 
-static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageType,void* rtmpPullParm,void* messageParm){
-    GJLivePull* livePull = (__bridge GJLivePull *)(rtmpPullParm);
+static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHandle parm){
+    GJLivePull* livePull = (__bridge GJLivePull *)(pull);
     
     dispatch_async(dispatch_get_main_queue(), ^{
         switch (messageType) {
-            case GJRTMPPullMessageType_connectError:
-            case GJRTMPPullMessageType_urlPraseError:
+            case GJLivePull_connectError:
+            case GJLivePull_urlPraseError:
                 GJLOG(GJ_LOGERROR, "pull connect error:%d",messageType);
                 [livePull.delegate livePull:livePull errorType:kLivePullConnectError infoDesc:@"连接错误"];
                 [livePull stopStreamPull];
                 break;
-            case GJRTMPPullMessageType_receivePacketError:
+            case GJLivePull_receivePacketError:
                 GJLOG(GJ_LOGERROR, "pull sendPacket error:%d",messageType);
                 [livePull.delegate livePull:livePull errorType:kLivePullReadPacketError infoDesc:@"读取失败"];
                 [livePull stopStreamPull];
                 break;
-            case GJRTMPPullMessageType_connectSuccess:
+            case GJLivePull_connectSuccess:
             {
                 GJLOG(GJ_LOGINFO, "pull connectSuccess");
-                livePull.connentDate = [NSDate date];
-                [livePull.delegate livePull:livePull connentSuccessWithElapsed:[livePull.connentDate timeIntervalSinceDate:livePull.startPullDate]*1000];
+                [livePull.delegate livePull:livePull connentSuccessWithElapsed:*(GInt32*)parm];
                 livePull.timer = [NSTimer scheduledTimerWithTimeInterval:livePull.gaterFrequency target:livePull selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
                 GJLOG(GJ_LOGINFO, "NSTimer START:%s",[NSString stringWithFormat:@"%@",livePull.timer].UTF8String);
 
             }
                 break;
-            case GJRTMPPullMessageType_closeComplete:{
+            case GJLivePull_closeComplete:{
                 GJLOG(GJ_LOGINFO, "pull closeComplete");
-                NSDate* stopDate = [NSDate date];
-                GJPullSessionInfo info = {0};
-                info.sessionDuring = [stopDate timeIntervalSinceDate:livePull.startPullDate]*1000;
-                [livePull.delegate livePull:livePull closeConnent:&info resion:kConnentCloce_Active];
+                [livePull.delegate livePull:livePull closeConnent:parm resion:kConnentCloce_Active];
+            }
+                break;
+            case GJLivePull_bufferUpdate:{
+                UnitBufferInfo* info = parm;
+                [livePull.delegate livePull:livePull bufferUpdatePercent:info->percent duration:info->bufferDur];
             }
                 break;
             default:
@@ -109,20 +100,14 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
     GJTrafficStatus aCache = GJLivePull_GetAudioTrafficStatus(_pullContext);
     _pullSessionStatus.videoStatus.cacheCount = vCache.enter.count - vCache.leave.count;
     _pullSessionStatus.videoStatus.cacheTime = vCache.enter.pts - vCache.leave.pts;
-    _pullSessionStatus.videoStatus.bitrate = _unitVByte / _gaterFrequency;
-    _unitVByte = 0;
-    _pullSessionStatus.videoStatus.frameRate = _unitVPacketCount / _gaterFrequency;
-    _unitVPacketCount = 0;
-
+    _pullSessionStatus.videoStatus.bitrate = (vCache.leave.byte - _videoTraffic.leave.byte)*1.0 / _gaterFrequency;
+    _pullSessionStatus.videoStatus.frameRate = (vCache.leave.count - _videoTraffic.leave.count)*1.0  / _gaterFrequency;
     _pullSessionStatus.audioStatus.cacheCount = aCache.enter.count - aCache.leave.count;
     _pullSessionStatus.audioStatus.cacheTime = aCache.enter.pts - aCache.leave.pts;
-    _pullSessionStatus.audioStatus.bitrate = _unitAByte / _gaterFrequency;
-    _unitAByte = 0;
-    _pullSessionStatus.audioStatus.frameRate = _unitAByte / _gaterFrequency;
-    _unitAPacketCount = 0;
-
-
-        
+    _pullSessionStatus.audioStatus.bitrate =  (aCache.leave.byte - _audioTraffic.leave.byte)*1.0 / _gaterFrequency;
+    _pullSessionStatus.audioStatus.frameRate = (aCache.leave.count - _audioTraffic.leave.count)*1.0  / _gaterFrequency;
+    _videoTraffic = vCache;
+    _audioTraffic = aCache;
     [self.delegate livePull:self updatePullStatus:&_pullSessionStatus];
 #ifdef NETWORK_DELAY
      
@@ -141,45 +126,16 @@ static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageT
 }
 
 -(UIView *)getPreviewView{
-    return _player.displayView;
+    return (__bridge UIView *)(GJLivePull_GetDisplayView(_pullContext));
 }
 
 -(void)setEnablePreview:(BOOL)enablePreview{
     _enablePreview = enablePreview;
-    
-}
-static const int mpeg4audio_sample_rates[16] = {
-    96000, 88200, 64000, 48000, 44100, 32000,
-    24000, 22050, 16000, 12000, 11025, 8000, 7350
-};
-
-
-static GBool imageReleaseCallback(GJRetainBuffer* buffer){
-    CVPixelBufferRelease((CVImageBufferRef)buffer->data);
-    return GFalse;
 }
 
-#ifdef TEST
--(void)pullimage:(CVImageBufferRef)streamPacket time:(CMTime)pts{
-    static int s = 0;
-    if (s == 0) {
-        s++;
-        [_player start];
-    }
-    [_player addVideoDataWith:streamPacket pts:pts.value];
-}
--(void)pullDataCallback:(GJStreamPacket)streamPacket{
-    pullDataCallback(_videoPull, streamPacket, (__bridge void *)(self));
-}
-#endif
-
-
-GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle param){
-
-}
 -(void)dealloc{
-    if (_videoPull) {
-        GJRtmpPull_CloseAndRelease(_videoPull);
+    if (_pullContext) {
+        GJLivePull_Dealloc(_pullContext);
     }
 }
 @end

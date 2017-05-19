@@ -241,7 +241,7 @@ static char* url = "rtmp://10.0.1.203/live/room";
             GJPushConfig config;
             config.channel = 2;
             config.audioSampleRate = 44100;
-            config.pushSize = CGSizeMake(360, 640);
+            config.pushSize = (GSize){360, 640};
             config.videoBitRate = 8*80*1024;
             config.pushUrl = url;
             
@@ -316,21 +316,21 @@ static char* url = "rtmp://10.0.1.203/live/room";
             break;
     }
 }
--(void)livePush:(GJLivePush *)livePush pushPacket:(R_GJH264Packet *)packet{
-    if (_pulls.count>0) {
-        GJStreamPacket ppush;
-        ppush.type = GJMediaType_Video;
-        ppush.packet.h264Packet = packet;
-        [_pulls[0].pull pullDataCallback:ppush];
-    }
-}
--(void)livePush:(GJLivePush *)livePush pushImagebuffer:(CVImageBufferRef)packet pts:(CMTime)pts{
-    if (_pulls.count>0) {
-        [_pulls[0].pull pullimage:packet time:pts];
-        
-    }
-
-}
+//-(void)livePush:(GJLivePush *)livePush pushPacket:(R_GJH264Packet *)packet{
+//    if (_pulls.count>0) {
+//        GJStreamPacket ppush;
+//        ppush.type = GJMediaType_Video;
+//        ppush.packet.h264Packet = packet;
+//        [_pulls[0].pull pullDataCallback:ppush];
+//    }
+//}
+//-(void)livePush:(GJLivePush *)livePush pushImagebuffer:(CVImageBufferRef)packet pts:(CMTime)pts{
+//    if (_pulls.count>0) {
+//        [_pulls[0].pull pullimage:packet time:pts];
+//        
+//    }
+//
+//}
 
 -(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushSessionStatus *)status{
     _sendRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f KB/s A:%0.2f KB/s",status->videoStatus.bitrate/1024.0,status->audioStatus.bitrate/1024.0];
@@ -344,7 +344,7 @@ static char* url = "rtmp://10.0.1.203/live/room";
 }
 -(void)livePull:(GJLivePull *)livePull closeConnent:(GJPullSessionInfo *)info resion:(GJConnentCloceReason)reason{
     PullShow* show = [self getShowWithPush:livePull];
-    show.pullStateLab.text = [NSString stringWithFormat:@"connent total：%ld ms",info->sessionDuring];
+    show.pullStateLab.text = [NSString stringWithFormat:@"connent total：%lld ms",info->sessionDuring];
 }
 -(void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullSessionStatus *)status{
     GJPullSessionStatus pullStatus = *status;
@@ -357,7 +357,7 @@ static char* url = "rtmp://10.0.1.203/live/room";
 }
 
 -(void)livePull:(GJLivePull *)livePull fristFrameDecode:(GJPullFristFrameInfo *)info{
-    NSLog(@"pull size:%@",[NSValue valueWithCGSize:info->size]);
+    NSLog(@"pull w:%f,h:%f",info->size.width,info->size.height);
 }
 -(void)livePull:(GJLivePull *)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString *)infoDesc{
 

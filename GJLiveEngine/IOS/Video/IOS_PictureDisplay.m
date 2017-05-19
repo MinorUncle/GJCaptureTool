@@ -16,7 +16,7 @@
 @property(strong,nonatomic)GJImageView*                     displayView;
 @end
 @implementation IOS_PictureDisplay
-- (instancetype)initWithFormat:(GJPixelFormat)format
+- (instancetype)initWithFormat:(GJPixelType)format
 {
     self = [super init];
     if (self) {
@@ -35,18 +35,33 @@
     [_imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
 }
 @end
-static GBool IOS_PictureDisplayCreate(GJPictureDisplayContext* context,GJPixelFormat format){
-    context->obaque = (__bridge GHandle)([[IOS_PictureDisplay alloc]initWithFormat:format]);
+static GBool IOS_PictureDisplaySetup(GJPictureDisplayContext* context,GJPixelType format){
+    if (context->obaque != GNULL) {
+        GJLOG(GJ_LOGFORBID, "重复setup video play");
+    }
+    context->obaque = (__bridge_retained GHandle)([[IOS_PictureDisplay alloc]initWithFormat:format]);
     return context->obaque != nil;
+}
+static GVoid IOS_PictureDisplayDealloc(GJPictureDisplayContext* context){
+    IOS_PictureDisplay* display = (__bridge_transfer IOS_PictureDisplay *)(context->obaque);
+    display = nil;
+    free(context);
 }
 static GVoid IOS_PictureDisplayImage(GJPictureDisplayContext* context,GJRetainBuffer* image){
     IOS_PictureDisplay* display = (__bridge IOS_PictureDisplay *)(context->obaque);
     [display displayImage:(CVImageBufferRef)image];
 }
-void GJ_PictureDisplayContextSetup(GJPictureDisplayContext* context){
-    if (context == NULL) {
-        context = (GJPictureDisplayContext*)malloc(sizeof(GJPictureDisplayContext));
+static GHandle IOS_PictureDisplayGetView(GJPictureDisplayContext* context){
+    IOS_PictureDisplay* display = (__bridge IOS_PictureDisplay *)(context->obaque);
+    return (__bridge GHandle)(display.displayView);
+}
+void GJ_PictureDisplayContextCreate(GJPictureDisplayContext** disPlayContext){
+    if (*disPlayContext == NULL) {
+        *disPlayContext = (GJPictureDisplayContext*)malloc(sizeof(GJPictureDisplayContext));
     }
-    context->displayCreate = IOS_PictureDisplayCreate;
+    GJPictureDisplayContext* context = *disPlayContext;
+    context->displaySetup = IOS_PictureDisplaySetup;
     context->displayView = IOS_PictureDisplayImage;
+    context->displayDealloc = IOS_PictureDisplayDealloc;
+    context->getDispayView = IOS_PictureDisplayGetView;
 }

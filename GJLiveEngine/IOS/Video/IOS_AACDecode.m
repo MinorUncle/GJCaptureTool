@@ -11,7 +11,7 @@
 #import "GJPCMDecodeFromAAC.h"
 #import "GJLog.h"
 #import "GJLiveDefine+internal.h"
-GBool decodeCreate (struct _GJAACDecodeContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,DecodeCompleteCallback callback,GHandle userData){
+static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AACDecodeCompleteCallback callback,GHandle userData){
     if (sourceFormat.mType != GJAudioType_AAC) {
         GJLOG(GJ_LOGERROR, "解码音频源格式不支持");
         return GFalse;
@@ -39,29 +39,30 @@ GBool decodeCreate (struct _GJAACDecodeContext* context,GJAudioFormat sourceForm
     d.mFramesPerPacket = 1;
     d.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
     GJPCMDecodeFromAAC* decode = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:d SourceDescription:s];
-    decode.decodeCallback = ^(R_GJFrame *frame){
+    decode.decodeCallback = ^(R_GJPCMFrame *frame){
         callback(frame,userData);
     };
     [decode start];
     context->obaque = (__bridge_retained GHandle)decode;
     return GTrue;
 }
-GVoid decodeRelease (struct _GJAACDecodeContext* context){
+static GVoid decodeRelease (struct _GJAACDecodeContext* context){
     GJPCMDecodeFromAAC* decode = (__bridge_transfer GJPCMDecodeFromAAC *)(context->obaque);
     [decode stop];
     decode = nil;
 }
-GBool decodePacket (struct _GJAACDecodeContext* context,R_GJAACPacket* packet){
+static GBool decodePacket (struct _GJAACDecodeContext* context,R_GJAACPacket* packet){
     GJPCMDecodeFromAAC* decode = (__bridge_transfer GJPCMDecodeFromAAC *)(context->obaque);
     [decode decodePacket:packet];
     return GTrue;
 }
 
-GVoid GJ_AACDecodeContextSetup(GJAACDecodeContext* context){
-    if (context == NULL) {
-        context = (GJAACDecodeContext*)malloc(sizeof(GJAACDecodeContext));
+GVoid GJ_AACDecodeContextCreate(GJAACDecodeContext** decodeContext){
+    if (*decodeContext == NULL) {
+        *decodeContext = (GJAACDecodeContext*)malloc(sizeof(GJAACDecodeContext));
     }
-    context->decodeCreate = decodeCreate;
+    GJAACDecodeContext* context = *decodeContext;
+    context->decodeSetup = decodeSetup;
     context->decodeRelease = decodeRelease;
     context->decodePacket = decodePacket;
     context->decodeeCompleteCallback = NULL;

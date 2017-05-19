@@ -15,17 +15,21 @@
 //#define NETWORK_DELAY
 
 //#define GJVIDEODECODE_TEST
+typedef struct GSize {
+    GFloat32 width;
+    GFloat32 height;
+}GSize;
 
 typedef struct GJPushConfig {
     //    video 。videoFps;等于采集的fps,pushSize与capturesize不同时会保留最大裁剪缩放
-    CGSize      pushSize;
-    CGFloat     videoBitRate;
+    GSize      pushSize;
+    GFloat32     videoBitRate;
     
     //  audio
-    int   channel;
-    int   audioSampleRate;
+    GInt32   channel;
+    GInt32   audioSampleRate;
     
-    char       *pushUrl;
+    GChar*    pushUrl;
 }GJPushConfig;
 typedef enum _CaptureSizeType
 {
@@ -80,17 +84,23 @@ typedef enum _GJNetworkQuality{
     GJNetworkQualityTerrible,
 }GJNetworkQuality;
 typedef struct PushInfo{
-    float bitrate;//byte/s
-    float frameRate;//
-    long  cacheTime;
-    long  cacheCount;
+    GFloat32 bitrate;//byte/s
+    GFloat32 frameRate;//
+    GLong  cacheTime;
+    GLong  cacheCount;
 }GJPushInfo;
 typedef struct PullInfo{
-    float bitrate;//byte/s
-    float frameRate;//
-    long  cacheTime;
-    long  cacheCount;
+    GFloat32 bitrate;//byte/s
+    GFloat32 frameRate;//
+    GLong  cacheTime;
+    GLong  cacheCount;
 }GJPullInfo;
+typedef struct UnitBufferInfo{
+    GFloat32 percent;//byte/s
+    GLong  bufferDur;
+    GLong  cachePts;
+    GLong  cacheCount;
+}UnitBufferInfo;
 
 typedef struct PushSessionStatus{
     GJPushInfo videoStatus;
@@ -103,24 +113,24 @@ typedef struct PullSessionStatus{
     GJPullInfo audioStatus;
 }GJPullSessionStatus;
 typedef struct _PushSessionInfo{
-    long sendFrameCount;
-    long dropFrameCount;
-    long sessionDuring;
+    GLong sendFrameCount;
+    GLong dropFrameCount;
+    GLong sessionDuring;
 }GJPushSessionInfo;
 typedef enum _ConnentCloceReason{
     kConnentCloce_Active,//主动关闭
     kConnentCloce_Drop,//掉线
 }GJConnentCloceReason;
 typedef struct _PullSessionInfo{
-    long pullFrameCount;
-    long dropFrameCount;
-    long sessionDuring;
-    long buffingTimes;
-    long buffingCount;
+    GLong pullFrameCount;
+    GLong dropFrameCount;
+    GTime sessionDuring;
+    GTime buffingTimes;
+    GLong buffingCount;
 }GJPullSessionInfo;
 
 typedef struct _PullFristFrameInfo{
-    CGSize size;
+    GSize size;
 }GJPullFristFrameInfo;
 
 typedef enum {

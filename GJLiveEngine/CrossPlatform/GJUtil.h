@@ -15,5 +15,5 @@
 
  @return in us
  */
-GInt32 GJ_Gettime();
+GTime GJ_Gettime();
 #endif /* GJUtil_h */
