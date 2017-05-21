@@ -232,7 +232,7 @@
     
        // Do any additional setup after loading the view.
 }
-static char* url = "rtmp://10.0.1.203/live/room";
+static char* url = "rtmp://192.168.199.187/live/room";
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
@@ -333,18 +333,26 @@ static char* url = "rtmp://10.0.1.203/live/room";
 //}
 
 -(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushSessionStatus *)status{
+    
     _sendRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f KB/s A:%0.2f KB/s",status->videoStatus.bitrate/1024.0,status->audioStatus.bitrate/1024.0];
     _fpsLab.text = [NSString stringWithFormat:@"FPS V:%0.2f,A:%0.2f",status->videoStatus.frameRate,status->audioStatus.frameRate];
     _delayVLab.text = [NSString stringWithFormat:@"cache V t:%ld ms f:%ld",status->videoStatus.cacheTime,status->videoStatus.cacheCount];
     _delayALab.text = [NSString stringWithFormat:@"cache A t:%ld ms f:%ld",status->audioStatus.cacheTime,status->audioStatus.cacheCount];
 }
 -(void)livePull:(GJLivePull *)livePull connentSuccessWithElapsed:(int)elapsed{
-    PullShow* show = [self getShowWithPush:livePull];
-    show.pullStateLab.text = [NSString stringWithFormat:@"connent during：%d ms",elapsed];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        PullShow* show = [self getShowWithPush:livePull];
+        show.pullStateLab.text = [NSString stringWithFormat:@"connent during：%d ms",elapsed];
+    });
+  
 }
 -(void)livePull:(GJLivePull *)livePull closeConnent:(GJPullSessionInfo *)info resion:(GJConnentCloceReason)reason{
-    PullShow* show = [self getShowWithPush:livePull];
-    show.pullStateLab.text = [NSString stringWithFormat:@"connent total：%lld ms",info->sessionDuring];
+    GJPullSessionInfo sInfo= *info;
+    dispatch_async(dispatch_get_main_queue(), ^{
+
+        PullShow* show = [self getShowWithPush:livePull];
+        show.pullStateLab.text = [NSString stringWithFormat:@"connent total：%lld ms",sInfo.sessionDuring];
+    });
 }
 -(void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullSessionStatus *)status{
     GJPullSessionStatus pullStatus = *status;

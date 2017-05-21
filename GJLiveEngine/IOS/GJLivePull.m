@@ -56,7 +56,6 @@ static GVoid livePullCallback(GHandle userDate,GJLivePullMessageType message,GHa
 static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHandle parm){
     GJLivePull* livePull = (__bridge GJLivePull *)(pull);
     
-    dispatch_async(dispatch_get_main_queue(), ^{
         switch (messageType) {
             case GJLivePull_connectError:
             case GJLivePull_urlPraseError:
@@ -73,8 +72,11 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
             {
                 GJLOG(GJ_LOGINFO, "pull connectSuccess");
                 [livePull.delegate livePull:livePull connentSuccessWithElapsed:*(GInt32*)parm];
-                livePull.timer = [NSTimer scheduledTimerWithTimeInterval:livePull.gaterFrequency target:livePull selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
-                GJLOG(GJ_LOGINFO, "NSTimer START:%s",[NSString stringWithFormat:@"%@",livePull.timer].UTF8String);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    livePull.timer = [NSTimer scheduledTimerWithTimeInterval:livePull.gaterFrequency target:livePull selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
+                    GJLOG(GJ_LOGINFO, "NSTimer START:%s",[NSString stringWithFormat:@"%@",livePull.timer].UTF8String);
+                });
+                
 
             }
                 break;
@@ -88,11 +90,16 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
                 [livePull.delegate livePull:livePull bufferUpdatePercent:info->percent duration:info->bufferDur];
             }
                 break;
+            case GJLivePull_decodeFristVideoFrame:{
+                GJPullFristFrameInfo info = {0};
+                info.size = *(GSize*)parm;
+                [livePull.delegate livePull:livePull fristFrameDecode:&info];
+            }
+                break;
             default:
-                GJLOG(GJ_LOGFORBID,"not catch info：%d",messageType);
+                GJLOG(GJ_LOGERROR,"not catch info：%d",messageType);
                 break;
         }
-    });
 }
 
 -(void)updateStatusCallback{
@@ -100,11 +107,11 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
     GJTrafficStatus aCache = GJLivePull_GetAudioTrafficStatus(_pullContext);
     _pullSessionStatus.videoStatus.cacheCount = vCache.enter.count - vCache.leave.count;
     _pullSessionStatus.videoStatus.cacheTime = vCache.enter.pts - vCache.leave.pts;
-    _pullSessionStatus.videoStatus.bitrate = (vCache.leave.byte - _videoTraffic.leave.byte)*1.0 / _gaterFrequency;
+    _pullSessionStatus.videoStatus.bitrate = (vCache.enter.byte - _videoTraffic.enter.byte)*1.0 / _gaterFrequency;
     _pullSessionStatus.videoStatus.frameRate = (vCache.leave.count - _videoTraffic.leave.count)*1.0  / _gaterFrequency;
     _pullSessionStatus.audioStatus.cacheCount = aCache.enter.count - aCache.leave.count;
     _pullSessionStatus.audioStatus.cacheTime = aCache.enter.pts - aCache.leave.pts;
-    _pullSessionStatus.audioStatus.bitrate =  (aCache.leave.byte - _audioTraffic.leave.byte)*1.0 / _gaterFrequency;
+    _pullSessionStatus.audioStatus.bitrate =  (aCache.enter.byte - _audioTraffic.enter.byte)*1.0 / _gaterFrequency;
     _pullSessionStatus.audioStatus.frameRate = (aCache.leave.count - _audioTraffic.leave.count)*1.0  / _gaterFrequency;
     _videoTraffic = vCache;
     _audioTraffic = aCache;

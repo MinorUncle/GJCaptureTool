@@ -23,7 +23,11 @@ static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelType forma
         frame->height = (GInt32)CVPixelBufferGetHeight(image);
         frame->width = (GInt32)CVPixelBufferGetWidth(image);
         frame->pts = pts;
+        frame->type = CVPixelBufferGetPixelFormatType(image);
+        CVPixelBufferRetain(image);
         retainBufferPack((GJRetainBuffer**)&frame, image, sizeof(image), cvImagereleaseCallBack, GNULL);
+        callback(userData,frame);
+        retainBufferUnRetain(&frame->retain);
     };
     context->obaque = (__bridge_retained GHandle)decode;
     return GTrue;
@@ -33,7 +37,7 @@ static GVoid decodeRelease (struct _GJH264DecodeContext* context){
     decode = nil;
 }
 static GBool decodePacket (struct _GJH264DecodeContext* context,R_GJH264Packet* packet){
-    GJH264Decoder* decode = (__bridge_transfer GJH264Decoder *)(context->obaque);
+    GJH264Decoder* decode = (__bridge GJH264Decoder *)(context->obaque);
     [decode decodePacket:packet];
     
     return GTrue;

@@ -18,7 +18,8 @@ typedef GVoid (*H264EncodeCompleteCallback) (GHandle userData,R_GJH264Packet* pa
 
 typedef struct _GJPictureDisplayContext{
     GHandle obaque;
-    GBool (*displaySetup) (struct _GJPictureDisplayContext* context,GJPixelType format);
+    GBool (*displaySetup) (struct _GJPictureDisplayContext* context);
+    GBool (*displaySetFormat) (struct _GJPictureDisplayContext* context,GJPixelType format);
     GVoid (*displayDealloc) (struct _GJPictureDisplayContext* context);
     GVoid (*displayView) (struct _GJPictureDisplayContext* context,GJRetainBuffer* image);
     GHandle (*getDispayView) (struct _GJPictureDisplayContext* context);

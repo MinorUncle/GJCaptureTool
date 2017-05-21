@@ -16,32 +16,39 @@
 @property(strong,nonatomic)GJImageView*                     displayView;
 @end
 @implementation IOS_PictureDisplay
-- (instancetype)initWithFormat:(GJPixelType)format
+- (instancetype)init
 {
     self = [super init];
     if (self) {
         _displayView = [[GJImageView alloc]init];
-        _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:(GJYUVPixelImageFormat)format];
-        if (_imageInput == nil) {
-            GJLOG(GJ_LOGFORBID, "GJImagePixelImageInput 创建失败！");
-            return nil;
-        }
-        [_imageInput addTarget:(GPUImageView*)_displayView];
-
     }
     return self;
+}
+-(BOOL)displaySetFormat:(GJPixelType)format{
+    _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:(GJYUVPixelImageFormat)format];
+    if (_imageInput == nil) {
+        GJLOG(GJ_LOGFORBID, "GJImagePixelImageInput 创建失败！");
+        return NO;
+    }
+    [_imageInput addTarget:(GPUImageView*)_displayView];
+    return YES;
 }
 -(void)displayImage:(CVImageBufferRef)image{
     [_imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
 }
 @end
-static GBool IOS_PictureDisplaySetup(GJPictureDisplayContext* context,GJPixelType format){
+static GBool IOS_PictureDisplaySetup(GJPictureDisplayContext* context){
     if (context->obaque != GNULL) {
         GJLOG(GJ_LOGFORBID, "重复setup video play");
     }
-    context->obaque = (__bridge_retained GHandle)([[IOS_PictureDisplay alloc]initWithFormat:format]);
+    context->obaque = (__bridge_retained GHandle)([[IOS_PictureDisplay alloc]init]);
     return context->obaque != nil;
 }
+static GBool displaySetFormat (GJPictureDisplayContext* context,GJPixelType format){
+    IOS_PictureDisplay* display = (__bridge IOS_PictureDisplay *)(context->obaque);
+    return [display displaySetFormat:format];
+}
+
 static GVoid IOS_PictureDisplayDealloc(GJPictureDisplayContext* context){
     IOS_PictureDisplay* display = (__bridge_transfer IOS_PictureDisplay *)(context->obaque);
     display = nil;
@@ -49,7 +56,7 @@ static GVoid IOS_PictureDisplayDealloc(GJPictureDisplayContext* context){
 }
 static GVoid IOS_PictureDisplayImage(GJPictureDisplayContext* context,GJRetainBuffer* image){
     IOS_PictureDisplay* display = (__bridge IOS_PictureDisplay *)(context->obaque);
-    [display displayImage:(CVImageBufferRef)image];
+    [display displayImage:(CVImageBufferRef)image->data];
 }
 static GHandle IOS_PictureDisplayGetView(GJPictureDisplayContext* context){
     IOS_PictureDisplay* display = (__bridge IOS_PictureDisplay *)(context->obaque);
@@ -61,6 +68,7 @@ void GJ_PictureDisplayContextCreate(GJPictureDisplayContext** disPlayContext){
     }
     GJPictureDisplayContext* context = *disPlayContext;
     context->displaySetup = IOS_PictureDisplaySetup;
+    context->displaySetFormat = displaySetFormat;
     context->displayView = IOS_PictureDisplayImage;
     context->displayDealloc = IOS_PictureDisplayDealloc;
     context->getDispayView = IOS_PictureDisplayGetView;

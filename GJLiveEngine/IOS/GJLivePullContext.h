@@ -50,6 +50,9 @@ typedef struct _GJLivePullContext{
     GHandle                 userData;
     GJTrafficStatus         videoTraffic;
     GJTrafficStatus         audioTraffic;
+    GLong                  videoUnDecodeByte;
+    GLong                  audioUnDecodeByte;
+
 }GJLivePullContext;
 
 GBool GJLivePull_Create(GJLivePullContext** context,GJLivePullCallback callback,GHandle param);

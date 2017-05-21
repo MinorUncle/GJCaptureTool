@@ -42,8 +42,8 @@ static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioFormat sour
     decode.decodeCallback = ^(R_GJPCMFrame *frame){
         callback(frame,userData);
     };
-    [decode start];
     context->obaque = (__bridge_retained GHandle)decode;
+    [decode start];
     return GTrue;
 }
 static GVoid decodeRelease (struct _GJAACDecodeContext* context){
@@ -52,7 +52,7 @@ static GVoid decodeRelease (struct _GJAACDecodeContext* context){
     decode = nil;
 }
 static GBool decodePacket (struct _GJAACDecodeContext* context,R_GJAACPacket* packet){
-    GJPCMDecodeFromAAC* decode = (__bridge_transfer GJPCMDecodeFromAAC *)(context->obaque);
+    GJPCMDecodeFromAAC* decode = (__bridge GJPCMDecodeFromAAC *)(context->obaque);
     [decode decodePacket:packet];
     return GTrue;
 }

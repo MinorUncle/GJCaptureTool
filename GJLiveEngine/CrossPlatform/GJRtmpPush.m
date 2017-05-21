@@ -40,14 +40,14 @@ static GHandle sendRunloop(GHandle parm){
     RTMP_EnableWrite(push->rtmp);
     
     push->rtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
-    
+    GJLOG(GJ_LOGINFO, "开始连接服务器。。。");
     ret = RTMP_Connect(push->rtmp, GNULL);
     if (!ret) {
         GJLOG(GJ_LOGERROR, "RTMP_Connect error");
         errType = GJRTMPPushMessageType_connectError;
         goto ERROR;
     }
-    GJLOG(GJ_LOGINFO, "RTMP_Connect success");
+    GJLOG(GJ_LOGINFO, "服务器连接成功，开始连接流");
 
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret ) {

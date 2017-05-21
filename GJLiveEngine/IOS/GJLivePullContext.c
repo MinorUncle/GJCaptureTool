@@ -27,10 +27,10 @@ GBool GJLivePull_Create(GJLivePullContext** pullContext,GJLivePullCallback callb
                 result = GFalse;
                 break;
             }
-            memset((GHandle)*pullContext, 0, sizeof(GJLivePullContext));
         }
         GJLivePullContext* context = *pullContext;
-
+        context->callback = callback;
+        context->userData = param;
         if(!GJLivePlay_Create(&context->player, livePlayCallback, context)){
             result = GFalse;
             break;
@@ -50,7 +50,9 @@ GBool GJLivePull_StartPull(GJLivePullContext* context,GChar* url){
     GBool result = GTrue;
     do{
         pthread_mutex_lock(&context->lock);
-        context->fristAudioClock = context->fristVideoClock = context->connentClock = context->fristVideoDecodeClock = 0;
+        context->fristAudioClock = context->fristVideoClock = context->connentClock = context->fristVideoDecodeClock = G_TIME_INVALID;
+        context->audioUnDecodeByte = context->videoUnDecodeByte = 0;
+        context->audioTraffic = context->videoTraffic = (GJTrafficStatus){0};
         if (context->videoPull != GNULL) {
             GJRtmpPull_CloseAndRelease(context->videoPull);
         }
@@ -76,25 +78,35 @@ GVoid GJLivePull_StopPull(GJLivePullContext* context){
     if (context->videoPull) {
         GJRtmpPull_CloseAndRelease(context->videoPull);
         context->videoPull = GNULL;
+    }else{
+        GJLOG(GJ_LOGWARNING, "重复停止拉流");
     }
     GJLivePlay_Stop(context->player);
-    context->audioDecoder->decodeRelease(context->audioDecoder);
-    free(context->audioDecoder);
+    if(context->audioDecoder){
+        context->audioDecoder->decodeRelease(context->audioDecoder);
+        free(context->audioDecoder);
+    }
     context->audioDecoder = GNULL;
     pthread_mutex_unlock(&context->lock);
 }
 GJTrafficStatus GJLivePull_GetVideoTrafficStatus(GJLivePullContext* context){
-    return GJLivePlay_GetVideoCacheInfo(context->player);
+    GJTrafficStatus status = GJLivePlay_GetVideoCacheInfo(context->player);
+    status.enter.byte = context->videoUnDecodeByte;
+    return status;
 }
 GJTrafficStatus GJLivePull_GetAudioTrafficStatus(GJLivePullContext* context){
-    return GJLivePlay_GetAudioCacheInfo(context->player);
+    GJTrafficStatus status = GJLivePlay_GetAudioCacheInfo(context->player);
+    status.enter.byte = context->audioUnDecodeByte;
+    return status;
 }
 
 GHandle GJLivePull_GetDisplayView(GJLivePullContext* context){
     return GJLivePlay_GetVideoDisplayView(context->player);
 }
 GVoid GJLivePull_Dealloc(GJLivePullContext* context){
-    GJLivePlay_Dealloc(context->player);
+    if (context->player) {
+        GJLivePlay_Dealloc(context->player);
+    }
 }
 
 static GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle param){
@@ -160,10 +172,12 @@ static const GInt32 mpeg4audio_sample_rates[16] = {
 
 void pullVideoDataCallback(GJRtmpPull* pull,R_GJH264Packet* h264Packet,void* parm){
     GJLivePullContext* livePull = parm;
+    livePull->videoUnDecodeByte += h264Packet->retain.size;
     livePull->videoDecoder->decodePacket(livePull->videoDecoder,h264Packet);
 }
 void pullAudioDataCallback(GJRtmpPull* pull,R_GJAACPacket* aacPacket,void* parm){
     GJLivePullContext* livePull = parm;
+    livePull->audioUnDecodeByte += aacPacket->retain.size;
     if (livePull->fristAudioClock == G_TIME_INVALID) {
         livePull->fristAudioClock = GJ_Gettime()/1000.0;
         uint8_t* adts = aacPacket->adtsOffset+aacPacket->retain.data;
@@ -187,6 +201,7 @@ void pullAudioDataCallback(GJRtmpPull* pull,R_GJAACPacket* aacPacket,void* parm)
         GJAudioFormat destformat = sourceformat;
         destformat.mBitsPerChannel = 16;
         destformat.mFramePerPacket = 1;
+        destformat.mType = GJAudioType_PCM;
         
         //            AudioStreamBasicDescription destformat = {0};
         //            destformat.mFormatID = kAudioFormatLinearPCM;
@@ -217,9 +232,10 @@ static GVoid h264DecodeCompleteCallback(GHandle userData,R_GJPixelFrame* frame){
     GJLivePullContext* pullContext = userData;
     if (pullContext->fristVideoClock == G_TIME_INVALID) {
         pullContext->fristVideoClock = GJ_Gettime()/1000.0;
+        GJLivePlay_SetVideoFormat(pullContext->player, frame->type);
         GJPullFristFrameInfo info = {0};
-        info.size.width = frame->width;//CGSizeMake((float)frame->width, (float)frame->height);
-        info.size.height = frame->height;
+        info.size.width = (GFloat32)frame->width;//CGSizeMake((float)frame->width, (float)frame->height);
+        info.size.height = (GFloat32)frame->height;
         pullContext->callback(pullContext->userData,    GJLivePull_decodeFristVideoFrame,"解码成功");
 
 //        pullContext->callback();

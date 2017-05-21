@@ -63,6 +63,7 @@ typedef struct PCMFrame{
 
 typedef struct PixelFrame{
     GJRetainBuffer retain;
+    GJPixelType type;
     GInt64 pts;
     GInt32 width;
     GInt32 height;
