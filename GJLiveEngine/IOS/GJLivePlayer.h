@@ -50,12 +50,9 @@ typedef struct PlayControl{
 }GJPlayControl;
 typedef struct _GJNetShakeInfo{
     GTime collectStartClock;
-    GTime preCollectClock;
-    GTime preCollectPts;
-    GTime preUpShake;
-    GTime preDownShake;
-    GTime upShake;
-    GTime downShake;
+    GTime collectStartPts;
+    GTime maxDownShake;
+    GTime preMaxDownShake;
 }GJNetShakeInfo;
 typedef struct _SyncInfo{
     GTime                 clock;

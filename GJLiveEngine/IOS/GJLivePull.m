@@ -125,6 +125,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
 }
 
 - (bool)startStreamPullWithUrl:(char*)url{
+    [_timer invalidate];
     return GJLivePull_StartPull(_pullContext, url);
 }
 

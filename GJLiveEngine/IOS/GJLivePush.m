@@ -265,7 +265,7 @@
         [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
     }];
     _fristFrameDate = [NSDate date];
-//    [_audioRecoder startRecodeAudio];
+    [_audioRecoder startRecodeAudio];
     __weak GJLivePush* wkSelf = self;
     wkSelf.videoStreamFilter.frameProcessingCompletionBlock =  ^(GPUImageOutput * output, CMTime time){
         CVPixelBufferRef pixel_buffer = [output framebufferForOutput].pixelBuffer;

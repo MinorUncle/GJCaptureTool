@@ -15,6 +15,7 @@ typedef GVoid (*AACEncodeCompleteCallback) (GHandle userData,R_GJAACPacket* pack
 
 typedef GVoid (*H264DecodeCompleteCallback) (GHandle userData,R_GJPixelFrame* frame);
 typedef GVoid (*H264EncodeCompleteCallback) (GHandle userData,R_GJH264Packet* packet);
+typedef GBool (*FillDataCallback)(GHandle userData,GVoid* data,GInt32* size);
 
 typedef struct _GJPictureDisplayContext{
     GHandle obaque;
@@ -28,7 +29,7 @@ typedef struct _GJPictureDisplayContext{
 
 typedef struct _GJAudioPlayContext{
     GHandle obaque;
-    GBool (*audioPlaySetup) (struct _GJAudioPlayContext* context,GJAudioFormat format);
+    GBool (*audioPlaySetup) (struct _GJAudioPlayContext* context,GJAudioFormat format,FillDataCallback dataCallback,GHandle userData);
     GVoid (*audioPlayDealloc) (struct _GJAudioPlayContext* context);
     GVoid (*audioPlayCallback) (struct _GJAudioPlayContext* context,GHandle audioData,GInt32 size);
     GVoid (*audioStop)(struct _GJAudioPlayContext* context);

@@ -14,12 +14,12 @@
  类似GJAudioQueuePlayer，不过这个是主动通过代理函数拉数据，可以做同步基准作用
  */
 
-@protocol GJAudioQueueDrivePlayerDelegate <NSObject>
-@required
--(BOOL)GJAudioQueueDrivePlayer:(GJAudioQueueDrivePlayer*)player outAudioData:(void*)data outSize:(int*)size;
-
-@end
-
+//@protocol GJAudioQueueDrivePlayerDelegate <NSObject>
+//@required
+//-(BOOL)GJAudioQueueDrivePlayer:(GJAudioQueueDrivePlayer*)player outAudioData:(void*)data outSize:(int*)size;
+//
+//@end
+typedef BOOL(^FillDataCallBack)(void* data,int* size);
 @interface GJAudioQueueDrivePlayer : NSObject
 @property (nonatomic,assign,readonly) BOOL available;
 @property (nonatomic,assign,readonly) AudioStreamBasicDescription format;
@@ -28,10 +28,11 @@
 
 @property (nonatomic,assign) UInt32 maxBufferSize;
 @property (nonatomic,assign,readonly) PlayStatus status;
-@property (nonatomic,weak) id<GJAudioQueueDrivePlayerDelegate> delegate;
+//@property (nonatomic,weak) id<GJAudioQueueDrivePlayerDelegate> delegate;
 //default 5
 @property (nonatomic,assign) int cacheBufferCount;
 
+@property (nonatomic,copy) FillDataCallBack fillDataCallback;
 
 /**
  *  return playedTime of audioqueue, return invalidPlayedTime when error occurs.

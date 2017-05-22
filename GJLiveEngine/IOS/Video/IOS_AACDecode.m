@@ -29,6 +29,7 @@ static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioFormat sour
     s.mFramesPerPacket = sourceFormat.mFramePerPacket;
     s.mSampleRate = sourceFormat.mSampleRate;
     s.mFormatID = kAudioFormatMPEG4AAC;
+    s.mChannelsPerFrame = sourceFormat.mChannelsPerFrame;
     
     AudioStreamBasicDescription d = s;
     d.mChannelsPerFrame = destForamt.mChannelsPerFrame;
@@ -40,7 +41,7 @@ static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioFormat sour
     d.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
     GJPCMDecodeFromAAC* decode = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:d SourceDescription:s];
     decode.decodeCallback = ^(R_GJPCMFrame *frame){
-        callback(frame,userData);
+        callback(userData,frame);
     };
     context->obaque = (__bridge_retained GHandle)decode;
     [decode start];

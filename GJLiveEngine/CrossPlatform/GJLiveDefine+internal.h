@@ -11,7 +11,7 @@
 #include "GJRetainBuffer.h"
 #include "GJRetainBufferPool.h"
 #include "GJLiveDefine.h"
-#define DEFAULT_MAX_DROP_STEP 8
+#define DEFAULT_MAX_DROP_STEP 30
 #define MAX_SEND_DELAY 15000  //重启
 #define SEND_DELAY_TIME 1500
 #define SEND_DELAY_COUNT 25

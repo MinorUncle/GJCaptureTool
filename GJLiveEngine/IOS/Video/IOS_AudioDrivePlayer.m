@@ -16,12 +16,16 @@
 @implementation IOS_AudioDrivePlayer
 
 @end
-inline static GBool audioPlaySetup (struct _GJAudioPlayContext* context,GJAudioFormat format){
+inline static GBool audioPlaySetup (struct _GJAudioPlayContext* context,GJAudioFormat format,FillDataCallback dataCallback,GHandle userData){
     if (format.mType != GJAudioType_PCM) {
         GJLOG(GJ_LOGFORBID, "视频格式不支持");
         return GFalse;
     }
-    context->obaque = (__bridge_retained GHandle)([[GJAudioQueueDrivePlayer alloc]initWithSampleRate:format.mSampleRate channel:format.mChannelsPerFrame formatID:kAudioFormatLinearPCM]);
+    GJAudioQueueDrivePlayer* player = [[GJAudioQueueDrivePlayer alloc]initWithSampleRate:format.mSampleRate channel:format.mChannelsPerFrame formatID:kAudioFormatLinearPCM];
+    player.fillDataCallback = ^BOOL(void *data, int *size) {
+        return dataCallback(userData,data,size);
+    };
+    context->obaque = (__bridge_retained GHandle)player;
     return context->obaque != nil;
 }
 inline static GVoid audioPlayDealloc (struct _GJAudioPlayContext* context){

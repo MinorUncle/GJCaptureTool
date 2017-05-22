@@ -232,7 +232,7 @@
     
        // Do any additional setup after loading the view.
 }
-static char* url = "rtmp://192.168.199.187/live/room";
+static char* url = "rtmp://10.0.1.146/live/room";
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room

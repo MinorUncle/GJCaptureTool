@@ -43,7 +43,7 @@
             _currentBitRate = format.baseFormat.bitRate;
             _allowMinBitRate = _currentBitRate;
             _dropStep = GRationalMake(0, DEFAULT_MAX_DROP_STEP);
-            _allowDropStep = GRationalMake(1, 2);
+            _allowDropStep = GRationalMake(1, 5);
             _dynamicAlgorithm = GRationalMake(5, 10);
         }
     }

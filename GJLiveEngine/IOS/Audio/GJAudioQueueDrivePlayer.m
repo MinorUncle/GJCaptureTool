@@ -199,7 +199,8 @@
                 AudioQueueBufferRef buffer;
                 OSStatus status = AudioQueueAllocateBuffer(_audioQueue, _maxBufferSize, &buffer);
                 int size;
-                if([self.delegate GJAudioQueueDrivePlayer:self outAudioData:buffer->mAudioData outSize:&size]){
+                
+                if(self.fillDataCallback(buffer->mAudioData,&size)){
                     buffer->mAudioDataByteSize = size;
                 }else{
                     _status = kPlayAStopStatus;
@@ -381,7 +382,8 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
     
     GJAudioQueueDrivePlayer *player = (__bridge GJAudioQueueDrivePlayer *)inClientData;
     int dataSize;
-    if([player.delegate GJAudioQueueDrivePlayer:player outAudioData:inBuffer->mAudioData outSize:&dataSize]){
+    
+    if(player.fillDataCallback(inBuffer->mAudioData,&dataSize)){
         inBuffer->mAudioDataByteSize = dataSize;
     }else{
         inBuffer->mAudioDataByteSize = player.format.mBytesPerFrame*1024;
@@ -405,9 +407,8 @@ static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
 
     int dataSize = 0;
     
-    if(player.status == kPlayARunningStatus && [player.delegate GJAudioQueueDrivePlayer:player outAudioData:inBuffer->mAudioData outSize:&dataSize]){
+    if(player.status == kPlayARunningStatus && player.fillDataCallback(inBuffer->mAudioData,&dataSize)){
         inBuffer->mAudioDataByteSize = dataSize;
-
     }else{
         
         if (player.status == kPlayAStopStatus) {
