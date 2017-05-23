@@ -9,6 +9,7 @@
 #import "IOS_H264Decoder.h"
 #import "GJH264Decoder.h"
 #import "GJBufferPool.h"
+#import "GJLog.h"
 static GBool cvImagereleaseCallBack(GJRetainBuffer * retain){
     CVImageBufferRef image = (CVImageBufferRef)retain->data;
     CVPixelBufferRelease(image);
@@ -17,6 +18,8 @@ static GBool cvImagereleaseCallBack(GJRetainBuffer * retain){
 }
 static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelType format,H264DecodeCompleteCallback callback,GHandle userData)
 {
+    GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
+  
     GJH264Decoder* decode = [[GJH264Decoder alloc]init];
     decode.completeCallback = ^(CVImageBufferRef image, int64_t pts){
         R_GJPixelFrame* frame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
@@ -35,6 +38,7 @@ static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelType forma
 static GVoid decodeRelease (struct _GJH264DecodeContext* context){
     GJH264Decoder* decode = (__bridge_transfer GJH264Decoder *)(context->obaque);
     decode = nil;
+    context->obaque = GNULL;
 }
 static GBool decodePacket (struct _GJH264DecodeContext* context,R_GJH264Packet* packet){
     GJH264Decoder* decode = (__bridge GJH264Decoder *)(context->obaque);

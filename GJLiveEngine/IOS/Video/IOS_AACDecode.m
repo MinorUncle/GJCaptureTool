@@ -12,6 +12,7 @@
 #import "GJLog.h"
 #import "GJLiveDefine+internal.h"
 static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AACDecodeCompleteCallback callback,GHandle userData){
+    GJAssert(context->obaque == GNULL, "上一个音频解码器没有释放");
     if (sourceFormat.mType != GJAudioType_AAC) {
         GJLOG(GJ_LOGERROR, "解码音频源格式不支持");
         return GFalse;
@@ -51,6 +52,7 @@ static GVoid decodeRelease (struct _GJAACDecodeContext* context){
     GJPCMDecodeFromAAC* decode = (__bridge_transfer GJPCMDecodeFromAAC *)(context->obaque);
     [decode stop];
     decode = nil;
+    context = GNULL;
 }
 static GBool decodePacket (struct _GJAACDecodeContext* context,R_GJAACPacket* packet){
     GJPCMDecodeFromAAC* decode = (__bridge GJPCMDecodeFromAAC *)(context->obaque);

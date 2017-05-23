@@ -84,7 +84,6 @@ GVoid GJLivePull_StopPull(GJLivePullContext* context){
     GJLivePlay_Stop(context->player);
     if(context->audioDecoder){
         context->audioDecoder->decodeRelease(context->audioDecoder);
-        free(context->audioDecoder);
     }
     context->audioDecoder = GNULL;
     pthread_mutex_unlock(&context->lock);
