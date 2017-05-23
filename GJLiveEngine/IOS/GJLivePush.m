@@ -341,7 +341,6 @@ static void rtmpCallback(GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType
                 break;
         }
     });
-    
 }
 
 

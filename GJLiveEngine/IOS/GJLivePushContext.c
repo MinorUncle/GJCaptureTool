@@ -10,6 +10,15 @@
 #include "GJLog.h"
 #include "GJUtil.h"
 
+
+static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* frame){
+
+}
+static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame){
+
+}
+
+
 GVoid rtmpPushMessageCallback(GHandle userData, GJRTMPPushMessageType messageType,GHandle messageParm){
     GJLivePushContext* context = userData;
     switch (messageType) {
@@ -24,27 +33,27 @@ GVoid rtmpPushMessageCallback(GHandle userData, GJRTMPPushMessageType messageTyp
             break;
         case GJRTMPPushMessageType_closeComplete:{
             GJPushSessionInfo info = {0};
-            NSDate* stopDate = [NSDate date];
-            info.sessionDuring = [stopDate timeIntervalSinceDate:livePush.startPushDate]*1000;
-            [livePush.delegate livePush:livePush closeConnent:&info resion:kConnentCloce_Active];
+            context->disConnentClock = GJ_Gettime()/1000;
+            info.sessionDuring = context->disConnentClock - context->connentClock;
+            context->callback(context->userData,GJLivePush_closeComplete,&info);
         }
             break;
         case GJRTMPPushMessageType_urlPraseError:
         case GJRTMPPushMessageType_connectError:
             GJLOG(GJ_LOGINFO, "推流连接失败");
-            [livePush.delegate livePush:livePush errorType:kLivePushConnectError infoDesc:@"rtmp连接失败"];
-            [livePush stopStreamPush];
+            context->callback(context->userData,GJLivePush_connectError,"rtmp连接失败");
+            GJLivePush_StopPush(context);
             break;
         case GJRTMPPushMessageType_sendPacketError:
-            [livePush.delegate livePush:livePush errorType:kLivePushWritePacketError infoDesc:@"发送失败"];
-            [livePush stopStreamPush];
+            context->callback(context->userData,GJLivePush_sendPacketError,"发送失败");
+            GJLivePush_StopPush(context);
             break;
         default:
             break;
     }
 
 }
-GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callback,GHandle param){
+GBool GJLivePush_Create(GJLivePushContext** pushContext,const GJPushConfig* config,GJLivePushCallback callback,GHandle param){
     GBool result = GFalse;
     do{
         if (*pushContext == GNULL) {
@@ -54,13 +63,27 @@ GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callb
                 break;
             }
         }
+        
         GJLivePushContext* context = *pushContext;
+        context->pushConfig = *config;
         context->callback = callback;
         context->userData = param;
         GJ_H264EncodeContextCreate(&context->videoEncoder);
         GJ_AACEncodeContextCreate(&context->audioEncoder);
         GJ_VideoProduceContextCreate(&context->videoProducer);
         GJ_AudioProduceContextCreate(&context->audioProducer);
+        GJVideoFormat vFormat = {0};
+        vFormat.mFps = config->mFps;
+        vFormat.mHeight = (GUInt32)config->mPushSize.height;
+        vFormat.mWidth = (GUInt32)config->mPushSize.width;
+        vFormat.mType = GJPixelType_YpCbCr8BiPlanar_Full;
+        context->videoProducer->videoProduceSetup(context->videoProducer,vFormat,videoCaptureFrameOutCallback,context);
+        GJAudioFormat aFormat = {0};
+        aFormat.mBitsPerChannel = 16;
+        aFormat.mType = GJAudioType_PCM;
+        aFormat.mSampleRate = config->mAudioSampleRate;
+        aFormat.mChannelsPerFrame = config->mAudioChannel;
+        context->audioProducer->audioProduceSetup(context->audioProducer,aFormat,audioCaptureFrameOutCallback,context);
         pthread_mutex_init(&context->lock, GNULL);
     }while (0);
     return result;
@@ -75,12 +98,19 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,GChar* url){
         }else{
             context->fristAudioEncodeClock = context->fristVideoEncodeClock = context->connentClock = G_TIME_INVALID;
             context->audioTraffic = context->videoTraffic = (GJTrafficStatus){0};
-        
+            context->startPushClock = GJ_Gettime()/1000;
+            if (!context->videoProducer->startProduce(context->videoProducer)) {
+                result = GFalse;
+                break;
+            }
+            if (!context->audioProducer->audioProduceStart(context->audioProducer)) {
+                result = GFalse;
+                break;
+            }
             if(!GJRtmpPush_Create(&context->videoPush, rtmpPushMessageCallback, (GHandle)context)){
                 result = GFalse;
                 break;
             };
-            context->startPushClock = GJ_Gettime()/1000;
         }
         pthread_mutex_unlock(&context->lock);
     }while (0);

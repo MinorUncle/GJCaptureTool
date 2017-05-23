@@ -64,7 +64,6 @@ GVoid GJ_H264DecodeContextDealloc(GJH264DecodeContext** context){
     if ((*context)->obaque) {
         GJLOG(GJ_LOGWARNING, "decodeUnSetup 没有调用，自动调用");
         (*context)->decodeUnSetup(*context);
-        
     }
     free(*context);
     *context = GNULL;

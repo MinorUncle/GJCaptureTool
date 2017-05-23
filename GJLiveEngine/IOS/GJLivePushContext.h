@@ -34,17 +34,23 @@ typedef struct _GJLivePushContext{
 
     pthread_mutex_t         lock;
     GTime                   startPushClock;
+    GTime                   stopPushClock;
+
     GTime                   connentClock;
+    GTime                   disConnentClock;
+    
     GTime                   fristVideoEncodeClock;
     GTime                   fristAudioEncodeClock;
 //
     GJLivePushCallback      callback;
     GHandle                 userData;
     GJTrafficStatus         videoTraffic;
-    GJTrafficStatus         audioTraffic;    
+    GJTrafficStatus         audioTraffic;
+    
+    GJPushConfig           pushConfig;
 }GJLivePushContext;
 
-GBool GJLivePush_Create(GJLivePushContext** context,GJLivePushCallback callback,GHandle param);
+GBool GJLivePush_Create(GJLivePushContext** context,const GJPushConfig* config,GJLivePushCallback callback,GHandle param);
 GBool GJLivePush_StartPush(GJLivePushContext* context,GChar* url);
 GVoid GJLivePush_StopPush(GJLivePushContext* context);
 GBool GJLivePush_StartPreview(GJLivePushContext* context,GChar* url);

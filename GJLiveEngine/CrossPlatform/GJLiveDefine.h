@@ -20,17 +20,17 @@ typedef struct GSize {
     GFloat32 height;
 }GSize;
 
-typedef struct GJPushConfig {
-    //    video 。videoFps;等于采集的fps,pushSize与capturesize不同时会保留最大裁剪缩放
-    GSize      pushSize;
-    GFloat32     videoBitRate;
-    
-    //  audio
-    GInt32   channel;
-    GInt32   audioSampleRate;
-    
-    GChar*    pushUrl;
-}GJPushConfig;
+//typedef struct GJPushConfig {
+//    //    video 。videoFps;等于采集的fps,pushSize与capturesize不同时会保留最大裁剪缩放
+//    GSize      pushSize;
+//    GFloat32     videoBitRate;
+//    
+//    //  audio
+//    GInt32   channel;
+//    GInt32   audioSampleRate;
+//    
+//    GChar*    pushUrl;
+//}GJPushConfig;
 typedef enum _GJCaptureSizeType
 {
     kCaptureSize352_288,
@@ -178,4 +178,14 @@ typedef struct _GJVideoFormat{
     GUInt32             mHeight;
     GUInt32             mWidth;
 }GJVideoFormat;
+
+typedef struct _GJPushConfig{
+    GUInt32             mFps;
+    GSize               mPushSize;
+    GInt32              mVideoBitrate;//  bit/s
+    
+    GInt32              mAudioSampleRate;
+    GInt32              mAudioChannel;
+    GInt32              mAudioBitrate;
+}GJPushConfig;
 #endif /* GJLiveDefine_h */
