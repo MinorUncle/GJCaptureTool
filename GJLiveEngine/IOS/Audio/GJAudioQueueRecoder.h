@@ -12,6 +12,7 @@
 #import "GJRetainBuffer.h"
 #import "GJLiveDefine+internal.h"
 @class GJAudioQueueRecoder;
+typedef void(^AudioRecodeCallBack)(R_GJPCMFrame* frame);
 
 typedef enum _RecoderStatus{
     kRecoderInvalidStatus = 0,
@@ -19,19 +20,19 @@ typedef enum _RecoderStatus{
     kRecoderRunningStatus,
     kRecoderPauseStatus,
 }RecoderStatus;
-@protocol GJAudioQueueRecoderDelegate <NSObject>
-@optional
 
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder aacPacket:(R_GJAACPacket*)packet;
--(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder pcmPacket:(R_GJPCMFrame*)packet;
+//@protocol GJAudioQueueRecoderDelegate <NSObject>
+//@optional
+//
+//-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder aacPacket:(R_GJAACPacket*)packet;
+//-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder pcmPacket:(R_GJPCMFrame*)packet;
+//@end
 
-
-@end
 @interface GJAudioQueueRecoder : NSObject
 @property(nonatomic,assign)int maxOutSize;
 @property(nonatomic,assign,readonly)AudioStreamBasicDescription format;
-@property(nonatomic,weak)id<GJAudioQueueRecoderDelegate> delegate;
 @property(nonatomic,assign,readonly)RecoderStatus status;
+@property(nonatomic,copy)AudioRecodeCallBack callback;
 
 /**
  回调延迟，越小消耗越大，默认0.2,单位s

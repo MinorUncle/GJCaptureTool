@@ -28,11 +28,12 @@ inline static GBool audioPlaySetup (struct _GJAudioPlayContext* context,GJAudioF
     context->obaque = (__bridge_retained GHandle)player;
     return context->obaque != nil;
 }
-inline static GVoid audioPlayDealloc (struct _GJAudioPlayContext* context){
-    GJAudioQueueDrivePlayer* player = (__bridge_transfer GJAudioQueueDrivePlayer *)(context->obaque);
-    player = nil;
-    free(context);
-    
+inline static GVoid audioPlayUnSetup (struct _GJAudioPlayContext* context){
+    if (context->obaque) {
+        GJAudioQueueDrivePlayer* player = (__bridge_transfer GJAudioQueueDrivePlayer *)(context->obaque);
+        player = nil;
+        context->obaque = GNULL;
+    }
 }
 inline static GVoid audioStop(struct _GJAudioPlayContext* context){
     GJAudioQueueDrivePlayer* player = (__bridge GJAudioQueueDrivePlayer *)(context->obaque);
@@ -65,7 +66,7 @@ GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext** audioPlayContext){
     }
     GJAudioPlayContext* context = *audioPlayContext;
     context->audioPlaySetup = audioPlaySetup;
-    context->audioPlayDealloc = audioPlayDealloc;
+    context->audioPlayUnSetup = audioPlayUnSetup;
     context->audioStart = audioStart;
     context->audioStop = audioStop;
     context->audioPause = audioPause;
@@ -73,4 +74,13 @@ GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext** audioPlayContext){
     context->audioSetSpeed = audioSetSpeed;
     context->audioGetSpeed = audioGetSpeed;
     context->audioPlayCallback = GNULL;
+}
+GVoid GJ_AudioPlayContextDealloc(GJAudioPlayContext** context){
+    if ((*context)->obaque) {
+        GJLOG(GJ_LOGWARNING, "audioPlayUnSetup 没有调用，自动调用");
+        (*context)->audioPlayUnSetup(*context);
+        
+    }
+    free(*context);
+    *context = GNULL;
 }

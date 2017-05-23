@@ -270,7 +270,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         packet->aacSize = outCacheBufferList.mBuffers[0].mDataByteSize;
         packet->pts = _currentPts;
         _currentPts = -1;
-        [self.delegate AACEncoderFromPCM:self completeBuffer:packet];
+        self.completeCallback(packet);
         retainBufferUnRetain(audioBuffer);
     }
 }

@@ -87,7 +87,7 @@ typedef struct _GJLivePlayContext{
 }GJLivePlayer;
 
 GBool  GJLivePlay_Create(GJLivePlayer** player,GJLivePlayCallback callback,GHandle userData);
-GVoid  GJLivePlay_Dealloc(GJLivePlayer* player);
+GVoid  GJLivePlay_Dealloc(GJLivePlayer** player);
 GBool  GJLivePlay_Start(GJLivePlayer* player);
 GVoid  GJLivePlay_Stop(GJLivePlayer* player);
 GBool  GJLivePlay_AddVideoData(GJLivePlayer* player,R_GJPixelFrame* videoFrame);

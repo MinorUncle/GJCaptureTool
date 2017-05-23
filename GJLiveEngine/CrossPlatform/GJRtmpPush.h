@@ -27,7 +27,7 @@ typedef enum _GJRTMPPushMessageType{
 
 
 struct _GJRtmpPush;
-typedef void(*PullMessageCallback)(struct _GJRtmpPush* rtmpPush, GJRTMPPushMessageType messageType,void* rtmpPullParm,void* messageParm);
+typedef GVoid(*PushMessageCallback)(GHandle userData, GJRTMPPushMessageType messageType,GHandle messageParm);
 
 #define MAX_URL_LENGTH 100
 typedef struct _GJRtmpPush{
@@ -38,7 +38,7 @@ typedef struct _GJRtmpPush{
     pthread_t                sendThread;
     pthread_mutex_t          mutex;
 
-    PullMessageCallback      messageCallback;
+    PushMessageCallback      messageCallback;
     void*                   rtmpPushParm;
     int                     stopRequest;
     int                     releaseRequest;
@@ -47,7 +47,8 @@ typedef struct _GJRtmpPush{
     GJTrafficStatus         videoStatus;
 }GJRtmpPush;
 
-void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmpPushParm);
+GBool GJRtmpPush_Create(GJRtmpPush** push,PushMessageCallback callback,void* rtmpPushParm);
+GVoid GJRtmpPush_CloseAndDealloc(GJRtmpPush** push);
 
 /**
  发送h264
@@ -57,8 +58,7 @@ void GJRtmpPush_Create(GJRtmpPush** push,PullMessageCallback callback,void* rtmp
  */
 GBool GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data);
 GBool GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data);
-void GJRtmpPush_CloseAndRelease(GJRtmpPush* push);
-void GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);
+GBool GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);
 GFloat32 GJRtmpPush_GetBufferRate(GJRtmpPush* push);
 GJTrafficStatus GJRtmpPush_GetVideoBufferCacheInfo(GJRtmpPush* push);
 GJTrafficStatus GJRtmpPush_GetAudioBufferCacheInfo(GJRtmpPush* push);

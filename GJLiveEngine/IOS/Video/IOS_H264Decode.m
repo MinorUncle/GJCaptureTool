@@ -6,17 +6,18 @@
 //  Copyright © 2017年 MinorUncle. All rights reserved.
 //
 
-#import "IOS_H264Decoder.h"
+#import "IOS_H264Decode.h"
 #import "GJH264Decoder.h"
 #import "GJBufferPool.h"
 #import "GJLog.h"
-static GBool cvImagereleaseCallBack(GJRetainBuffer * retain){
+#import <stdlib.h>
+inline static GBool cvImagereleaseCallBack(GJRetainBuffer * retain){
     CVImageBufferRef image = (CVImageBufferRef)retain->data;
     CVPixelBufferRelease(image);
     GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)retain);
     return GTrue;
 }
-static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelType format,H264DecodeCompleteCallback callback,GHandle userData)
+inline static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelType format,VideoFrameOutCallback callback,GHandle userData)
 {
     GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
   
@@ -35,12 +36,14 @@ static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelType forma
     context->obaque = (__bridge_retained GHandle)decode;
     return GTrue;
 }
-static GVoid decodeRelease (struct _GJH264DecodeContext* context){
-    GJH264Decoder* decode = (__bridge_transfer GJH264Decoder *)(context->obaque);
-    decode = nil;
-    context->obaque = GNULL;
+inline static GVoid decodeUnSetup (struct _GJH264DecodeContext* context){
+    if (context->obaque) {
+        GJH264Decoder* decode = (__bridge_transfer GJH264Decoder *)(context->obaque);
+        decode = nil;
+        context->obaque = GNULL;
+    }
 }
-static GBool decodePacket (struct _GJH264DecodeContext* context,R_GJH264Packet* packet){
+inline static GBool decodePacket (struct _GJH264DecodeContext* context,R_GJH264Packet* packet){
     GJH264Decoder* decode = (__bridge GJH264Decoder *)(context->obaque);
     [decode decodePacket:packet];
     
@@ -53,7 +56,16 @@ GVoid GJ_H264DecodeContextCreate(GJH264DecodeContext** decodeContext){
     }
     GJH264DecodeContext* context = *decodeContext;
     context->decodeSetup = decodeSetup;
-    context->decodeRelease = decodeRelease;
+    context->decodeUnSetup = decodeUnSetup;
     context->decodePacket = decodePacket;
     context->decodeeCompleteCallback = NULL;
+}
+GVoid GJ_H264DecodeContextDealloc(GJH264DecodeContext** context){
+    if ((*context)->obaque) {
+        GJLOG(GJ_LOGWARNING, "decodeUnSetup 没有调用，自动调用");
+        (*context)->decodeUnSetup(*context);
+        
+    }
+    free(*context);
+    *context = GNULL;
 }

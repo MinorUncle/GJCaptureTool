@@ -40,6 +40,7 @@
 static GBool IOS_PictureDisplaySetup(GJPictureDisplayContext* context){
     if (context->obaque != GNULL) {
         GJLOG(GJ_LOGFORBID, "重复setup video play");
+        
     }
     context->obaque = (__bridge_retained GHandle)([[IOS_PictureDisplay alloc]init]);
     return context->obaque != nil;
@@ -49,10 +50,12 @@ static GBool displaySetFormat (GJPictureDisplayContext* context,GJPixelType form
     return [display displaySetFormat:format];
 }
 
-static GVoid IOS_PictureDisplayDealloc(GJPictureDisplayContext* context){
-    IOS_PictureDisplay* display = (__bridge_transfer IOS_PictureDisplay *)(context->obaque);
-    display = nil;
-    free(context);
+static GVoid displayUnSetup(GJPictureDisplayContext* context){
+    if (context->obaque) {
+        IOS_PictureDisplay* display = (__bridge_transfer IOS_PictureDisplay *)(context->obaque);
+        display = nil;
+        context->obaque = GNULL;
+    }
 }
 static GVoid IOS_PictureDisplayImage(GJPictureDisplayContext* context,GJRetainBuffer* image){
     IOS_PictureDisplay* display = (__bridge IOS_PictureDisplay *)(context->obaque);
@@ -62,7 +65,7 @@ static GHandle IOS_PictureDisplayGetView(GJPictureDisplayContext* context){
     IOS_PictureDisplay* display = (__bridge IOS_PictureDisplay *)(context->obaque);
     return (__bridge GHandle)(display.displayView);
 }
-void GJ_PictureDisplayContextCreate(GJPictureDisplayContext** disPlayContext){
+GVoid GJ_PictureDisplayContextCreate(GJPictureDisplayContext** disPlayContext){
     if (*disPlayContext == NULL) {
         *disPlayContext = (GJPictureDisplayContext*)malloc(sizeof(GJPictureDisplayContext));
     }
@@ -70,6 +73,15 @@ void GJ_PictureDisplayContextCreate(GJPictureDisplayContext** disPlayContext){
     context->displaySetup = IOS_PictureDisplaySetup;
     context->displaySetFormat = displaySetFormat;
     context->displayView = IOS_PictureDisplayImage;
-    context->displayDealloc = IOS_PictureDisplayDealloc;
+    context->displayUnSetup = displayUnSetup;
     context->getDispayView = IOS_PictureDisplayGetView;
+}
+GVoid GJ_PictureDisplayContextDealloc(GJPictureDisplayContext** context){
+    if ((*context)->obaque) {
+        GJLOG(GJ_LOGWARNING, "displayUnSetup 没有调用，自动调用");
+        (*context)->displayUnSetup(*context);
+        
+    }
+    free(*context);
+    *context = GNULL;
 }

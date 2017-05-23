@@ -134,7 +134,8 @@ static void pcmHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
         memcpy(retainBuffer->retain.data, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
         retainBuffer->retain.size = inBuffer->mAudioDataByteSize;
         retainBuffer->pts = inStartTime->mHostTime;
-        [tempSelf.delegate GJAudioQueueRecoder:tempSelf pcmPacket:retainBuffer];
+        tempSelf.callback(retainBuffer);
+        
         retainBufferUnRetain(&retainBuffer->retain);
         AudioQueueEnqueueBuffer (tempSelf.mAudioQueue,inBuffer,0,NULL);
     }else{

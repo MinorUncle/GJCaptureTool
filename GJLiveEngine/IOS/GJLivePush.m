@@ -26,7 +26,7 @@
 #ifdef GJVIDEODECODE_TEST
 #import "GJH264Decoder.h"
 #endif
-@interface GJLivePush()<GJH264EncoderDelegate,GJAudioQueueRecoderDelegate,AACEncoderFromPCMDelegate>
+@interface GJLivePush()<GJH264EncoderDelegate,GJAudioQueueRecoderDelegate>
 {
     GPUImageVideoCamera* _videoCamera;
     NSString* _sessionPreset;
@@ -194,10 +194,10 @@
     }
     
     if (_videoEncoder == nil) {
-        H264Format format = [GJH264Encoder defaultFormat];
-        format.baseFormat.bitRate = _pushConfig.videoBitRate;
-        _videoEncoder = [[GJH264Encoder alloc]initWithFormat:format];
-        _videoEncoder.allowMinBitRate = format.baseFormat.bitRate * 0.6;
+//        H264Format format = [GJH264Encoder defaultFormat];
+//        format.baseFormat.bitRate = _pushConfig.videoBitRate;
+//        _videoEncoder = [[GJH264Encoder alloc]initWithSourceSize:CGSizeMake(_pushConfig.pushSize.width, _pushConfig.pushSize.height)];
+//        _videoEncoder.allowMinBitRate = format.baseFormat.bitRate * 0.6;
         _videoEncoder.deleagte = self;
     }
     _pushUrl = [NSString stringWithUTF8String:_pushConfig.pushUrl];
@@ -231,7 +231,7 @@
         desc.mFramesPerPacket = 1024;
         desc.mSampleRate = source.mSampleRate;
         _audioEncoder = [[AACEncoderFromPCM alloc]initWithSourceForamt:&source DestDescription:&desc];
-        _audioEncoder.delegate = self;
+//        _audioEncoder.delegate = self;
         [_audioEncoder start];
 #ifdef GJPCMDecodeFromAAC_TEST
         _audioDecode = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&source SourceDescription:&desc];

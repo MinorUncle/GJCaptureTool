@@ -25,59 +25,22 @@ typedef enum EntropyMode{
 
 #define VIDEO_TIMESCALE 1000
 
-#if __COREFOUNDATION_CFBASE__
-CFStringRef  getCFStrByLevel(ProfileLevel level){
-    CFStringRef ref;
-    switch (level) {
-        case profileLevelBase:
-            ref = kVTProfileLevel_H264_Baseline_AutoLevel;
-            break;
-        case profileLevelMain:
-            ref = kVTProfileLevel_H264_Main_AutoLevel;
-            break;
-        case profileLevelHigh:
-            ref = kVTProfileLevel_H264_High_AutoLevel;
-            break;
-        default:
-            break;
-    }
-    return ref;
-}
-CFStringRef getCFStrByEntropyMode(EntropyMode model){
-    CFStringRef ref;
-    switch (model) {
-        case EntropyMode_CABAC:
-            ref = kVTH264EntropyMode_CABAC;
-            break;
-        case EntropyMode_CAVLC:
-            ref = kVTH264EntropyMode_CAVLC;
-            break;
-        default:
-            break;
-    }
-    return ref;
-}
 
-
-
-#endif
-
-typedef struct GJVideoFormat{
-    
-    uint32_t width,height;
-    uint8_t fps;
-    uint32_t bitRate;
-}GJVideoFormat;
-
-typedef struct H264Format{
-    GJVideoFormat baseFormat;
-    uint32_t gopSize;
-    EntropyMode model;
-    ProfileLevel level;
-    BOOL allowBframe;
-    BOOL allowPframe;
-    
-}H264Format;
+//typedef struct GJVideoFormat{
+//    
+//    uint32_t width,height;
+//    uint8_t fps;
+//    uint32_t bitRate;
+//}GJVideoFormat;
+//
+//typedef struct H264Format{
+//    GJVideoFormat baseFormat;
+//    uint32_t gopSize;
+//    EntropyMode model;
+//    ProfileLevel level;
+//    int allowBframe;
+//    int allowPframe;
+//}H264Format;
 
 
 

@@ -31,14 +31,29 @@ typedef struct GJPushConfig {
     
     GChar*    pushUrl;
 }GJPushConfig;
-typedef enum _CaptureSizeType
+typedef enum _GJCaptureSizeType
 {
     kCaptureSize352_288,
     kCaptureSize640_480,
     kCaptureSize1280_720,
     kCaptureSize1920_1080,
     kCaptureSize3840_2160
-}CaptureSizeType;
+}GJCaptureSizeType;
+typedef enum _GJCaptureDevicePosition
+{
+    GJCameraPositionUnspecified         = 0,
+    GJCameraPositionBack                = 1,
+    GJCameraPositionFront               = 2
+} GJCameraPosition;
+
+typedef enum _GJInterfaceOrientation
+{
+    GJInterfaceOrientationUnknown            ,
+    GJInterfaceOrientationPortrait           ,
+    GJInterfaceOrientationPortraitUpsideDown ,
+    GJInterfaceOrientationLandscapeLeft      ,
+    GJInterfaceOrientationLandscapeRight     ,
+} GJInterfaceOrientation;
 
 //视频流的翻转角度
 typedef enum LiveStreamFlipDirection {
@@ -157,4 +172,10 @@ typedef struct _GJPixelFormat{
     GUInt32             mHeight;
     GUInt32             mWidth;
 }GJPixelFormat;
+typedef struct _GJVideoFormat{
+    GJPixelType         mType;
+    GUInt32             mFps;
+    GUInt32             mHeight;
+    GUInt32             mWidth;
+}GJVideoFormat;
 #endif /* GJLiveDefine_h */

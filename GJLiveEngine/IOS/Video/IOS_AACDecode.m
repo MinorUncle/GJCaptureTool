@@ -11,7 +11,7 @@
 #import "GJPCMDecodeFromAAC.h"
 #import "GJLog.h"
 #import "GJLiveDefine+internal.h"
-static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AACDecodeCompleteCallback callback,GHandle userData){
+inline static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AudioFrameOutCallback callback,GHandle userData){
     GJAssert(context->obaque == GNULL, "上一个音频解码器没有释放");
     if (sourceFormat.mType != GJAudioType_AAC) {
         GJLOG(GJ_LOGERROR, "解码音频源格式不支持");
@@ -41,6 +41,7 @@ static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioFormat sour
     d.mFramesPerPacket = 1;
     d.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
     GJPCMDecodeFromAAC* decode = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:d SourceDescription:s];
+    context->decodeeCompleteCallback = callback;
     decode.decodeCallback = ^(R_GJPCMFrame *frame){
         callback(userData,frame);
     };
@@ -48,13 +49,15 @@ static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioFormat sour
     [decode start];
     return GTrue;
 }
-static GVoid decodeRelease (struct _GJAACDecodeContext* context){
-    GJPCMDecodeFromAAC* decode = (__bridge_transfer GJPCMDecodeFromAAC *)(context->obaque);
-    [decode stop];
-    decode = nil;
-    context = GNULL;
+inline static GVoid decodeUnSetup (struct _GJAACDecodeContext* context){
+    if(context->obaque){
+        GJPCMDecodeFromAAC* decode = (__bridge_transfer GJPCMDecodeFromAAC *)(context->obaque);
+        [decode stop];
+        decode = nil;
+        context->obaque = GNULL;
+    }
 }
-static GBool decodePacket (struct _GJAACDecodeContext* context,R_GJAACPacket* packet){
+inline static GBool decodePacket (struct _GJAACDecodeContext* context,R_GJAACPacket* packet){
     GJPCMDecodeFromAAC* decode = (__bridge GJPCMDecodeFromAAC *)(context->obaque);
     [decode decodePacket:packet];
     return GTrue;
@@ -66,7 +69,17 @@ GVoid GJ_AACDecodeContextCreate(GJAACDecodeContext** decodeContext){
     }
     GJAACDecodeContext* context = *decodeContext;
     context->decodeSetup = decodeSetup;
-    context->decodeRelease = decodeRelease;
+    context->decodeUnSetup = decodeUnSetup;
     context->decodePacket = decodePacket;
     context->decodeeCompleteCallback = NULL;
 }
+GVoid GJ_AACDecodeContextDealloc(GJAACDecodeContext** context){
+    if ((*context)->obaque) {
+        GJLOG(GJ_LOGWARNING, "decodeUnSetup 没有调用，自动调用");
+        (*context)->decodeUnSetup(*context);
+        
+    }
+    free(*context);
+    *context = GNULL;
+}
+

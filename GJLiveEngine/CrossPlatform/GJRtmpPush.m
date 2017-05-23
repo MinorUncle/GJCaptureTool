@@ -56,7 +56,7 @@ static GHandle sendRunloop(GHandle parm){
         goto ERROR;
     }else{
         if(push->messageCallback){
-            push->messageCallback(push, GJRTMPPushMessageType_connectSuccess,push->rtmpPushParm,GNULL);
+            push->messageCallback(push->rtmpPushParm, GJRTMPPushMessageType_connectSuccess,GNULL);
         }
     }
     GJLOG(GJ_LOGINFO, "RTMP_ConnectStream success");
@@ -96,7 +96,7 @@ static GHandle sendRunloop(GHandle parm){
 ERROR:
     
     if (push->messageCallback) {
-        push->messageCallback(push, errType,push->rtmpPushParm,errParm);
+        push->messageCallback(push->rtmpPushParm, errType,errParm);
     }
     RTMP_Close(push->rtmp);
     GBool shouldDelloc = GFalse;
@@ -114,7 +114,7 @@ ERROR:
     return GNULL;
 }
 
-GVoid GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,GHandle rtmpPushParm){
+GBool GJRtmpPush_Create(GJRtmpPush** sender,PushMessageCallback callback,GHandle rtmpPushParm){
     GJRtmpPush* push = GNULL;
     if (*sender == GNULL) {
         push = (GJRtmpPush*)malloc(sizeof(GJRtmpPush));
@@ -132,6 +132,7 @@ GVoid GJRtmpPush_Create(GJRtmpPush** sender,PullMessageCallback callback,GHandle
     push->releaseRequest = GFalse;
     pthread_mutex_init(&push->mutex, GNULL);
     *sender = push;
+    return GTrue;
 }
 
 
@@ -324,7 +325,7 @@ GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
     }
 }
 
-GVoid  GJRtmpPush_StartConnect(GJRtmpPush* sender,const GChar* sendUrl){
+GBool  GJRtmpPush_StartConnect(GJRtmpPush* sender,const GChar* sendUrl){
 //    GChar* p = "GJRtmpPush_StartConnect__test";
 //    GJ_Log(GJ_LOGINFO,p,p);
     GJLOG(GJ_LOGINFO,"GJRtmpPush_StartConnect:%p",sender);
@@ -342,6 +343,7 @@ GVoid  GJRtmpPush_StartConnect(GJRtmpPush* sender,const GChar* sendUrl){
     }
     sender->stopRequest = GFalse;
     pthread_create(&sender->sendThread, GNULL, sendRunloop, sender);
+    return GTrue;
 }
 GVoid GJRtmpPush_Delloc(GJRtmpPush* push){
 
@@ -364,10 +366,11 @@ GVoid GJRtmpPush_Delloc(GJRtmpPush* push){
     GJLOG(GJ_LOGDEBUG, "GJRtmpPush_Delloc:%p",push);
 
 }
-GVoid GJRtmpPush_CloseAndRelease(GJRtmpPush* push){
+GVoid GJRtmpPush_CloseAndDealloc(GJRtmpPush** push){
     
-    GJRtmpPush_Close(push);
-    GJRtmpPush_Release(push);
+    GJRtmpPush_Close(*push);
+    GJRtmpPush_Release(*push);
+    *push = GNULL;
 }
 GVoid GJRtmpPush_Release(GJRtmpPush* push){
     GJLOG(GJ_LOGINFO,"GJRtmpPush_Release::%p",push);

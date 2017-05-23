@@ -8,4 +8,5 @@
 
 #import "GJBridegContext.h"
 
-void GJ_PictureDisplayContextCreate(GJPictureDisplayContext** context);
+GVoid GJ_PictureDisplayContextCreate(GJPictureDisplayContext** context);
+GVoid GJ_PictureDisplayContextDealloc(GJPictureDisplayContext** context);

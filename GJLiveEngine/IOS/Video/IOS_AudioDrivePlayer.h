@@ -7,4 +7,5 @@
 //
 #include "GJBridegContext.h"
 GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext** context);
+GVoid GJ_AudioPlayContextDealloc(GJAudioPlayContext** context);
 

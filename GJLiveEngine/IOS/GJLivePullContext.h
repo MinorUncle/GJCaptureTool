@@ -14,9 +14,8 @@
 #include "GJRtmpPull.h"
 #include "GJLivePlayer.h"
 
+#include "GJBridegContext.h"
 
-#include "IOS_AACDecode.h"
-#include "IOS_H264Decoder.h"
 typedef enum _GJLivePullMessageType{
     GJLivePull_messageInvalid,
     GJLivePull_connectSuccess,
@@ -42,15 +41,15 @@ typedef struct _GJLivePullContext{
     GJLivePlayer*      player;
     GTime                   startPullClock;
     GTime                   connentClock;
-    GTime                   fristVideoClock;
+    GTime                   fristVideoPullClock;
+    GTime                   fristAudioPullClock;
     GTime                   fristVideoDecodeClock;
-    GTime                   fristAudioClock;
-    
+
     GJLivePullCallback      callback;
     GHandle                 userData;
     GJTrafficStatus         videoTraffic;
     GJTrafficStatus         audioTraffic;
-    GLong                  videoUnDecodeByte;
+    GLong                  videoUnDecodeByte;//没有解码前的数据大小，
     GLong                  audioUnDecodeByte;
 
 }GJLivePullContext;
@@ -58,7 +57,7 @@ typedef struct _GJLivePullContext{
 GBool GJLivePull_Create(GJLivePullContext** context,GJLivePullCallback callback,GHandle param);
 GBool GJLivePull_StartPull(GJLivePullContext* context,GChar* url);
 GVoid GJLivePull_StopPull(GJLivePullContext* context);
-GVoid GJLivePull_Dealloc(GJLivePullContext* context);
+GVoid GJLivePull_Dealloc(GJLivePullContext** context);
 GJTrafficStatus GJLivePull_GetVideoTrafficStatus(GJLivePullContext* context);
 GJTrafficStatus GJLivePull_GetAudioTrafficStatus(GJLivePullContext* context);
 GHandle GJLivePull_GetDisplayView(GJLivePullContext* context);

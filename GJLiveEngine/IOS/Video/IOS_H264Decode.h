@@ -9,3 +9,4 @@
 
 #import "GJBridegContext.h"
 GVoid GJ_H264DecodeContextCreate(GJH264DecodeContext** context);
+GVoid GJ_H264DecodeContextDealloc(GJH264DecodeContext** context);

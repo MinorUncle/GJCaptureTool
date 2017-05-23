@@ -20,6 +20,45 @@ typedef enum _GJEncodeQuality{
     GJEncodeQualityTerrible,
 }GJEncodeQuality;
 
+
+#if __COREFOUNDATION_CFBASE__
+CFStringRef  getCFStrByLevel(ProfileLevel level){
+    CFStringRef ref;
+    switch (level) {
+        case profileLevelBase:
+            ref = kVTProfileLevel_H264_Baseline_AutoLevel;
+            break;
+        case profileLevelMain:
+            ref = kVTProfileLevel_H264_Main_AutoLevel;
+            break;
+        case profileLevelHigh:
+            ref = kVTProfileLevel_H264_High_AutoLevel;
+            break;
+        default:
+            break;
+    }
+    return ref;
+}
+CFStringRef getCFStrByEntropyMode(EntropyMode model){
+    CFStringRef ref;
+    switch (model) {
+        case EntropyMode_CABAC:
+            ref = kVTH264EntropyMode_CABAC;
+            break;
+        case EntropyMode_CAVLC:
+            ref = kVTH264EntropyMode_CAVLC;
+            break;
+        default:
+            break;
+    }
+    return ref;
+}
+
+
+
+#endif
+typedef void(^H264EncodeComplete)(R_GJH264Packet* packet);
+
 @class GJH264Encoder;
 @protocol GJH264EncoderDelegate <NSObject>
 @required
@@ -44,7 +83,16 @@ typedef enum _GJEncodeQuality{
 @end
 @interface GJH264Encoder : NSObject
 @property(nonatomic,weak)id<GJH264EncoderDelegate> deleagte;
-@property(assign,nonatomic)H264Format destFormat;
+
+@property(assign,nonatomic)EntropyMode entropyMode;
+@property(assign,nonatomic)ProfileLevel profileLevel;
+@property(assign,nonatomic)int gop;
+@property(assign,nonatomic)BOOL allowBFrame;
+@property(assign,nonatomic)int bitrate;
+@property(assign,nonatomic,readonly)CGSize sourceSize;
+
+
+@property(nonatomic,copy)H264EncodeComplete completeCallback;
 
 /**
  已经编码的数量,不包括丢帧的数量
@@ -77,11 +125,10 @@ typedef enum _GJEncodeQuality{
 /**
  自定义输出格式，如果直接走init()则配置默认格式.输出图像像素大小等于输入图像大小。
 
- @param format 格式
+ @param size 格式
  @return return value description
  */
--(instancetype)initWithFormat:(H264Format)format;
-
+-(instancetype)initWithSourceSize:(CGSize)size;
 /**
  编码
 
@@ -96,7 +143,7 @@ typedef enum _GJEncodeQuality{
  刷新编码器，之前的编码不会回调。
  */
 -(void)flush;
-+(H264Format)defaultFormat;
+//+(H264Format)defaultFormat;
 @end
 
 void praseVideoParamet(uint8_t* inparameterSet,uint8_t** inoutSetArry,int* inoutArryCount){

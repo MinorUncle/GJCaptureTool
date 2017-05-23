@@ -745,13 +745,15 @@ GHandle  GJLivePlay_GetVideoDisplayView(GJLivePlayer* player){
     return player->videoPlayer->getDispayView(player->videoPlayer);
 }
 
-GVoid  GJLivePlay_Dealloc(GJLivePlayer* player){
+GVoid  GJLivePlay_Dealloc(GJLivePlayer** livePlayer){
     GJLOG(GJ_LOGDEBUG, "GJPlivePlayer dealloc");
-    player->videoPlayer->displayDealloc(player->videoPlayer);
-    player->audioPlayer->audioPlayDealloc(player->audioPlayer);
+    GJLivePlayer* player = *livePlayer;
+    GJ_PictureDisplayContextDealloc(&player->videoPlayer);
+    GJ_AudioPlayContextDealloc(&player->audioPlayer);
     queueFree(&player->playControl.audioQueue);
     queueFree(&player->playControl.imageQueue);
     free(player);
+    *livePlayer = GNULL;
 }
 
 //

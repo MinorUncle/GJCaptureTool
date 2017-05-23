@@ -10,19 +10,21 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <CoreMedia/CoreMedia.h>
 #import "GJLiveDefine+internal.h"
-
+typedef void(^AACEncodeComplete)(R_GJAACPacket* packet);
 #define MAX_PCM_LENTH 2048+10
-@class AACEncoderFromPCM;
-@protocol AACEncoderFromPCMDelegate<NSObject>
--(void)AACEncoderFromPCM:(AACEncoderFromPCM*)encoder completeBuffer:(R_GJAACPacket*)buffer;
-@end
+//@class AACEncoderFromPCM;
+//@protocol AACEncoderFromPCMDelegate<NSObject>
+//-(void)AACEncoderFromPCM:(AACEncoderFromPCM*)encoder completeBuffer:(R_GJAACPacket*)buffer;
+//@end
 @interface AACEncoderFromPCM : NSObject
 @property(nonatomic,assign,readonly)AudioStreamBasicDescription destFormat;
 @property(nonatomic,assign,readonly)AudioStreamBasicDescription sourceFormat;
 
 @property(nonatomic,assign,readonly)int destMaxOutSize;
 
-@property(nonatomic,weak)id<AACEncoderFromPCMDelegate>delegate;
+@property(nonatomic,copy)AACEncodeComplete completeCallback;
+
+//@property(nonatomic,weak)id<AACEncoderFromPCMDelegate>delegate;
 
 
 -(BOOL)start;

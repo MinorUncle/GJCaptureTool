@@ -8,3 +8,4 @@
 
 #import "GJBridegContext.h"
 GVoid GJ_AACDecodeContextCreate(GJAACDecodeContext** context);
+GVoid GJ_AACDecodeContextDealloc(GJAACDecodeContext** context);
