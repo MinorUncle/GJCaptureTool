@@ -143,7 +143,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
 
 -(void)dealloc{
     if (_pullContext) {
-        GJLivePull_Dealloc(_pullContext);
+        GJLivePull_Dealloc(&(_pullContext));
     }
 }
 @end

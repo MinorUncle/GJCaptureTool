@@ -43,6 +43,7 @@ typedef struct _GJVideoProduceContext{
     GBool (*setCameraPosition)      (struct _GJVideoProduceContext* context,GJCameraPosition cameraPosition);
     GBool(*setOrientation)          (struct _GJVideoProduceContext* context,GJInterfaceOrientation outOrientation);
     GBool (*setHorizontallyMirror)  (struct _GJVideoProduceContext* context,GBool mirror);
+    GBool (*setFrameRate)           (struct _GJVideoProduceContext* context,GInt32 fps);
 
 }GJVideoProduceContext;
 typedef struct _GJAudioProduceContext{
@@ -90,7 +91,7 @@ typedef struct _GJEncodeToH264eContext{
     GHandle obaque;
     GBool (*encodeSetup)            (struct _GJEncodeToH264eContext* context,GJPixelFormat format,H264PacketOutCallback callback,GHandle userData);
     GVoid (*encodeUnSetup)          (struct _GJEncodeToH264eContext* context);
-    GBool (*encodePacket)           (struct _GJEncodeToH264eContext* context,R_GJPixelFrame* frame);
+    GBool (*encodeFrame)           (struct _GJEncodeToH264eContext* context,R_GJPixelFrame* frame,GBool forceKey);
     GBool (*encodeSetBitrate)       (struct _GJEncodeToH264eContext* context,GInt32 bitrate);
     GBool (*encodeSetProfile)       (struct _GJEncodeToH264eContext* context,ProfileLevel profile);
     GBool (*encodeSetEntropy)       (struct _GJEncodeToH264eContext* context,EntropyMode model);

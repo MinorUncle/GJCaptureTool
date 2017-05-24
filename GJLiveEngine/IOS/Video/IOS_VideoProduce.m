@@ -106,6 +106,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property(nonatomic,assign)CGSize destSize;
 @property(nonatomic,assign)BOOL horizontallyMirror;
 @property(nonatomic,assign)CGSize captureSize;
+@property(nonatomic,assign)int frameRate;
 
 @property(nonatomic,copy)VideoRecodeCallback callback;
 
@@ -125,6 +126,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 -(GPUImageVideoCamera *)camera{
     if (_camera == nil) {
         _camera = [[GPUImageVideoCamera alloc]initWithSessionPreset:AVCaptureSessionPreset640x480 cameraPosition:_cameraPosition];
+        _camera.outputImageOrientation = UIInterfaceOrientationPortrait;
         _cropFilter = [[GPUImageCropFilter alloc]init];
         [_camera addTarget:_cropFilter];
     }
@@ -224,7 +226,10 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
     _horizontallyMirror = horizontallyMirror;
     self.camera.horizontallyMirrorRearFacingCamera = self.camera.horizontallyMirrorFrontFacingCamera = _horizontallyMirror;
 }
-
+-(void)setFrameRate:(int)frameRate{
+    _frameRate = frameRate;
+    self.camera.frameRate = frameRate;
+}
 -(void)setCameraPosition:(AVCaptureDevicePosition)cameraPosition{
     _cameraPosition = cameraPosition;
     if (self.camera.cameraPosition != _cameraPosition) {
@@ -235,14 +240,14 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
     if (![self.camera isRunning]) {
         [self.camera startCameraCapture];
     }
-    [self.camera addTarget:self.imageView];
+    [self.cropFilter addTarget:self.imageView];
     return YES;
 }
 -(void)stopPreview{
     if (_cropFilter.frameProcessingCompletionBlock == nil && [_camera isRunning]) {
         [_camera stopCameraCapture];
     }
-    [_camera removeTarget:_imageView];
+    [_cropFilter removeTarget:_imageView];
 }
 
 -(UIView*)getPreviewView{
@@ -329,6 +334,11 @@ inline static GBool videoProduceSetHorizontallyMirror(struct _GJVideoProduceCont
     [recode setHorizontallyMirror:mirror];
     return GTrue;
 }
+inline static GBool videoProduceSetFrameRate(struct _GJVideoProduceContext* context,GInt32 fps){
+    IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
+    [recode setFrameRate:fps];
+    return recode.frameRate = fps;
+}
 inline static GBool videoProduceStartPreview(struct _GJVideoProduceContext* context){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     return [recode startPreview];
@@ -353,6 +363,7 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext** produceContext){
     context->setOrientation = videoProduceSetOutputOrientation;
     context->setHorizontallyMirror = videoProduceSetHorizontallyMirror;
     context->getRenderView = videoProduceGetRenderView;
+    context->setFrameRate = videoProduceSetFrameRate;
 }
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext** context){
     if ((*context)->obaque) {

@@ -12,11 +12,11 @@
 GBool encodeSetup(struct _GJEncodeToAACContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AACPacketOutCallback callback,GHandle userData){
     GJAssert(context->obaque == GNULL, "上一个音频解码器没有释放");
     if (sourceFormat.mType != GJAudioType_PCM) {
-        GJLOG(GJ_LOGERROR, "解码音频源格式不支持");
+        GJLOG(GJ_LOGERROR, "编码音频源格式不支持");
         return GFalse;
     }
     if (destForamt.mType != GJAudioType_AAC) {
-        GJLOG(GJ_LOGERROR, "解码目标音频格式不支持");
+        GJLOG(GJ_LOGERROR, "编码目标音频格式不支持");
         return GFalse;
     }
     if (callback == GNULL) {
@@ -24,22 +24,21 @@ GBool encodeSetup(struct _GJEncodeToAACContext* context,GJAudioFormat sourceForm
         return GFalse;
     }
     context->encodeCompleteCallback = callback;
-    AudioStreamBasicDescription s = {0};
-    s.mBitsPerChannel = sourceFormat.mBitsPerChannel;
-    s.mFramesPerPacket = sourceFormat.mFramePerPacket;
-    s.mSampleRate = sourceFormat.mSampleRate;
-    s.mFormatID = kAudioFormatMPEG4AAC;
-    s.mChannelsPerFrame = sourceFormat.mChannelsPerFrame;
+    AudioStreamBasicDescription dest = {0};
+    dest.mFramesPerPacket = destForamt.mFramePerPacket;
+    dest.mSampleRate = destForamt.mSampleRate;
+    dest.mFormatID = kAudioFormatMPEG4AAC;
+    dest.mChannelsPerFrame = destForamt.mChannelsPerFrame;
     
-    AudioStreamBasicDescription d = s;
-    d.mChannelsPerFrame = destForamt.mChannelsPerFrame;
-    d.mSampleRate = destForamt.mSampleRate;
-    d.mFormatID = kAudioFormatLinearPCM; //PCM
-    d.mBitsPerChannel = destForamt.mBitsPerChannel;
-    d.mBytesPerPacket = d.mBytesPerFrame =d.mChannelsPerFrame *  d.mBitsPerChannel;
-    d.mFramesPerPacket = 1;
-    d.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
-    AACEncoderFromPCM* encoder = [[AACEncoderFromPCM alloc]initWithSourceForamt:&s DestDescription:&d];
+    AudioStreamBasicDescription source = dest;
+    source.mChannelsPerFrame = sourceFormat.mChannelsPerFrame;
+    source.mSampleRate = sourceFormat.mSampleRate;
+    source.mFormatID = kAudioFormatLinearPCM; //PCM
+    source.mBitsPerChannel = sourceFormat.mBitsPerChannel;
+    source.mBytesPerPacket = source.mBytesPerFrame =source.mChannelsPerFrame *  source.mBitsPerChannel;
+    source.mFramesPerPacket = sourceFormat.mFramePerPacket;
+    source.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
+    AACEncoderFromPCM* encoder = [[AACEncoderFromPCM alloc]initWithSourceForamt:&source DestDescription:&dest];
     [encoder start];
     encoder.completeCallback = ^(R_GJAACPacket *packet) {
         callback(userData,packet);

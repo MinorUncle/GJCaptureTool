@@ -226,8 +226,7 @@
         [self.view addSubview:show.view];
     }
     
-    [_livePush startCaptureWithSizeType:kCaptureSize1280_720 fps:15 position:AVCaptureDevicePositionBack];
-    
+    _livePush.cameraPosition = GJInterfaceOrientationPortrait;
     [_livePush startPreview];
     
        // Do any additional setup after loading the view.
@@ -239,16 +238,15 @@ static char* url = "rtmp://10.0.1.146/live/room";
     if (btn == _pushButton) {
         if (btn.selected) {
             GJPushConfig config;
-            config.channel = 2;
-            config.audioSampleRate = 44100;
-            config.pushSize = (GSize){360, 640};
-            config.videoBitRate = 8*80*1024;
-            config.pushUrl = url;
+            config.mAudioChannel = 2;
+            config.mAudioSampleRate = 44100;
+            config.mPushSize = (GSize){360, 640};
+            config.mVideoBitrate = 8*80*1024;
             
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
             path = [path stringByAppendingPathComponent:@"test.mp4"];
 //            [_livePush videoRecodeWithPath:path];
-            [_livePush startStreamPushWithConfig:&config];
+            [_livePush startStreamPushWithConfig:&config url:[NSString stringWithUTF8String:url]];
         }else{
              [_livePush stopStreamPush];
         }

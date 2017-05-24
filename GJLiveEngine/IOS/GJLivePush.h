@@ -11,8 +11,7 @@
 #import <CoreVideo/CVImageBuffer.h>
 #import <CoreMedia/CMTime.h>
 #import "GJLiveDefine+internal.h"
-
-enum AVCaptureDevicePosition;
+#import <AVFoundation/AVFoundation.h>
 @class UIView;
 @class GJLivePush;
 
@@ -36,39 +35,33 @@ enum AVCaptureDevicePosition;
 #import "GJLivePlayer.h"
 
 @interface GJLivePush : NSObject
-@property(nonatomic,assign)enum AVCaptureDevicePosition cameraPosition;
+@property(nonatomic,assign)GJCameraPosition cameraPosition;
+
+@property(nonatomic,assign)GJInterfaceOrientation outOrientation;
+
 
 @property(nonatomic,strong,readonly,getter=getPreviewView)UIView* previewView;
 
-@property(nonatomic,assign,readonly)CaptureSizeType caputreSizeType;
+//@property(nonatomic,assign,readonly)CaptureSizeType caputreSizeType;
 
-@property(nonatomic,assign,readonly)NSInteger captureFps;
+@property(nonatomic,assign,readonly)GJPushConfig pushConfig;
 
 @property(nonatomic,weak)id<GJLivePushDelegate> delegate;
-#ifdef GJVIDEODECODE_TEST
-@property(strong,nonatomic)GJLivePlayer* player;
-#endif
-//push status,
-#define kLIVEPUSH_CONNECT 1<<0
-#define kLIVEPUSH_PREVIEW 1<<1
-#define kLIVEPUSH_CAPTURE 1<<2
-
-@property(nonatomic,assign,readonly)int status;
 
 
-- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
-
-- (void)stopCapture;
+//- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
+//
+//- (void)stopCapture;
 
 - (void)startPreview;
 
 - (void)stopPreview;
 
-- (bool)startStreamPushWithConfig:(const GJPushConfig*)config;
+- (bool)startStreamPushWithConfig:(const GJPushConfig*)config url:(NSString*)url;
 
 - (void)stopStreamPush;
 
-- (void)videoRecodeWithPath:(NSString*)path;
+//- (void)videoRecodeWithPath:(NSString*)path;
 
 
 

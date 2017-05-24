@@ -13,12 +13,6 @@
 #import "GJBufferPool.h"
 #import "GJLiveDefine+internal.h"
 
-typedef enum _GJEncodeQuality{
-    GJEncodeQualityExcellent=0,
-    GJEncodeQualityGood,
-    GJEncodeQualitybad,
-    GJEncodeQualityTerrible,
-}GJEncodeQuality;
 
 
 #if __COREFOUNDATION_CFBASE__
@@ -59,30 +53,7 @@ CFStringRef getCFStrByEntropyMode(EntropyMode model){
 #endif
 typedef void(^H264EncodeComplete)(R_GJH264Packet* packet);
 
-@class GJH264Encoder;
-@protocol GJH264EncoderDelegate <NSObject>
-@required
-
-/**
- 数据压缩完成时回调。
-
- @param encoder encoder description
- @param packet 引用用数据
-
- @return 可以理解为下一级数据缓存的比例，用于动态编码。
- */
--(GJTrafficStatus)GJH264Encoder:(GJH264Encoder*)encoder encodeCompletePacket:(R_GJH264Packet*)packet;
-
-/**
- 编码质量回调
-
- @param encoder encoder description
- @param quality 0优。1，一般，码率降低。2，差，码率降低且丢帧，3，非常差，码率为允许正常最小，且丢一半帧以上。
- */
--(void)GJH264Encoder:(GJH264Encoder*)encoder qualityQarning:(GJEncodeQuality)quality;
-@end
 @interface GJH264Encoder : NSObject
-@property(nonatomic,weak)id<GJH264EncoderDelegate> deleagte;
 
 @property(assign,nonatomic)EntropyMode entropyMode;
 @property(assign,nonatomic)ProfileLevel profileLevel;

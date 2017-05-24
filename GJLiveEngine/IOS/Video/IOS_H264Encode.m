@@ -26,10 +26,10 @@ inline static GVoid encodeUnSetup (GJEncodeToH264eContext* context){
         context->obaque = GNULL;
     }
 }
-inline static GBool encodePacket (GJEncodeToH264eContext* context,R_GJPixelFrame* frame){
+inline static GBool encodeFrame (GJEncodeToH264eContext* context,R_GJPixelFrame* frame,GBool forceKey){
     GJH264Encoder* encode = (__bridge GJH264Encoder *)(context->obaque);
     CVImageBufferRef image = (CVImageBufferRef)frame->retain.data;
-    return [encode encodeImageBuffer:image pts:frame->pts fourceKey:NO];
+    return [encode encodeImageBuffer:image pts:frame->pts fourceKey:forceKey];
 }
 inline static GBool encodeSetBitrate (GJEncodeToH264eContext* context,GInt32 bitrate){
     GJH264Encoder* encode = (__bridge GJH264Encoder *)(context->obaque);
@@ -64,7 +64,7 @@ GVoid GJ_H264EncodeContextCreate(GJEncodeToH264eContext** encodeContext){
     GJEncodeToH264eContext* context = *encodeContext;
     context->encodeSetup = encodeSetup;
     context->encodeUnSetup = encodeUnSetup;
-    context->encodePacket = encodePacket;
+    context->encodeFrame = encodeFrame;
     context->encodeSetBitrate = encodeSetBitrate;
     context->encodeSetProfile = encodeSetProfile;
     context->encodeSetEntropy = encodeSetEntropy;

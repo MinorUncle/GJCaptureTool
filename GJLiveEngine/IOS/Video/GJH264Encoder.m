@@ -12,7 +12,6 @@
 #import "GJLog.h"
 //#define DEFAULT_DELAY  10
 //默认i帧是p帧的I_P_RATE+1倍。越小丢帧时码率降低越大
-#define I_P_RATE 4
 
 #define DEFAULT_CHECK_DELAY 1000
 #define DROP_BITRATE_RATE 0.1
@@ -38,7 +37,7 @@
 -(instancetype)initWithSourceSize:(CGSize)size{
     self = [super init];
     if(self){
-        
+        _sourceSize = size;
         _bitrate = 600;;
 //        _allowMinBitRate = _currentBitRate;
         _dropStep = GRationalMake(0, DEFAULT_MAX_DROP_STEP);
@@ -333,32 +332,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //        NSLog(@"encodecount:%d,lenth:%d,pts:%lld \n",i++,pushPacket->ppsSize+pushPacket->spsSize+pushPacket->ppSize,pts.value);
 //    NSLog(@"encode frame:%d",pushPacket->ppSize);
     encoder.completeCallback(pushPacket);
-    
-//    GJTrafficStatus bufferStatus = [encoder.deleagte GJH264Encoder:encoder encodeCompletePacket:pushPacket];
-//  
-//    if (bufferStatus.enter.count % encoder.dynamicAlgorithm.den == 0) {
-//        GLong cacheInCount = bufferStatus.enter.count - bufferStatus.leave.count;
-//        if(cacheInCount == 1 && encoder.currentBitRate < encoder.destFormat.baseFormat.bitRate){
-//            GJLOG(GJ_LOGINFO, "宏观检测出提高视频质量");
-//            [encoder appendQualityWithStep:1];
-//        }else{
-//            GLong diffInCount = bufferStatus.leave.count - encoder.preBufferStatus.leave.count;
-//            if(diffInCount <= encoder.dynamicAlgorithm.num){//降低质量敏感检测
-//                GJLOG(GJ_LOGINFO, "敏感检测出降低视频质量");
-//                [encoder reduceQualityWithStep:encoder.dynamicAlgorithm.num - diffInCount+1];
-//            }else if(diffInCount > encoder.dynamicAlgorithm.den + encoder.dynamicAlgorithm.num){//提高质量敏感检测
-//                GJLOG(GJ_LOGINFO, "敏感检测出提高音频质量");
-//                [encoder appendQualityWithStep:diffInCount - encoder.dynamicAlgorithm.den - encoder.dynamicAlgorithm.num];
-//            }else{
-//                GLong cacheInPts = bufferStatus.enter.pts - bufferStatus.leave.pts;
-//                if (diffInCount < encoder.dynamicAlgorithm.den && cacheInPts > SEND_DELAY_TIME && cacheInCount > SEND_DELAY_COUNT) {
-//                    GJLOG(GJ_LOGWARNING, "宏观检测出降低视频质量 (很少可能会出现)");
-//                    [encoder reduceQualityWithStep:encoder.dynamicAlgorithm.den - diffInCount];
-//                }
-//            }
-//        }
-//        encoder.preBufferStatus = bufferStatus;
-//    }
+
     retainBufferUnRetain(retainBuffer);
 }
 
