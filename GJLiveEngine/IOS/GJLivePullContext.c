@@ -85,7 +85,6 @@ GVoid GJLivePull_StopPull(GJLivePullContext* context){
     }
     GJLivePlay_Stop(context->player);
     context->audioDecoder->decodeUnSetup(context->audioDecoder);
-    context->videoDecoder->decodeUnSetup(context->videoDecoder);
     pthread_mutex_unlock(&context->lock);
 }
 GJTrafficStatus GJLivePull_GetVideoTrafficStatus(GJLivePullContext* context){

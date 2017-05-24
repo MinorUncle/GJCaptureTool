@@ -71,12 +71,12 @@ static GHandle sendRunloop(GHandle parm){
         GInt32 iRet = RTMP_SendPacket(push->rtmp,&packet->packet,0);
         if (iRet) {
             if (packet->packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
-                GJLOGFREQ("send video pts:%d",packet->packet.m_nTimeStamp);
+                GJLOGFREQ("send video pts:%d size:%d",packet->packet.m_nTimeStamp,packet->packet.m_nBodySize);
                 push->videoStatus.leave.byte+=packet->packet.m_nBodySize;
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.pts = packet->packet.m_nTimeStamp;
             }else{
-                GJLOGFREQ("send audio pts:%d",packet->packet.m_nTimeStamp);
+                GJLOGFREQ("send audio pts:%d size:%d",packet->packet.m_nTimeStamp,packet->packet.m_nBodySize);
                 push->audioStatus.leave.byte+=packet->packet.m_nBodySize;
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.pts = packet->packet.m_nTimeStamp;
@@ -137,7 +137,9 @@ GBool GJRtmpPush_Create(GJRtmpPush** sender,PushMessageCallback callback,GHandle
 
 
 GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
-
+    if (sender == GNULL) {
+        return GFalse;
+    }
     GBool isKey = GFalse;
     GUInt8 *sps = packet->spsOffset + packet->retain.data,*pps = packet->ppsOffset + packet->retain.data,*pp = packet->ppOffset+packet->retain.data;
     GInt32 spsSize = packet->spsSize,ppsSize = packet->ppsSize,ppSize = packet->ppSize;
@@ -280,7 +282,9 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
 }
 
 GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
-   
+    if (sender == GNULL) {
+        return GFalse;
+    }
     GUChar * body;
     GInt32 preSize = 2;
     GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
@@ -407,10 +411,18 @@ GFloat32 GJRtmpPush_GetBufferRate(GJRtmpPush* sender){
     return length / size;
 };
 GJTrafficStatus GJRtmpPush_GetVideoBufferCacheInfo(GJRtmpPush* push){
-    return push->videoStatus;
+    if (push == GNULL) {
+        return (GJTrafficStatus){0};
+    }else{
+        return push->videoStatus;
+    }
 }
 GJTrafficStatus GJRtmpPush_GetAudioBufferCacheInfo(GJRtmpPush* push){
-    return push->audioStatus;
+    if (push == GNULL) {
+        return (GJTrafficStatus){0};
+    }else{
+        return push->audioStatus;
+    }
 }
 
 

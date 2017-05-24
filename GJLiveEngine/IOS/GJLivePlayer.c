@@ -291,7 +291,7 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer* player){
             cache = _syncControl->videoInfo.trafficStatus.enter.pts - _syncControl->videoInfo.trafficStatus.leave.pts;
             bufferInfo.cacheCount = _syncControl->audioInfo.trafficStatus.enter.count - _syncControl->audioInfo.trafficStatus.leave.count;
         }
-        GLong duration = (GLong)(GJ_Gettime()/1000) - _syncControl->bufferInfo.lastPauseFlag;
+        GLong duration = (GLong)(GJ_Gettime()/1000 - _syncControl->bufferInfo.lastPauseFlag);
         bufferInfo.bufferDur = duration;
         bufferInfo.cachePts = cache;
         bufferInfo.percent = cache*1.0/_syncControl->bufferInfo.lowWaterFlag;
@@ -394,10 +394,10 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm){
                 delay = 0;
             }else{
                 GJLOG(GJ_LOGWARNING, "视频等待音频时间过长 delay:%ld PTS:%ld clock:%ld，等待下一帧做判断处理",delay,cImageBuf->pts,timeStandards);
-                R_GJPixelFrame* nextBuffer = {0};
+                R_GJPixelFrame nextBuffer = {0};
                 GBool peekResult = GFalse;
                 while ((peekResult = queuePeekWaitCopyValue(_playControl->imageQueue, 0, (GHandle)&nextBuffer, sizeof(R_GJPixelFrame), VIDEO_PTS_PRECISION))) {
-                    if(nextBuffer->pts < cImageBuf->pts){
+                    if(nextBuffer.pts < cImageBuf->pts){
                         GJLOG(GJ_LOGWARNING, "视频PTS重新开始，直接显示");
                         delay = 0;
                         break;
@@ -547,6 +547,7 @@ GVoid  GJLivePlay_Stop(GJLivePlayer* player){
         
         pthread_mutex_lock(&player->playControl.oLock);
         player->audioPlayer->audioStop(player->audioPlayer);
+        player->audioPlayer->audioPlayUnSetup(player->audioPlayer);
         GInt32 vlength = queueGetLength(player->playControl.imageQueue);
         GInt32 alength = queueGetLength(player->playControl.audioQueue);
         
@@ -583,7 +584,7 @@ GVoid  GJLivePlay_Stop(GJLivePlayer* player){
 }
 GBool  GJLivePlay_AddVideoData(GJLivePlayer* player,R_GJPixelFrame* videoFrame){
 
-    GJLOGFREQ("收到音频 PTS:%lld",videoFrame);
+    GJLOGFREQ("收到视频 PTS:%lld",videoFrame->pts);
     if (videoFrame->pts < player->syncControl.videoInfo.trafficStatus.enter.pts) {
         pthread_mutex_lock(&player->playControl.oLock);
         GInt32 length = queueGetLength(player->playControl.imageQueue);

@@ -42,7 +42,7 @@ typedef struct _GJLivePushContext{
     GJLivePushCallback      callback;
     GHandle                 userData;
     
-    GJPushConfig            pushConfig;
+    GJPushConfig*            pushConfig;
     
     GJNetworkQuality        netQuality;
     

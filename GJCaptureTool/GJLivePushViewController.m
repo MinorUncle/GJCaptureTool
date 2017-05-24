@@ -132,10 +132,19 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
-    GJ_LogSetLevel(GJ_LOGINFO);
+    GJ_LogSetLevel(GJ_LOGALL);
     RTMP_LogSetLevel(RTMP_LOGERROR);
     
     _livePush = [[GJLivePush alloc]init];
+    
+    GJPushConfig config = {0};
+    config.mAudioChannel = 2;
+    config.mAudioSampleRate = 44100;
+    config.mPushSize = (GSize){360, 640};
+    config.mVideoBitrate = 8*80*1024;
+    config.mFps = 15;
+    config.mAudioBitrate = 40*1000;
+    [_livePush setPushConfig:config];
     _livePush.delegate = self;
  
     
@@ -237,16 +246,11 @@ static char* url = "rtmp://10.0.1.146/live/room";
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
     if (btn == _pushButton) {
         if (btn.selected) {
-            GJPushConfig config;
-            config.mAudioChannel = 2;
-            config.mAudioSampleRate = 44100;
-            config.mPushSize = (GSize){360, 640};
-            config.mVideoBitrate = 8*80*1024;
             
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
             path = [path stringByAppendingPathComponent:@"test.mp4"];
 //            [_livePush videoRecodeWithPath:path];
-            [_livePush startStreamPushWithConfig:&config url:[NSString stringWithUTF8String:url]];
+            [_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]];
         }else{
              [_livePush stopStreamPush];
         }

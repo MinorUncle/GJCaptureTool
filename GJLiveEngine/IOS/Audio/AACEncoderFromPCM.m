@@ -57,8 +57,6 @@
 }
 -(void)initQueue{
     queueCreate(&_resumeQueue, 10,true,false);
-
-
     _encoderQueue = dispatch_queue_create("audioEncodeQueue", DISPATCH_QUEUE_SERIAL);
 }
 //编码输入

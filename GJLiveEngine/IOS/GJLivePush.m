@@ -80,13 +80,16 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
 -(UIView *)getPreviewView{
     return (__bridge UIView *)(GJLivePush_GetDisplayView(_livePush));
 }
-- (bool)startStreamPushWithConfig:(const GJPushConfig*)config url:(NSString *)url{
+
+-(void)setPushConfig:(GJPushConfig)pushConfig{
+    _pushConfig = pushConfig;
+    GJLivePush_SetConfig(_livePush, &_pushConfig);
+}
+- (bool)startStreamPushWithUrl:(NSString *)url{
     if (_timer != nil) {
         GJLOG(GJ_LOGERROR, "请先关闭上一个流");
         return NO;
     }else{
-        _pushConfig = *config;
-        GJLivePush_SetConfig(_livePush, config);
         _pushUrl = url;
         _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency target:self selector:@selector(updateGaterInfo:) userInfo:nil repeats:YES];
         return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);

@@ -57,7 +57,9 @@
 
 - (void)stopPreview;
 
-- (bool)startStreamPushWithConfig:(const GJPushConfig*)config url:(NSString*)url;
+- (bool)startStreamPushWithUrl:(NSString *)url;
+
+- (void)setPushConfig:(GJPushConfig)pushConfig;
 
 - (void)stopStreamPush;
 

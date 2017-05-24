@@ -12,7 +12,7 @@
 #import <stdlib.h>
 inline static GBool encodeSetup (struct _GJEncodeToH264eContext* context,GJPixelFormat format,H264PacketOutCallback callback,GHandle userData){
     GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
-    GJH264Encoder* encoder = [[GJH264Encoder alloc]init];
+    GJH264Encoder* encoder = [[GJH264Encoder alloc]initWithSourceSize:CGSizeMake((CGFloat)format.mWidth, (CGFloat)format.mHeight)];
     encoder.completeCallback = ^(R_GJH264Packet *packet) {
         callback(userData,packet);
     };

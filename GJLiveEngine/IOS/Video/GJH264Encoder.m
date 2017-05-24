@@ -43,7 +43,8 @@
         _dropStep = GRationalMake(0, DEFAULT_MAX_DROP_STEP);
         _allowDropStep = GRationalMake(1, 5);
         _dynamicAlgorithm = GRationalMake(5, 10);
-    
+        _allowBFrame = NO;
+        
         _profileLevel = profileLevelMain;
         _entropyMode = EntropyMode_CABAC;
         
@@ -179,6 +180,7 @@ RETRY:
     }
 }
 -(void)setAllowBFrame:(BOOL)allowBFrame{
+    _allowBFrame = allowBFrame;
     OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowFrameReordering, _allowBFrame?kCFBooleanTrue:kCFBooleanFalse);
     if (result != 0) {
         GJLOG(GJ_LOGFORBID,"kVTCompressionPropertyKey_AllowFrameReordering set error");
@@ -194,22 +196,22 @@ RETRY:
     self.profileLevel = _profileLevel;
     self.entropyMode = _entropyMode;
     self.gop = _gop;
-    self.currentBitRate = _bitrate;
+    self.bitrate = _bitrate;
 }
-
--(void)setCurrentBitRate:(int32_t)currentBitRate{
-    if (currentBitRate>0 && _enCodeSession) {
-        _bitrate = currentBitRate;
+-(void)setBitrate:(int)bitrate{
+    if (bitrate>0 && _enCodeSession) {
+        _bitrate = bitrate;
         CFNumberRef bitRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &(_bitrate));
         OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, bitRate);
         CFRelease(bitRate);
         if (result != noErr) {
             GJLOG(GJ_LOGFORBID, "kVTCompressionPropertyKey_AverageBitRate set error:%d",result);
         }else{
-            GJLOG(GJ_LOGINFO, "set video bitrate:%0.2f kB/s",currentBitRate/1024.0/8.0);
+            GJLOG(GJ_LOGINFO, "set video bitrate:%0.2f kB/s",bitrate/1024.0/8.0);
         }
     }
 }
+
 static GBool retainBufferRelease(GJRetainBuffer* buffer){
     GJBufferPool* pool = buffer->parm;
     GJBufferPoolSetData(pool, buffer->data-buffer->frontSize);

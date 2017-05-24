@@ -54,7 +54,7 @@ GVoid encodeUnSetup(struct _GJEncodeToAACContext* context){
     }
 }
 GVoid encodeFrame(struct _GJEncodeToAACContext* context,R_GJPCMFrame* frame){
-    AACEncoderFromPCM* encode = (__bridge_transfer AACEncoderFromPCM *)(context->obaque);
+    AACEncoderFromPCM* encode = (__bridge AACEncoderFromPCM *)(context->obaque);
     [encode encodeWithPacket:frame];
 }
 GBool encodeSetBitrate(struct _GJEncodeToAACContext* context,GInt32 bitrate){
@@ -69,6 +69,7 @@ GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext** encodeContext){
     context->encodeSetup = encodeSetup;
     context->encodeUnSetup = encodeUnSetup;
     context->encodeFrame = encodeFrame;
+    context->encodeSetBitrate =  encodeSetBitrate;
     context->encodeCompleteCallback = NULL;
 
 }

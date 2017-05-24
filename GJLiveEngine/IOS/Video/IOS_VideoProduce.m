@@ -112,20 +112,40 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 @end
 @implementation IOS_VideoProduce
-- (instancetype)init
+- (instancetype)initWithFormat:(GJVideoFormat)format
 {
     self = [super init];
     if (self) {
         
         _cameraPosition = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
-        _destSize = CGSizeMake(480, 640);
+        _destSize = CGSizeMake((CGFloat)format.mWidth, (CGFloat)format.mHeight);
+        _frameRate = format.mFps;
+    }
+    return self;
+}
+-(instancetype)init{
+    self = [super init];
+    if (self) {
+        _cameraPosition = AVCaptureDevicePositionBack;
+        _outputOrientation = UIInterfaceOrientationPortrait;
+        _destSize = CGSizeMake(480,640);
+        _frameRate = 15;
     }
     return self;
 }
 -(GPUImageVideoCamera *)camera{
     if (_camera == nil) {
-        _camera = [[GPUImageVideoCamera alloc]initWithSessionPreset:AVCaptureSessionPreset640x480 cameraPosition:_cameraPosition];
+        CGSize size = _destSize;
+        if (_outputOrientation == UIInterfaceOrientationPortrait ||
+            _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+            size.height += size.width;
+            size.width = size.height - size.width;
+            size.height = size.height - size.width;
+        }
+        NSString* preset = getCapturePresetWithSize(size);
+        _camera = [[GPUImageVideoCamera alloc]initWithSessionPreset:preset cameraPosition:_cameraPosition];
+        _camera.frameRate = _frameRate;
         _camera.outputImageOrientation = UIInterfaceOrientationPortrait;
         _cropFilter = [[GPUImageCropFilter alloc]init];
         [_camera addTarget:_cropFilter];
@@ -140,7 +160,15 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 -(GPUImageCropFilter *)cropFilter{
     if (_cropFilter == nil) {
-        _camera = [[GPUImageVideoCamera alloc]initWithSessionPreset:AVCaptureSessionPreset640x480 cameraPosition:_cameraPosition];
+        CGSize size = _destSize;
+        if (_outputOrientation == UIInterfaceOrientationPortrait ||
+            _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+            size.height += size.width;
+            size.width = size.height - size.width;
+            size.height = size.height - size.width;
+        }
+        NSString* preset = getCapturePresetWithSize(size);
+        _camera = [[GPUImageVideoCamera alloc]initWithSessionPreset:preset cameraPosition:_cameraPosition];
         _cropFilter = [[GPUImageCropFilter alloc]init];
         [_camera addTarget:_cropFilter];
     }
@@ -257,7 +285,7 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
 @end
 inline static GBool videoProduceSetup(struct _GJVideoProduceContext* context,GJVideoFormat format,VideoFrameOutCallback callback,GHandle userData){
     GJAssert(context->obaque == GNULL, "上一个视频生产器没有释放");
-    IOS_VideoProduce* recode = [[IOS_VideoProduce alloc]init];
+    IOS_VideoProduce* recode = [[IOS_VideoProduce alloc]initWithFormat:format];
     recode.callback = ^(R_GJPixelFrame *frame) {
         callback(userData,frame);
     };
