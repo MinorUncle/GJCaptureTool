@@ -19,7 +19,6 @@ static GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong
 static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* frame){
     GJLivePushContext* context = userData;
     if ((context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
-        frame->pts = GJ_Gettime()/1000-context->connentClock;
         context->videoEncoder->encodeFrame(context->videoEncoder,frame,GFalse);
     }else{
         GJLOG(GJ_LOGWARNING, "丢视频帧");
@@ -28,11 +27,11 @@ static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* fram
 }
 static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame){
     GJLivePushContext* context = userData;
-    frame->pts = GJ_Gettime()/1000-context->connentClock;
     context->audioEncoder->encodeFrame(context->audioEncoder,frame);
 }
 static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
     GJLivePushContext* context = userData;
+    packet->pts = GJ_Gettime()/1000-context->connentClock;
     GJRtmpPush_SendH264Data(context->videoPush, packet);
     GJTrafficStatus bufferStatus = GJRtmpPush_GetVideoBufferCacheInfo(context->videoPush);
     if (bufferStatus.enter.count % context->dynamicAlgorithm.den == 0) {
@@ -61,6 +60,7 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
 }
 static GVoid aacPacketOutCallback(GHandle userData,R_GJAACPacket* packet){
     GJLivePushContext* context = userData;
+    packet->pts = GJ_Gettime()/1000-context->connentClock;
     GJRtmpPush_SendAACData(context->videoPush, packet);
 }
 
