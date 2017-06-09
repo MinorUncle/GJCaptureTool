@@ -48,6 +48,8 @@
 
 @property(nonatomic,weak)id<GJLivePushDelegate> delegate;
 
+@property(nonatomic,assign)BOOL videoMute;
+@property(nonatomic,assign)BOOL audioMute;
 
 //- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
 //

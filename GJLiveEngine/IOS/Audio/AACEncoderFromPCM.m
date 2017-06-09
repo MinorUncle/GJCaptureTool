@@ -253,11 +253,10 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
                 GJLOG(GJ_LOGFORBID, "running状态编码错误");
                 _isRunning = NO;
             }else{
-                GJLOG(GJ_LOGWARNING, "stop导致编码错误");
+                GJLOG(GJ_LOGWARNING, "编码结束");
             }
             break;
         }
-        
         
 
         audioBuffer->size = outCacheBufferList.mBuffers[0].mDataByteSize+7;

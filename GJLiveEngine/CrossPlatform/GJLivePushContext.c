@@ -18,7 +18,8 @@ static GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong
 
 static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* frame){
     GJLivePushContext* context = userData;
-    if ((context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
+    
+    if (!context->videoMute && (context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
         context->videoEncoder->encodeFrame(context->videoEncoder,frame,GFalse);
     }else{
         GJLOG(GJ_LOGWARNING, "丢视频帧");
@@ -27,7 +28,9 @@ static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* fram
 }
 static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame){
     GJLivePushContext* context = userData;
-    context->audioEncoder->encodeFrame(context->audioEncoder,frame);
+    if (!context->audioMute) {
+        context->audioEncoder->encodeFrame(context->audioEncoder,frame);
+    }
 }
 static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
     GJLivePushContext* context = userData;
@@ -351,6 +354,14 @@ GBool GJLivePush_StartPreview(GJLivePushContext* context){
 }
 GVoid GJLivePush_StopPreview(GJLivePushContext* context){
     return context->videoProducer->stopPreview(context->videoProducer);
+}
+GBool GJLivePush_SetAudioMute(GJLivePushContext* context,GBool mute){
+    context->audioMute = mute;
+    return GTrue;
+}
+GBool GJLivePush_SetVideoMute(GJLivePushContext* context,GBool mute){
+    context->videoMute = mute;
+    return GTrue;
 }
 GVoid GJLivePush_SetCameraPosition(GJLivePushContext* context,GJCameraPosition position){
     context->videoProducer->setCameraPosition(context->videoProducer,position);

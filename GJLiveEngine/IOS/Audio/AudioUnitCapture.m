@@ -28,7 +28,10 @@ static OSStatus playbackCallback(void *inRefCon,
 #define kInputBus   1
 
 @interface AudioUnitCapture ()
-@property (copy,nonatomic)  void(^recDataBlock)(uint8_t* pcmData, int size);
+{
+    GJRetainBufferPool* _bufferPool;
+}
+@property (copy,nonatomic)  void(^recDataBlock)(R_GJPCMFrame* pcmData);
 @property (copy,nonatomic)  void(^playDataBlock)(uint8_t* playBuffer, int size);
 @property (assign,nonatomic) AudioComponentInstance audioUnit;
 @property (assign,nonatomic) float samplerate;
@@ -37,7 +40,7 @@ static OSStatus playbackCallback(void *inRefCon,
 @implementation AudioUnitCapture
 
 @synthesize audioUnit       = _audioUnit;
-@synthesize samplerate      = _samplerate;
+@synthesize format      = _format;
 
 AudioUnitCapture * globalUnit = NULL;
 
@@ -83,23 +86,26 @@ static OSStatus playbackCallback(void *inRefCon,
                                  UInt32 inBusNumber,
                                  UInt32 inNumberFrames,
                                  AudioBufferList *ioData) {
-    
-    
     memset(ioData->mBuffers[0].mData, 0, ioData->mBuffers[0].mDataByteSize);
     if (globalUnit.playDataBlock) {
         globalUnit.playDataBlock(ioData->mBuffers[0].mData, ioData->mBuffers[0].mDataByteSize);
     }
-    
     return noErr;
 }
 
-- (id)initWithSamplerate:(float)samplerate {
+- (id)initWithSamplerate:(float)samplerate channel:(UInt32)channel{
     self = [super init];
     if (self) {
         globalUnit = self;
-        _samplerate = samplerate;
-        
+        _format.mSampleRate       = samplerate;               // 3
+        _format.mChannelsPerFrame = channel;                     // 4
+        _format.mFramesPerPacket  = 1;                     // 7
+        _format.mBitsPerChannel   = 16;                    // 5
+        _format.mBytesPerFrame   = _format.mChannelsPerFrame * _format.mBitsPerChannel/8;
+        _format.mFramesPerPacket = _format.mBytesPerFrame * _format.mFramesPerPacket ;
+        _format.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
         [self initAudio];
+        GJRetainBufferPoolCreate(&_bufferPool, _format.mFramesPerPacket*1024, GTrue, R_GJPCMFrameMalloc, nil);
     }
     return self;
 }
@@ -167,31 +173,25 @@ static OSStatus playbackCallback(void *inRefCon,
     [self checkError:status key:@"kAudioOutputUnitProperty_EnableIO"];
     
     // Describe format
-    AudioStreamBasicDescription audioFormat;
-    audioFormat.mSampleRate			= _samplerate;
-    audioFormat.mFormatID			= kAudioFormatLinearPCM;
-    audioFormat.mFormatFlags		= kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
-    audioFormat.mFramesPerPacket	= 1;
-    audioFormat.mChannelsPerFrame	= 1;
-    audioFormat.mBitsPerChannel		= 16;
-    audioFormat.mBytesPerPacket		= 2;
-    audioFormat.mBytesPerFrame		= 2;
+    
+ 
+
     
     // Apply format
     status = AudioUnitSetProperty(_audioUnit,
                                   kAudioUnitProperty_StreamFormat,
                                   kAudioUnitScope_Output,
                                   kInputBus,
-                                  &audioFormat,
-                                  sizeof(audioFormat));
+                                  &_format,
+                                  sizeof(_format));
     [self checkError:status key:@"kAudioUnitProperty_StreamFormat"];
     
     status = AudioUnitSetProperty(_audioUnit,
                                   kAudioUnitProperty_StreamFormat,
                                   kAudioUnitScope_Input,
                                   kOutputBus,
-                                  &audioFormat,
-                                  sizeof(audioFormat));
+                                  &_format,
+                                  sizeof(_format));
     [self checkError:status key:@"kAudioUnitProperty_StreamFormat"];
     
     
@@ -306,10 +306,18 @@ static OSStatus playbackCallback(void *inRefCon,
     return deviceString;
 }
 
-- (void)startRecording:(void(^)(uint8_t* pcmData, int size))dataBlock
+- (void)startRecording:(void(^)(R_GJPCMFrame* frame))dataBlock
 {
     _recDataBlock = dataBlock;
+    NSError *audioSessionError = nil;
     
+    AVAudioSession *mySession = [AVAudioSession sharedInstance];     // 1
+    [mySession setPreferredInputNumberOfChannels:_format.mChannelsPerFrame error:&audioSessionError];
+    [mySession setPreferredIOBufferDuration:1024.0/_format.mSampleRate error:&audioSessionError];
+    [mySession setCategory: AVAudioSessionCategoryPlayAndRecord      // 3
+                     error: &audioSessionError];
+    [mySession setActive: YES                                        // 4
+                   error: &audioSessionError];
     OSStatus status = AudioOutputUnitStart(_audioUnit);
     [self checkError:status key:@"AudioOutputUnitStart"];
 }

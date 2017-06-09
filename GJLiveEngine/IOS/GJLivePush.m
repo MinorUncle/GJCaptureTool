@@ -105,7 +105,14 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     [self stopStreamPush];
     return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
 }
-
+-(void)setAudioMute:(BOOL)audioMute{
+    _audioMute = audioMute;
+    GJLivePush_SetAudioMute(_livePush, audioMute);
+}
+-(void)setVideoMute:(BOOL)videoMute{
+    _videoMute = videoMute;
+    GJLivePush_SetVideoMute(_livePush, videoMute);
+}
 -(void)updateGaterInfo:(NSTimer*)timer{
     GJTrafficStatus vInfo = GJLivePush_GetVideoTrafficStatus(_livePush);
     GJTrafficStatus aInfo = GJLivePush_GetAudioTrafficStatus(_livePush);

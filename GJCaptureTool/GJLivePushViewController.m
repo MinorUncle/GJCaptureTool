@@ -13,6 +13,9 @@
 #import "GJLog.h"
 #import "log.h"
 #import "GJBufferPool.h"
+
+static char* url = "rtmp://169.254.221.81/live/room";
+
 @interface PullShow : NSObject
 {
     
@@ -136,6 +139,7 @@
     RTMP_LogSetLevel(RTMP_LOGERROR);
     
     _livePush = [[GJLivePush alloc]init];
+    _livePush.videoMute = YES;
     
     GJPushConfig config = {0};
     config.mAudioChannel = 2;
@@ -240,7 +244,6 @@
     
        // Do any additional setup after loading the view.
 }
-static char* url = "rtmp://10.0.1.146/live/room";
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
@@ -389,22 +392,18 @@ static char* url = "rtmp://10.0.1.146/live/room";
     PullShow* show = [self getShowWithPush:livePull];
     dispatch_async(dispatch_get_main_queue(), ^{
         show.playerBufferLab.text = [NSString stringWithFormat:@"buffer：%0.2f  %ld ms",percent,duration];
-            
     });
 }
 
 -(void)livePull:(GJLivePull *)livePull networkDelay:(long)delay{
     PullShow* show = [self getShowWithPush:livePull];
-
     dispatch_async(dispatch_get_main_queue(), ^{
         show.netDelay.text = [NSString stringWithFormat:@"NetDelay:%ld ms",delay];
-        
     });
 }
 -(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
     UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"提示" message:@"是否测试释放推拉流对象" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:@"取消", nil];
     [alert show];
-
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{

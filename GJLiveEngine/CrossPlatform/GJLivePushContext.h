@@ -58,6 +58,9 @@ typedef struct _GJLivePushContext{
     GInt32                  videoMinBitrate;
     GInt32                  captureVideoCount;
     GInt32                  dropVideoCount;
+    
+    GBool                   audioMute;
+    GBool                   videoMute;
 
 }GJLivePushContext;
 
@@ -67,6 +70,8 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context);
 GVoid GJLivePush_SetConfig(GJLivePushContext* context,const GJPushConfig* config);
 GBool GJLivePush_StartPreview(GJLivePushContext* context);
 GVoid GJLivePush_StopPreview(GJLivePushContext* context);
+GBool GJLivePush_SetAudioMute(GJLivePushContext* context,GBool mute);
+GBool GJLivePush_SetVideoMute(GJLivePushContext* context,GBool mute);
 
 GVoid GJLivePush_SetCameraPosition(GJLivePushContext* context,GJCameraPosition position);
 GVoid GJLivePush_SetOutOrientation(GJLivePushContext* context,GJInterfaceOrientation orientation);

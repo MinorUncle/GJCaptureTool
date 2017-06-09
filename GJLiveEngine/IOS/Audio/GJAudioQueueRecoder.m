@@ -221,8 +221,8 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
             format.mChannelsPerFrame = channel;                     // 4
             format.mFramesPerPacket  = 1;                     // 7
             format.mBitsPerChannel   = 16;                    // 5
-            format.mBytesPerFrame   = format.mChannelsPerFrame * format.mBitsPerChannel/8;
-            format.mFramesPerPacket = format.mBytesPerFrame * format.mFramesPerPacket ;
+            format.mBytesPerFrame    = format.mChannelsPerFrame * format.mBitsPerChannel/8;
+            format.mBytesPerPacket   = format.mBytesPerFrame * format.mFramesPerPacket;
             format.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
             callback = pcmHandleInputBuffer;
             break;

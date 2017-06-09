@@ -8,15 +8,16 @@
 
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
+#import "GJLiveDefine+internal.h"
 
 @interface AudioUnitCapture : NSObject
 
 @property (readonly,nonatomic) AudioComponentInstance audioUnit;
-@property (readonly,nonatomic) float samplerate;
+@property (readonly,nonatomic) AudioStreamBasicDescription format;
 
-- (id)initWithSamplerate:(float)samplerate;
+- (id)initWithSamplerate:(float)samplerate channel:(UInt32)channel;
 
-- (void)startRecording:(void(^)(uint8_t* pcmData, int size))dataBlock;
+- (void)startRecording:(void(^)(R_GJPCMFrame* frame))dataBlock;
 - (void)stopRecording;
 - (void)destoryBlcock;
 
