@@ -81,6 +81,12 @@ static GHandle pullRunloop(GHandle parm){
                 pull->audioPullInfo.byte += packet.m_nBodySize;
                 GUInt8* body = (GUInt8*)packet.m_body;
                 
+                NSData* d = [NSData dataWithBytes:body length:packet.m_nBodySize];
+                NSLog(@"p:%@",d);
+                
+                RTMPPacket_Free(&packet);
+                continue;
+                
                 R_GJAACPacket* aacPacket = (R_GJAACPacket*)                GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJAACPacket));
                 memset(aacPacket, 0, sizeof(R_GJAACPacket));
 
@@ -96,36 +102,82 @@ static GHandle pullRunloop(GHandle parm){
                 pull->audioCallback(pull,aacPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);
                 
+                
+                
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
                 GJLOGFREQ("receive audio pts:%d",packet.m_nTimeStamp);
                 GUInt8 *body = (GUInt8*)packet.m_body;
                 GUInt8 *pbody = body;
                 GInt32 isKey = 0;
-                if ((pbody[0] & 0x0F) == 7) {
-                    if (pbody[1] == 0) {//sps pps
-                        spsSize += pbody[11]<<8;
-                        spsSize += pbody[12];
-                        sps = pbody+13;
-                        
-                        pbody = sps+spsSize;
-                        ppsSize += pbody[1]<<8;
-                        ppsSize += pbody[2];
-                        pps = pbody+3;
-                        pbody = pps+ppsSize;
-                        if (pbody+4>body+packet.m_nBodySize) {
-                            GJLOG(GJ_LOGINFO,"only spspps\n");
+                GInt32 index = 0;
+                
+                while (index < packet.m_nBodySize) {
+                    if ((pbody[index]) == 0x17) {
+                        index ++;
+                        if (pbody[index] == 0) {//sps pps
+                            index += 10;
+                            spsSize = pbody[index++]<<8;
+                            spsSize += pbody[index++];
+                            sps = pbody+index;
+                            index += spsSize+1;
+                            ppsSize += pbody[index++]<<8;
+                            ppsSize += pbody[index++];
+                            pps = pbody+index;
+                            index += ppsSize;
+                            if (pbody+4>body+packet.m_nBodySize) {
+                                GJLOG(GJ_LOGINFO,"only spspps\n");
+                            }
+                        }else if (pbody[index] == 1) {
+                            isKey = GTrue;
+                            index += 4;
+                            if ((pbody[index+4] & 0x0F) == 0x6) {
+                                seiSize += pbody[index]<<24;
+                                seiSize += pbody[index+1]<<16;
+                                seiSize += pbody[index+2]<<8;
+                                seiSize += pbody[index+3];
+                                sei = pbody + index;
+                                seiSize += 4;
+                                index += seiSize;
+                            }
+                            if((pbody[index+4] & 0x0F) == 0x5){
+                                ppSize += pbody[index]<<24;
+                                ppSize += pbody[index+1]<<16;
+                                ppSize += pbody[index+2]<<8;
+                                ppSize += pbody[index+3];
+                                pp = pbody + index;
+                                ppSize += 4;
+                                index += ppSize;
+                            }
+                        }else{
+                            GJLOG(GJ_LOGFORBID,"h264格式有误\n");
+                            RTMPPacket_Free(&packet);
+                            continue;
                         }
-                    }
-                    if (pbody[1] == 1) {//naul
-                        find_pp_sps_pps(&isKey, pbody+8,(GInt32)(body+packet.m_nBodySize- pbody-8), &pp, NULL, NULL, NULL, NULL, &sei, &seiSize);
-                        ppSize = (GInt32)(body+packet.m_nBodySize-pp);
+                        
+                    }else if((pbody[index]) == 0x27){
+                        isKey = GFalse;
+                        index += 5;
+                        if((pbody[index+4] & 0x0F) == 0x1){
+                            ppSize += pbody[index]<<24;
+                            ppSize += pbody[index+1]<<16;
+                            ppSize += pbody[index+2]<<8;
+                            ppSize += pbody[index+3];
+                            pp = pbody + index;
+                            ppSize += 4;
+                            index += ppSize;
+                        }else{
+                            GJLOG(GJ_LOGFORBID,"h264格式有误\n");
+                            RTMPPacket_Free(&packet);
+                            continue;
+                        }
+
                     }else{
-                        GJAssert(0,"h264 stream no naul\n");
+                        GJLOG(GJ_LOGFORBID,"h264格式有误，type:%d\n",body[0]);
+                        RTMPPacket_Free(&packet);
+                        continue;
                     }
-                    
-                }else{
-                    GJAssert(0,"not h264 stream,type:%d\n",body[0] & 0x0F);
                 }
+               
                 
                 R_GJH264Packet* h264Packet = (R_GJH264Packet*)                GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJH264Packet));
                 memset(h264Packet, 0, sizeof(R_GJH264Packet));

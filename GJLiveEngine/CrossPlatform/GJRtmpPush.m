@@ -141,8 +141,55 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         return GFalse;
     }
     GBool isKey = GFalse;
-    GUInt8 *sps = packet->spsOffset + packet->retain.data,*pps = packet->ppsOffset + packet->retain.data,*pp = packet->ppOffset+packet->retain.data;
-    GInt32 spsSize = packet->spsSize,ppsSize = packet->ppsSize,ppSize = packet->ppSize;
+    GUInt8 *sps = GNULL,*pps = GNULL,*pp = GNULL;
+    GInt32 spsSize = 0,ppsSize = 0,ppSize = 0;
+    GInt32 sps_ppsPreSize = 0,ppPreSize = 0;//flv tag前置预留大小大小
+    
+    if (packet->spsSize > 0) {
+        isKey = GTrue;
+
+        sps_ppsPreSize = 16;
+        spsSize = packet->spsSize;
+        ppsSize = packet->ppsSize;
+        
+        sps = packet->spsOffset + packet->retain.data;
+        pps = packet->ppsOffset + packet->retain.data;
+    }
+    if (packet->ppSize > 0) {
+        ppPreSize = 5;
+        ppSize = packet->ppSize;
+        pp = packet->ppOffset+packet->retain.data;
+        if ((pp[0] & 0x1F) == 5 || (pp[0] & 0x1F) == 6) {
+            isKey = GTrue;
+            if (packet->seiSize != 0) {
+                pp = packet->seiOffset + packet->retain.data;
+                ppSize += packet->seiSize;
+            }
+        }
+    }else{
+        GJAssert(1, "没有pp");
+    }
+    
+    GInt32 preSize = ppPreSize+sps_ppsPreSize+RTMP_MAX_HEADER_SIZE+spsSize+ppsSize;
+    if (pp-packet->retain.data + packet->retain.frontSize < preSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
+        GJLOG(GJ_LOGDEBUG, "预留位置过小,扩大");
+        retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+ppPreSize+sps_ppsPreSize, GTrue);
+        if (packet->spsSize>0) {
+            sps = packet->spsOffset + packet->retain.data;
+        }
+        if (packet->ppsSize>0) {
+            pps = packet->ppsOffset + packet->retain.data;
+        }
+        if (packet->ppSize > 0) {
+            pp = packet->ppOffset+packet->retain.data;
+        }
+#ifdef SEND_SEI
+        if (packet->seiSize != 0) {
+            pp = packet->seiOffset + packet->retain.data;
+            ppSize += packet->seiSize;
+        }
+#endif
+    }
     
     GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
     memset(pushPacket, 0, sizeof(GJRTMP_Packet));
@@ -152,43 +199,8 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
 
     GUChar * body=GNULL;
     GInt32 iIndex = 0;
-    GInt32 sps_ppsPreSize = 0,ppPreSize = 0,ppHasPreSize=9;//flv tag前置预留大小大小
    
-
-    if (packet->spsSize>0) {
-        sps_ppsPreSize = 16;
-    }
-    if (packet->ppSize>0) {
- 
-        ppPreSize = 9;
-        
-        if ((pp[4] & 0x1F) == 5) {
-            isKey = GTrue;
-#ifdef SEND_SEI
-            if (packet->sei) {
-                pp = packet->sei;
-                ppSize += packet->seiSize;
-            }
-#endif
-            ppHasPreSize -= packet->ppOffset - packet->ppsOffset - packet->ppsSize;
-        }
-    }else{
-        GJAssert(0, "没有pp");
-    }
-
-    if (pp-packet->retain.data + packet->retain.frontSize < ppPreSize+sps_ppsPreSize+RTMP_MAX_HEADER_SIZE+spsSize+ppsSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
-        GJLOG(GJ_LOGDEBUG, "预留位置过小,扩大");
-        retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+spsSize+ppsSize, GTrue);
-        sps = packet->spsOffset + packet->retain.data;
-        pps = packet->ppsOffset + packet->retain.data;
-        pp = packet->ppOffset+packet->retain.data;
-#ifdef SEND_SEI
-        if (packet->sei) {
-            pp = packet->sei;
-            ppSize += packet->seiSize;
-        }
-#endif
-    }
+   
 //    使用pp做参考点，防止sei不发送的情况，导致pp移动，产生消耗
     sendPacket->m_body = (GChar*)pp - ppPreSize - sps_ppsPreSize - spsSize - ppsSize;
     sendPacket->m_nBodySize = ppSize+spsSize+ppsSize+ppPreSize+sps_ppsPreSize;
@@ -201,14 +213,9 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     sendPacket->m_nTimeStamp = (uint32_t)packet->pts;
     if (packet->ppsSize > 0 && packet->spsSize > 0) {
 
-        //先移动，防止被填充:[13]sps,[13+spsSize+3]pps
-        if (ppHasPreSize<0) {//右移动
-            pps = memmove(pp - ppPreSize - ppsSize, pps, ppsSize);
-            sps = memmove(pp - ppPreSize - ppsSize - spsSize - 3, sps, spsSize);
-        }else{
-            sps = memmove(pp - ppPreSize - ppsSize - spsSize - 3, sps, spsSize);
-            pps = memmove(pp - ppPreSize - ppsSize, pps, ppsSize);
-        }
+//        //先移动，防止被填充:[13]sps,[13+spsSize+3]pps
+//        sps = memmove(pp - ppPreSize - ppsSize -3 + 4 - spsSize, sps, spsSize);
+//        pps = memmove(pp - ppPreSize - ppsSize, pps+4, ppsSize-4);
 
 
         body[iIndex++] = 0x17;
@@ -219,26 +226,23 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         body[iIndex++] = 0x00;
         
         body[iIndex++] = 0x01;
-        body[iIndex++] = sps[1+4];
-        body[iIndex++] = sps[2+4];
-        body[iIndex++] = sps[3+4];
+        body[iIndex++] = sps[1];
+        body[iIndex++] = sps[2];
+        body[iIndex++] = sps[3];
         body[iIndex++] = 0xff;
         
         /*sps*/
         body[iIndex++]   = 0xe1;
-        body[iIndex++] = (spsSize >> 8) & 0xff;
+        body[iIndex++] = spsSize>>8 & 0xff;
         body[iIndex++] = spsSize & 0xff;
-        GJAssert(body+iIndex == sps, "位置不对");
-
-//        memmove(&body[iIndex],sps,spsSize);
+        memmove(&body[iIndex],sps,spsSize);
         iIndex +=  spsSize;
 
         /*pps*/
         body[iIndex++]   = 0x01;
-        body[iIndex++] = ((ppsSize) >> 8) & 0xff;
-        body[iIndex++] = (ppsSize) & 0xff;
-//        memmove(&body[iIndex], pps, ppsSize);
-        GJAssert(body+iIndex == pps, "位置不对");
+        body[iIndex++] = ppsSize>>8 & 0xff;
+        body[iIndex++] = ppsSize & 0xff;
+        memmove(&body[iIndex],pps,ppsSize);
         iIndex +=  ppsSize;
     }
     if (packet->ppSize > 0) {
@@ -257,14 +261,15 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         body[iIndex++] = 0x00;
         body[iIndex++] = 0x00;
         // NALU size
-        body[iIndex++] = ppSize>>24 &0xff;
-        body[iIndex++] = ppSize>>16 &0xff;
-        body[iIndex++] = ppSize>>8 &0xff;
-        body[iIndex++] = ppSize    &0xff;
-        GJAssert(body+iIndex == pp, "位置不对");
+//        body[iIndex++] = ppSize>>24 &0xff;
+//        body[iIndex++] = ppSize>>16 &0xff;
+//        body[iIndex++] = ppSize>>8 &0xff;
+//        body[iIndex++] = ppSize    &0xff;
 
         // NALU data
-//        memcpy(&body[iIndex],pp,ppSize);   //不需要移动
+//        memcpy(&body[iIndex],pp,ppSize);
+        GJAssert(body+iIndex == pp, "位置不对");
+
     }
 
     retainBufferRetain(retainBuffer);

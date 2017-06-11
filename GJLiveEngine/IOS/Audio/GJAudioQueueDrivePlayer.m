@@ -225,8 +225,8 @@
             }
         }
         UInt32 numPrepared = 0;
-        OSStatus status = AudioQueuePrime(_audioQueue, 0, &numPrepared);
-        status = AudioQueueStart(_audioQueue, NULL);
+//        OSStatus status = AudioQueuePrime(_audioQueue, 0, &numPrepared);
+        OSStatus status = AudioQueueStart(_audioQueue, NULL);
         if (status != 0) {
             char* codeChar = (char*)&status;
             _status = kPlayAStopStatus;

@@ -11,36 +11,48 @@
 #import "GJLog.h"
 
 
-#define AUDIO_UNIT_RECODE
+#define AMAZING_AUDIO_ENGINE
 //#define AUDIO_QUEUE_RECODE
 
-
+#import <CoreAudio/CoreAudioTypes.h>
 #ifdef AUDIO_QUEUE_RECODE
 #import "GJAudioQueueRecoder.h"
 #endif
+
+#ifdef AMAZING_AUDIO_ENGINE
 
 #import "AudioUnitCapture.h"
 #import "AEAudioController.h"
 #import "AEPlaythroughChannel.h"
 
-@interface GJPlaythroughChannel : AEPlaythroughChannel
+@interface GJAudioOutput : NSObject <AEAudioReceiver>
 {
     GJRetainBufferPool* _bufferPool;
-    GJQueue* _qeue;
 }
+- (instancetype)init;
+
+- (id)initWithAudioController:(AEAudioController*)audioController;
+
+@property (nonatomic, assign) float volume;
+@property (nonatomic, assign) float pan;
+@property (nonatomic, assign) BOOL channelIsMuted;
+@property (nonatomic, readonly) AudioStreamBasicDescription audioDescription;
+@property (nonatomic, weak) AEAudioController *audioController;
+@property (nonatomic, copy)void(^audioCallback)(R_GJPCMFrame* frame);
+
 @end
-@implementation GJPlaythroughChannel
+@implementation GJAudioOutput
 
 
-static void inputCallback(__unsafe_unretained GJPlaythroughChannel *THIS,
+static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
                           __unsafe_unretained AEAudioController *audioController,
                           void                     *source,
                           const AudioTimeStamp     *time,
                           UInt32                    frames,
                           AudioBufferList          *audio) {
     
-    GJPlaythroughChannel* playChannel = THIS;
-    if (playChannel.audiobusConnectedToSelf ) return;
+    GJAudioOutput* playChannel = THIS;
+    if (playChannel.channelIsMuted || !playChannel.audioCallback) return;
     if (audio &&  audio->mNumberBuffers>0) {
         GUInt32 size = (GUInt32)audio->mBuffers[0].mDataByteSize;
         if (playChannel->_bufferPool == GNULL) {
@@ -50,57 +62,41 @@ static void inputCallback(__unsafe_unretained GJPlaythroughChannel *THIS,
                     return ;
                 }
         }
-        R_GJPCMFrame* frmae = (R_GJPCMFrame*)GJRetainBufferPoolGetData(playChannel->_bufferPool);
-        memcpy(frmae->retain.data, audio->mBuffers[0].mData, audio->mBuffers[0].mDataByteSize);
-        frmae->channel = audio->mBuffers[0].mNumberChannels;
-        
-        
-        retainBufferUnRetain(&frmae->retain);
+        R_GJPCMFrame* rFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetData(playChannel->_bufferPool);
+        memcpy(rFrame->retain.data, audio->mBuffers[0].mData, audio->mBuffers[0].mDataByteSize);
+        rFrame->channel = audio->mBuffers[0].mNumberChannels;
+        playChannel.audioCallback(rFrame);
+        retainBufferUnRetain(&rFrame->retain);
     };
 }
 
 -(AEAudioReceiverCallback)receiverCallback {
     return inputCallback;
 }
-
-static OSStatus renderCallback(__unsafe_unretained AEPlaythroughChannel *THIS,
-                               __unsafe_unretained AEAudioController *audioController,
-                               const AudioTimeStamp     *time,
-                               UInt32                    frames,
-                               AudioBufferList          *audio) {
-    while ( 1 ) {
-        // Discard any buffers with an incompatible format, in the event of a format change
-        AudioBufferList *nextBuffer = TPCircularBufferNextBufferList(&THIS->_buffer, NULL);
-        if ( !nextBuffer ) break;
-        if ( nextBuffer->mNumberBuffers == audio->mNumberBuffers ) break;
-        TPCircularBufferConsumeNextBufferList(&THIS->_buffer);
-    }
-    
-    UInt32 fillCount = TPCircularBufferPeek(&THIS->_buffer, NULL, AEAudioControllerAudioDescription(audioController));
-    if ( fillCount > frames+kSkipThreshold ) {
-        UInt32 skip = fillCount - frames;
-        TPCircularBufferDequeueBufferListFrames(&THIS->_buffer,
-                                                &skip,
-                                                NULL,
-                                                NULL,
-                                                AEAudioControllerAudioDescription(audioController));
-    }
-    
-    TPCircularBufferDequeueBufferListFrames(&THIS->_buffer,
-                                            &frames,
-                                            audio,
-                                            NULL,
-                                            AEAudioControllerAudioDescription(audioController));
-    
-    return noErr;
+- (id)initWithAudioController:(AEAudioController*)audioController {
+    return [self init];
 }
 
--(AEAudioRenderCallback)renderCallback {
-    return renderCallback;
+- (id)init {
+    if ( !(self = [super init]) ) return nil;
+    _volume = 1.0;
+    return self;
 }
-
+-(AudioStreamBasicDescription)audioDescription {
+    return _audioController.inputAudioDescription;
+}
+- (void)dealloc {
+    if (_bufferPool) {
+        GJRetainBufferPoolClean(_bufferPool, YES);
+        GJRetainBufferPoolFree(&(_bufferPool));
+    }
+    self.audioController = nil;
+}
+- (void)teardown {
+    self.audioController = nil;
+}
 @end
-
+#endif
 
 inline static GBool audioProduceSetup(struct _GJAudioProduceContext* context,GJAudioFormat format,AudioFrameOutCallback callback,GHandle userData){
     GJAssert(context->obaque == GNULL, "上一个音频生产器没有释放");
@@ -131,6 +127,8 @@ inline static GBool audioProduceSetup(struct _GJAudioProduceContext* context,GJA
     };
     context->obaque = (__bridge_retained GHandle)(recoder);
 #endif
+    
+#ifdef AMAZING_AUDIO_ENGINE
     AudioStreamBasicDescription audioFormat = {0};
     audioFormat.mSampleRate       = format.mSampleRate;               // 3
     audioFormat.mChannelsPerFrame = format.mChannelsPerFrame;                     // 4
@@ -143,14 +141,27 @@ inline static GBool audioProduceSetup(struct _GJAudioProduceContext* context,GJA
 
     
     AEAudioController* audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat options:AEAudioControllerOptionEnableInput];
-    return [audioController start:nil];
+    
+    GJAudioOutput* audioOut = [[GJAudioOutput alloc]initWithAudioController:audioController];
+    [audioController addInputReceiver:audioOut];
+    audioOut.audioCallback = ^(R_GJPCMFrame* frame){
+        callback(userData,frame);
+    };
+    context->obaque = (__bridge_retained GHandle)audioController;
+#endif
+    return GTrue;
 }
 inline static GVoid audioProduceUnSetup(struct _GJAudioProduceContext* context){
     if(context->obaque){
 #ifdef AUDIO_QUEUE_RECODE
-
         GJAudioQueueRecoder* recode = (__bridge_transfer GJAudioQueueRecoder *)(context->obaque);
         [recode stop];
+        context->obaque = GNULL;
+#endif
+        
+#ifdef AMAZING_AUDIO_ENGINE
+        AEAudioController* audioController = (__bridge_transfer AEAudioController *)(context->obaque);
+        [audioController stop];
         context->obaque = GNULL;
 #endif
     }
@@ -161,13 +172,22 @@ inline static GBool audioProduceStart(struct _GJAudioProduceContext* context){
     GJAudioQueueRecoder* recode = (__bridge GJAudioQueueRecoder *)(context->obaque);
     result =  [recode startRecodeAudio];
 #endif
-    
+#ifdef AMAZING_AUDIO_ENGINE
+    NSError* error;
+    AEAudioController* audioController = (__bridge AEAudioController *)(context->obaque);
+    [audioController start:&error];
+    result = (error != nil);
+#endif
     return result;
 }
 inline static GVoid audioProduceStop(struct _GJAudioProduceContext* context){
 #ifdef AUDIO_QUEUE_RECODE
     GJAudioQueueRecoder* recode = (__bridge GJAudioQueueRecoder *)(context->obaque);
     [recode stop];
+#endif
+#ifdef AMAZING_AUDIO_ENGINE
+    AEAudioController* audioController = (__bridge AEAudioController *)(context->obaque);
+    [audioController stop];
 #endif
 }
 

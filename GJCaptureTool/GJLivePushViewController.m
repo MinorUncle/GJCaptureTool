@@ -14,7 +14,8 @@
 #import "log.h"
 #import "GJBufferPool.h"
 
-static char* url = "rtmp://169.254.221.81/live/room";
+//static char* url = "rtmp://169.254.221.81/live/room";
+static char* url = "rtmp://192.168.199.187/live/room";
 
 @interface PullShow : NSObject
 {
@@ -135,11 +136,12 @@ static char* url = "rtmp://169.254.221.81/live/room";
 - (void)viewDidLoad {
     [super viewDidLoad];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
-    GJ_LogSetLevel(GJ_LOGALL);
+    GJ_LogSetLevel(GJ_LOGDEBUG);
     RTMP_LogSetLevel(RTMP_LOGERROR);
     
     _livePush = [[GJLivePush alloc]init];
     _livePush.videoMute = YES;
+//    _livePush.audioMute = YES;
     
     GJPushConfig config = {0};
     config.mAudioChannel = 2;

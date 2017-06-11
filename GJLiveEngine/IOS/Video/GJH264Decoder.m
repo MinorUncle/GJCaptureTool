@@ -107,8 +107,8 @@ void decodeOutputCallback(
     CMBlockBufferRef blockBuffer = NULL;
     
     if (packet->spsSize > 0) {
-        uint8_t*  parameterSetPointers[2] = {packet->spsOffset+packet->retain.data+4, packet->ppsOffset+packet->retain.data+4};
-        size_t parameterSetSizes[2] = {packet->spsSize-4, packet->ppsSize-4};
+        uint8_t*  parameterSetPointers[2] = {packet->spsOffset+packet->retain.data, packet->ppsOffset+packet->retain.data};
+        size_t parameterSetSizes[2] = {packet->spsSize, packet->ppsSize};
         
         CMVideoFormatDescriptionRef  desc;
         status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,
@@ -163,9 +163,15 @@ void decodeOutputCallback(
     
     if (packet->ppSize>0) {
         blockLength = (int)(packet->ppSize);
-        void* data = packet->ppOffset+packet->retain.data;
-        uint32_t dataLength32 = htonl (blockLength - 4);
-        memcpy (data, &dataLength32, sizeof (uint32_t));
+        void* data = NULL;
+        if (packet->seiSize>0) {
+            data = packet->seiOffset+packet->retain.data;
+            blockLength = packet->seiSize + packet->ppSize;
+        }else{
+            data = packet->ppOffset+packet->retain.data;
+        }
+//        uint32_t dataLength32 = htonl (blockLength - 4);
+//        memcpy (data, &dataLength32, sizeof (uint32_t));
         status = CMBlockBufferCreateWithMemoryBlock(NULL, data,
                                                     blockLength,
                                                     kCFAllocatorNull, NULL,
@@ -231,7 +237,7 @@ RETRY:
             CFRelease(blockBuffer);
         }
     }else{
-        GJLOG(GJ_LOGFORBID, "帧没有pp");
+        GJLOG(GJ_LOGWARNING, "帧没有pp");
 
     }
     

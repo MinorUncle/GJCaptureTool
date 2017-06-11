@@ -14,6 +14,8 @@
 #import "GJLiveDefine.h"
 #import "GJLiveDefine+internal.h"
 
+#define GJRTMP_PACKET_NEED_PRESIZE 10
+
 typedef enum _GJRTMPPushMessageType{
     GJRTMPPushMessageType_connectSuccess,
     GJRTMPPushMessageType_closeComplete,

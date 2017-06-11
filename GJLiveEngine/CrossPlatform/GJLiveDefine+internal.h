@@ -16,7 +16,7 @@
 #define SEND_DELAY_TIME 1500
 #define SEND_DELAY_COUNT 25
 
-//#define SEND_SEI
+#define SEND_SEI
 //#define TEST
 
 typedef struct GRational{
@@ -37,11 +37,11 @@ typedef struct TrafficStatus{
 typedef struct H264Packet{
     GJRetainBuffer retain;
     GInt64 pts;
-    GLong spsOffset;
+    GLong spsOffset;//裸数据
     GInt32 spsSize;
-    GLong ppsOffset;
+    GLong ppsOffset;//裸数据
     GInt32 ppsSize;
-    GLong ppOffset;
+    GLong ppOffset;//四位大端字节表示长度
     GInt32 ppSize;
     GLong seiOffset;
     GInt32 seiSize;
