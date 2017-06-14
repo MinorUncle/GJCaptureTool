@@ -163,6 +163,8 @@
 		4CEC0EBA16B5294300D11ED9 /* AEBlockFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CEC0EB816B5294300D11ED9 /* AEBlockFilter.m */; };
 		6A40E1A21EEAA2BB0047E0F0 /* AEPlaythroughChannel.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CA689C01542DC8C00AF8DDD /* AEPlaythroughChannel.m */; };
 		6A40E1A31EEAA2BF0047E0F0 /* AEPlaythroughChannel.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CA689BF1542DC8C00AF8DDD /* AEPlaythroughChannel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		6AB4F4491EF0D8C000FD4172 /* GJAudioSessionCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AB4F4471EF0D8C000FD4172 /* GJAudioSessionCenter.h */; };
+		6AB4F44A1EF0D8C000FD4172 /* GJAudioSessionCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB4F4481EF0D8C000FD4172 /* GJAudioSessionCenter.m */; };
 		7A5687151B54617200243427 /* AEAudioController+Audiobus.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C2886511557DB800074175A /* AEAudioController+Audiobus.m */; };
 		7A5687161B54617200243427 /* AEAudioFilePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CAD56AA15163488003CE861 /* AEAudioFilePlayer.m */; };
 		7A5687171B54617200243427 /* AEAudioFileWriter.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C38DC5415458AB1009F4454 /* AEAudioFileWriter.m */; };
@@ -302,6 +304,8 @@
 		4CE501971493F82600F23607 /* TheAmazingAudioEngine-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TheAmazingAudioEngine-Prefix.pch"; sourceTree = "<group>"; };
 		4CEC0EB716B5294200D11ED9 /* AEBlockFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEBlockFilter.h; sourceTree = "<group>"; };
 		4CEC0EB816B5294300D11ED9 /* AEBlockFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEBlockFilter.m; sourceTree = "<group>"; };
+		6AB4F4471EF0D8C000FD4172 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
+		6AB4F4481EF0D8C000FD4172 /* GJAudioSessionCenter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioSessionCenter.m; sourceTree = "<group>"; };
 		7A5687101B54610900243427 /* libTheAmazingAudioEngine OS X.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine OS X.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A5687231B5461A000243427 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		B0EE36FC1AD4270400D7AB17 /* AESequencerBeat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AESequencerBeat.h; sourceTree = "<group>"; };
@@ -452,6 +456,8 @@
 				4CAD569315162822003CE861 /* TheAmazingAudioEngine.h */,
 				4CAD56801516281D003CE861 /* AEAudioController.h */,
 				4CAD56811516281D003CE861 /* AEAudioController.m */,
+				6AB4F4471EF0D8C000FD4172 /* GJAudioSessionCenter.h */,
+				6AB4F4481EF0D8C000FD4172 /* GJAudioSessionCenter.m */,
 				4C2886361556FC620074175A /* AEAudioController+Audiobus.h */,
 				4C2886541557DC230074175A /* AEAudioController+AudiobusStub.h */,
 				4C2886511557DB800074175A /* AEAudioController+Audiobus.m */,
@@ -543,6 +549,7 @@
 				4C215D121523A94200D36CAD /* TheAmazingAudioEngine.h in Headers */,
 				F9C23C1E1BA979050060718F /* AEMessageQueue.h in Headers */,
 				4C13AA9B1BB0FC9900DE05E0 /* AEMemoryBufferPlayer.h in Headers */,
+				6AB4F4491EF0D8C000FD4172 /* GJAudioSessionCenter.h in Headers */,
 				4C2886381556FC620074175A /* AEAudioController+Audiobus.h in Headers */,
 				4C215D131523A94200D36CAD /* AEAudioController.h in Headers */,
 				4C49FE32153DC21A008725E0 /* AEAudioFileLoaderOperation.h in Headers */,
@@ -782,6 +789,7 @@
 				4C70F9A91BB0D2FE0064CF73 /* AELowPassFilter.m in Sources */,
 				4C70F9A11BB0D2FE0064CF73 /* AEDistortionFilter.m in Sources */,
 				4C49FE34153DC21A008725E0 /* AEAudioFileLoaderOperation.m in Sources */,
+				6AB4F44A1EF0D8C000FD4172 /* GJAudioSessionCenter.m in Sources */,
 				4C13AA9D1BB0FC9900DE05E0 /* AEMemoryBufferPlayer.m in Sources */,
 				4C38DC5715458AB1009F4454 /* AEAudioFileWriter.m in Sources */,
 				4C70F99D1BB0D2FE0064CF73 /* AEBandpassFilter.m in Sources */,

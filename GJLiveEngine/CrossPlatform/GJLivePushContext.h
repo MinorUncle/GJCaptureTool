@@ -35,6 +35,9 @@ typedef struct _GJLivePushContext{
     GTime                   startPushClock;
     GTime                   stopPushClock;
 
+    GTime                   firstVideoEncodeClock;
+    GTime                   firstAudioEncodeClock;
+
     GTime                   connentClock;
     GTime                   disConnentClock;
     

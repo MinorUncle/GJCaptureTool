@@ -8,6 +8,7 @@
 
 #include "GJRtmpPush.h"
 #include "GJLog.h"
+#include "log.h"
 #import <Foundation/Foundation.h>
 //extern "C"{
 #include "sps_decode.h"
@@ -134,61 +135,106 @@ GBool GJRtmpPush_Create(GJRtmpPush** sender,PushMessageCallback callback,GHandle
     *sender = push;
     return GTrue;
 }
-
-
+static GBool sequenceHeaderReleaseCallBack(GJRetainBuffer * buffer){
+    free(buffer->data);
+    free(buffer);
+    return GTrue;
+}
+GBool GJRtmpPush_SendAVCSequenceHeader(GJRtmpPush* push,GUInt8* sps,GInt32 spsSize,GUInt8* pps,GInt32 ppsSize,GUInt64 dts){
+    GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
+    RTMPPacket* sendPacket = &pushPacket->packet;
+    RTMPPacket_Reset(sendPacket);
+    pushPacket->retainBuffer = GNULL;
+    GInt32 needSize = spsSize + ppsSize + RTMP_MAX_HEADER_SIZE + 16;
+    GHandle data = (GHandle)malloc(needSize);
+    pushPacket->packet.m_body = data + RTMP_MAX_HEADER_SIZE;
+    pushPacket->packet.m_nBodySize = needSize - RTMP_MAX_HEADER_SIZE;
+    sendPacket->m_packetType = RTMP_PACKET_TYPE_VIDEO;
+    sendPacket->m_nChannel = 0x04;
+    sendPacket->m_hasAbsTimestamp = 0;
+    sendPacket->m_headerType = RTMP_PACKET_SIZE_MEDIUM;
+    sendPacket->m_nInfoField2 = push->rtmp->m_stream_id;
+    sendPacket->m_nTimeStamp = (GUInt32)dts;
+    
+    retainBufferPack(&(pushPacket->retainBuffer), data, needSize, sequenceHeaderReleaseCallBack, GNULL);
+    GUInt8* body = (GUInt8*)pushPacket->packet.m_body;
+    GInt32 iIndex = 0;
+    
+    body[iIndex++] = 0x17;
+    body[iIndex++] = 0x00;
+    
+    body[iIndex++] = 0x00;
+    body[iIndex++] = 0x00;
+    body[iIndex++] = 0x00;
+    
+    ////AVCDecoderConfigurationRecord
+    body[iIndex++] = 0x01;
+    body[iIndex++] = sps[1];
+    body[iIndex++] = sps[2];
+    body[iIndex++] = sps[3];
+    body[iIndex++] = 0xff;
+    
+    /*sps*/
+    body[iIndex++]   = 0xe1;
+    body[iIndex++] = spsSize>>8 & 0xff;
+    body[iIndex++] = spsSize & 0xff;
+    memcpy(&body[iIndex],sps,spsSize);
+    iIndex +=  spsSize;
+    
+    /*pps*/
+    body[iIndex++]   = 0x01;
+    body[iIndex++] = ppsSize>>8 & 0xff;
+    body[iIndex++] = ppsSize & 0xff;
+    memcpy(&body[iIndex],pps,ppsSize);
+    
+    
+    if (queuePush(push->sendBufferQueue, pushPacket, 0)) {
+        push->videoStatus.enter.pts = pushPacket->packet.m_nTimeStamp;
+        push->videoStatus.enter.count++;
+        push->videoStatus.enter.byte += pushPacket->packet.m_nBodySize;
+        return GTrue;
+    }else{
+        return GFalse;
+    }
+}
 GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     if (sender == GNULL) {
         return GFalse;
     }
     GBool isKey = GFalse;
-    GUInt8 *sps = GNULL,*pps = GNULL,*pp = GNULL;
-    GInt32 spsSize = 0,ppsSize = 0,ppSize = 0;
-    GInt32 sps_ppsPreSize = 0,ppPreSize = 0;//flv tag前置预留大小大小
-    
-    if (packet->spsSize > 0) {
-        isKey = GTrue;
-
-        sps_ppsPreSize = 16;
-        spsSize = packet->spsSize;
-        ppsSize = packet->ppsSize;
-        
-        sps = packet->spsOffset + packet->retain.data;
-        pps = packet->ppsOffset + packet->retain.data;
-    }
+    GUInt8 *pp = GNULL;
+    GInt32 ppSize = 0;
+    GInt32 ppPreSize = 0;//flv tag前置预留大小大小
+    GUInt8 fristByte = 0x27;
     if (packet->ppSize > 0) {
         ppPreSize = 5;
         ppSize = packet->ppSize;
         pp = packet->ppOffset+packet->retain.data;
         if ((pp[0] & 0x1F) == 5 || (pp[0] & 0x1F) == 6) {
             isKey = GTrue;
+            fristByte = 0x17;
             if (packet->seiSize != 0) {
                 pp = packet->seiOffset + packet->retain.data;
                 ppSize += packet->seiSize;
             }
         }
     }else{
-        GJAssert(1, "没有pp");
+        GJAssert(0, "没有pp");
+        return GFalse;
     }
     
-    GInt32 preSize = ppPreSize+sps_ppsPreSize+RTMP_MAX_HEADER_SIZE+spsSize+ppsSize;
+    GInt32 preSize = ppPreSize+RTMP_MAX_HEADER_SIZE;
     if (pp-packet->retain.data + packet->retain.frontSize < preSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
         GJLOG(GJ_LOGDEBUG, "预留位置过小,扩大");
-        retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+ppPreSize+sps_ppsPreSize, GTrue);
-        if (packet->spsSize>0) {
-            sps = packet->spsOffset + packet->retain.data;
-        }
-        if (packet->ppsSize>0) {
-            pps = packet->ppsOffset + packet->retain.data;
-        }
+        retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+ppPreSize, GTrue);
+
         if (packet->ppSize > 0) {
             pp = packet->ppOffset+packet->retain.data;
         }
-#ifdef SEND_SEI
         if (packet->seiSize != 0) {
             pp = packet->seiOffset + packet->retain.data;
             ppSize += packet->seiSize;
         }
-#endif
     }
     
     GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
@@ -202,8 +248,8 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
    
    
 //    使用pp做参考点，防止sei不发送的情况，导致pp移动，产生消耗
-    sendPacket->m_body = (GChar*)pp - ppPreSize - sps_ppsPreSize - spsSize - ppsSize;
-    sendPacket->m_nBodySize = ppSize+spsSize+ppsSize+ppPreSize+sps_ppsPreSize;
+    sendPacket->m_body = (GChar*)pp - ppPreSize;
+    sendPacket->m_nBodySize = ppSize+ppPreSize;
     body = (GUChar *)sendPacket->m_body;
     sendPacket->m_packetType = RTMP_PACKET_TYPE_VIDEO;
     sendPacket->m_nChannel = 0x04;
@@ -211,65 +257,13 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     sendPacket->m_headerType = RTMP_PACKET_SIZE_LARGE;
     sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
     sendPacket->m_nTimeStamp = (uint32_t)packet->pts;
-    if (packet->ppsSize > 0 && packet->spsSize > 0) {
-
-//        //先移动，防止被填充:[13]sps,[13+spsSize+3]pps
-//        sps = memmove(pp - ppPreSize - ppsSize -3 + 4 - spsSize, sps, spsSize);
-//        pps = memmove(pp - ppPreSize - ppsSize, pps+4, ppsSize-4);
-
-
-        body[iIndex++] = 0x17;
-        body[iIndex++] = 0x00;
-        
-        body[iIndex++] = 0x00;
-        body[iIndex++] = 0x00;
-        body[iIndex++] = 0x00;
-        
-        body[iIndex++] = 0x01;
-        body[iIndex++] = sps[1];
-        body[iIndex++] = sps[2];
-        body[iIndex++] = sps[3];
-        body[iIndex++] = 0xff;
-        
-        /*sps*/
-        body[iIndex++]   = 0xe1;
-        body[iIndex++] = spsSize>>8 & 0xff;
-        body[iIndex++] = spsSize & 0xff;
-        memmove(&body[iIndex],sps,spsSize);
-        iIndex +=  spsSize;
-
-        /*pps*/
-        body[iIndex++]   = 0x01;
-        body[iIndex++] = ppsSize>>8 & 0xff;
-        body[iIndex++] = ppsSize & 0xff;
-        memmove(&body[iIndex],pps,ppsSize);
-        iIndex +=  ppsSize;
-    }
     if (packet->ppSize > 0) {
-
-        if(isKey)
-        {
-            body[iIndex++] = 0x17;// 1:Iframe  7:AVC
-        }
-        else
-        {
-            body[iIndex++] = 0x27;// 2:Pframe  7:AVC
-        }
+        body[iIndex++] = fristByte;
         body[iIndex++] = 0x01;// AVC NALU
         
         body[iIndex++] = 0x00;
         body[iIndex++] = 0x00;
         body[iIndex++] = 0x00;
-        // NALU size
-//        body[iIndex++] = ppSize>>24 &0xff;
-//        body[iIndex++] = ppSize>>16 &0xff;
-//        body[iIndex++] = ppSize>>8 &0xff;
-//        body[iIndex++] = ppSize    &0xff;
-
-        // NALU data
-//        memcpy(&body[iIndex],pp,ppSize);
-        GJAssert(body+iIndex == pp, "位置不对");
-
     }
 
     retainBufferRetain(retainBuffer);
@@ -285,7 +279,56 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         return GFalse;
     }
 }
+GBool GJRtmpPush_SendAACSequenceHeader(GJRtmpPush* push,GInt32 aactype, GInt32 sampleRate, GInt32 channels,GUInt64 dts){
+    if (push == GNULL) {
+        return GFalse;
+    }
+    GUInt8 srIndex = 0;
+    if (sampleRate == 44100) {
+        srIndex = 4;
+    }else if (sampleRate == 22050){
+        srIndex = 7;
+    }else if (sampleRate == 11025){
+        srIndex = 10;
+    }else{
+        GJLOG(GJ_LOGFORBID, "sampleRate error");
+        return GFalse;
+    }
+    
+    GUInt8 config1 = (aactype << 3) | ((srIndex & 0xe) >> 1);
+    GUInt8 config2 = ((srIndex & 0x1) << 7) | (channels << 3);
+    
+    GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
+    RTMPPacket* sendPacket = &pushPacket->packet;
+    RTMPPacket_Reset(sendPacket);
+    pushPacket->retainBuffer = GNULL;
+    GInt32 needSize = 2 + 2 + RTMP_MAX_HEADER_SIZE;
+    GHandle data = (GHandle)malloc(needSize);
+    pushPacket->packet.m_body = data + RTMP_MAX_HEADER_SIZE;
+    pushPacket->packet.m_nBodySize = needSize - RTMP_MAX_HEADER_SIZE;
+    sendPacket->m_packetType = RTMP_PACKET_TYPE_AUDIO;
+    sendPacket->m_nChannel = 0x04;
+    sendPacket->m_hasAbsTimestamp = 0;
+    sendPacket->m_headerType = RTMP_PACKET_SIZE_MEDIUM;
+    sendPacket->m_nInfoField2 = push->rtmp->m_stream_id;
+    sendPacket->m_nTimeStamp = (GUInt32)dts;
 
+    retainBufferPack(&(pushPacket->retainBuffer), data, needSize, sequenceHeaderReleaseCallBack, GNULL);
+    GUInt8* body = (GUInt8*)pushPacket->packet.m_body;
+    body[0] = 0xAF;
+    body[1] = 0x00;
+    
+    body[2] = config1;
+    body[3] = config2;
+    if (queuePush(push->sendBufferQueue, pushPacket, 0)) {
+        push->audioStatus.enter.pts = pushPacket->packet.m_nTimeStamp;
+        push->audioStatus.enter.count++;
+        push->audioStatus.enter.byte += pushPacket->packet.m_nBodySize;
+        return GTrue;
+    }else{
+        return GFalse;
+    }
+}
 GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
     if (sender == GNULL) {
         return GFalse;
@@ -304,8 +347,8 @@ GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
         retainBufferMoveDataToPoint(&buffer->retain, RTMP_MAX_HEADER_SIZE+preSize, GTrue);
     }
 
-    sendPacket->m_body = (GChar*)(buffer->adtsOffset +buffer->retain.data - preSize);
-    sendPacket->m_nBodySize = buffer->adtsSize+buffer->aacSize+preSize;
+    sendPacket->m_body = (GChar*)(buffer->aacOffset +buffer->retain.data - preSize);
+    sendPacket->m_nBodySize = buffer->aacSize+preSize;
 
     body = (GUChar *)sendPacket->m_body;
     

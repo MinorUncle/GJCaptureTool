@@ -260,9 +260,9 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         
 
         audioBuffer->size = outCacheBufferList.mBuffers[0].mDataByteSize+7;
-        adtsDataForPacketLength(outCacheBufferList.mBuffers[0].mDataByteSize, audioBuffer->data, _destFormat.mSampleRate, _destFormat.mChannelsPerFrame);
+//        adtsDataForPacketLength(outCacheBufferList.mBuffers[0].mDataByteSize, audioBuffer->data, _destFormat.mSampleRate, _destFormat.mChannelsPerFrame);
         packet->adtsOffset = 0;
-        packet->adtsSize = 7;
+        packet->adtsSize = 0;
         packet->aacOffset = 7;
         packet->aacSize = outCacheBufferList.mBuffers[0].mDataByteSize;
         packet->pts = _currentPts;

@@ -184,47 +184,53 @@ void pullAudioDataCallback(GJRtmpPull* pull,R_GJAACPacket* aacPacket,void* parm)
     GJLivePullContext* livePull = parm;
     livePull->audioUnDecodeByte += aacPacket->retain.size;
     if (livePull->fristAudioPullClock == G_TIME_INVALID) {
-        livePull->fristAudioPullClock = GJ_Gettime()/1000.0;
-        uint8_t* adts = aacPacket->adtsOffset+aacPacket->retain.data;
-        uint8_t sampleIndex = adts[2] << 2;
-        sampleIndex = sampleIndex>>4;
-        int sampleRate = mpeg4audio_sample_rates[sampleIndex];
-        uint8_t channel = adts[2] & 0x1 <<2;
-        channel += (adts[3] & 0xc0)>>6;
-        
-        GJAudioFormat sourceformat = {0};
-        sourceformat.mType = GJAudioType_AAC;
-        sourceformat.mChannelsPerFrame = channel;
-        sourceformat.mSampleRate = sampleRate;
-        sourceformat.mFramePerPacket = 1024;
-        
-        //            AudioStreamBasicDescription sourceformat = {0};
-        //            sourceformat.mFormatID = kAudioFormatMPEG4AAC;
-        //            sourceformat.mChannelsPerFrame = channel;
-        //            sourceformat.mSampleRate = sampleRate;
-        //            sourceformat.mFramesPerPacket = 1024;
-        GJAudioFormat destformat = sourceformat;
-        destformat.mBitsPerChannel = 16;
-        destformat.mFramePerPacket = 1;
-        destformat.mType = GJAudioType_PCM;
-        
-        //            AudioStreamBasicDescription destformat = {0};
-        //            destformat.mFormatID = kAudioFormatLinearPCM;
-        //            destformat.mSampleRate       = sourceformat.mSampleRate;               // 3
-        //            destformat.mChannelsPerFrame = sourceformat.mChannelsPerFrame;                     // 4
-        //            destformat.mFramesPerPacket  = 1;                     // 7
-        //            destformat.mBitsPerChannel   = 16;                    // 5
-        //            destformat.mBytesPerFrame   = destformat.mChannelsPerFrame * destformat.mBitsPerChannel/8;
-        //            destformat.mFramesPerPacket = destformat.mBytesPerFrame * destformat.mFramesPerPacket ;
-        //            destformat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
-        pthread_mutex_lock(&livePull->lock);
-        livePull->audioDecoder->decodeSetup(livePull->audioDecoder,sourceformat,destformat,aacDecodeCompleteCallback,livePull);
-        GJLivePlay_SetAudioFormat(livePull->player, destformat);
-        //            livePull.audioDecoder = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&destformat SourceDescription:&sourceformat];
-        //            livePull.audioDecoder.delegate = livePull;
-        //            [livePull.audioDecoder start];
-        //            livePull.player.audioFormat = destformat;
-        pthread_mutex_unlock(&livePull->lock);
+        if (aacPacket->adtsSize >0) {
+            livePull->fristAudioPullClock = GJ_Gettime()/1000.0;
+            uint8_t* adts = aacPacket->adtsOffset+aacPacket->retain.data;
+            uint8_t sampleIndex = adts[2] << 2;
+            sampleIndex = sampleIndex>>4;
+            int sampleRate = mpeg4audio_sample_rates[sampleIndex];
+            uint8_t channel = adts[2] & 0x1 <<2;
+            channel += (adts[3] & 0xc0)>>6;
+            
+            GJAudioFormat sourceformat = {0};
+            sourceformat.mType = GJAudioType_AAC;
+            sourceformat.mChannelsPerFrame = channel;
+            sourceformat.mSampleRate = sampleRate;
+            sourceformat.mFramePerPacket = 1024;
+            
+            //            AudioStreamBasicDescription sourceformat = {0};
+            //            sourceformat.mFormatID = kAudioFormatMPEG4AAC;
+            //            sourceformat.mChannelsPerFrame = channel;
+            //            sourceformat.mSampleRate = sampleRate;
+            //            sourceformat.mFramesPerPacket = 1024;
+            GJAudioFormat destformat = sourceformat;
+            destformat.mBitsPerChannel = 16;
+            destformat.mFramePerPacket = 1;
+            destformat.mType = GJAudioType_PCM;
+            
+            //            AudioStreamBasicDescription destformat = {0};
+            //            destformat.mFormatID = kAudioFormatLinearPCM;
+            //            destformat.mSampleRate       = sourceformat.mSampleRate;               // 3
+            //            destformat.mChannelsPerFrame = sourceformat.mChannelsPerFrame;                     // 4
+            //            destformat.mFramesPerPacket  = 1;                     // 7
+            //            destformat.mBitsPerChannel   = 16;                    // 5
+            //            destformat.mBytesPerFrame   = destformat.mChannelsPerFrame * destformat.mBitsPerChannel/8;
+            //            destformat.mFramesPerPacket = destformat.mBytesPerFrame * destformat.mFramesPerPacket ;
+            //            destformat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
+            pthread_mutex_lock(&livePull->lock);
+            livePull->audioDecoder->decodeSetup(livePull->audioDecoder,sourceformat,destformat,aacDecodeCompleteCallback,livePull);
+            GJLivePlay_SetAudioFormat(livePull->player, destformat);
+            //            livePull.audioDecoder = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&destformat SourceDescription:&sourceformat];
+            //            livePull.audioDecoder.delegate = livePull;
+            //            [livePull.audioDecoder start];
+            //            livePull.player.audioFormat = destformat;
+            pthread_mutex_unlock(&livePull->lock);
+        }else{
+            GJLOG(GJ_LOGERROR,"音频没有adts");
+            return;
+        }
+    
     }
     livePull->audioDecoder->decodePacket(livePull->audioDecoder,aacPacket);
 }

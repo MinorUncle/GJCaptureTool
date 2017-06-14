@@ -56,6 +56,32 @@ inline static GBool encodeAllowBFrame (GJEncodeToH264eContext* context,GBool all
     encode.allowBFrame = allowBframe;
     return encode.allowBFrame == allowBframe;
 }
+inline static GBool encodeGetSPS_PPS(struct _GJEncodeToH264eContext* context,GUInt8* sps,GInt32* spsSize,GUInt8* pps,GInt32* ppsSize){
+    GJH264Encoder* encode = (__bridge GJH264Encoder *)(context->obaque);
+    GBool result = GFalse;
+    if (sps == GNULL || *spsSize < (GInt32)encode.sps.length) {
+        result = GFalse;
+    }else{
+        memcpy(sps, encode.sps.bytes, encode.sps.length);
+        result = GTrue;
+    }
+    if (pps == GNULL || *ppsSize < (GInt32)encode.pps.length) {
+        result = GFalse;
+    }else{
+        memcpy(pps, encode.pps.bytes, encode.pps.length);
+        result = GTrue;
+    }
+    if (spsSize != GNULL) {
+        *spsSize = (GInt32)encode.sps.length;
+        result = GTrue;
+    }
+    if (ppsSize != GNULL) {
+        *ppsSize = (GInt32)encode.pps.length;
+        result = GTrue;
+    }
+
+    return result;
+}
 
 GVoid GJ_H264EncodeContextCreate(GJEncodeToH264eContext** encodeContext){
     if (*encodeContext == NULL) {
@@ -70,6 +96,7 @@ GVoid GJ_H264EncodeContextCreate(GJEncodeToH264eContext** encodeContext){
     context->encodeSetEntropy = encodeSetEntropy;
     context->encodeSetGop = encodeSetGop;
     context->encodeAllowBFrame = encodeAllowBFrame;
+    context->encodeGetSPS_PPS = encodeGetSPS_PPS;
     context->encodeCompleteCallback = NULL;
 }
 GVoid GJ_H264EncodeContextDealloc(GJEncodeToH264eContext** context){

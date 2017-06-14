@@ -35,6 +35,34 @@ static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame)
 static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
     GJLivePushContext* context = userData;
     packet->pts = GJ_Gettime()/1000-context->connentClock;
+    if (context->firstVideoEncodeClock == G_TIME_INVALID) {
+        context->firstVideoEncodeClock = GJ_Gettime();
+        GUInt8* sps,*pps;
+        GInt32 spsSize,ppsSize;
+        sps = pps = GNULL;
+        
+        context->videoEncoder->encodeGetSPS_PPS(context->videoEncoder,sps,&spsSize,pps,&ppsSize);
+        if (spsSize <= 0 || ppsSize <= 0) {
+            GJLOG(GJ_LOGFORBID, "无法获得sps,pps2");
+            context->firstVideoEncodeClock = G_TIME_INVALID;
+            return;
+        }else{
+            sps = (GUInt8*)malloc(spsSize);
+            pps = (GUInt8*)malloc(ppsSize);
+            context->videoEncoder->encodeGetSPS_PPS(context->videoEncoder,sps,&spsSize,pps,&ppsSize);
+            if (sps == GNULL || pps == GNULL) {
+                GJLOG(GJ_LOGFORBID, "无法获得sps,pps2");
+                context->firstVideoEncodeClock = G_TIME_INVALID;
+                return;
+            }else{
+                if(!GJRtmpPush_SendAVCSequenceHeader(context->videoPush, sps, spsSize, pps, ppsSize, packet->pts)){
+                    GJLOG(GJ_LOGFORBID, "SendAVCSequenceHeader 失败");
+                    context->firstVideoEncodeClock = G_TIME_INVALID;
+                    return;
+                }
+            }
+        }
+    }
     GJRtmpPush_SendH264Data(context->videoPush, packet);
     GJTrafficStatus bufferStatus = GJRtmpPush_GetVideoBufferCacheInfo(context->videoPush);
     if (bufferStatus.enter.count % context->dynamicAlgorithm.den == 0) {
@@ -64,6 +92,14 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
 static GVoid aacPacketOutCallback(GHandle userData,R_GJAACPacket* packet){
     GJLivePushContext* context = userData;
     packet->pts = GJ_Gettime()/1000-context->connentClock;
+    if (context->firstAudioEncodeClock == G_TIME_INVALID) {
+        context->firstAudioEncodeClock = GJ_Gettime();
+        if (!GJRtmpPush_SendAACSequenceHeader(context->videoPush, 2, context->pushConfig->mAudioSampleRate,  context->pushConfig->mAudioChannel, packet->pts)) {
+            GJLOG(GJ_LOGFORBID, "SendAACSequenceHeader 失败");
+            context->firstAudioEncodeClock = G_TIME_INVALID;
+            return;
+        }
+    }
     GJRtmpPush_SendAACData(context->videoPush, packet);
 }
 
@@ -279,6 +315,7 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
                 GJLOG(GJ_LOGERROR, "请先配置推流参数");
                 return GFalse;
             }
+            context->firstAudioEncodeClock = context->firstVideoEncodeClock = G_TIME_INVALID;
             context->connentClock = context->disConnentClock = G_TIME_INVALID;
             context->startPushClock = GJ_Gettime()/1000;
             

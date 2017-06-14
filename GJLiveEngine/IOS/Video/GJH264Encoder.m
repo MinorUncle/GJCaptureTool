@@ -30,6 +30,7 @@
 @property(nonatomic,assign)BOOL stopRequest;//防止下一帧满时一直等待
 
 
+
 @end
 
 @implementation GJH264Encoder
@@ -43,7 +44,7 @@
         _dropStep = GRationalMake(0, DEFAULT_MAX_DROP_STEP);
         _allowDropStep = GRationalMake(1, 5);
         _dynamicAlgorithm = GRationalMake(5, 10);
-        _allowBFrame = NO;
+        _allowBFrame = YES;
         
         _profileLevel = profileLevelMain;
         _entropyMode = EntropyMode_CABAC;
@@ -143,6 +144,7 @@ RETRY:
         return;
     }
     _stopRequest = NO;
+    _sps = _pps = nil;
     memset(&_preBufferStatus, 0, sizeof(_preBufferStatus));
     if (_bufferPool != NULL) {
         __block GJBufferPool* pool = _bufferPool;
@@ -241,7 +243,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
     bool keyframe = !CFDictionaryContainsKey( (CFArrayGetValueAtIndex(CMSampleBufferGetSampleAttachmentsArray(sample, true), 0)), kCMSampleAttachmentKey_NotSync);
     
-    if (keyframe)
+    if (keyframe && encoder.sps == nil)
     {
         CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sample);
         size_t sparameterSetSize, sparameterSetCount;
@@ -273,10 +275,12 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         }
         uint8_t* data = retainBuffer->data;
         memcpy(&data[0], sparameterSet, sparameterSetSize);
+        encoder.sps = [NSData dataWithBytes:data length:sparameterSetSize];
         pushPacket->spsOffset=data - retainBuffer->data;
         pushPacket->spsSize=(int)sparameterSetSize;
         
         memcpy(&data[sparameterSetSize], pparameterSet, pparameterSetSize);
+        encoder.pps = [NSData dataWithBytes:data + sparameterSetSize length:pparameterSetSize];
         pushPacket->ppsOffset = sparameterSetSize;
         pushPacket->ppsSize = (int)pparameterSetSize;
 //        拷贝keyframe;

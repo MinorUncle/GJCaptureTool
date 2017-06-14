@@ -61,7 +61,8 @@ typedef void(^H264EncodeComplete)(R_GJH264Packet* packet);
 @property(assign,nonatomic)BOOL allowBFrame;
 @property(assign,nonatomic)int bitrate;
 @property(assign,nonatomic,readonly)CGSize sourceSize;
-
+@property(nonatomic,retain)NSData* sps;
+@property(nonatomic,retain)NSData* pps;
 
 @property(nonatomic,copy)H264EncodeComplete completeCallback;
 

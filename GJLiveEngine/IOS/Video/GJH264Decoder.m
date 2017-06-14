@@ -223,7 +223,7 @@ RETRY:
                     [self createDecompSession];
                     goto RETRY;
                 }else{
-                    GJLOG(GJ_LOGFORBID, "解码错误0：%d  ,format:%p",status,_formatDesc);
+                    GJLOG(GJ_LOGERROR, "解码错误0：%d  ,format:%p",status,_formatDesc);
                 }
                 //                    [self createDecompSession];
                 //                    status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);

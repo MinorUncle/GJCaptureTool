@@ -13,6 +13,8 @@
 #include <string.h>
 #import <Foundation/Foundation.h>
 #import "GJBufferPool.h"
+#include "GJFLVPack.h"
+
 #define BUFFER_CACHE_SIZE 40
 #define RTMP_RECEIVE_TIMEOUT    10
 
@@ -81,38 +83,61 @@ static GHandle pullRunloop(GHandle parm){
                 pull->audioPullInfo.byte += packet.m_nBodySize;
                 GUInt8* body = (GUInt8*)packet.m_body;
                 
-                NSData* d = [NSData dataWithBytes:body length:packet.m_nBodySize];
-                NSLog(@"p:%@",d);
-                
-                RTMPPacket_Free(&packet);
-                continue;
-                
-                R_GJAACPacket* aacPacket = (R_GJAACPacket*)                GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJAACPacket));
+                R_GJAACPacket* aacPacket = (R_GJAACPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJAACPacket));
                 memset(aacPacket, 0, sizeof(R_GJAACPacket));
 
                 GJRetainBuffer* retainBuffer = &aacPacket->retain;
                 retainBufferPack(&retainBuffer, body - RTMP_MAX_HEADER_SIZE, RTMP_MAX_HEADER_SIZE+packet.m_nBodySize, packetBufferRelease, NULL);
 //                retainBufferMoveDataToPoint(retainBuffer, RTMP_MAX_HEADER_SIZE, GFalse);
                 aacPacket->pts = packet.m_nTimeStamp;
-                aacPacket->adtsOffset = body+2-aacPacket->retain.data;
-                aacPacket->adtsSize = 7;
-                aacPacket->aacOffset = aacPacket->adtsOffset+7;
-                aacPacket->aacSize = (GInt32)(packet.m_nBodySize -aacPacket->adtsSize - 2);
+                
+                if (body[1] == GJ_flv_a_aac_package_type_aac_raw) {
+                    aacPacket->adtsOffset = 0;
+                    aacPacket->adtsSize = 0;
+                    aacPacket->aacOffset = RTMP_MAX_HEADER_SIZE+2;
+                    aacPacket->aacSize = (GInt32)(packet.m_nBodySize - 2);
+                }else if (body[1] == GJ_flv_a_aac_package_type_aac_sequence_header){
+                    GUInt8 profile = body[2]>>3;
+                    GUInt8 freqIdx = ((body[2] & 0x07) << 1) |(body[3]&0x01);
+                    GUInt8 chanCfg = (body[3] & 0x78) >> 3;
+                    int adtsLength = 7;
+                    GUInt8* adts = body - RTMP_MAX_HEADER_SIZE;
+                    NSUInteger fullLength = adtsLength + 0;
+                    adts[0] = (char)0xFF;	// 11111111  	= syncword
+                    adts[1] = (char)0xF1;	   // 1111 0 00 1 = syncword+id(MPEG-4) + Layer + absent
+                    adts[2] = (char)(((profile)<<6) + (freqIdx<<2) +(chanCfg>>2));// profile(2)+sampling(4)+privatebit(1)+channel_config(1)
+                    adts[3] = (char)(((chanCfg&3)<<6) + (fullLength>>11));
+                    adts[4] = (char)((fullLength&0x7FF) >> 3);
+                    adts[5] = (char)(((fullLength&7)<<5) + 0x1F);
+                    adts[6] = (char)0xFC;
+                    
+                    aacPacket->adtsOffset = 0;
+                    aacPacket->adtsSize = adtsLength;
+                    aacPacket->aacOffset = RTMP_MAX_HEADER_SIZE+2;
+                    aacPacket->aacSize = (GInt32)(packet.m_nBodySize - 2);
+                }else{
+                    GJLOG(GJ_LOGFORBID,"音频流格式错误");
+                    packet.m_body=NULL;
+                    retainBufferUnRetain(retainBuffer);
+                    break;
+                }
+               
                 packet.m_body=NULL;
                 pull->audioCallback(pull,aacPacket,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);
                 
-                
-                
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
-                GJLOGFREQ("receive audio pts:%d",packet.m_nTimeStamp);
+//                GJLOGFREQ("receive video pts:%d",packet.m_nTimeStamp);
+                GJLOG(GJ_LOGDEBUG,"receive video pts:%d",packet.m_nTimeStamp);
+
                 GUInt8 *body = (GUInt8*)packet.m_body;
                 GUInt8 *pbody = body;
                 GInt32 isKey = 0;
                 GInt32 index = 0;
                 
+                            
                 while (index < packet.m_nBodySize) {
-                    if ((pbody[index]) == 0x17) {
+                    if ((pbody[index] & 0x0F) == 0x07) {
                         index ++;
                         if (pbody[index] == 0) {//sps pps
                             index += 10;
@@ -128,9 +153,9 @@ static GHandle pullRunloop(GHandle parm){
                                 GJLOG(GJ_LOGINFO,"only spspps\n");
                             }
                         }else if (pbody[index] == 1) {
-                            isKey = GTrue;
                             index += 4;
                             if ((pbody[index+4] & 0x0F) == 0x6) {
+                                isKey = GTrue;
                                 seiSize += pbody[index]<<24;
                                 seiSize += pbody[index+1]<<16;
                                 seiSize += pbody[index+2]<<8;
@@ -138,8 +163,26 @@ static GHandle pullRunloop(GHandle parm){
                                 sei = pbody + index;
                                 seiSize += 4;
                                 index += seiSize;
-                            }
-                            if((pbody[index+4] & 0x0F) == 0x5){
+                                if(index < packet.m_nBodySize && (pbody[index+4] & 0x0F) == 0x5){
+                                    ppSize += pbody[index]<<24;
+                                    ppSize += pbody[index+1]<<16;
+                                    ppSize += pbody[index+2]<<8;
+                                    ppSize += pbody[index+3];
+                                    pp = pbody + index;
+                                    ppSize += 4;
+                                    index += ppSize;
+                                }
+                            }else if((pbody[index+4] & 0x0F) == 0x5){
+                                isKey = GTrue;
+                                ppSize += pbody[index]<<24;
+                                ppSize += pbody[index+1]<<16;
+                                ppSize += pbody[index+2]<<8;
+                                ppSize += pbody[index+3];
+                                pp = pbody + index;
+                                ppSize += 4;
+                                index += ppSize;
+                            }else if((pbody[index+4] & 0x0F) == 0x1){
+                                isKey = GFalse;
                                 ppSize += pbody[index]<<24;
                                 ppSize += pbody[index+1]<<16;
                                 ppSize += pbody[index+2]<<8;
@@ -148,33 +191,21 @@ static GHandle pullRunloop(GHandle parm){
                                 ppSize += 4;
                                 index += ppSize;
                             }
+                            
+                        }else  if (pbody[index] == 2){
+                            GJLOG(GJ_LOGDEBUG,"直播结束\n");
+                            RTMPPacket_Free(&packet);
+                            break;
                         }else{
                             GJLOG(GJ_LOGFORBID,"h264格式有误\n");
                             RTMPPacket_Free(&packet);
-                            continue;
+                            goto ERROR;
                         }
                         
-                    }else if((pbody[index]) == 0x27){
-                        isKey = GFalse;
-                        index += 5;
-                        if((pbody[index+4] & 0x0F) == 0x1){
-                            ppSize += pbody[index]<<24;
-                            ppSize += pbody[index+1]<<16;
-                            ppSize += pbody[index+2]<<8;
-                            ppSize += pbody[index+3];
-                            pp = pbody + index;
-                            ppSize += 4;
-                            index += ppSize;
-                        }else{
-                            GJLOG(GJ_LOGFORBID,"h264格式有误\n");
-                            RTMPPacket_Free(&packet);
-                            continue;
-                        }
-
                     }else{
                         GJLOG(GJ_LOGFORBID,"h264格式有误，type:%d\n",body[0]);
                         RTMPPacket_Free(&packet);
-                        continue;
+                        break;
                     }
                 }
                
@@ -199,6 +230,8 @@ static GHandle pullRunloop(GHandle parm){
                 pull->videoPullInfo.pts = packet.m_nTimeStamp;
                 pull->videoPullInfo.count++;
                 pull->videoPullInfo.byte += packet.m_nBodySize;
+                
+                
                 
                 pull->videoCallback(pull,h264Packet,pull->dataCallbackParm);
                 retainBufferUnRetain(retainBuffer);
