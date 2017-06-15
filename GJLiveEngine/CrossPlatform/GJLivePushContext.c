@@ -56,7 +56,9 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
                 return;
             }else{
                 if(!GJRtmpPush_SendAVCSequenceHeader(context->videoPush, sps, spsSize, pps, ppsSize, packet->pts)){
-                    GJLOG(GJ_LOGFORBID, "SendAVCSequenceHeader 失败");
+                    if (context->videoPush != GNULL) {
+                        GJLOG(GJ_LOGFORBID, "SendAVCSequenceHeader 失败");
+                    }
                     context->firstVideoEncodeClock = G_TIME_INVALID;
                     return;
                 }
@@ -95,7 +97,9 @@ static GVoid aacPacketOutCallback(GHandle userData,R_GJAACPacket* packet){
     if (context->firstAudioEncodeClock == G_TIME_INVALID) {
         context->firstAudioEncodeClock = GJ_Gettime();
         if (!GJRtmpPush_SendAACSequenceHeader(context->videoPush, 2, context->pushConfig->mAudioSampleRate,  context->pushConfig->mAudioChannel, packet->pts)) {
-            GJLOG(GJ_LOGFORBID, "SendAACSequenceHeader 失败");
+            if (context->videoPush!= GNULL) {
+                GJLOG(GJ_LOGFORBID, "SendAACSequenceHeader 失败");
+            }
             context->firstAudioEncodeClock = G_TIME_INVALID;
             return;
         }
@@ -193,6 +197,13 @@ static void _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong 
     if (context->videoBitrate != bitrate) {
         if(context->videoEncoder->encodeSetBitrate(context->videoEncoder,bitrate)){
             context->videoBitrate = bitrate;
+            
+            VideoDynamicInfo info ;
+            info.sourceFPS = context->pushConfig->mFps;
+            info.sourceBitrate = context->pushConfig->mVideoBitrate;
+            info.currentFPS = info.sourceFPS - GRationalValue(context->videoDropStep);
+            info.currentBitrate = bitrate;
+            context->callback(context->userData,GJLivePush_dynamicVideoUpdate,&info);
         }
         context->callback(context->userData,GJLivePush_updateNetQuality,&quality);
     }
@@ -251,6 +262,12 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
     if (context->videoBitrate != bitrate) {
         if(context->videoEncoder->encodeSetBitrate(context->videoEncoder,bitrate)){
             context->videoBitrate = bitrate;
+            VideoDynamicInfo info ;
+            info.sourceFPS = context->pushConfig->mFps;
+            info.sourceBitrate = context->pushConfig->mVideoBitrate;
+            info.currentFPS = info.sourceFPS - GRationalValue(context->videoDropStep);
+            info.currentBitrate = bitrate;
+            context->callback(context->userData,GJLivePush_dynamicVideoUpdate,&info);
         }
         context->callback(context->userData,GJLivePush_updateNetQuality,&quality);
     }

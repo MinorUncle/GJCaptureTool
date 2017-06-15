@@ -51,6 +51,12 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
                 [livePush.delegate livePush:livePush errorType:kLivePushWritePacketError infoDesc:@"发送失败"];
                 [livePush stopStreamPush];
                 break;
+            case GJLivePush_dynamicVideoUpdate:
+            {
+                [livePush.delegate livePush:livePush dynamicVideoUpdate:param];
+
+                break;
+            }
             default:
                 break;
         }

@@ -127,8 +127,8 @@ static GHandle pullRunloop(GHandle parm){
                 retainBufferUnRetain(retainBuffer);
                 
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
-//                GJLOGFREQ("receive video pts:%d",packet.m_nTimeStamp);
-                GJLOG(GJ_LOGDEBUG,"receive video pts:%d",packet.m_nTimeStamp);
+                GJLOGFREQ("receive video pts:%d",packet.m_nTimeStamp);
+//                GJLOG(GJ_LOGDEBUG,"receive video pts:%d",packet.m_nTimeStamp);
 
                 GUInt8 *body = (GUInt8*)packet.m_body;
                 GUInt8 *pbody = body;
@@ -195,6 +195,8 @@ static GHandle pullRunloop(GHandle parm){
                         }else  if (pbody[index] == 2){
                             GJLOG(GJ_LOGDEBUG,"直播结束\n");
                             RTMPPacket_Free(&packet);
+                            errType = GJRTMPPullMessageType_closeComplete;
+                            goto ERROR;
                             break;
                         }else{
                             GJLOG(GJ_LOGFORBID,"h264格式有误\n");

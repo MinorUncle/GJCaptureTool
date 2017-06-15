@@ -141,6 +141,7 @@ static GBool sequenceHeaderReleaseCallBack(GJRetainBuffer * buffer){
     return GTrue;
 }
 GBool GJRtmpPush_SendAVCSequenceHeader(GJRtmpPush* push,GUInt8* sps,GInt32 spsSize,GUInt8* pps,GInt32 ppsSize,GUInt64 dts){
+    if(push == GNULL)return GFalse;
     GJRTMP_Packet* pushPacket = (GJRTMP_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJRTMP_Packet));
     RTMPPacket* sendPacket = &pushPacket->packet;
     RTMPPacket_Reset(sendPacket);

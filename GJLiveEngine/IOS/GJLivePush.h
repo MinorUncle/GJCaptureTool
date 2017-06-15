@@ -22,6 +22,7 @@
 -(void)livePush:(GJLivePush*)livePush updatePushStatus:(GJPushSessionStatus*)status;
 -(void)livePush:(GJLivePush*)livePush closeConnent:(GJPushSessionInfo*)info resion:(GJConnentCloceReason)reason;
 -(void)livePush:(GJLivePush*)livePush connentSuccessWithElapsed:(int)elapsed;
+-(void)livePush:(GJLivePush*)livePush dynamicVideoUpdate:(VideoDynamicInfo*)elapsed;
 
 -(void)livePush:(GJLivePush*)livePush errorType:(GJLiveErrorType)type infoDesc:(NSString*)info;
 //-(void)livePush:(GJLivePush*)livePush pushPacket:(R_GJH264Packet*)packet;

@@ -356,8 +356,11 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm){
     cImageBuf = GNULL;
     
     GJLOG(GJ_LOGDEBUG, "start play runloop");
+    if (_playControl->status == kPlayStatusStop) {
+        goto ERROR;
+    }
     R_GJPixelFrame watiBuffer[2] = {0};
-    queuePeekWaitValue(_playControl->imageQueue, 2, (GHandle*)&watiBuffer, GINT32_MAX);///等待至少两帧
+    queuePeekWaitValue(_playControl->imageQueue, 2, (GHandle*)&watiBuffer, 100);///等待至少两帧
     _syncControl->videoInfo.startTime = GJ_Gettime() / 1000;
     while ((_playControl->status != kPlayStatusStop)) {
         if (queuePop(_playControl->imageQueue, (GHandle*)&cImageBuf,_playControl->status == kPlayStatusBuffering?GINT32_MAX:0)) {

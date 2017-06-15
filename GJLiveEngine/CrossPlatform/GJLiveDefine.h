@@ -134,6 +134,12 @@ typedef struct _PushSessionInfo{
     GLong dropFrameCount;
     GLong sessionDuring;
 }GJPushSessionInfo;
+typedef struct _VideoDynamicInfo{
+    GFloat32 currentBitrate;
+    GFloat32 currentFPS;
+    GFloat32 sourceBitrate;
+    GFloat32 sourceFPS;
+}VideoDynamicInfo;
 typedef enum _ConnentCloceReason{
     kConnentCloce_Active,//主动关闭
     kConnentCloce_Drop,//掉线

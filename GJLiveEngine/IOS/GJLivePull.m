@@ -91,9 +91,9 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
             }
                 break;
             case GJLivePull_decodeFristVideoFrame:{
-                GJPullFristFrameInfo info = {0};
-                info.size = *(GSize*)parm;
-                [livePull.delegate livePull:livePull fristFrameDecode:&info];
+//                GJPullFristFrameInfo info = {0};
+//                info.size = *(GSize*)parm;
+                [livePull.delegate livePull:livePull fristFrameDecode:parm];
             }
                 break;
             default:

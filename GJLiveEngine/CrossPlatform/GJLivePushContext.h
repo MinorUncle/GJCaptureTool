@@ -17,6 +17,7 @@ typedef enum _GJLivePushMessageType{
     GJLivePush_messageInvalid,
     GJLivePush_connectSuccess,
     GJLivePush_closeComplete,
+    GJLivePush_dynamicVideoUpdate,
     GJLivePush_connectError,
     GJLivePush_urlPraseError,
     GJLivePush_sendPacketError,

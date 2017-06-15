@@ -247,7 +247,7 @@ static GVoid h264DecodeCompleteCallback(GHandle userData,R_GJPixelFrame* frame){
         GJPullFristFrameInfo info = {0};
         info.size.width = (GFloat32)frame->width;//CGSizeMake((float)frame->width, (float)frame->height);
         info.size.height = (GFloat32)frame->height;
-        pullContext->callback(pullContext->userData,    GJLivePull_decodeFristVideoFrame,"解码成功");
+        pullContext->callback(pullContext->userData,    GJLivePull_decodeFristVideoFrame,&info);
 
 //        pullContext->callback();
     }
