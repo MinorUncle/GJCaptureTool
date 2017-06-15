@@ -10,6 +10,7 @@
 #import "IOS_AudioDrivePlayer.h"
 #import "GJLiveDefine+internal.h"
 #import "GJLog.h"
+#import "GJAudioSessionCenter.h"
 @interface IOS_AudioDrivePlayer : NSObject
 
 @end
@@ -22,6 +23,11 @@ inline static GBool audioPlaySetup (struct _GJAudioPlayContext* context,GJAudioF
         return GFalse;
     }
     GJAudioQueueDrivePlayer* player = [[GJAudioQueueDrivePlayer alloc]initWithSampleRate:format.mSampleRate channel:format.mChannelsPerFrame formatID:kAudioFormatLinearPCM];
+    NSError* error;
+    if(![[GJAudioSessionCenter shareSession]requestPlay:YES key:player error:&error]){
+        GJLOG(GJ_LOGERROR, "request play session fail:%@",error);
+    }
+
     player.fillDataCallback = ^BOOL(void *data, int *size) {
         return dataCallback(userData,data,size);
     };
@@ -31,6 +37,10 @@ inline static GBool audioPlaySetup (struct _GJAudioPlayContext* context,GJAudioF
 inline static GVoid audioPlayUnSetup (struct _GJAudioPlayContext* context){
     if (context->obaque) {
         GJAudioQueueDrivePlayer* player = (__bridge_transfer GJAudioQueueDrivePlayer *)(context->obaque);
+        NSError* error;
+        if(![[GJAudioSessionCenter shareSession]requestPlay:NO key:player error:&error]){
+            GJLOG(GJ_LOGERROR, "request play session fail:%@",error);
+        }
         player = nil;
         context->obaque = GNULL;
     }

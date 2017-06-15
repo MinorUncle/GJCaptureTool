@@ -39,7 +39,7 @@
 #import "AEFloatConverter.h"
 #import "AEBlockChannel.h"
 #import <pthread.h>
-
+#import "GJAudioSessionCenter.h"
 // Uncomment the following or define the following symbol as part of your build process to enable per-second performance reports
 // #define TAAE_REPORT_RENDER_TIME
 
@@ -1960,8 +1960,33 @@ BOOL AECurrentThreadIsAudioThread(void) {
     }
     
     NSError *error = nil;
-    if ( ![audioSession setCategory:_audioSessionCategory withOptions:options error:&error] ) {
-        NSLog(@"TAAE: Error setting audio session category: %@", error);
+    if ( [_audioSessionCategory isEqualToString:AVAudioSessionCategoryRecord] || [_audioSessionCategory isEqualToString:AVAudioSessionCategoryPlayAndRecord]) {
+        if ( ![[GJAudioSessionCenter shareSession]requestRecode:YES key:self error:&error] ) {
+            NSLog(@"TAAE: Error setting audio session category: %@", error);
+        }
+    }else{
+        if ( ![[GJAudioSessionCenter shareSession]requestRecode:NO key:self error:&error] ) {
+            NSLog(@"TAAE: Error setting audio session category: %@", error);
+        }
+    }
+    if (_allowMixingWithOtherApps) {
+        if(![[GJAudioSessionCenter shareSession]requestMix:YES absolute:NO key:self error:&error]){
+            NSLog(@"TAAE: Error setting audio session category: %@", error);
+        }
+    }else{
+        if(![[GJAudioSessionCenter shareSession]requestMix:NO absolute:NO key:self error:&error]){
+            NSLog(@"TAAE: Error setting audio session category: %@", error);
+        }
+    }
+    
+    if (_enableBluetoothInput) {
+        if(![[GJAudioSessionCenter shareSession]requestBluetooth:YES absolute:NO key:self error:&error]){
+            NSLog(@"TAAE: Error setting audio session category: %@", error);
+        }
+    }else{
+        if(![[GJAudioSessionCenter shareSession]requestBluetooth:NO absolute:NO key:self error:&error]){
+            NSLog(@"TAAE: Error setting audio session category: %@", error);
+        }
     }
 }
 

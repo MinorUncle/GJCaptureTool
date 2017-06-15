@@ -8,22 +8,39 @@
 
 #import "GJAudioSessionCenter.h"
 #import <AVFoundation/AVFoundation.h>
+static  GJAudioSessionCenter* _gjAudioSession;
 @interface GJAudioSessionCenter(){
-    NSInteger _playeRequest;
-    NSInteger _recodeRequest;
-    NSInteger _mixingRequest;
-    NSInteger _bluetoothRequest;
-    NSInteger _voiceProcessingRequest;
+    NSMutableArray* _playeRequest;
+    NSMutableArray* _recodeRequest;
+    NSMutableArray* _mixingRequest;
+    NSMutableArray* _bluetoothRequest;
+    NSMutableArray* _voiceProcessingRequest;
     
     AVAudioSessionCategoryOptions _categoryOptions;
     NSString * _category;
 }
 @end
 @implementation GJAudioSessionCenter
+
++(instancetype)shareSession{
+    if (_gjAudioSession) {
+        _gjAudioSession = [[GJAudioSessionCenter alloc]init];
+    }
+    return _gjAudioSession;
+}
++(instancetype)allocWithZone:(struct _NSZone *)zone{
+    if (_gjAudioSession) {
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            _gjAudioSession = [super allocWithZone:zone];
+        });
+    }
+    return _gjAudioSession;
+}
 -(void)activeConfigWithError:(NSError**)error{
     [[AVAudioSession sharedInstance]setActive:YES withOptions:_categoryOptions error:error];
 }
--(void)updateCategory{
+-(BOOL)updateCategoryWithError:(NSError**)error{
     
     if (_recodeRequest > 0) {
         if (_recodeRequest > 0) {
@@ -34,102 +51,116 @@
     }else{
         _category = AVAudioSessionCategoryPlayback;
     }
+    if (![_category isEqualToString:[AVAudioSession sharedInstance].category]) {
+        return [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+    }
+    return YES;
 }
--(void)updateCategoryOptions{
+-(BOOL)updateCategoryOptionsWithError:(NSError**)error{
     _categoryOptions = 0;
-    if (_mixingRequest > 0) {
+    if (_mixingRequest.count > 0) {
         _categoryOptions |= AVAudioSessionCategoryOptionMixWithOthers;
     }
-    if (_bluetoothRequest>0) {
-        _bluetoothRequest |= AVAudioSessionCategoryOptionAllowBluetooth;
+    if (_bluetoothRequest.count>0) {
+        _categoryOptions |= AVAudioSessionCategoryOptionAllowBluetooth;
     }
+    if ([AVAudioSession sharedInstance].categoryOptions != _categoryOptions) {
+        return [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+    }
+    return YES;
 }
--(void)requestPlay:(BOOL)play error:(NSError**)error{
-    if (play) {
-        _playeRequest ++;
-        if (_playeRequest ==1) {
-            [self updateCategory];
-            [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+-(BOOL)requestPlay:(BOOL)play key:(id)key error:(NSError**)error{
+    BOOL result = YES;
+    if (play){
+        if(![_playeRequest containsObject:key]){
+            [_playeRequest addObject:key];
+            if (_playeRequest.count ==1) {
+                result = [self updateCategoryWithError:error];
+            }
         }
-    }else if (_playeRequest > 0) {
-        _playeRequest --;
-        if (_playeRequest == 0) {
-            [self updateCategory];
-            [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+    }else if([_playeRequest containsObject:key]){
+        [_playeRequest removeObject:key];
+        if (_playeRequest.count == 0) {
+            result = [self updateCategoryWithError:error];
         }
     }
+    return result;
 }
--(void)requestRecode:(BOOL)recode error:(NSError**)error{
+-(BOOL)requestRecode:(BOOL)recode key:(id)key error:(NSError**)error{
+    BOOL result = YES;
     if (recode) {
-        _recodeRequest ++;
-        if (_recodeRequest ==1) {
-            [self updateCategory];
-            [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+        if(![_recodeRequest containsObject:key]){
+            [_recodeRequest addObject:key];
+            if (_recodeRequest.count ==1) {
+                result = [self updateCategoryWithError:error];
+            }
         }
-    }else if (_recodeRequest > 0) {
-        _recodeRequest --;
-        if (_recodeRequest == 0) {
-            [self updateCategory];
-            [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+    }else if([_recodeRequest containsObject:key]){
+        [_playeRequest removeObject:key];
+        if (_playeRequest.count == 0) {
+            result = [self updateCategoryWithError:error];
         }
     }
+    return result;
 }
--(void)requestMix:(BOOL)mix absolute:(BOOL)absolute error:(NSError**)error{
+-(BOOL)requestMix:(BOOL)mix absolute:(BOOL)absolute key:(NSString*)key error:(NSError**)error{
+    BOOL result = YES;
     if (absolute) {
         if (mix) {
-            _mixingRequest = 1;
-            _categoryOptions |= AVAudioSessionCategoryOptionMixWithOthers;
-            [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
-            
+            [_mixingRequest removeAllObjects];
+            [_mixingRequest addObject:key];
+            result = [self updateCategoryOptionsWithError:error];
         }else{
-            _mixingRequest = 0;
-            _categoryOptions |= !AVAudioSessionCategoryOptionMixWithOthers;
-            [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+            [_mixingRequest removeAllObjects];
+            result = [self updateCategoryOptionsWithError:error];
 
         }
     }else{
         if (mix) {
-            _mixingRequest ++;
-            if (_recodeRequest ==1) {
-                _categoryOptions |= AVAudioSessionCategoryOptionMixWithOthers;
-                [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+            if (![_mixingRequest containsObject:key]) {
+                [_mixingRequest addObject:key];
+                if (_mixingRequest.count ==1) {
+                    result = [self updateCategoryOptionsWithError:error];
+                }
             }
-        }else if (_recodeRequest > 0) {
-            _recodeRequest --;
-            if (_recodeRequest == 0) {
-                _categoryOptions |= !AVAudioSessionCategoryOptionMixWithOthers;
-                [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+           
+        }else if ([_mixingRequest containsObject:key]) {
+            [_mixingRequest removeObject:key];
+            if (_mixingRequest.count == 0) {
+                result = [self updateCategoryOptionsWithError:error];
             }
         }
     }
+    return result;
 }
--(void)requestBluetooth:(BOOL)bluetooth absolute:(BOOL)absolute error:(NSError**)error{
+-(BOOL)requestBluetooth:(BOOL)bluetooth absolute:(BOOL)absolute key:(id)key error:(NSError**)error{
+    BOOL result = YES;
     if (absolute) {
         if (bluetooth) {
-            _bluetoothRequest = 1;
-            [self updateCategoryOptions];
-            [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+            [_bluetoothRequest removeAllObjects];
+            [_bluetoothRequest addObject:key];
+            result = [self updateCategoryOptionsWithError:error];
             
         }else{
-            _bluetoothRequest = 0;
-            [self updateCategoryOptions];
-            [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+            [_bluetoothRequest removeAllObjects];
+            result = [self updateCategoryOptionsWithError:error];
             
         }
     }else{
         if (bluetooth) {
-            _bluetoothRequest ++;
-            if (_bluetoothRequest ==1) {
-                [self updateCategoryOptions];
-                [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+            if (![_bluetoothRequest containsObject:key]) {
+                [_bluetoothRequest addObject:key];
+                if (_bluetoothRequest.count ==1) {
+                    result = [self updateCategoryOptionsWithError:error];
+                }
             }
-        }else if (_bluetoothRequest > 0) {
-            _bluetoothRequest --;
-            if (_bluetoothRequest == 0) {
-                [self updateCategoryOptions];
-                [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+        }else if ([_bluetoothRequest containsObject:key]) {
+            [_bluetoothRequest removeObject:key];
+            if (_bluetoothRequest.count == 0) {
+                result = [self updateCategoryOptionsWithError:error];
             }
         }
     }
+    return result;
 }
 @end

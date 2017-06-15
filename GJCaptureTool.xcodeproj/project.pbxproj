@@ -15,6 +15,7 @@
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
 		6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */; };
 		6AB4F4321EF0082200FD4172 /* GJFLVPack.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AB4F4301EF0082200FD4172 /* GJFLVPack.h */; };
+		6AB4F4981EF270D300FD4172 /* GJAudioSessionCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AB4F4971EF270D200FD4172 /* GJAudioSessionCenter.h */; };
 		6ABD5B661E88B73B00404A6B /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E61E84BE3F002A2A2D /* libcrypto.a */; };
 		6ABD5B671E88B73B00404A6B /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E41E84BE3F002A2A2D /* libopenssl.a */; };
 		6AE37BBC1ED5955500B049EB /* IOS_AACDecode.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BAC1ED5955500B049EB /* IOS_AACDecode.h */; };
@@ -470,6 +471,7 @@
 		6A6668121EB3254700CE8C17 /* GJPlatformHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPlatformHeader.h; sourceTree = "<group>"; };
 		6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFLVPack.c; sourceTree = "<group>"; };
 		6AB4F4301EF0082200FD4172 /* GJFLVPack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJFLVPack.h; sourceTree = "<group>"; };
+		6AB4F4971EF270D200FD4172 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
 		6AE37BAC1ED5955500B049EB /* IOS_AACDecode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_AACDecode.h; sourceTree = "<group>"; };
 		6AE37BAD1ED5955500B049EB /* IOS_AACDecode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_AACDecode.m; sourceTree = "<group>"; };
 		6AE37BAE1ED5955500B049EB /* IOS_AACEncode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_AACEncode.h; sourceTree = "<group>"; };
@@ -1022,6 +1024,7 @@
 		6A40DFBA1EE8DB630047E0F0 /* TheAmazingAudioEngine */ = {
 			isa = PBXGroup;
 			children = (
+				6AB4F4971EF270D200FD4172 /* GJAudioSessionCenter.h */,
 				6A40DFBB1EE8DB630047E0F0 /* AEAudioBufferManager.h */,
 				6A40E1A41EEAA2D70047E0F0 /* AEPlaythroughChannel.h */,
 				6A40DFBC1EE8DB630047E0F0 /* AEAudioController+Audiobus.h */,
@@ -1427,6 +1430,7 @@
 				AE70A5271ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h in Headers */,
 				6AE37BD51ED5956800B049EB /* GJLivePlayer.h in Headers */,
 				AE70A51F1ECB4DFE0009E49A /* AACEncoderFromPCM.h in Headers */,
+				6AB4F4981EF270D300FD4172 /* GJAudioSessionCenter.h in Headers */,
 				AE70A53D1ECB4DFE0009E49A /* GJH264Decoder.h in Headers */,
 				AE70A5141ECB4DFE0009E49A /* GJLiveDefine.h in Headers */,
 				AE70A51A1ECB4DFE0009E49A /* GJUtil.h in Headers */,
