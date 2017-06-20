@@ -28,39 +28,52 @@
 @synthesize previewView = _previewView;
 static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType,GHandle param){
     GJLivePush* livePush = (__bridge GJLivePush *)(userDate);
-    dispatch_async(dispatch_get_main_queue(), ^{
         switch (messageType) {
             case GJLivePush_connectSuccess:
             {
                 GJLOG(GJ_LOGINFO, "推流连接成功");
-                [livePush.delegate livePush:livePush connentSuccessWithElapsed:*(int*)param];
+                GLong elapsed = *(GLong*)param;
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [livePush.delegate livePush:livePush connentSuccessWithElapsed:elapsed];
+                });
             }
                 break;
-            case GJLivePush_closeComplete:{
-                GJPushSessionInfo info = {0};
-                [livePush.delegate livePush:livePush closeConnent:&info resion:kConnentCloce_Active];
+            case GJLivePush_closeComplete:
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    GJPushSessionInfo info = {0};
+                    [livePush.delegate livePush:livePush closeConnent:&info resion:kConnentCloce_Active];
+                });
             }
                 break;
             case GJLivePush_urlPraseError:
             case GJLivePush_connectError:
+            {
                 GJLOG(GJ_LOGINFO, "推流连接失败");
-                [livePush.delegate livePush:livePush errorType:kLivePushConnectError infoDesc:@"rtmp连接失败"];
-                [livePush stopStreamPush];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [livePush.delegate livePush:livePush errorType:kLivePushConnectError infoDesc:@"rtmp连接失败"];
+                    [livePush stopStreamPush];
+                });
+            }
                 break;
             case GJLivePush_sendPacketError:
-                [livePush.delegate livePush:livePush errorType:kLivePushWritePacketError infoDesc:@"发送失败"];
-                [livePush stopStreamPush];
+            {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [livePush.delegate livePush:livePush errorType:kLivePushWritePacketError infoDesc:@"发送失败"];
+                    [livePush stopStreamPush];
+                });
+            }
                 break;
             case GJLivePush_dynamicVideoUpdate:
             {
-                [livePush.delegate livePush:livePush dynamicVideoUpdate:param];
-
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [livePush.delegate livePush:livePush dynamicVideoUpdate:param];
+                });
                 break;
             }
             default:
                 break;
         }
-    });
 }
 
 - (instancetype)init
@@ -93,7 +106,7 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
 }
 - (bool)startStreamPushWithUrl:(NSString *)url{
     if (_timer != nil) {
-        GJLOG(GJ_LOGERROR, "请先关闭上一个流");
+        GJLOG(GJ_LOGFORBID, "请先关闭上一个流");
         return NO;
     }else{
         _pushUrl = url;
@@ -102,9 +115,9 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     }
 }
 - (void)stopStreamPush{
-    GJLivePush_StopPush(_livePush);
     [_timer invalidate];
     _timer = nil;
+    GJLivePush_StopPush(_livePush);
 }
 
 - (bool)reStartStreamPush{

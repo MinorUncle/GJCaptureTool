@@ -53,8 +53,8 @@ static GBool displaySetFormat (GJPictureDisplayContext* context,GJPixelType form
 static GVoid displayUnSetup(GJPictureDisplayContext* context){
     if (context->obaque) {
         IOS_PictureDisplay* display = (__bridge_transfer IOS_PictureDisplay *)(context->obaque);
-        display = nil;
         context->obaque = GNULL;
+        display = nil;
     }
 }
 static GVoid IOS_PictureDisplayImage(GJPictureDisplayContext* context,GJRetainBuffer* image){

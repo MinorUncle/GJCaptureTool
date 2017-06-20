@@ -15,7 +15,7 @@
 #include "GJBridegContext.h"
 typedef enum _GJLivePushMessageType{
     GJLivePush_messageInvalid,
-    GJLivePush_connectSuccess,
+    GJLivePush_connectSuccess,   //data，到start time的延时
     GJLivePush_closeComplete,
     GJLivePush_dynamicVideoUpdate,
     GJLivePush_connectError,

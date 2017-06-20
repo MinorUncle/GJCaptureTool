@@ -47,14 +47,16 @@ inline static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioForm
     };
     context->obaque = (__bridge_retained GHandle)decode;
     [decode start];
+    GJLOG(GJ_LOGDEBUG, "aac decode decodeSetup:%p",decode);
     return GTrue;
 }
 inline static GVoid decodeUnSetup (struct _GJAACDecodeContext* context){
     if(context->obaque){
         GJPCMDecodeFromAAC* decode = (__bridge_transfer GJPCMDecodeFromAAC *)(context->obaque);
         [decode stop];
-        decode = nil;
         context->obaque = GNULL;
+        GJLOG(GJ_LOGDEBUG, "aac decode unSetup:%p",decode);
+        decode = nil;
     }
 }
 inline static GBool decodePacket (struct _GJAACDecodeContext* context,R_GJAACPacket* packet){

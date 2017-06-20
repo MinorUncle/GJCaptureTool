@@ -15,7 +15,8 @@ static  GJAudioSessionCenter* _gjAudioSession;
     NSMutableArray* _mixingRequest;
     NSMutableArray* _bluetoothRequest;
     NSMutableArray* _voiceProcessingRequest;
-    
+    NSMutableArray* _activeRequest;
+
     AVAudioSessionCategoryOptions _categoryOptions;
     NSString * _category;
 }
@@ -23,22 +24,42 @@ static  GJAudioSessionCenter* _gjAudioSession;
 @implementation GJAudioSessionCenter
 
 +(instancetype)shareSession{
-    if (_gjAudioSession) {
+    if (_gjAudioSession == nil) {
         _gjAudioSession = [[GJAudioSessionCenter alloc]init];
     }
     return _gjAudioSession;
 }
 +(instancetype)allocWithZone:(struct _NSZone *)zone{
-    if (_gjAudioSession) {
+    if (_gjAudioSession == nil) {
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
             _gjAudioSession = [super allocWithZone:zone];
+            _gjAudioSession->_playeRequest = [NSMutableArray arrayWithCapacity:2];
+            _gjAudioSession->_recodeRequest = [NSMutableArray arrayWithCapacity:2];
+            _gjAudioSession->_mixingRequest = [NSMutableArray arrayWithCapacity:2];
+            _gjAudioSession->_bluetoothRequest = [NSMutableArray arrayWithCapacity:2];
+            _gjAudioSession->_voiceProcessingRequest = [NSMutableArray arrayWithCapacity:2];
+            _gjAudioSession->_activeRequest = [NSMutableArray arrayWithCapacity:2];
         });
     }
     return _gjAudioSession;
 }
--(void)activeConfigWithError:(NSError**)error{
-    [[AVAudioSession sharedInstance]setActive:YES withOptions:_categoryOptions error:error];
+-(BOOL)activeSession:(BOOL)active key:(NSString*)key error:(NSError**)error{
+    BOOL result = YES;
+    if (active){
+        if(![_activeRequest containsObject:key]){
+            [_activeRequest addObject:key];
+            if (_activeRequest.count ==1) {
+                result = [[AVAudioSession sharedInstance] setActive:active error:error];
+            }
+        }
+    }else if([_activeRequest containsObject:key]){
+        [_activeRequest removeObject:key];
+        if (_activeRequest.count == 0) {
+            result = [[AVAudioSession sharedInstance] setActive:active error:error];
+        }
+    }
+    return result;
 }
 -(BOOL)updateCategoryWithError:(NSError**)error{
     
@@ -69,7 +90,7 @@ static  GJAudioSessionCenter* _gjAudioSession;
     }
     return YES;
 }
--(BOOL)requestPlay:(BOOL)play key:(id)key error:(NSError**)error{
+-(BOOL)requestPlay:(BOOL)play key:(NSString*)key error:(NSError**)error{
     BOOL result = YES;
     if (play){
         if(![_playeRequest containsObject:key]){
@@ -86,7 +107,7 @@ static  GJAudioSessionCenter* _gjAudioSession;
     }
     return result;
 }
--(BOOL)requestRecode:(BOOL)recode key:(id)key error:(NSError**)error{
+-(BOOL)requestRecode:(BOOL)recode key:(NSString*)key error:(NSError**)error{
     BOOL result = YES;
     if (recode) {
         if(![_recodeRequest containsObject:key]){
@@ -103,64 +124,47 @@ static  GJAudioSessionCenter* _gjAudioSession;
     }
     return result;
 }
--(BOOL)requestMix:(BOOL)mix absolute:(BOOL)absolute key:(NSString*)key error:(NSError**)error{
+-(BOOL)requestMix:(BOOL)mix key:(NSString*)key error:(NSError**)error{
     BOOL result = YES;
-    if (absolute) {
-        if (mix) {
-            [_mixingRequest removeAllObjects];
-            [_mixingRequest addObject:key];
-            result = [self updateCategoryOptionsWithError:error];
-        }else{
-            [_mixingRequest removeAllObjects];
-            result = [self updateCategoryOptionsWithError:error];
 
-        }
-    }else{
-        if (mix) {
-            if (![_mixingRequest containsObject:key]) {
-                [_mixingRequest addObject:key];
-                if (_mixingRequest.count ==1) {
-                    result = [self updateCategoryOptionsWithError:error];
-                }
-            }
-           
-        }else if ([_mixingRequest containsObject:key]) {
-            [_mixingRequest removeObject:key];
-            if (_mixingRequest.count == 0) {
+    if (mix) {
+        if (![_mixingRequest containsObject:key]) {
+            [_mixingRequest addObject:key];
+            if (_mixingRequest.count ==1) {
                 result = [self updateCategoryOptionsWithError:error];
             }
+        }
+       
+    }else if ([_mixingRequest containsObject:key]) {
+        [_mixingRequest removeObject:key];
+        if (_mixingRequest.count == 0) {
+            result = [self updateCategoryOptionsWithError:error];
         }
     }
     return result;
 }
--(BOOL)requestBluetooth:(BOOL)bluetooth absolute:(BOOL)absolute key:(id)key error:(NSError**)error{
+-(BOOL)requestBluetooth:(BOOL)bluetooth key:(NSString*)key error:(NSError**)error{
     BOOL result = YES;
-    if (absolute) {
-        if (bluetooth) {
-            [_bluetoothRequest removeAllObjects];
+   
+    if (bluetooth) {
+        if (![_bluetoothRequest containsObject:key]) {
             [_bluetoothRequest addObject:key];
-            result = [self updateCategoryOptionsWithError:error];
-            
-        }else{
-            [_bluetoothRequest removeAllObjects];
-            result = [self updateCategoryOptionsWithError:error];
-            
-        }
-    }else{
-        if (bluetooth) {
-            if (![_bluetoothRequest containsObject:key]) {
-                [_bluetoothRequest addObject:key];
-                if (_bluetoothRequest.count ==1) {
-                    result = [self updateCategoryOptionsWithError:error];
-                }
-            }
-        }else if ([_bluetoothRequest containsObject:key]) {
-            [_bluetoothRequest removeObject:key];
-            if (_bluetoothRequest.count == 0) {
+            if (_bluetoothRequest.count ==1) {
                 result = [self updateCategoryOptionsWithError:error];
             }
         }
+    }else if ([_bluetoothRequest containsObject:key]) {
+        [_bluetoothRequest removeObject:key];
+        if (_bluetoothRequest.count == 0) {
+            result = [self updateCategoryOptionsWithError:error];
+        }
     }
+    
     return result;
+}
+
+-(BOOL)setPrefferSampleRate:(double)sampleRate error:(NSError**)error{
+    return [[AVAudioSession sharedInstance]setPreferredSampleRate:sampleRate error:error];
+
 }
 @end

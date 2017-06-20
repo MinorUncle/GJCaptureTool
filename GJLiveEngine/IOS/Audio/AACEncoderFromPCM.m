@@ -34,6 +34,14 @@
     if (self) {
         _sourceFormat = *sFormat;
         _destFormat = *dFormat;
+        _bitrate = 64000; // 64kbs
+        
+        if (_destFormat.mSampleRate >= 44100) {
+            _bitrate = 192000; // 192kbs
+        } else if (_destFormat.mSampleRate < 22000) {
+            _bitrate = 32000; // 32kbs
+        }
+
         [self initQueue];
     }
     return self;
@@ -41,9 +49,10 @@
 
 - (instancetype)init
 {
+    
     self = [super init];
     if (self) {
-        
+        GJAssert(0, "请使用 initWithSourceForamt");
         memset(&_destFormat, 0, sizeof(_destFormat));
         _destFormat.mChannelsPerFrame = 1;
         _destFormat.mFramesPerPacket = 1024;
@@ -168,21 +177,15 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         _destMaxOutSize += PUSH_AAC_PACKET_PRE_SIZE + 7;//7字节aac头
         assert(!status);
 
-        UInt32 outputBitRate = 64000; // 64kbs
+        UInt32 outputBitRate = _bitrate; // 64kbs
         UInt32 propSize = sizeof(outputBitRate);
         
-        if (_destFormat.mSampleRate >= 44100) {
-            outputBitRate = 192000; // 192kbs
-        } else if (_destFormat.mSampleRate < 22000) {
-            outputBitRate = 32000; // 32kbs
-        }
-        GJLOG(GJ_LOGDEBUG, "aac encode bitrate:%d kbps",outputBitRate/1000);
         // set the bit rate depending on the samplerate chosen
         AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
         
         // get it back and print it out
         AudioConverterGetProperty(_encodeConvert, kAudioConverterEncodeBitRate, &propSize, &outputBitRate);
-        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u\n", (unsigned int)outputBitRate);
+        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
     }
     if (_bufferPool) {
         GJRetainBufferPoolClean(_bufferPool, true);
@@ -196,6 +199,16 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     });
     GJLOG(GJ_LOGDEBUG, "AudioConverterNewSpecific success");
     return YES;
+}
+-(void)setBitrate:(int)bitrate{
+    _bitrate = bitrate;
+    UInt32 outputBitRate = _bitrate; // 64kbs
+    UInt32 propSize = sizeof(outputBitRate);
+    // set the bit rate depending on the samplerate chosen
+    AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
+    // get it back and print it out
+    AudioConverterGetProperty(_encodeConvert, kAudioConverterEncodeBitRate, &propSize, &outputBitRate);
+    GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
 }
 -(OSStatus)_getAudioClass:(AudioClassDescription*)audioClass WithType:(UInt32)type fromManufacturer:(UInt32)manufacturer{
     UInt32 audioClassSize;

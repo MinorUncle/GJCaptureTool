@@ -20,7 +20,7 @@
 #endif
 
 #ifdef AMAZING_AUDIO_ENGINE
-
+#import "GJAudioSessionCenter.h"
 #import "AudioUnitCapture.h"
 #import "AEAudioController.h"
 #import "AEPlaythroughChannel.h"
@@ -138,8 +138,11 @@ inline static GBool audioProduceSetup(struct _GJAudioProduceContext* context,GJA
     audioFormat.mBytesPerPacket =audioFormat.mBytesPerFrame*audioFormat.mFramesPerPacket;
     audioFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
     audioFormat.mFormatID = kAudioFormatLinearPCM;
-
-    
+    NSError* error;
+    [[GJAudioSessionCenter shareSession] setPrefferSampleRate:format.mSampleRate error:&error];
+    if (error != nil) {
+        GJLOG(GJ_LOGERROR, "setPrefferSampleRate error:%s",error.localizedDescription.UTF8String);
+    }
     AEAudioController* audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat options:AEAudioControllerOptionEnableInput];
     
     GJAudioOutput* audioOut = [[GJAudioOutput alloc]initWithAudioController:audioController];

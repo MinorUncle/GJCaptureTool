@@ -125,6 +125,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 
 @property (strong, nonatomic) UILabel *delayVLab;
 @property (strong, nonatomic) UILabel *delayALab;
+@property (strong, nonatomic) UILabel *currentV;
 
 
 @property(strong,nonatomic)NSMutableArray<PullShow*>* pulls;
@@ -194,6 +195,12 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _delayALab.textColor = [UIColor redColor];
     _delayALab.text = @"cache A t:0 ms f:0";
     [self.view addSubview:_delayALab];
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _currentV = [[UILabel alloc]initWithFrame:rect];
+    _currentV.textColor = [UIColor redColor];
+    _currentV.text = @"CV rate:0 kB/s f:0";
+    [self.view addSubview:_currentV];
     
     int count = 3;
     rect.origin.y = CGRectGetMaxY(self.topView.frame);
@@ -286,8 +293,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
 }
 
 
--(void)livePush:(GJLivePush *)livePush connentSuccessWithElapsed:(int)elapsed{
-    _pushStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%d ms",elapsed];
+-(void)livePush:(GJLivePush *)livePush connentSuccessWithElapsed:(GLong)elapsed{
+    _pushStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%ld ms",elapsed];
 }
 -(void)livePush:(GJLivePush *)livePush closeConnent:(GJPushSessionInfo *)info resion:(GJConnentCloceReason)reason{
     GJPushSessionInfo pushInfo = *info;
@@ -302,6 +309,9 @@ static char* url = "rtmp://10.0.1.142/live/room";
         }
     }
     return 0;
+}
+-(void)livePush:(GJLivePush *)livePush dynamicVideoUpdate:(VideoDynamicInfo *)elapsed{
+    _currentV.text = [NSString stringWithFormat:@"CV rate:%fkB/s f:%f",elapsed->currentBitrate,elapsed->sourceFPS];
 }
 -(void)livePush:(GJLivePush *)livePush errorType:(GJLiveErrorType)type infoDesc:(id)infoDesc{
     switch (type) {

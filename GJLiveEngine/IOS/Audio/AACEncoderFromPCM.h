@@ -21,6 +21,7 @@ typedef void(^AACEncodeComplete)(R_GJAACPacket* packet);
 @property(nonatomic,assign,readonly)AudioStreamBasicDescription sourceFormat;
 
 @property(nonatomic,assign,readonly)int destMaxOutSize;
+@property(nonatomic,assign)int bitrate;
 
 @property(nonatomic,copy)AACEncodeComplete completeCallback;
 

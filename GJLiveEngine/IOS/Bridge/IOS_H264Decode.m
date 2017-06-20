@@ -20,7 +20,8 @@ inline static GBool cvImagereleaseCallBack(GJRetainBuffer * retain){
 inline static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelType format,VideoFrameOutCallback callback,GHandle userData)
 {
     GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
-  
+    GJLOG(GJ_LOGINFO, "GJH264Decoder setup");
+
     GJH264Decoder* decode = [[GJH264Decoder alloc]init];
     decode.completeCallback = ^(CVImageBufferRef image, int64_t pts){
         R_GJPixelFrame* frame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
@@ -39,8 +40,9 @@ inline static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelTyp
 inline static GVoid decodeUnSetup (struct _GJH264DecodeContext* context){
     if (context->obaque) {
         GJH264Decoder* decode = (__bridge_transfer GJH264Decoder *)(context->obaque);
-        decode = nil;
         context->obaque = GNULL;
+        decode = nil;
+        GJLOG(GJ_LOGINFO, "GJH264Decoder unsetup");
     }
 }
 inline static GBool decodePacket (struct _GJH264DecodeContext* context,R_GJH264Packet* packet){

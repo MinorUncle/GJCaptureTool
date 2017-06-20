@@ -13,10 +13,11 @@
 +(instancetype)shareSession;
 
 
--(BOOL)requestPlay:(BOOL)play key:(id)key error:(NSError**)error;
+-(BOOL)requestPlay:(BOOL)play key:(NSString*)key error:(NSError**)error;
 
--(BOOL)requestRecode:(BOOL)recode key:(id)key error:(NSError**)error;
--(BOOL)requestMix:(BOOL)mix absolute:(BOOL)absolute key:(NSString*)key error:(NSError**)error;
--(BOOL)requestBluetooth:(BOOL)bluetooth absolute:(BOOL)absolute key:(id)key error:(NSError**)error;
--(BOOL)activeConfigWithError:(NSError**)error;
+-(BOOL)requestRecode:(BOOL)recode key:(NSString*)key error:(NSError**)error;
+-(BOOL)requestMix:(BOOL)mix key:(NSString*)key error:(NSError**)error;
+-(BOOL)requestBluetooth:(BOOL)bluetooth key:(NSString*)key error:(NSError**)error;
+-(BOOL)activeSession:(BOOL)active key:(NSString*)key error:(NSError**)error;
+-(BOOL)setPrefferSampleRate:(double)sampleRate error:(NSError**)error;
 @end

@@ -240,6 +240,7 @@
 
 - (BOOL)resume
 {
+    GJLOG(GJ_LOGDEBUG, "audioplay resume");
     if (_status == kPlayAPauseStatus) {
         _status = kPlayARunningStatus;
         OSStatus status = AudioQueueStart(_audioQueue, NULL);
@@ -255,6 +256,7 @@
 
 - (BOOL)pause
 {
+    GJLOG(GJ_LOGDEBUG, "audioplay pause");
     if (_status != kPlayAPauseStatus) {
         _status = kPlayAPauseStatus;
         OSStatus status = AudioQueuePause(_audioQueue);

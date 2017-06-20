@@ -1026,6 +1026,11 @@ static OSStatus ioUnitRenderNotifyCallback(void *inRefCon, AudioUnitRenderAction
     free(_inputTable);
     
     if ( _audiobusMonitorBuffer ) AEAudioBufferListFree(_audiobusMonitorBuffer);
+    [[GJAudioSessionCenter shareSession] requestPlay:NO key:[NSString stringWithFormat:@"%p",self] error:nil];
+    [[GJAudioSessionCenter shareSession] requestRecode:NO key:[NSString stringWithFormat:@"%p",self] error:nil];
+    [[GJAudioSessionCenter shareSession] requestMix:NO key:[NSString stringWithFormat:@"%p",self] error:nil];
+    [[GJAudioSessionCenter shareSession] requestBluetooth:NO key:[NSString stringWithFormat:@"%p",self] error:nil];
+    [[GJAudioSessionCenter shareSession] activeSession:NO key:[NSString stringWithFormat:@"%p",self] error:nil];
 }
 
 -(BOOL)start:(NSError **)error {
@@ -1046,7 +1051,7 @@ static OSStatus ioUnitRenderNotifyCallback(void *inRefCon, AudioUnitRenderAction
 #if TARGET_OS_IPHONE
     AVAudioSession *audioSession = [AVAudioSession sharedInstance];
     
-    if ( ![audioSession setActive:YES error:error] ) {
+    if ( ![[GJAudioSessionCenter shareSession]activeSession:YES key:[NSString stringWithFormat:@"%p"] error:&error] ) {
         return NO;
     }
     
@@ -1150,7 +1155,8 @@ static OSStatus ioUnitRenderNotifyCallback(void *inRefCon, AudioUnitRenderAction
 #if TARGET_OS_IPHONE
     if ( !_interrupted ) {
         NSError *error = nil;
-        if ( ![((AVAudioSession*)[AVAudioSession sharedInstance]) setActive:NO error:&error] ) {
+        
+        if ( ![[GJAudioSessionCenter shareSession]activeSession:NO key:[NSString stringWithFormat:@"%p"] error:&error] ) {
             NSLog(@"TAAE: Couldn't deactivate audio session: %@", error);
         }
     }
@@ -1961,30 +1967,30 @@ BOOL AECurrentThreadIsAudioThread(void) {
     
     NSError *error = nil;
     if ( [_audioSessionCategory isEqualToString:AVAudioSessionCategoryRecord] || [_audioSessionCategory isEqualToString:AVAudioSessionCategoryPlayAndRecord]) {
-        if ( ![[GJAudioSessionCenter shareSession]requestRecode:YES key:self error:&error] ) {
+        if ( ![[GJAudioSessionCenter shareSession]requestRecode:YES key:[NSString stringWithFormat:@"%p"] error:&error] ) {
             NSLog(@"TAAE: Error setting audio session category: %@", error);
         }
     }else{
-        if ( ![[GJAudioSessionCenter shareSession]requestRecode:NO key:self error:&error] ) {
+        if ( ![[GJAudioSessionCenter shareSession]requestRecode:NO key:[NSString stringWithFormat:@"%p"] error:&error] ) {
             NSLog(@"TAAE: Error setting audio session category: %@", error);
         }
     }
     if (_allowMixingWithOtherApps) {
-        if(![[GJAudioSessionCenter shareSession]requestMix:YES absolute:NO key:self error:&error]){
+        if(![[GJAudioSessionCenter shareSession]requestMix:YES key:[NSString stringWithFormat:@"%p"] error:&error]){
             NSLog(@"TAAE: Error setting audio session category: %@", error);
         }
     }else{
-        if(![[GJAudioSessionCenter shareSession]requestMix:NO absolute:NO key:self error:&error]){
+        if(![[GJAudioSessionCenter shareSession]requestMix:NO key:[NSString stringWithFormat:@"%p"] error:&error]){
             NSLog(@"TAAE: Error setting audio session category: %@", error);
         }
     }
     
     if (_enableBluetoothInput) {
-        if(![[GJAudioSessionCenter shareSession]requestBluetooth:YES absolute:NO key:self error:&error]){
+        if(![[GJAudioSessionCenter shareSession]requestBluetooth:YES key:[NSString stringWithFormat:@"%p"] error:&error]){
             NSLog(@"TAAE: Error setting audio session category: %@", error);
         }
     }else{
-        if(![[GJAudioSessionCenter shareSession]requestBluetooth:NO absolute:NO key:self error:&error]){
+        if(![[GJAudioSessionCenter shareSession]requestBluetooth:NO key:[NSString stringWithFormat:@"%p"] error:&error]){
             NSLog(@"TAAE: Error setting audio session category: %@", error);
         }
     }
@@ -2367,7 +2373,7 @@ AudioTimeStamp AEAudioControllerCurrentAudioTimestamp(__unsafe_unretained AEAudi
 #if TARGET_OS_IPHONE
 - (void)applicationWillEnterForeground:(NSNotification*)notification {
     NSError *error = nil;
-    if ( ![((AVAudioSession*)[AVAudioSession sharedInstance]) setActive:YES error:&error] ) {
+    if ( ![[GJAudioSessionCenter shareSession]activeSession:YES key:[NSString stringWithFormat:@"%p"] error:&error] ) {
         NSLog(@"TAAE: Couldn't activate audio session: %@", error);
     }
     
@@ -2404,7 +2410,7 @@ AudioTimeStamp AEAudioControllerCurrentAudioTimestamp(__unsafe_unretained AEAudi
             if ( [[UIApplication sharedApplication] applicationState] != UIApplicationStateBackground || _started ) {
                 // make sure we are again the active session
                 NSError *error = nil;
-                if ( ![((AVAudioSession*)[AVAudioSession sharedInstance]) setActive:YES error:&error] ) {
+                if ( ![[GJAudioSessionCenter shareSession]activeSession:YES key:[NSString stringWithFormat:@"%p"] error:&error] ) {
                     NSLog(@"TAAE: Couldn't activate audio session: %@", error);
                 }
             }
@@ -2568,7 +2574,7 @@ static void audioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, Audio
     if ( audioSession.inputAvailable ) [extraInfo appendFormat:@", input available"];
     
     // Start session
-    if ( ![audioSession setActive:YES error:&error] ) {
+    if ( ![[GJAudioSessionCenter shareSession]activeSession:YES key:[NSString stringWithFormat:@"%p"] error:&error] ) {
         NSLog(@"TAAE: Couldn't activate audio session: %@", error);
     }
     

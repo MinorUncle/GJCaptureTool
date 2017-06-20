@@ -58,7 +58,9 @@ GVoid encodeFrame(struct _GJEncodeToAACContext* context,R_GJPCMFrame* frame){
     [encode encodeWithPacket:frame];
 }
 GBool encodeSetBitrate(struct _GJEncodeToAACContext* context,GInt32 bitrate){
-    return GTrue;
+    AACEncoderFromPCM* encode = (__bridge AACEncoderFromPCM *)(context->obaque);
+    encode.bitrate = bitrate;
+    return encode.bitrate == bitrate;
 }
 
 GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext** encodeContext){

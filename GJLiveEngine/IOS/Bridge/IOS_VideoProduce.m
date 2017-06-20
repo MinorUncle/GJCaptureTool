@@ -229,7 +229,7 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
     if (![_cropFilter.targets containsObject:_imageView]) {
         [_camera stopCameraCapture];
     }
-    runAsynchronouslyOnVideoProcessingQueue(^{
+    runSynchronouslyOnVideoProcessingQueue(^{
         _cropFilter.frameProcessingCompletionBlock = nil;
     });
 }

@@ -36,14 +36,14 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
     GJLivePushContext* context = userData;
     packet->pts = GJ_Gettime()/1000-context->connentClock;
     if (context->firstVideoEncodeClock == G_TIME_INVALID) {
-        context->firstVideoEncodeClock = GJ_Gettime();
+        context->firstVideoEncodeClock = GJ_Gettime()/1000;
         GUInt8* sps,*pps;
         GInt32 spsSize,ppsSize;
         sps = pps = GNULL;
         
         context->videoEncoder->encodeGetSPS_PPS(context->videoEncoder,sps,&spsSize,pps,&ppsSize);
         if (spsSize <= 0 || ppsSize <= 0) {
-            GJLOG(GJ_LOGFORBID, "无法获得sps,pps2");
+            GJLOG(GJ_LOGERROR, "无法获得sps,pps2");
             context->firstVideoEncodeClock = G_TIME_INVALID;
             return;
         }else{
@@ -51,16 +51,23 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
             pps = (GUInt8*)malloc(ppsSize);
             context->videoEncoder->encodeGetSPS_PPS(context->videoEncoder,sps,&spsSize,pps,&ppsSize);
             if (sps == GNULL || pps == GNULL) {
-                GJLOG(GJ_LOGFORBID, "无法获得sps,pps2");
+                GJLOG(GJ_LOGERROR, "无法获得sps,pps2");
                 context->firstVideoEncodeClock = G_TIME_INVALID;
+                free(sps);
+                free(pps);
                 return;
             }else{
                 if(!GJRtmpPush_SendAVCSequenceHeader(context->videoPush, sps, spsSize, pps, ppsSize, packet->pts)){
                     if (context->videoPush != GNULL) {
-                        GJLOG(GJ_LOGFORBID, "SendAVCSequenceHeader 失败");
+                        GJLOG(GJ_LOGERROR, "SendAVCSequenceHeader 失败");
                     }
                     context->firstVideoEncodeClock = G_TIME_INVALID;
+                    free(sps);
+                    free(pps);
                     return;
+                }else{
+                    free(sps);
+                    free(pps);
                 }
             }
         }
@@ -118,6 +125,9 @@ GVoid rtmpPushMessageCallback(GHandle userData, GJRTMPPushMessageType messageTyp
             context->connentClock = GJ_Gettime()/1000;
             context->audioProducer->audioProduceStart(context->audioProducer);
             context->videoProducer->startProduce(context->videoProducer);
+            GLong during = (GLong)(context->connentClock - context->startPushClock);
+            context->callback(context->userData,GJLivePush_connectSuccess,&during);
+
         }
             break;
         case GJRTMPPushMessageType_closeComplete:{

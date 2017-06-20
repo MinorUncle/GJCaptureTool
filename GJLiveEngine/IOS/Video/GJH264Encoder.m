@@ -83,7 +83,7 @@
     if ((_frameCount++) % _dropStep.den < _dropStep.num) {
         return NO;
     }
-RETRY:
+//RETRY:
     {
     //    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount*1000.0/_destFormat.baseFormat.fps, 1000);
        
@@ -107,12 +107,12 @@ RETRY:
             return YES;
         }else{
             if (status == kVTInvalidSessionErr) {
-                GJLOG(GJ_LOGWARNING,"编码失败 kVTInvalidSessionErr,重新编码");
+                GJLOG(GJ_LOGWARNING,"编码失败 kVTInvalidSessionErr:%d,重新编码",status);
                 VTCompressionSessionInvalidate(_enCodeSession);
                 _enCodeSession = nil;
                 [self creatEnCodeSession];
                 [self setAllParm];
-                goto RETRY;
+//                goto RETRY;//不重试，防止占用太多时间
             }else{
                 GJLOG(GJ_LOGFORBID,"编码失败：%d",status);
             }
@@ -147,12 +147,8 @@ RETRY:
     _sps = _pps = nil;
     memset(&_preBufferStatus, 0, sizeof(_preBufferStatus));
     if (_bufferPool != NULL) {
-        __block GJBufferPool* pool = _bufferPool;
-        _bufferPool = NULL;
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-            GJBufferPoolClean(pool,true);
-            GJBufferPoolFree(&pool);
-        });
+        GJBufferPoolClean(_bufferPool,true);
+        GJBufferPoolFree(&_bufferPool);
     }
     GJBufferPoolCreate(&_bufferPool,1, true);
     VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
@@ -471,12 +467,14 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
 
 -(void)dealloc{
+    GJLOG(GJ_LOGDEBUG, "GJH264Encoder：%p",self);
     _stopRequest = YES;
     if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
     if (_bufferPool) {
         GJBufferPoolClean(_bufferPool,true);
         GJBufferPoolFree(&_bufferPool);
     }
+    
 }
 //-(void)restart{
 //
