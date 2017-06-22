@@ -117,6 +117,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @property (strong, nonatomic) UIButton *pushButton;
 @property (strong, nonatomic) UIButton *pullButton;
 @property (strong, nonatomic) UIButton *pull2Button;
+@property (strong, nonatomic) UIButton *audioMixBtn;
 
 @property (strong, nonatomic) UILabel *fpsLab;
 @property (strong, nonatomic) UILabel *sendRateLab;
@@ -165,8 +166,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
     
     
     
-    rect.origin = CGPointMake(10, 20);
-    rect.size = CGSizeMake(self.view.bounds.size.width-10, 30);
+    rect.origin = CGPointMake(0, 20);
+    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, 30);
     _pushStateLab = [[UILabel alloc]initWithFrame:rect];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
@@ -201,6 +202,18 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _currentV.textColor = [UIColor redColor];
     _currentV.text = @"CV rate:0 kB/s f:0";
     [self.view addSubview:_currentV];
+    
+    rect.origin = CGPointMake(0, 20);
+    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, 30);
+    _audioMixBtn = [[UIButton alloc]initWithFrame:rect];
+    [_audioMixBtn setTitle:@"开始混音" forState:UIControlStateNormal];
+    [_audioMixBtn setTitle:@"结束混音" forState:UIControlStateSelected];
+    [_audioMixBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_audioMixBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _audioMixBtn.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_audioMixBtn];
+
+
     
     int count = 3;
     rect.origin.y = CGRectGetMaxY(self.topView.frame);
@@ -265,6 +278,14 @@ static char* url = "rtmp://10.0.1.142/live/room";
             [_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]];
         }else{
              [_livePush stopStreamPush];
+        }
+    }else if(btn == _audioMixBtn){
+        if (btn.selected) {
+            NSString* path = [[NSBundle mainBundle]pathForResource:@"OrganRun" ofType:@"m4a"];
+            [_livePush startAudioMixWithFile:[NSURL fileURLWithPath:path]];
+
+        }else{
+            [_livePush stopAudioMix];
         }
     }else{
         GJLivePull* pull = NULL;

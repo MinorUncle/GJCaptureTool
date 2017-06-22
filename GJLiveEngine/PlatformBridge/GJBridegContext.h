@@ -52,6 +52,14 @@ typedef struct _GJAudioProduceContext{
     GVoid (*audioProduceUnSetup)         (struct _GJAudioProduceContext* context);
     GBool (*audioProduceStart)      (struct _GJAudioProduceContext* context);
     GVoid (*audioProduceStop)       (struct _GJAudioProduceContext* context);
+    
+    
+    GBool (*enableAudioInEarMonitoring)       (struct _GJAudioProduceContext* context,GBool enable);
+    GBool (*setupMixAudioFile)       (struct _GJAudioProduceContext* context,GChar* file,GBool loop);
+    GBool (*startMixAudioFileAtTime)       (struct _GJAudioProduceContext* context,GUInt64 time);
+    GVoid (*stopMixAudioFile)       (struct _GJAudioProduceContext* context);
+
+
 }GJAudioProduceContext;
 typedef struct _GJAudioPlayContext{
     GHandle obaque;
@@ -75,6 +83,8 @@ typedef struct _GJEncodeToAACContext{
 }GJEncodeToAACContext;
 typedef struct _GJAACDecodeContext{
     GHandle obaque;
+    pthread_mutex_t lock;
+
     GBool (*decodeSetup)            (struct _GJAACDecodeContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AudioFrameOutCallback callback,GHandle userData);
     GVoid (*decodeUnSetup)          (struct _GJAACDecodeContext* context);
     GBool (*decodePacket)           (struct _GJAACDecodeContext* context,R_GJAACPacket* packet);

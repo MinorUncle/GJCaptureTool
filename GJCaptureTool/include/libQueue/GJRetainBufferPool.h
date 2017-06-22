@@ -38,7 +38,7 @@ GBool GJRetainBufferPoolCreate(GJRetainBufferPool** pool,GUInt32 minSize,GBool a
 
  @param pool pool
  */
-GVoid GJRetainBufferPoolFree(GJRetainBufferPool** pool);
+GVoid GJRetainBufferPoolFree(GJRetainBufferPool* pool);
 
 /**
  清除内容，当complete为yes时表示彻底清除，可能会产生阻塞等待

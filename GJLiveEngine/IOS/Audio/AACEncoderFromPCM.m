@@ -188,8 +188,11 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
     }
     if (_bufferPool) {
-        GJRetainBufferPoolClean(_bufferPool, true);
-        GJRetainBufferPoolFree(&_bufferPool);
+        GJRetainBufferPool* pool = _bufferPool;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJRetainBufferPoolClean(pool, GTrue);
+            GJRetainBufferPoolFree(pool);
+        });
         _bufferPool = NULL;
     }
     GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJAACPacketMalloc,GNULL);
@@ -202,13 +205,42 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 }
 -(void)setBitrate:(int)bitrate{
     _bitrate = bitrate;
-    UInt32 outputBitRate = _bitrate; // 64kbs
-    UInt32 propSize = sizeof(outputBitRate);
+    UInt32 propSize = 0;
     // set the bit rate depending on the samplerate chosen
-    AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
-    // get it back and print it out
-    AudioConverterGetProperty(_encodeConvert, kAudioConverterEncodeBitRate, &propSize, &outputBitRate);
-    GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
+//    AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
+//    // get it back and print it out
+//    AudioConverterGetProperty(_encodeConvert, kAudioConverterEncodeBitRate, &propSize, &outputBitRate);
+    OSStatus result = AudioConverterGetPropertyInfo(_encodeConvert, kAudioConverterApplicableEncodeBitRates, &propSize, NULL);
+    if (result != noErr || propSize <= 0) {
+        return;
+    }
+    
+    AudioValueRange* arry = (AudioValueRange*)malloc(propSize);
+    result = AudioConverterGetProperty(_encodeConvert, kAudioConverterApplicableEncodeBitRates, &propSize, arry);
+    if (result != noErr) {
+        free(arry);
+        return;
+    }
+    int availableCount = propSize / sizeof(AudioValueRange);
+    Float64 current = arry[0].mMinimum;
+    for (int i = 0; i<availableCount; i++) {
+        if (arry[i].mMinimum > bitrate) {
+            break;
+        }else{
+            current = arry[i].mMinimum;
+        }
+    }
+    
+    UInt32 outputBitRate = (UInt32)current;
+    propSize = sizeof(outputBitRate);
+    result = AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
+    if(result == noErr){
+        _bitrate = (int)outputBitRate;
+        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
+    }else{
+        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps error:%d\n", (unsigned int)outputBitRate/1000,result);
+    }
+    free(arry);
 }
 -(OSStatus)_getAudioClass:(AudioClassDescription*)audioClass WithType:(UInt32)type fromManufacturer:(UInt32)manufacturer{
     UInt32 audioClassSize;
@@ -378,8 +410,11 @@ int get_f_index(unsigned int sampling_frequency)
 -(void)dealloc{
     queueFree(&(_resumeQueue));
     if (_bufferPool) {
-        GJRetainBufferPoolClean(_bufferPool, GTrue);
-        GJRetainBufferPoolFree(&_bufferPool);
+        GJRetainBufferPool* pool = _bufferPool;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJRetainBufferPoolClean(pool, GTrue);
+            GJRetainBufferPoolFree(pool);
+        });
     }
 
     GJLOG(GJ_LOGINFO, "AACEncoderFromPCM");

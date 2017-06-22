@@ -66,6 +66,12 @@
 
 - (void)stopStreamPush;
 
+- (BOOL)enableAudioInEarMonitoring:(BOOL)enable;
+
+- (BOOL)startAudioMixWithFile:(NSURL*)fileUrl;
+
+- (void)stopAudioMix;
+
 //- (void)videoRecodeWithPath:(NSString*)path;
 
 

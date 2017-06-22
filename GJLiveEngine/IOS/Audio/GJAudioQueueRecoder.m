@@ -364,10 +364,11 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
         AudioQueueDispose(_mAudioQueue, true);
     }
     if (_bufferPool) {
-        GJRetainBufferPoolClean(_bufferPool, GTrue);
-        GJRetainBufferPoolFree(&_bufferPool);
+        GJRetainBufferPool* pool = _bufferPool;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJRetainBufferPoolClean(pool, YES);
+            GJRetainBufferPoolFree(pool);
+        });
     }
-
-
 }
 @end

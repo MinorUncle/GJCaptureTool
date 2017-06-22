@@ -124,6 +124,7 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     [self stopStreamPush];
     return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
 }
+
 -(void)setAudioMute:(BOOL)audioMute{
     _audioMute = audioMute;
     GJLivePush_SetAudioMute(_livePush, audioMute);
@@ -131,6 +132,15 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
 -(void)setVideoMute:(BOOL)videoMute{
     _videoMute = videoMute;
     GJLivePush_SetVideoMute(_livePush, videoMute);
+}
+-(BOOL)startAudioMixWithFile:(NSURL*)fileUrl{
+    return GJLivePush_StartMixFile(_livePush, fileUrl.path.UTF8String);
+}
+-(void)stopAudioMix{
+    GJLivePush_StopAudioMix(_livePush);
+}
+-(BOOL)enableAudioInEarMonitoring:(BOOL)enable{
+    return GJLivePush_EnableAudioInEarMonitoring(_livePush, enable);
 }
 -(void)updateGaterInfo:(NSTimer*)timer{
     GJTrafficStatus vInfo = GJLivePush_GetVideoTrafficStatus(_livePush);

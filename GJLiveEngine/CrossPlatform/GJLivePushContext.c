@@ -409,7 +409,7 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context){
         context->audioEncoder->encodeUnSetup(context->audioEncoder);
         context->videoEncoder->encodeUnSetup(context->videoEncoder);
     }else{
-        GJLOG(GJ_LOGWARNING, "重复停止拉流");
+        GJLOG(GJ_LOGWARNING, "重复停止推流流");
     }
     pthread_mutex_unlock(&context->lock);
 }
@@ -426,6 +426,20 @@ GBool GJLivePush_SetAudioMute(GJLivePushContext* context,GBool mute){
 GBool GJLivePush_SetVideoMute(GJLivePushContext* context,GBool mute){
     context->videoMute = mute;
     return GTrue;
+}
+GBool GJLivePush_StartMixFile(GJLivePushContext* context,const GChar* fileName){
+    GBool result = context->audioProducer->setupMixAudioFile(context->audioProducer,fileName,GFalse);
+    if (result == GFalse) {
+        return result;
+    }
+    result = context->audioProducer->startMixAudioFileAtTime(context->audioProducer,0);
+    return result;
+}
+GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext* context,GBool enable){
+    return context->audioProducer->enableAudioInEarMonitoring(context->audioProducer,enable);
+}
+GVoid GJLivePush_StopAudioMix(GJLivePushContext* context){
+    context->audioProducer->stopMixAudioFile(context->audioProducer);
 }
 GVoid GJLivePush_SetCameraPosition(GJLivePushContext* context,GJCameraPosition position){
     context->videoProducer->setCameraPosition(context->videoProducer,position);

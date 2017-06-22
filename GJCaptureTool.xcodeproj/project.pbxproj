@@ -11,6 +11,7 @@
 		6A40DFB91EE8DAE80047E0F0 /* libTheAmazingAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFB41EE8DA4D0047E0F0 /* libTheAmazingAudioEngine.a */; };
 		6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
 		6A40E1A51EEAA2D70047E0F0 /* AEPlaythroughChannel.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A40E1A41EEAA2D70047E0F0 /* AEPlaythroughChannel.h */; };
+		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
 		6AA71EEB1EBABDF000F2E8DB /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
 		6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */; };
@@ -469,6 +470,7 @@
 		6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		6A40E1A41EEAA2D70047E0F0 /* AEPlaythroughChannel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEPlaythroughChannel.h; sourceTree = "<group>"; };
 		6A6668121EB3254700CE8C17 /* GJPlatformHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPlatformHeader.h; sourceTree = "<group>"; };
+		6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrganRun.m4a; sourceTree = "<group>"; };
 		6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFLVPack.c; sourceTree = "<group>"; };
 		6AB4F4301EF0082200FD4172 /* GJFLVPack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJFLVPack.h; sourceTree = "<group>"; };
 		6AB4F4971EF270D200FD4172 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
@@ -1112,9 +1114,9 @@
 				AE70A4D01ECB4DFE0009E49A /* GJRtmpPush.h */,
 				AE70A4D11ECB4DFE0009E49A /* GJRtmpPush.m */,
 				AE70A4D21ECB4DFE0009E49A /* GJUtil.c */,
+				AE70A4D31ECB4DFE0009E49A /* GJUtil.h */,
 				6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */,
 				6AB4F4301EF0082200FD4172 /* GJFLVPack.h */,
-				AE70A4D31ECB4DFE0009E49A /* GJUtil.h */,
 				AE70A4D41ECB4DFE0009E49A /* sps_decode.c */,
 				AE70A4D51ECB4DFE0009E49A /* sps_decode.h */,
 			);
@@ -1365,6 +1367,7 @@
 				C561ABFC1D51D3DC00113453 /* Main.storyboard */,
 				C561AC8B1D51D3DC00113453 /* Info.plist */,
 				C561AC8C1D51D3DC00113453 /* main.m */,
+				6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */,
 				C561AC8D1D51D3DC00113453 /* OpenGLPlayer */,
 				C561AC931D51D3DC00113453 /* ViewController.h */,
 				C561AC941D51D3DC00113453 /* ViewController.mm */,
@@ -1689,6 +1692,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C561ACA41D51D3DC00113453 /* Main.storyboard in Resources */,
+				6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */,
 				C561AC9C1D51D3DC00113453 /* Assets.xcassets in Resources */,
 				C561ACA31D51D3DC00113453 /* LaunchScreen.storyboard in Resources */,
 			);

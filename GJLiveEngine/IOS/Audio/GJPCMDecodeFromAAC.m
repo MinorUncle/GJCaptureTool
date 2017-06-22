@@ -196,10 +196,13 @@ static const int mpeg4audio_sample_rates[16] = {
     status = AudioConverterGetProperty(_decodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
     _destMaxOutSize *= AAC_FRAME_PER_PACKET;
     if (_bufferPool != NULL) {
-        GJRetainBufferPoolClean(_bufferPool, true);
-        GJRetainBufferPoolFree(&_bufferPool);
+        
+        GJRetainBufferPool* pool = _bufferPool;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJRetainBufferPoolClean(pool, YES);
+            GJRetainBufferPoolFree(pool);
+        });
         _bufferPool = NULL;
-
     }
     GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJPCMFrameMalloc,GNULL);
     
@@ -259,12 +262,11 @@ static const int mpeg4audio_sample_rates[16] = {
         retainBufferUnRetain(&_prePacket->retain);
     }
     if (_bufferPool) {
-        GJRetainBufferPoolClean(_bufferPool, true);
-        GJRetainBufferPoolFree(&_bufferPool);
-//        dispatch_async(dispatch_get_global_queue(0, 0), ^{
-//            GJRetainBufferPoolClean(_bufferPool, true);
-//            GJRetainBufferPoolFree(&_bufferPool);
-//        });
+        GJRetainBufferPool* pool = _bufferPool;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJRetainBufferPoolClean(pool, YES);
+            GJRetainBufferPoolFree(pool);
+        });
     }
     if (_resumeQueue) {
         queueFree(&(_resumeQueue));

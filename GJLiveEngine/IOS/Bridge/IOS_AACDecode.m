@@ -12,6 +12,7 @@
 #import "GJLog.h"
 #import "GJLiveDefine+internal.h"
 inline static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AudioFrameOutCallback callback,GHandle userData){
+    //pthread_mutex_lock(&context->lock);
     GJAssert(context->obaque == GNULL, "上一个音频解码器没有释放");
     if (sourceFormat.mType != GJAudioType_AAC) {
         GJLOG(GJ_LOGERROR, "解码音频源格式不支持");
@@ -48,9 +49,11 @@ inline static GBool decodeSetup (struct _GJAACDecodeContext* context,GJAudioForm
     context->obaque = (__bridge_retained GHandle)decode;
     [decode start];
     GJLOG(GJ_LOGDEBUG, "aac decode decodeSetup:%p",decode);
+    //pthread_mutex_unlock(&context->lock);
     return GTrue;
 }
 inline static GVoid decodeUnSetup (struct _GJAACDecodeContext* context){
+    //pthread_mutex_lock(&context->lock);
     if(context->obaque){
         GJPCMDecodeFromAAC* decode = (__bridge_transfer GJPCMDecodeFromAAC *)(context->obaque);
         [decode stop];
@@ -58,10 +61,13 @@ inline static GVoid decodeUnSetup (struct _GJAACDecodeContext* context){
         GJLOG(GJ_LOGDEBUG, "aac decode unSetup:%p",decode);
         decode = nil;
     }
+    //pthread_mutex_unlock(&context->lock);
 }
 inline static GBool decodePacket (struct _GJAACDecodeContext* context,R_GJAACPacket* packet){
+    //pthread_mutex_lock(&context->lock);
     GJPCMDecodeFromAAC* decode = (__bridge GJPCMDecodeFromAAC *)(context->obaque);
     [decode decodePacket:packet];
+    //pthread_mutex_unlock(&context->lock);
     return GTrue;
 }
 
@@ -70,6 +76,7 @@ GVoid GJ_AACDecodeContextCreate(GJAACDecodeContext** decodeContext){
         *decodeContext = (GJAACDecodeContext*)malloc(sizeof(GJAACDecodeContext));
     }
     GJAACDecodeContext* context = *decodeContext;
+    //pthread_mutex_init(&context->lock, GNULL);
     context->decodeSetup = decodeSetup;
     context->decodeUnSetup = decodeUnSetup;
     context->decodePacket = decodePacket;
@@ -81,6 +88,7 @@ GVoid GJ_AACDecodeContextDealloc(GJAACDecodeContext** context){
         (*context)->decodeUnSetup(*context);
         
     }
+    //pthread_mutex_destroy(&(*context)->lock);
     free(*context);
     *context = GNULL;
 }

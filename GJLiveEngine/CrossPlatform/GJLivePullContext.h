@@ -62,5 +62,4 @@ GJTrafficStatus GJLivePull_GetVideoTrafficStatus(GJLivePullContext* context);
 GJTrafficStatus GJLivePull_GetAudioTrafficStatus(GJLivePullContext* context);
 GHandle GJLivePull_GetDisplayView(GJLivePullContext* context);
 
-
 #endif /* GJLivePullContext_h */
