@@ -118,6 +118,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @property (strong, nonatomic) UIButton *pullButton;
 @property (strong, nonatomic) UIButton *pull2Button;
 @property (strong, nonatomic) UIButton *audioMixBtn;
+@property (strong, nonatomic) UIButton *earPlay;
 
 @property (strong, nonatomic) UILabel *fpsLab;
 @property (strong, nonatomic) UILabel *sendRateLab;
@@ -171,11 +172,13 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _pushStateLab = [[UILabel alloc]initWithFrame:rect];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
+    _pushStateLab.font = [UIFont systemFontOfSize:14];
     [self.view addSubview:_pushStateLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
     _fpsLab = [[UILabel alloc]initWithFrame:rect];
     _fpsLab.textColor = [UIColor redColor];
+    _fpsLab.font = [UIFont systemFontOfSize:14];
     _fpsLab.text = @"FPS V:0,A:0";
     [self.view addSubview:_fpsLab];
     
@@ -183,27 +186,31 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _sendRateLab = [[UILabel alloc]initWithFrame:rect];
     _sendRateLab.textColor = [UIColor redColor];
     _sendRateLab.text = @"bitrate V:0 KB/s A:0 KB/s";
+    _sendRateLab.font = [UIFont systemFontOfSize:14];
     [self.view addSubview:_sendRateLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
     _delayVLab = [[UILabel alloc]initWithFrame:rect];
     _delayVLab.textColor = [UIColor redColor];
+    _delayVLab.font = [UIFont systemFontOfSize:14];
     _delayVLab.text = @"cache V t:0 ms f:0";
     [self.view addSubview:_delayVLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
     _delayALab = [[UILabel alloc]initWithFrame:rect];
     _delayALab.textColor = [UIColor redColor];
+    _delayALab.font = [UIFont systemFontOfSize:14];
     _delayALab.text = @"cache A t:0 ms f:0";
     [self.view addSubview:_delayALab];
     
     rect.origin.y = CGRectGetMaxY(rect);
     _currentV = [[UILabel alloc]initWithFrame:rect];
     _currentV.textColor = [UIColor redColor];
+    _currentV.font = [UIFont systemFontOfSize:14];
     _currentV.text = @"CV rate:0 kB/s f:0";
     [self.view addSubview:_currentV];
     
-    rect.origin = CGPointMake(0, 20);
+    rect.origin = CGPointMake(self.view.bounds.size.width*0.5, 20);
     rect.size = CGSizeMake(self.view.bounds.size.width*0.5, 30);
     _audioMixBtn = [[UIButton alloc]initWithFrame:rect];
     [_audioMixBtn setTitle:@"开始混音" forState:UIControlStateNormal];
@@ -213,6 +220,14 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _audioMixBtn.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_audioMixBtn];
 
+    rect.origin.y = CGRectGetMaxY(rect);
+    _earPlay = [[UIButton alloc]initWithFrame:rect];
+    [_earPlay setTitle:@"开始耳返" forState:UIControlStateNormal];
+    [_earPlay setTitle:@"结束耳返" forState:UIControlStateSelected];
+    [_earPlay setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_earPlay addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _earPlay.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_earPlay];
 
     
     int count = 3;
@@ -281,13 +296,15 @@ static char* url = "rtmp://10.0.1.142/live/room";
         }
     }else if(btn == _audioMixBtn){
         if (btn.selected) {
-            NSString* path = [[NSBundle mainBundle]pathForResource:@"OrganRun" ofType:@"m4a"];
-            [_livePush startAudioMixWithFile:[NSURL fileURLWithPath:path]];
+            NSURL* path = [[NSBundle mainBundle]URLForResource:@"OrganRun" withExtension:@"m4a"];
+            [_livePush startAudioMixWithFile:path];
 
         }else{
             [_livePush stopAudioMix];
         }
-    }else{
+    }else if(btn == _earPlay){
+        [_livePush enableAudioInEarMonitoring:btn.selected];
+    }else {
         GJLivePull* pull = NULL;
         for (PullShow* show in _pulls) {
             if (show.pullBtn == btn) {
@@ -315,12 +332,12 @@ static char* url = "rtmp://10.0.1.142/live/room";
 
 
 -(void)livePush:(GJLivePush *)livePush connentSuccessWithElapsed:(GLong)elapsed{
-    _pushStateLab.text = [NSString stringWithFormat:@"推流连接成功 耗时：%ld ms",elapsed];
+    _pushStateLab.text = [NSString stringWithFormat:@"推流连接耗时：%ld ms",elapsed];
 }
 -(void)livePush:(GJLivePush *)livePush closeConnent:(GJPushSessionInfo *)info resion:(GJConnentCloceReason)reason{
     GJPushSessionInfo pushInfo = *info;
     dispatch_async(dispatch_get_main_queue(), ^{
-        _pushStateLab.text = [NSString stringWithFormat:@"推流关闭 总推流时长：%ld ms",pushInfo.sessionDuring];
+        _pushStateLab.text = [NSString stringWithFormat:@"推流关闭,推流时长：%ld ms",pushInfo.sessionDuring];
     });
 }
 -(PullShow*)getShowWithPush:(GJLivePull*)pull{

@@ -123,25 +123,39 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
     if (self) {
         NSError* error;
         [[GJAudioSessionCenter shareSession] setPrefferSampleRate:audioFormat.mSampleRate error:&error];
+        
         if (error != nil) {
             GJLOG(GJ_LOGERROR, "setPrefferSampleRate error:%s",error.localizedDescription.UTF8String);
         }
         _audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat options:AEAudioControllerOptionEnableInput];
         _audioController.useMeasurementMode = NO;
-        _audioOut = [[GJAudioOutput alloc]initWithAudioController:_audioController];
-        [_audioController addInputReceiver:_audioOut];
+//        _audioController.voiceProcessingOnlyForSpeakerAndMicrophone = NO;
+        _audioController.voiceProcessingEnabled = YES;
+        if (![_audioController start:&error]) {
+            GJLOG(GJ_LOGERROR, "AEAudioController start error:%@",error.description.UTF8String);
+            self = nil;
+        }
+
     }
     return self;
 }
+-(GJAudioOutput *)audioOut{
+    if (_audioOut == nil) {
+        _audioOut = [[GJAudioOutput alloc]initWithAudioController:_audioController];
+    }
+    return _audioOut;
+}
 
 -(void)setAudioCallback:(void (^)(R_GJPCMFrame *))audioCallback{
-    _audioOut.audioCallback = audioCallback;
+    self.audioOut.audioCallback = audioCallback;
 }
 -(BOOL)startRecode:(NSError**)error{
-    return  [_audioController start:error];
+
+    [_audioController addInputReceiver:self.audioOut];
+    return  _audioOut != nil;
 }
 -(void)stopRecode{
-    [_audioController stop];
+    [_audioController removeInputReceiver:_audioOut];
 }
 -(AEPlaythroughChannel *)playthrough{
     if (_playthrough == nil) {
@@ -179,11 +193,11 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
 }
 -(BOOL)mixFilePlayAtTime:(uint64_t)time{
     if (_mixfilePlay) {
-        [_mixfilePlay playAtTime:time];
-        return NO;
+//        [_mixfilePlay playAtTime:time];
+        return YES;
     }else{
         GJLOG(GJ_LOGERROR, "请先设置minx file");
-        return YES;
+        return NO;
     }
 }
 -(void)stopMix{
@@ -272,18 +286,30 @@ inline static GVoid audioProduceUnSetup(struct _GJAudioProduceContext* context){
     }
 }
 inline static GBool audioProduceStart(struct _GJAudioProduceContext* context){
-    GBool result = GTrue;
+    __block GBool result = GTrue;
 #ifdef AUDIO_QUEUE_RECODE
     GJAudioQueueRecoder* recode = (__bridge GJAudioQueueRecoder *)(context->obaque);
     result =  [recode startRecodeAudio];
 #endif
 #ifdef AMAZING_AUDIO_ENGINE
-    NSError* error;
-    GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
-    if(![manager startRecode:&error]){
-        GJLOG(GJ_LOGERROR, "startRecode error:%s",error.localizedDescription.UTF8String);
-        result = GFalse;
+    if (1) {
+        NSError* error;
+        GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
+        if(![manager startRecode:&error]){
+            GJLOG(GJ_LOGERROR, "startRecode error:%s",error.localizedDescription.UTF8String);
+            result = GFalse;
+        }
+    }else{
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            NSError* error;
+            GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
+            if(![manager startRecode:&error]){
+                GJLOG(GJ_LOGERROR, "startRecode error:%s",error.localizedDescription.UTF8String);
+                result = GFalse;
+            }
+        });
     }
+
 #endif
     return result;
 }
@@ -293,8 +319,15 @@ inline static GVoid audioProduceStop(struct _GJAudioProduceContext* context){
     [recode stop];
 #endif
 #ifdef AMAZING_AUDIO_ENGINE
-    GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
-    [manager stopRecode];
+    if (1) {
+        GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
+        [manager stopRecode];
+    }else{
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
+            [manager stopRecode];
+        });
+    }
 #endif
 }
 
@@ -305,7 +338,7 @@ GBool enableAudioInEarMonitoring(struct _GJAudioProduceContext* context,GBool en
 #endif
     return  GTrue;
 }
-GBool setupMixAudioFile(struct _GJAudioProduceContext* context,GChar* file,GBool loop){
+GBool setupMixAudioFile(struct _GJAudioProduceContext* context,const GChar* file,GBool loop){
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
     NSURL * url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:file]];

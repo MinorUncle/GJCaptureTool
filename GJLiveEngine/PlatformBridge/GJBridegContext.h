@@ -55,7 +55,7 @@ typedef struct _GJAudioProduceContext{
     
     
     GBool (*enableAudioInEarMonitoring)       (struct _GJAudioProduceContext* context,GBool enable);
-    GBool (*setupMixAudioFile)       (struct _GJAudioProduceContext* context,GChar* file,GBool loop);
+    GBool (*setupMixAudioFile)       (struct _GJAudioProduceContext* context,const GChar* file,GBool loop);
     GBool (*startMixAudioFileAtTime)       (struct _GJAudioProduceContext* context,GUInt64 time);
     GVoid (*stopMixAudioFile)       (struct _GJAudioProduceContext* context);
 

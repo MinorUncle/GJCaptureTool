@@ -436,7 +436,11 @@ GBool GJLivePush_StartMixFile(GJLivePushContext* context,const GChar* fileName){
     return result;
 }
 GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext* context,GBool enable){
-    return context->audioProducer->enableAudioInEarMonitoring(context->audioProducer,enable);
+    if (context->audioProducer->obaque == GNULL) {
+        return GFalse;
+    }else{
+        return context->audioProducer->enableAudioInEarMonitoring(context->audioProducer,enable);
+    }
 }
 GVoid GJLivePush_StopAudioMix(GJLivePushContext* context){
     context->audioProducer->stopMixAudioFile(context->audioProducer);
