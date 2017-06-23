@@ -3005,10 +3005,8 @@ static void audioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, Audio
     OSStatus err = 0;
     for ( int retry=0; retry<6; retry++ ) {
         err = AUGraphUpdate(_audioGraph, NULL);
-        if ( err != kAUGraphErr_CannotDoInCurrentContext ){
-            [NSThread sleepForTimeInterval:0.01];
-            break;
-        }
+        if ( err != kAUGraphErr_CannotDoInCurrentContext )break;
+        [NSThread sleepForTimeInterval:0.01];
     }
     
     return err;

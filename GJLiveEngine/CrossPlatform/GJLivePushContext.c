@@ -29,7 +29,7 @@ static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* fram
 static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame){
     GJLivePushContext* context = userData;
     if (!context->audioMute) {
-        context->audioEncoder->encodeFrame(context->audioEncoder,frame);
+//        context->audioEncoder->encodeFrame(context->audioEncoder,frame);
     }
 }
 static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
@@ -296,7 +296,7 @@ GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callb
         context->callback = callback;
         context->userData = param;
         GJ_H264EncodeContextCreate(&context->videoEncoder);
-        GJ_AACEncodeContextCreate(&context->audioEncoder);
+//        GJ_AACEncodeContextCreate(&context->audioEncoder);
         GJ_VideoProduceContextCreate(&context->videoProducer);
         GJ_AudioProduceContextCreate(&context->audioProducer);
         pthread_mutex_init(&context->lock, GNULL);
@@ -375,8 +375,8 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             GJAudioFormat aDFormat = aFormat;
             aDFormat.mFramePerPacket = 1024;
             aDFormat.mType = GJAudioType_AAC;
-            context->audioEncoder->encodeSetup(context->audioEncoder,aFormat,aDFormat,aacPacketOutCallback,context);
-            context->audioEncoder->encodeSetBitrate(context->audioEncoder,context->pushConfig->mAudioBitrate);
+//            context->audioEncoder->encodeSetup(context->audioEncoder,aFormat,aDFormat,aacPacketOutCallback,context);
+//            context->audioEncoder->encodeSetBitrate(context->audioEncoder,context->pushConfig->mAudioBitrate);
             GJPixelFormat vformat = {0};
             vformat.mHeight = context->pushConfig->mPushSize.height;
             vformat.mWidth = context->pushConfig->mPushSize.width;
@@ -406,7 +406,7 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context){
         GJRtmpPush_CloseAndDealloc(&context->videoPush);
         context->audioProducer->audioProduceStop(context->audioProducer);
         context->videoProducer->stopProduce(context->videoProducer);
-        context->audioEncoder->encodeUnSetup(context->audioEncoder);
+//        context->audioEncoder->encodeUnSetup(context->audioEncoder);
         context->videoEncoder->encodeUnSetup(context->videoEncoder);
     }else{
         GJLOG(GJ_LOGWARNING, "重复停止推流流");
@@ -460,7 +460,7 @@ GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
         GJLOG(GJ_LOGERROR, "非法释放");
     }else{
         GJ_H264EncodeContextDealloc(&context->videoEncoder);
-        GJ_AACEncodeContextDealloc(&context->audioEncoder);
+//        GJ_AACEncodeContextDealloc(&context->audioEncoder);
         GJ_VideoProduceContextDealloc(&context->videoProducer);
         GJ_AudioProduceContextDealloc(&context->audioProducer);
         if (context->pushConfig) {
