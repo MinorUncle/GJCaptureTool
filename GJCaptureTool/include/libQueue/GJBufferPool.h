@@ -30,7 +30,7 @@ typedef struct _GJBufferPool{
 GBool GJBufferPoolCreate(GJBufferPool** pool,GUInt32 minSize,GBool atomic);
 //小数据最好多用默认的，大数据最好不要用默认的
 GJBufferPool* defauleBufferPool();
-GVoid GJBufferPoolFree(GJBufferPool** pool);
+GVoid GJBufferPoolFree(GJBufferPool* pool);
 
 /**
  清除内容，当complete为yes时表示彻底清除，可能会产生阻塞等待

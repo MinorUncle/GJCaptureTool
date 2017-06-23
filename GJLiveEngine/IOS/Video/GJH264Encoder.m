@@ -147,8 +147,12 @@
     _sps = _pps = nil;
     memset(&_preBufferStatus, 0, sizeof(_preBufferStatus));
     if (_bufferPool != NULL) {
-        GJBufferPoolClean(_bufferPool,true);
-        GJBufferPoolFree(&_bufferPool);
+        GJBufferPool* pool = _bufferPool;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJBufferPoolClean(pool,true);
+            GJBufferPoolFree(pool);
+        });
+        _bufferPool = NULL;
     }
     GJBufferPoolCreate(&_bufferPool,1, true);
     VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
@@ -471,8 +475,11 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     _stopRequest = YES;
     if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
     if (_bufferPool) {
-        GJBufferPoolClean(_bufferPool,true);
-        GJBufferPoolFree(&_bufferPool);
+        GJBufferPool* pool = _bufferPool;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJBufferPoolClean(pool,true);
+            GJBufferPoolFree(pool);
+        });
     }
     
 }
