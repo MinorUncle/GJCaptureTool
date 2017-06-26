@@ -127,14 +127,9 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
         if (error != nil) {
             GJLOG(GJ_LOGERROR, "setPrefferSampleRate error:%s",error.localizedDescription.UTF8String);
         }
-        _audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat options:AEAudioControllerOptionEnableInput];
+        _audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat inputEnabled:YES];
         _audioController.useMeasurementMode = NO;
-//        _audioController.voiceProcessingOnlyForSpeakerAndMicrophone = NO;
-        _audioController.voiceProcessingEnabled = YES;
-        if (![_audioController start:&error]) {
-            GJLOG(GJ_LOGERROR, "AEAudioController start error:%@",error.description.UTF8String);
-            self = nil;
-        }
+        [_audioController addOutputReceiver:self.audioOut];
 
     }
     return self;
@@ -150,12 +145,13 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
     self.audioOut.audioCallback = audioCallback;
 }
 -(BOOL)startRecode:(NSError**)error{
-
-    [_audioController addInputReceiver:self.audioOut];
-    return  _audioOut != nil;
+    if (![_audioController start:error]) {
+        GJLOG(GJ_LOGERROR, "AEAudioController start error:%@",(*error).description.UTF8String);
+    }
+    return *error == nil;
 }
 -(void)stopRecode{
-    [_audioController removeInputReceiver:_audioOut];
+    [_audioController stop];
 }
 -(AEPlaythroughChannel *)playthrough{
     if (_playthrough == nil) {
@@ -210,6 +206,18 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
 }
 -(void)dealloc{
     GJLOG(GJ_LOGDEBUG, "GJAudioManager dealloc");
+    [_audioController removeInputReceiver:_audioOut];
+    NSMutableArray* play = [NSMutableArray arrayWithCapacity:2];
+    
+    if (_mixfilePlay) {
+        [play addObject:_mixfilePlay];
+    }
+    if (_playthrough) {
+        [play addObject:_playthrough];
+        [_audioController removeInputReceiver:_playthrough];
+    }
+    [_audioController removeChannels:play];
+    
 }
 @end
 
@@ -292,7 +300,7 @@ inline static GBool audioProduceStart(struct _GJAudioProduceContext* context){
     result =  [recode startRecodeAudio];
 #endif
 #ifdef AMAZING_AUDIO_ENGINE
-    if (1) {
+    if (/* DISABLES CODE */ (1)) {
         NSError* error;
         GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
         if(![manager startRecode:&error]){
@@ -319,7 +327,7 @@ inline static GVoid audioProduceStop(struct _GJAudioProduceContext* context){
     [recode stop];
 #endif
 #ifdef AMAZING_AUDIO_ENGINE
-    if (1) {
+    if (/* DISABLES CODE */ (1)) {
         GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
         [manager stopRecode];
     }else{
