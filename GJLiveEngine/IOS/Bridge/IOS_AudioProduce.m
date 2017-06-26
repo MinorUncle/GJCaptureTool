@@ -24,6 +24,7 @@
 #import "AudioUnitCapture.h"
 #import "AEAudioController.h"
 #import "AEPlaythroughChannel.h"
+#import "AEAudioSender.h"
 
 
 
@@ -74,7 +75,6 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
     };
 }
 
-
 -(AEAudioReceiverCallback)receiverCallback {
     return inputCallback;
 }
@@ -107,17 +107,38 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
 }
 @end
 
-@interface GJAudioManager : NSObject
+@interface GJAudioManager : NSObject <AEAudioSenderDelegate>
 {
+    GJRetainBufferPool* _bufferPool;
 }
 @property (nonatomic, retain)AEPlaythroughChannel* playthrough;
 @property (nonatomic, retain)AEAudioFilePlayer* mixfilePlay;
-@property (nonatomic, retain) AEAudioController *audioController;
-@property (nonatomic, retain) GJAudioOutput *audioOut;
+@property (nonatomic, retain)AEAudioController *audioController;
+@property (nonatomic, retain)GJAudioOutput *audioOut;
+@property (nonatomic, retain)AEAudioSender* audioSender;
 
 @property (nonatomic, copy)void(^audioCallback)(R_GJPCMFrame* frame);
 @end
 @implementation GJAudioManager
+
+- (void)AEAudioSenderPushData:(AudioBufferList*)bufferList withTime:(const AudioTimeStamp*)lAudioTime{
+    if (bufferList->mNumberBuffers>0) {
+        GUInt32 size = (GUInt32)bufferList->mBuffers[0].mDataByteSize;
+        if (_bufferPool == GNULL) {
+            
+            GBool result = GJRetainBufferPoolCreate(&(_bufferPool), size, GTrue, R_GJPCMFrameMalloc, GNULL);
+            if (result != GTrue) {
+                return ;
+            }
+        }
+        R_GJPCMFrame* rFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetData(_bufferPool);
+        memcpy(rFrame->retain.data, bufferList->mBuffers[0].mData, bufferList->mBuffers[0].mDataByteSize);
+        rFrame->channel = bufferList->mBuffers[0].mNumberChannels;
+        self.audioCallback(rFrame);
+        retainBufferUnRetain(&rFrame->retain);
+    };
+
+}
 -(instancetype)initWithFormat:(AudioStreamBasicDescription )audioFormat{
     self = [super init];
     if (self) {
@@ -129,7 +150,7 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
         }
         _audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat inputEnabled:YES];
         _audioController.useMeasurementMode = NO;
-        [_audioController addOutputReceiver:self.audioOut];
+        [_audioController addOutputReceiver:self.audioSender];
 
     }
     return self;
@@ -140,10 +161,16 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
     }
     return _audioOut;
 }
-
--(void)setAudioCallback:(void (^)(R_GJPCMFrame *))audioCallback{
-    self.audioOut.audioCallback = audioCallback;
+-(AEAudioSender *)audioSender{
+    if (_audioSender == nil) {
+        _audioSender = [[AEAudioSender alloc]initWithAudioController:_audioController];
+        _audioSender.delegate = self;
+    }
+    return _audioSender;
 }
+//-(void)setAudioCallback:(void (^)(R_GJPCMFrame *))audioCallback{
+//    self.audioOut.audioCallback = audioCallback;
+//}
 -(BOOL)startRecode:(NSError**)error{
     if (![_audioController start:error]) {
         GJLOG(GJ_LOGERROR, "AEAudioController start error:%@",(*error).description.UTF8String);
@@ -175,6 +202,7 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
     if (_mixfilePlay != nil) {
         GJLOG(GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
         [_audioController removeChannels:@[_mixfilePlay]];
+        [_audioController removeOutputReceiver:_audioSender fromChannel:_mixfilePlay];
         _mixfilePlay = nil;
     }
     NSError* error;
@@ -184,12 +212,13 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
         return GFalse;
     }else{
         [_audioController addChannels:@[_mixfilePlay]];
+        [_audioController addOutputReceiver:_audioSender forChannel:_mixfilePlay];
         return GTrue;
     }
 }
 -(BOOL)mixFilePlayAtTime:(uint64_t)time{
     if (_mixfilePlay) {
-//        [_mixfilePlay playAtTime:time];
+        [_mixfilePlay playAtTime:time];
         return YES;
     }else{
         GJLOG(GJ_LOGERROR, "请先设置minx file");
@@ -201,6 +230,7 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
         GJLOG(GJ_LOGWARNING, "重复stop mix");
     }else{
         [_audioController removeChannels:@[_mixfilePlay]];
+        [_audioController removeOutputReceiver:_audioSender fromChannel:_mixfilePlay];
         _mixfilePlay = nil;
     }
 }

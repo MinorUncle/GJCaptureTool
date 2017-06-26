@@ -296,7 +296,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
         }
     }else if(btn == _audioMixBtn){
         if (btn.selected) {
-            NSURL* path = [[NSBundle mainBundle]URLForResource:@"OrganRun" withExtension:@"m4a"];
+            NSURL* path = [[NSBundle mainBundle]URLForResource:@"MixTest" withExtension:@"mp3"];
             [_livePush startAudioMixWithFile:path];
 
         }else{

@@ -12,6 +12,8 @@
 		6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
 		6A40E1A51EEAA2D70047E0F0 /* AEPlaythroughChannel.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A40E1A41EEAA2D70047E0F0 /* AEPlaythroughChannel.h */; };
 		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
+		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
+		6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85F9E91F0140AF0037A64F /* AEAudioSender.h */; };
 		6AA71EEB1EBABDF000F2E8DB /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
 		6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */; };
@@ -471,6 +473,8 @@
 		6A40E1A41EEAA2D70047E0F0 /* AEPlaythroughChannel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEPlaythroughChannel.h; sourceTree = "<group>"; };
 		6A6668121EB3254700CE8C17 /* GJPlatformHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPlatformHeader.h; sourceTree = "<group>"; };
 		6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrganRun.m4a; sourceTree = "<group>"; };
+		6A85F9941F00F0B00037A64F /* MixTest.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MixTest.mp3; sourceTree = "<group>"; };
+		6A85F9E91F0140AF0037A64F /* AEAudioSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEAudioSender.h; path = TheAmazingAudioEngine/AEAudioSender.h; sourceTree = SOURCE_ROOT; };
 		6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFLVPack.c; sourceTree = "<group>"; };
 		6AB4F4301EF0082200FD4172 /* GJFLVPack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJFLVPack.h; sourceTree = "<group>"; };
 		6AB4F4971EF270D200FD4172 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
@@ -1026,6 +1030,7 @@
 		6A40DFBA1EE8DB630047E0F0 /* TheAmazingAudioEngine */ = {
 			isa = PBXGroup;
 			children = (
+				6A85F9E91F0140AF0037A64F /* AEAudioSender.h */,
 				6AB4F4971EF270D200FD4172 /* GJAudioSessionCenter.h */,
 				6A40DFBB1EE8DB630047E0F0 /* AEAudioBufferManager.h */,
 				6A40E1A41EEAA2D70047E0F0 /* AEPlaythroughChannel.h */,
@@ -1330,6 +1335,7 @@
 		C54FA89F1D21006000A0D3C3 = {
 			isa = PBXGroup;
 			children = (
+				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
 				6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */,
 				6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */,
 				0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */,
@@ -1424,6 +1430,7 @@
 				6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */,
 				AE70A5101ECB4DFE0009E49A /* GJFormats.h in Headers */,
 				6AE37BD91ED5956800B049EB /* GJLivePushContext.h in Headers */,
+				6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */,
 				AE70A51C1ECB4DFE0009E49A /* sps_decode.h in Headers */,
 				AE70A5171ECB4DFE0009E49A /* GJRtmpPush.h in Headers */,
 				6AE37BC21ED5955500B049EB /* IOS_AudioProduce.h in Headers */,
@@ -1695,6 +1702,7 @@
 				6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */,
 				C561AC9C1D51D3DC00113453 /* Assets.xcassets in Resources */,
 				C561ACA31D51D3DC00113453 /* LaunchScreen.storyboard in Resources */,
+				6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
