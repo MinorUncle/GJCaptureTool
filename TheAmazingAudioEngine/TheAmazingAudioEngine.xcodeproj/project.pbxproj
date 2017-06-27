@@ -165,6 +165,8 @@
 		6A85F9E01F0139770037A64F /* AEMixerBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C8A0F3E1540BBD300307CB6 /* AEMixerBuffer.m */; };
 		6A85F9E71F013E200037A64F /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85F9E51F013E200037A64F /* AEAudioSender.h */; };
 		6A85F9E81F013E200037A64F /* AEAudioSender.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A85F9E61F013E200037A64F /* AEAudioSender.m */; };
+		6A85FA251F0239550037A64F /* GJAudioMixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA231F0239550037A64F /* GJAudioMixer.h */; };
+		6A85FA261F0239550037A64F /* GJAudioMixer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A85FA241F0239550037A64F /* GJAudioMixer.m */; };
 		6AB4F4491EF0D8C000FD4172 /* GJAudioSessionCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AB4F4471EF0D8C000FD4172 /* GJAudioSessionCenter.h */; };
 		6AB4F44A1EF0D8C000FD4172 /* GJAudioSessionCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB4F4481EF0D8C000FD4172 /* GJAudioSessionCenter.m */; };
 		7A5687151B54617200243427 /* AEAudioController+Audiobus.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C2886511557DB800074175A /* AEAudioController+Audiobus.m */; };
@@ -308,6 +310,8 @@
 		4CEC0EB816B5294300D11ED9 /* AEBlockFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEBlockFilter.m; sourceTree = "<group>"; };
 		6A85F9E51F013E200037A64F /* AEAudioSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioSender.h; sourceTree = "<group>"; };
 		6A85F9E61F013E200037A64F /* AEAudioSender.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAudioSender.m; sourceTree = "<group>"; };
+		6A85FA231F0239550037A64F /* GJAudioMixer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioMixer.h; sourceTree = "<group>"; };
+		6A85FA241F0239550037A64F /* GJAudioMixer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioMixer.m; sourceTree = "<group>"; };
 		6AB4F4471EF0D8C000FD4172 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
 		6AB4F4481EF0D8C000FD4172 /* GJAudioSessionCenter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioSessionCenter.m; sourceTree = "<group>"; };
 		7A5687101B54610900243427 /* libTheAmazingAudioEngine OS X.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine OS X.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -420,6 +424,8 @@
 				4C70F9781BB0D0900064CF73 /* Filters */,
 				4C8A0F3D1540BBD300307CB6 /* AEMixerBuffer.h */,
 				4C8A0F3E1540BBD300307CB6 /* AEMixerBuffer.m */,
+				6A85FA231F0239550037A64F /* GJAudioMixer.h */,
+				6A85FA241F0239550037A64F /* GJAudioMixer.m */,
 				6A85F9E51F013E200037A64F /* AEAudioSender.h */,
 				6A85F9E61F013E200037A64F /* AEAudioSender.m */,
 				4CA689B11541EF4A00AF8DDD /* AELimiter.h */,
@@ -553,6 +559,7 @@
 			files = (
 				4CB2273C1D0E5FD100B1135F /* AERealtimeWatchdog.h in Headers */,
 				4C215D121523A94200D36CAD /* TheAmazingAudioEngine.h in Headers */,
+				6A85FA251F0239550037A64F /* GJAudioMixer.h in Headers */,
 				F9C23C1E1BA979050060718F /* AEMessageQueue.h in Headers */,
 				4C13AA9B1BB0FC9900DE05E0 /* AEMemoryBufferPlayer.h in Headers */,
 				6AB4F4491EF0D8C000FD4172 /* GJAudioSessionCenter.h in Headers */,
@@ -785,6 +792,7 @@
 				4C215D081523A8E500D36CAD /* AEAudioController.m in Sources */,
 				4C70F9A51BB0D2FE0064CF73 /* AEHighPassFilter.m in Sources */,
 				4C215D091523A8E500D36CAD /* AEAudioFilePlayer.m in Sources */,
+				6A85FA261F0239550037A64F /* GJAudioMixer.m in Sources */,
 				4C215D0A1523A8E500D36CAD /* AEUtilities.m in Sources */,
 				4C70F9AD1BB0D2FE0064CF73 /* AENewTimePitchFilter.m in Sources */,
 				4CCAFEFF1C0BCFF100B87416 /* AEAudioBufferManager.m in Sources */,

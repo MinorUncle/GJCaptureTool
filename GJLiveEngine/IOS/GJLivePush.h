@@ -40,7 +40,6 @@
 
 @property(nonatomic,assign)GJInterfaceOrientation outOrientation;
 
-
 @property(nonatomic,strong,readonly,getter=getPreviewView)UIView* previewView;
 
 //@property(nonatomic,assign,readonly)CaptureSizeType caputreSizeType;
@@ -53,7 +52,7 @@
 @property(nonatomic,assign)BOOL audioMute;
 
 //- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
-//
+
 //- (void)stopCapture;
 
 - (void)startPreview;
@@ -71,6 +70,12 @@
 - (BOOL)startAudioMixWithFile:(NSURL*)fileUrl;
 
 - (void)stopAudioMix;
+
+- (void)setInputVolume:(float)volume;
+
+- (void)setMixVolume:(float)volume;
+
+- (void)setMasterOutVolume:(float)volume;
 
 //- (void)videoRecodeWithPath:(NSString*)path;
 

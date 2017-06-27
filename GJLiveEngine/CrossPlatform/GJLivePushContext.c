@@ -437,6 +437,15 @@ GBool GJLivePush_StartMixFile(GJLivePushContext* context,const GChar* fileName){
     result = context->audioProducer->startMixAudioFileAtTime(context->audioProducer,0);
     return result;
 }
+GBool GJLivePush_SetMixVolume(GJLivePushContext* context,GFloat32 volume){
+    return GJCheckBool(context->audioProducer->setMixVolume(context->audioProducer,volume),"setMixVolume");
+}
+GBool GJLivePush_SetOutVolume(GJLivePushContext* context,GFloat32 volume){
+    return GJCheckBool(context->audioProducer->setOutVolume(context->audioProducer,volume),"setOutVolume");
+}
+GBool GJLivePush_SetInputGain(GJLivePushContext* context,GFloat32 gain){
+    return GJCheckBool(context->audioProducer->setInputGain(context->audioProducer,gain),"setInputGain");
+}
 GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext* context,GBool enable){
     if (context->audioProducer->obaque == GNULL) {
         return GFalse;

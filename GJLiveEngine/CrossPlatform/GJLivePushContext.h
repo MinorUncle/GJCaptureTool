@@ -91,4 +91,8 @@ GHandle GJLivePush_GetDisplayView(GJLivePushContext* context);
 GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext* context,GBool enable);
 GVoid GJLivePush_StopAudioMix(GJLivePushContext* context);
 GBool GJLivePush_StartMixFile(GJLivePushContext* context,const GChar* fileName);
+GBool GJLivePush_SetMixVolume(GJLivePushContext* context,GFloat32 volume);
+GBool GJLivePush_SetOutVolume(GJLivePushContext* context,GFloat32 volume);
+GBool GJLivePush_SetInputGain(GJLivePushContext* context,GFloat32 gain);
+
 #endif /* GJLivePushContext_h */

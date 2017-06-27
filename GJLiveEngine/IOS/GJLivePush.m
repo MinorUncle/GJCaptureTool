@@ -139,6 +139,18 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
 -(void)stopAudioMix{
     GJLivePush_StopAudioMix(_livePush);
 }
+- (void)setInputVolume:(float)volume{
+    GJLivePush_SetInputGain(_livePush, volume);
+}
+
+- (void)setMixVolume:(float)volume{
+    GJLivePush_SetMixVolume(_livePush, volume);
+}
+
+- (void)setMasterOutVolume:(float)volume{
+    GJLivePush_SetOutVolume(_livePush, volume);
+}
+
 -(BOOL)enableAudioInEarMonitoring:(BOOL)enable{
     return GJLivePush_EnableAudioInEarMonitoring(_livePush, enable);
 }

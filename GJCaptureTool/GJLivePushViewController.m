@@ -120,6 +120,15 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @property (strong, nonatomic) UIButton *audioMixBtn;
 @property (strong, nonatomic) UIButton *earPlay;
 
+@property (strong, nonatomic) UISlider *inputGain;
+@property (strong, nonatomic) UILabel *inputGainLab;
+
+@property (strong, nonatomic) UISlider *mixGain;
+@property (strong, nonatomic) UILabel *mixGainLab;
+
+@property (strong, nonatomic) UISlider *outputGain;
+@property (strong, nonatomic) UILabel *outputGainLab;
+
 @property (strong, nonatomic) UILabel *fpsLab;
 @property (strong, nonatomic) UILabel *sendRateLab;
 
@@ -172,13 +181,13 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _pushStateLab = [[UILabel alloc]initWithFrame:rect];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
-    _pushStateLab.font = [UIFont systemFontOfSize:14];
+    _pushStateLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_pushStateLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
     _fpsLab = [[UILabel alloc]initWithFrame:rect];
     _fpsLab.textColor = [UIColor redColor];
-    _fpsLab.font = [UIFont systemFontOfSize:14];
+    _fpsLab.font = [UIFont systemFontOfSize:10];
     _fpsLab.text = @"FPS V:0,A:0";
     [self.view addSubview:_fpsLab];
     
@@ -186,27 +195,27 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _sendRateLab = [[UILabel alloc]initWithFrame:rect];
     _sendRateLab.textColor = [UIColor redColor];
     _sendRateLab.text = @"bitrate V:0 KB/s A:0 KB/s";
-    _sendRateLab.font = [UIFont systemFontOfSize:14];
+    _sendRateLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_sendRateLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
     _delayVLab = [[UILabel alloc]initWithFrame:rect];
     _delayVLab.textColor = [UIColor redColor];
-    _delayVLab.font = [UIFont systemFontOfSize:14];
+    _delayVLab.font = [UIFont systemFontOfSize:10];
     _delayVLab.text = @"cache V t:0 ms f:0";
     [self.view addSubview:_delayVLab];
     
     rect.origin.y = CGRectGetMaxY(rect);
     _delayALab = [[UILabel alloc]initWithFrame:rect];
     _delayALab.textColor = [UIColor redColor];
-    _delayALab.font = [UIFont systemFontOfSize:14];
+    _delayALab.font = [UIFont systemFontOfSize:10];
     _delayALab.text = @"cache A t:0 ms f:0";
     [self.view addSubview:_delayALab];
     
     rect.origin.y = CGRectGetMaxY(rect);
     _currentV = [[UILabel alloc]initWithFrame:rect];
     _currentV.textColor = [UIColor redColor];
-    _currentV.font = [UIFont systemFontOfSize:14];
+    _currentV.font = [UIFont systemFontOfSize:10];
     _currentV.text = @"CV rate:0 kB/s f:0";
     [self.view addSubview:_currentV];
     
@@ -229,6 +238,56 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _earPlay.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_earPlay];
 
+    rect.origin.y = CGRectGetMaxY(rect);
+    rect.size.width *= 0.4;
+    _inputGainLab = [[UILabel alloc]initWithFrame:rect];
+    _inputGainLab.text = @"采集音量";
+    _inputGainLab.font = [UIFont systemFontOfSize:10];
+    [self.view addSubview:_inputGainLab];
+    rect.origin.x = CGRectGetMaxX(rect);
+    rect.size.width = self.view.bounds.size.width - rect.origin.x;
+    _inputGain = [[UISlider alloc]initWithFrame:rect];
+    _inputGain.maximumValue = 1.0;
+    _inputGain.minimumValue = 0.0;
+    _inputGain.continuous = NO;
+    [_inputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    [self.view addSubview:_inputGain];
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    rect.size.width = _inputGainLab.bounds.size.width;
+    rect.origin.x = _inputGainLab.frame.origin.x;
+    
+    _mixGainLab = [[UILabel alloc]initWithFrame:rect];
+    _mixGainLab.text = @"混音音量";
+    _mixGainLab.font = [UIFont systemFontOfSize:10];
+    [self.view addSubview:_mixGainLab];
+    rect.origin.x = CGRectGetMaxX(rect);
+    rect.size.width = self.view.bounds.size.width - rect.origin.x;
+    _mixGain = [[UISlider alloc]initWithFrame:rect];
+    _mixGain.maximumValue = 1.0;
+    _mixGain.minimumValue = 0.0;
+    _mixGain.continuous = NO;
+    [_mixGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    [self.view addSubview:_mixGain];
+    
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    rect.size.width = _mixGainLab.bounds.size.width;
+    rect.origin.x = _mixGainLab.frame.origin.x;
+    
+    _outputGainLab = [[UILabel alloc]initWithFrame:rect];
+    _outputGainLab.text = @"混音音量";
+    _outputGainLab.font = [UIFont systemFontOfSize:10];
+    [self.view addSubview:_outputGainLab];
+    rect.origin.x = CGRectGetMaxX(rect);
+    rect.size.width = self.view.bounds.size.width - rect.origin.x;
+    _outputGain = [[UISlider alloc]initWithFrame:rect];
+    _outputGain.maximumValue = 1.0;
+    _outputGain.minimumValue = 0.0;
+    _outputGain.continuous = NO;
+    [_outputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    [self.view addSubview:_outputGain];
+    
     
     int count = 3;
     rect.origin.y = CGRectGetMaxY(self.topView.frame);
@@ -281,7 +340,19 @@ static char* url = "rtmp://10.0.1.142/live/room";
     
        // Do any additional setup after loading the view.
 }
+-(void)valueChange:(UISlider*)slider{
+    if (slider == _inputGain) {
+        _inputGainLab.text = [NSString stringWithFormat:@"采集音量：%0.2f",slider.value];
+        [_livePush setInputVolume:slider.value];
+    }else if (slider == _mixGain){
+        _mixGainLab.text = [NSString stringWithFormat:@"混音音量：%0.2f",slider.value];
+        [_livePush setMixVolume:slider.value];
 
+    }else if (slider == _outputGain){
+        _outputGainLab.text = [NSString stringWithFormat:@"输出音量：%0.2f",slider.value];
+        [_livePush setMasterOutVolume:slider.value];
+    }
+}
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
     if (btn == _pushButton) {

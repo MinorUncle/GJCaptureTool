@@ -25,120 +25,24 @@
 #import "AEAudioController.h"
 #import "AEPlaythroughChannel.h"
 #import "AEAudioSender.h"
+#import "GJAudioMixer.h"
 
 
-
-@interface GJAudioOutput : NSObject <AEAudioReceiver>
-{
-    GJRetainBufferPool* _bufferPool;
-}
-- (instancetype)init;
-
-- (id)initWithAudioController:(AEAudioController*)audioController;
-
-@property (nonatomic, assign) float volume;
-@property (nonatomic, assign) float pan;
-@property (nonatomic, assign) BOOL channelIsMuted;
-@property (nonatomic, readonly) AudioStreamBasicDescription audioDescription;
-@property (nonatomic, weak) AEAudioController *audioController;
-
-
-@property (nonatomic, copy)void(^audioCallback)(R_GJPCMFrame* frame);
-
-@end
-@implementation GJAudioOutput
-
-
-static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
-                          __unsafe_unretained AEAudioController *audioController,
-                          void                     *source,
-                          const AudioTimeStamp     *time,
-                          UInt32                    frames,
-                          AudioBufferList          *audio) {
-    
-    GJAudioOutput* playChannel = THIS;
-    if (playChannel.channelIsMuted || !playChannel.audioCallback) return;
-    if (audio &&  audio->mNumberBuffers>0) {
-        GUInt32 size = (GUInt32)audio->mBuffers[0].mDataByteSize;
-        if (playChannel->_bufferPool == GNULL) {
-            
-            GBool result = GJRetainBufferPoolCreate(&(playChannel->_bufferPool), size, GTrue, R_GJPCMFrameMalloc, GNULL);
-            if (result != GTrue) {
-                return ;
-            }
-        }
-        R_GJPCMFrame* rFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetData(playChannel->_bufferPool);
-        memcpy(rFrame->retain.data, audio->mBuffers[0].mData, audio->mBuffers[0].mDataByteSize);
-        rFrame->channel = audio->mBuffers[0].mNumberChannels;
-        playChannel.audioCallback(rFrame);
-        retainBufferUnRetain(&rFrame->retain);
-    };
-}
-
--(AEAudioReceiverCallback)receiverCallback {
-    return inputCallback;
-}
-- (id)initWithAudioController:(AEAudioController*)audioController {
-    return [self init];
-}
-
-- (id)init {
-    if ( !(self = [super init]) ) return nil;
-    _volume = 1.0;
-    return self;
-}
--(AudioStreamBasicDescription)audioDescription {
-    return _audioController.inputAudioDescription;
-}
-
-
-- (void)dealloc {
-    if (_bufferPool) {
-        GJRetainBufferPool* pool = _bufferPool;
-        dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            GJRetainBufferPoolClean(pool, YES);
-            GJRetainBufferPoolFree(pool);
-        });
-    }
-    self.audioController = nil;
-}
-- (void)teardown {
-    self.audioController = nil;
-}
-@end
-
-@interface GJAudioManager : NSObject <AEAudioSenderDelegate>
+@interface GJAudioManager : NSObject<GJAudioMixerDelegate>
 {
     GJRetainBufferPool* _bufferPool;
 }
 @property (nonatomic, retain)AEPlaythroughChannel* playthrough;
 @property (nonatomic, retain)AEAudioFilePlayer* mixfilePlay;
 @property (nonatomic, retain)AEAudioController *audioController;
-@property (nonatomic, retain)GJAudioOutput *audioOut;
-@property (nonatomic, retain)AEAudioSender* audioSender;
+@property (nonatomic, retain)GJAudioMixer* audioMixer;
+
+@property (nonatomic, readonly) AEAudioReceiverCallback receiverCallback;
 
 @property (nonatomic, copy)void(^audioCallback)(R_GJPCMFrame* frame);
 @end
 @implementation GJAudioManager
 
-- (void)AEAudioSenderPushData:(AudioBufferList*)bufferList withTime:(const AudioTimeStamp*)lAudioTime{
-    if (bufferList->mNumberBuffers>0) {
-        GUInt32 size = (GUInt32)bufferList->mBuffers[0].mDataByteSize;
-        if (_bufferPool == GNULL) {
-            
-            GBool result = GJRetainBufferPoolCreate(&(_bufferPool), size, GTrue, R_GJPCMFrameMalloc, GNULL);
-            if (result != GTrue) {
-                return ;
-            }
-        }
-        R_GJPCMFrame* rFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetData(_bufferPool);
-        memcpy(rFrame->retain.data, bufferList->mBuffers[0].mData, bufferList->mBuffers[0].mDataByteSize);
-        rFrame->channel = bufferList->mBuffers[0].mNumberChannels;
-        self.audioCallback(rFrame);
-        retainBufferUnRetain(&rFrame->retain);
-    };
-
-}
 -(instancetype)initWithFormat:(AudioStreamBasicDescription )audioFormat{
     self = [super init];
     if (self) {
@@ -150,27 +54,25 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
         }
         _audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat inputEnabled:YES];
         _audioController.useMeasurementMode = NO;
-        [_audioController addOutputReceiver:self.audioSender];
-
+       
+        _audioMixer = [[GJAudioMixer alloc]init];
+        _audioMixer.delegate = self;
+        [_audioController addInputReceiver:_audioMixer];
+        GJRetainBufferPoolCreate(&_bufferPool, 0, GTrue, R_GJPCMFrameMalloc, GNULL);
     }
     return self;
 }
--(GJAudioOutput *)audioOut{
-    if (_audioOut == nil) {
-        _audioOut = [[GJAudioOutput alloc]initWithAudioController:_audioController];
-    }
-    return _audioOut;
+
+-(void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time{
+    R_GJPCMFrame* pcmFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool, frame->mBuffers[0].mDataByteSize);
+    memcpy(pcmFrame->retain.data, frame->mBuffers[0].mData, frame->mBuffers[0].mDataByteSize);
+    pcmFrame->channel = frame->mBuffers[0].mNumberChannels;
+    pcmFrame->pts = (GInt64)time;
+    pcmFrame->retain.size = frame->mBuffers[0].mDataByteSize;
+    self.audioCallback(pcmFrame);
+    retainBufferUnRetain(&pcmFrame->retain);
 }
--(AEAudioSender *)audioSender{
-    if (_audioSender == nil) {
-        _audioSender = [[AEAudioSender alloc]initWithAudioController:_audioController];
-        _audioSender.delegate = self;
-    }
-    return _audioSender;
-}
-//-(void)setAudioCallback:(void (^)(R_GJPCMFrame *))audioCallback{
-//    self.audioOut.audioCallback = audioCallback;
-//}
+
 -(BOOL)startRecode:(NSError**)error{
     if (![_audioController start:error]) {
         GJLOG(GJ_LOGERROR, "AEAudioController start error:%@",(*error).description.UTF8String);
@@ -202,7 +104,7 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
     if (_mixfilePlay != nil) {
         GJLOG(GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
         [_audioController removeChannels:@[_mixfilePlay]];
-        [_audioController removeOutputReceiver:_audioSender fromChannel:_mixfilePlay];
+        [_audioController removeOutputReceiver:_audioMixer fromChannel:_mixfilePlay];
         _mixfilePlay = nil;
     }
     NSError* error;
@@ -212,7 +114,10 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
         return GFalse;
     }else{
         [_audioController addChannels:@[_mixfilePlay]];
-        [_audioController addOutputReceiver:_audioSender forChannel:_mixfilePlay];
+        [_audioController performAsynchronousMessageExchangeWithBlock:^{
+             [_audioController addOutputReceiver:_audioMixer forChannel:_mixfilePlay];
+        } responseBlock:nil];
+       
         return GTrue;
     }
 }
@@ -230,17 +135,18 @@ static void inputCallback(__unsafe_unretained GJAudioOutput *THIS,
         GJLOG(GJ_LOGWARNING, "重复stop mix");
     }else{
         [_audioController removeChannels:@[_mixfilePlay]];
-        [_audioController removeOutputReceiver:_audioSender fromChannel:_mixfilePlay];
+        [_audioController removeOutputReceiver:_audioMixer fromChannel:_mixfilePlay];
         _mixfilePlay = nil;
     }
 }
 -(void)dealloc{
     GJLOG(GJ_LOGDEBUG, "GJAudioManager dealloc");
-    [_audioController removeInputReceiver:_audioOut];
+    [_audioController removeInputReceiver:_audioMixer];
     NSMutableArray* play = [NSMutableArray arrayWithCapacity:2];
     
     if (_mixfilePlay) {
         [play addObject:_mixfilePlay];
+        [_audioController removeOutputReceiver:_audioMixer fromChannel:_mixfilePlay];
     }
     if (_playthrough) {
         [play addObject:_playthrough];
@@ -397,7 +303,33 @@ GVoid stopMixAudioFile(struct _GJAudioProduceContext* context){
     return [manager stopMix];
 #endif
 }
-
+GBool setInputGain(struct _GJAudioProduceContext* context,GFloat32 inputGain){
+#ifdef AMAZING_AUDIO_ENGINE
+    GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
+    manager.audioController.inputGain = inputGain;
+    GFloat32 gain = manager.audioController.inputGain;
+    return GFloatEqual(gain, inputGain);
+#endif
+    return GFalse;
+}
+GBool setMixVolume(struct _GJAudioProduceContext* context,GFloat32 volume){
+#ifdef AMAZING_AUDIO_ENGINE
+    GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
+    manager.mixfilePlay.volume = volume;
+    
+    return GFloatEqual(manager.mixfilePlay.volume, volume);
+#endif
+    return GFalse;
+    
+}
+GBool setOutVolume(struct _GJAudioProduceContext* context,GFloat32 volume){
+#ifdef AMAZING_AUDIO_ENGINE
+    GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
+    manager.audioController.masterOutputVolume = volume;
+    return GFloatEqual(manager.audioController.masterOutputVolume, volume);
+#endif
+    return GFalse;
+}
 
 GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext** recodeContext){
     if (*recodeContext == NULL) {
@@ -413,6 +345,11 @@ GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext** recodeContext){
     context->setupMixAudioFile = setupMixAudioFile;
     context->startMixAudioFileAtTime = startMixAudioFileAtTime;
     context->stopMixAudioFile = stopMixAudioFile;
+    
+    context->setInputGain = setInputGain;
+    context->setMixVolume = setMixVolume;
+    context->setOutVolume = setOutVolume;
+
 }
 GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext** context){
     if ((*context)->obaque) {

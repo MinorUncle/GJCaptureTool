@@ -14,6 +14,15 @@
 		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
 		6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85F9E91F0140AF0037A64F /* AEAudioSender.h */; };
+		6A85FA1B1F01FA990037A64F /* GJBufferPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA131F01FA990037A64F /* GJBufferPool.h */; };
+		6A85FA1C1F01FA990037A64F /* GJBufferPool+cplus.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA141F01FA990037A64F /* GJBufferPool+cplus.h */; };
+		6A85FA1D1F01FA990037A64F /* GJLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA151F01FA990037A64F /* GJLog.h */; };
+		6A85FA1E1F01FA990037A64F /* GJPlatformHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA161F01FA990037A64F /* GJPlatformHeader.h */; };
+		6A85FA1F1F01FA990037A64F /* GJQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA171F01FA990037A64F /* GJQueue.h */; };
+		6A85FA201F01FA990037A64F /* GJQueue+cplus.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA181F01FA990037A64F /* GJQueue+cplus.h */; };
+		6A85FA211F01FA990037A64F /* GJRetainBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA191F01FA990037A64F /* GJRetainBuffer.h */; };
+		6A85FA221F01FA990037A64F /* GJRetainBufferPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA1A1F01FA990037A64F /* GJRetainBufferPool.h */; };
+		6A85FA281F02397F0037A64F /* GJAudioMixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA271F02397F0037A64F /* GJAudioMixer.h */; };
 		6AA71EEB1EBABDF000F2E8DB /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
 		6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */; };
@@ -433,14 +442,6 @@
 		04D15F771E7E69CA005F6DDD /* GPUImageWhiteBalanceFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUImageWhiteBalanceFilter.h; sourceTree = "<group>"; };
 		04D15F781E7E69CA005F6DDD /* GPUImageXYDerivativeFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUImageXYDerivativeFilter.h; sourceTree = "<group>"; };
 		04D15F791E7E69CA005F6DDD /* GPUImageZoomBlurFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUImageZoomBlurFilter.h; sourceTree = "<group>"; };
-		04D15F7B1E7E69CA005F6DDD /* GJBufferPool+cplus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GJBufferPool+cplus.h"; sourceTree = "<group>"; };
-		04D15F7C1E7E69CA005F6DDD /* GJBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJBufferPool.h; sourceTree = "<group>"; };
-		04D15F7D1E7E69CA005F6DDD /* GJDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJDebug.h; sourceTree = "<group>"; };
-		04D15F7E1E7E69CA005F6DDD /* GJQueue+cplus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GJQueue+cplus.h"; sourceTree = "<group>"; };
-		04D15F7F1E7E69CA005F6DDD /* GJQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJQueue.h; sourceTree = "<group>"; };
-		04D15F801E7E69CA005F6DDD /* GJRetainBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJRetainBuffer.h; sourceTree = "<group>"; };
-		04D15F811E7E69CA005F6DDD /* GJRetainBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJRetainBufferPool.h; sourceTree = "<group>"; };
-		04D15F961E7FB615005F6DDD /* GJLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLog.h; sourceTree = "<group>"; };
 		6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RtmpCode.xcodeproj; path = ../rtmpAndOpenssl/RtmpCode.xcodeproj; sourceTree = "<group>"; };
 		6A0E86F61E84E881002A2A2D /* amf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = amf.h; sourceTree = "<group>"; };
 		6A0E86F71E84E881002A2A2D /* dh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dh.h; sourceTree = "<group>"; };
@@ -471,10 +472,18 @@
 		6A40DFCB1EE8DB630047E0F0 /* TheAmazingAudioEngine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TheAmazingAudioEngine.h; sourceTree = "<group>"; };
 		6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
 		6A40E1A41EEAA2D70047E0F0 /* AEPlaythroughChannel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEPlaythroughChannel.h; sourceTree = "<group>"; };
-		6A6668121EB3254700CE8C17 /* GJPlatformHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPlatformHeader.h; sourceTree = "<group>"; };
 		6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrganRun.m4a; sourceTree = "<group>"; };
 		6A85F9941F00F0B00037A64F /* MixTest.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MixTest.mp3; sourceTree = "<group>"; };
 		6A85F9E91F0140AF0037A64F /* AEAudioSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEAudioSender.h; path = TheAmazingAudioEngine/AEAudioSender.h; sourceTree = SOURCE_ROOT; };
+		6A85FA131F01FA990037A64F /* GJBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJBufferPool.h; path = ../../../../GJQueue/GJBufferPool.h; sourceTree = "<group>"; };
+		6A85FA141F01FA990037A64F /* GJBufferPool+cplus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "GJBufferPool+cplus.h"; path = "../../../../GJQueue/GJBufferPool+cplus.h"; sourceTree = "<group>"; };
+		6A85FA151F01FA990037A64F /* GJLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJLog.h; path = ../../../../GJQueue/GJLog.h; sourceTree = "<group>"; };
+		6A85FA161F01FA990037A64F /* GJPlatformHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJPlatformHeader.h; path = ../../../../GJQueue/GJPlatformHeader.h; sourceTree = "<group>"; };
+		6A85FA171F01FA990037A64F /* GJQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJQueue.h; path = ../../../../GJQueue/GJQueue.h; sourceTree = "<group>"; };
+		6A85FA181F01FA990037A64F /* GJQueue+cplus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "GJQueue+cplus.h"; path = "../../../../GJQueue/GJQueue+cplus.h"; sourceTree = "<group>"; };
+		6A85FA191F01FA990037A64F /* GJRetainBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJRetainBuffer.h; path = ../../../../GJQueue/GJRetainBuffer.h; sourceTree = "<group>"; };
+		6A85FA1A1F01FA990037A64F /* GJRetainBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJRetainBufferPool.h; path = ../../../../GJQueue/GJRetainBufferPool.h; sourceTree = "<group>"; };
+		6A85FA271F02397F0037A64F /* GJAudioMixer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJAudioMixer.h; path = TheAmazingAudioEngine/GJAudioMixer.h; sourceTree = SOURCE_ROOT; };
 		6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFLVPack.c; sourceTree = "<group>"; };
 		6AB4F4301EF0082200FD4172 /* GJFLVPack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJFLVPack.h; sourceTree = "<group>"; };
 		6AB4F4971EF270D200FD4172 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
@@ -775,10 +784,10 @@
 		04D15EC71E7E69C9005F6DDD /* include */ = {
 			isa = PBXGroup;
 			children = (
+				6A85FA121F01FA7F0037A64F /* libQueue */,
 				6A0E86F51E84E881002A2A2D /* rtmp */,
 				04D15EC81E7E69C9005F6DDD /* GJImageFilters */,
 				04D15ECD1E7E69C9005F6DDD /* GPUImage */,
-				04D15F7A1E7E69CA005F6DDD /* libQueue */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -974,22 +983,6 @@
 			path = GPUImage;
 			sourceTree = "<group>";
 		};
-		04D15F7A1E7E69CA005F6DDD /* libQueue */ = {
-			isa = PBXGroup;
-			children = (
-				6A6668121EB3254700CE8C17 /* GJPlatformHeader.h */,
-				04D15F7B1E7E69CA005F6DDD /* GJBufferPool+cplus.h */,
-				04D15F7C1E7E69CA005F6DDD /* GJBufferPool.h */,
-				04D15F7D1E7E69CA005F6DDD /* GJDebug.h */,
-				04D15F7E1E7E69CA005F6DDD /* GJQueue+cplus.h */,
-				04D15F961E7FB615005F6DDD /* GJLog.h */,
-				04D15F7F1E7E69CA005F6DDD /* GJQueue.h */,
-				04D15F801E7E69CA005F6DDD /* GJRetainBuffer.h */,
-				04D15F811E7E69CA005F6DDD /* GJRetainBufferPool.h */,
-			);
-			path = libQueue;
-			sourceTree = "<group>";
-		};
 		6A0E86D01E84BE3E002A2A2D /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -1040,6 +1033,7 @@
 				6A40DFBF1EE8DB630047E0F0 /* AEAudioFilePlayer.h */,
 				6A40DFC01EE8DB630047E0F0 /* AEAudioFileWriter.h */,
 				6A40DFC11EE8DB630047E0F0 /* AEAudioUnitChannel.h */,
+				6A85FA271F02397F0037A64F /* GJAudioMixer.h */,
 				6A40DFC21EE8DB630047E0F0 /* AEAudioUnitFilter.h */,
 				6A40DFC31EE8DB630047E0F0 /* AEBlockAudioReceiver.h */,
 				6A40DFC41EE8DB630047E0F0 /* AEBlockChannel.h */,
@@ -1052,6 +1046,21 @@
 				6A40DFCB1EE8DB630047E0F0 /* TheAmazingAudioEngine.h */,
 			);
 			path = TheAmazingAudioEngine;
+			sourceTree = "<group>";
+		};
+		6A85FA121F01FA7F0037A64F /* libQueue */ = {
+			isa = PBXGroup;
+			children = (
+				6A85FA131F01FA990037A64F /* GJBufferPool.h */,
+				6A85FA141F01FA990037A64F /* GJBufferPool+cplus.h */,
+				6A85FA151F01FA990037A64F /* GJLog.h */,
+				6A85FA161F01FA990037A64F /* GJPlatformHeader.h */,
+				6A85FA171F01FA990037A64F /* GJQueue.h */,
+				6A85FA181F01FA990037A64F /* GJQueue+cplus.h */,
+				6A85FA191F01FA990037A64F /* GJRetainBuffer.h */,
+				6A85FA1A1F01FA990037A64F /* GJRetainBufferPool.h */,
+			);
+			path = libQueue;
 			sourceTree = "<group>";
 		};
 		6AE37BAB1ED5955500B049EB /* Bridge */ = {
@@ -1422,13 +1431,17 @@
 				AE70A5501ECB4DFE0009E49A /* GJBridegContext.h in Headers */,
 				6AE37BBC1ED5955500B049EB /* IOS_AACDecode.h in Headers */,
 				6AE37BC61ED5955500B049EB /* IOS_H264Encode.h in Headers */,
+				6A85FA1F1F01FA990037A64F /* GJQueue.h in Headers */,
 				AE70A53B1ECB4DFE0009E49A /* GJLivePush.h in Headers */,
 				AE70A52B1ECB4DFE0009E49A /* GJAudioQueueRecoder.h in Headers */,
 				AE70A5111ECB4DFE0009E49A /* GJLive.h in Headers */,
 				AE70A5131ECB4DFE0009E49A /* GJLiveDefine+internal.h in Headers */,
+				6A85FA281F02397F0037A64F /* GJAudioMixer.h in Headers */,
 				6AE37BC01ED5955500B049EB /* IOS_AudioDrivePlayer.h in Headers */,
 				6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */,
+				6A85FA1D1F01FA990037A64F /* GJLog.h in Headers */,
 				AE70A5101ECB4DFE0009E49A /* GJFormats.h in Headers */,
+				6A85FA211F01FA990037A64F /* GJRetainBuffer.h in Headers */,
 				6AE37BD91ED5956800B049EB /* GJLivePushContext.h in Headers */,
 				6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */,
 				AE70A51C1ECB4DFE0009E49A /* sps_decode.h in Headers */,
@@ -1437,19 +1450,24 @@
 				AE70A5371ECB4DFE0009E49A /* GJLivePull.h in Headers */,
 				6AE37BBE1ED5955500B049EB /* IOS_AACEncode.h in Headers */,
 				6A40E1A51EEAA2D70047E0F0 /* AEPlaythroughChannel.h in Headers */,
+				6A85FA1B1F01FA990037A64F /* GJBufferPool.h in Headers */,
 				AE70A5271ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h in Headers */,
 				6AE37BD51ED5956800B049EB /* GJLivePlayer.h in Headers */,
+				6A85FA1E1F01FA990037A64F /* GJPlatformHeader.h in Headers */,
 				AE70A51F1ECB4DFE0009E49A /* AACEncoderFromPCM.h in Headers */,
 				6AB4F4981EF270D300FD4172 /* GJAudioSessionCenter.h in Headers */,
 				AE70A53D1ECB4DFE0009E49A /* GJH264Decoder.h in Headers */,
+				6A85FA1C1F01FA990037A64F /* GJBufferPool+cplus.h in Headers */,
 				AE70A5141ECB4DFE0009E49A /* GJLiveDefine.h in Headers */,
 				AE70A51A1ECB4DFE0009E49A /* GJUtil.h in Headers */,
 				AE70A53F1ECB4DFE0009E49A /* GJH264Encoder.h in Headers */,
 				AE70A5311ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h in Headers */,
 				6AE37BC41ED5955500B049EB /* IOS_H264Decode.h in Headers */,
 				6AE37BC81ED5955500B049EB /* IOS_PictureDisplay.h in Headers */,
+				6A85FA221F01FA990037A64F /* GJRetainBufferPool.h in Headers */,
 				AE70A5151ECB4DFE0009E49A /* GJRtmpPull.h in Headers */,
 				6AB4F4321EF0082200FD4172 /* GJFLVPack.h in Headers */,
+				6A85FA201F01FA990037A64F /* GJQueue+cplus.h in Headers */,
 				AE70A5391ECB4DFE0009E49A /* GJLivePush+advanced.h in Headers */,
 				6AE37BCA1ED5955500B049EB /* IOS_VideoProduce.h in Headers */,
 			);

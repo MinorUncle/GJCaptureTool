@@ -49,14 +49,17 @@ typedef struct _GJVideoProduceContext{
 typedef struct _GJAudioProduceContext{
     GHandle obaque;
     GBool (*audioProduceSetup)      (struct _GJAudioProduceContext* context,GJAudioFormat foramt,AudioFrameOutCallback callback,GHandle userData);
-    GVoid (*audioProduceUnSetup)         (struct _GJAudioProduceContext* context);
+    GVoid (*audioProduceUnSetup)    (struct _GJAudioProduceContext* context);
     GBool (*audioProduceStart)      (struct _GJAudioProduceContext* context);
     GVoid (*audioProduceStop)       (struct _GJAudioProduceContext* context);
     
     
-    GBool (*enableAudioInEarMonitoring)       (struct _GJAudioProduceContext* context,GBool enable);
-    GBool (*setupMixAudioFile)       (struct _GJAudioProduceContext* context,const GChar* file,GBool loop);
-    GBool (*startMixAudioFileAtTime)       (struct _GJAudioProduceContext* context,GUInt64 time);
+    GBool (*enableAudioInEarMonitoring)(struct _GJAudioProduceContext* context,GBool enable);
+    GBool (*setupMixAudioFile)      (struct _GJAudioProduceContext* context,const GChar* file,GBool loop);
+    GBool (*startMixAudioFileAtTime)(struct _GJAudioProduceContext* context,GUInt64 time);
+    GBool (*setInputGain)           (struct _GJAudioProduceContext* context,GFloat32 inputGain);
+    GBool (*setMixVolume)           (struct _GJAudioProduceContext* context,GFloat32 volume);
+    GBool (*setOutVolume)           (struct _GJAudioProduceContext* context,GFloat32 volume);
     GVoid (*stopMixAudioFile)       (struct _GJAudioProduceContext* context);
 
 
