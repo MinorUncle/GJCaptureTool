@@ -454,6 +454,10 @@ GBool GJLivePush_StartMixFile(GJLivePushContext* context,const GChar* fileName){
 GBool GJLivePush_SetMixVolume(GJLivePushContext* context,GFloat32 volume){
     return GJCheckBool(context->audioProducer->setMixVolume(context->audioProducer,volume),"setMixVolume");
 }
+GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext* context,GBool should){
+    return GJCheckBool(context->audioProducer->setMixToStream(context->audioProducer,should),"setMixToStream");
+
+}
 GBool GJLivePush_SetOutVolume(GJLivePushContext* context,GFloat32 volume){
     return GJCheckBool(context->audioProducer->setOutVolume(context->audioProducer,volume),"setOutVolume");
 }

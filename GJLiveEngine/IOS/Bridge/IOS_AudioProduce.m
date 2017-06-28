@@ -32,6 +32,7 @@
 {
     GJRetainBufferPool* _bufferPool;
 }
+@property (nonatomic, assign)BOOL mixToSream;
 @property (nonatomic, retain)AEPlaythroughChannel* playthrough;
 @property (nonatomic, retain)AEAudioFilePlayer* mixfilePlay;
 @property (nonatomic, retain)AEAudioController *audioController;
@@ -47,8 +48,8 @@
     self = [super init];
     if (self) {
         NSError* error;
+        _mixToSream = YES;
         [[GJAudioSessionCenter shareSession] setPrefferSampleRate:audioFormat.mSampleRate error:&error];
-        
         if (error != nil) {
             GJLOG(GJ_LOGERROR, "setPrefferSampleRate error:%s",error.localizedDescription.UTF8String);
         }
@@ -99,7 +100,14 @@
     }
     return GTrue;
 }
-
+-(void)setMixToSream:(BOOL)mixToSream{
+    _mixToSream = mixToSream;
+    if (_mixToSream) {
+        [_audioMixer removeIgnoreSource:AEAudioSourceMainOutput];
+    }else{
+        [_audioMixer addIgnoreSource:AEAudioSourceMainOutput];
+    }
+}
 -(BOOL)setMixFile:(NSURL*)file{
     if (_mixfilePlay != nil) {
         GJLOG(GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
@@ -333,7 +341,13 @@ GBool setOutVolume(struct _GJAudioProduceContext* context,GFloat32 volume){
 #endif
     return GFalse;
 }
-
+GBool setMixToStream(struct _GJAudioProduceContext* context,GBool should){
+#ifdef AMAZING_AUDIO_ENGINE
+    GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
+    manager.mixToSream = should;
+#endif
+    return GTrue;
+}
 GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext** recodeContext){
     if (*recodeContext == NULL) {
         *recodeContext = (GJAudioProduceContext*)malloc(sizeof(GJAudioProduceContext));
@@ -352,6 +366,7 @@ GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext** recodeContext){
     context->setInputGain = setInputGain;
     context->setMixVolume = setMixVolume;
     context->setOutVolume = setOutVolume;
+    context->setMixToStream = setMixToStream;
 
 }
 GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext** context){

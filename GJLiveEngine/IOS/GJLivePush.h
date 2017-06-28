@@ -40,6 +40,9 @@
 
 @property(nonatomic,assign)GJInterfaceOrientation outOrientation;
 
+@property(nonatomic,assign)BOOL mixFileNeedToStream;
+
+
 @property(nonatomic,strong,readonly,getter=getPreviewView)UIView* previewView;
 
 //@property(nonatomic,assign,readonly)CaptureSizeType caputreSizeType;

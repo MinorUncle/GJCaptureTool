@@ -18,5 +18,9 @@
 
 @interface GJAudioMixer : NSObject <AEAudioReceiver>
 @property (nonatomic, readonly) AEAudioReceiverCallback receiverCallback;
-@property (nonatomic, weak)id<GJAudioMixerDelegate> delegate; 
+@property (nonatomic, weak)id<GJAudioMixerDelegate> delegate;
+
+-(void)addIgnoreSource:(void*)source;
+-(void)removeIgnoreSource:(void*)source;
+
 @end

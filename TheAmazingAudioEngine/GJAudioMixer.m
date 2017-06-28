@@ -9,68 +9,158 @@
 #import "GJAudioMixer.h"
 #import "AEUtilities.h"
 #define MAX_MIX_COUNT 4
+#define IGNORE_BUS -1
 @interface GJAudioMixer(){
-    AUGraph                     _graph;
-    AUNode                      _mixerNode;
-    AudioUnit                   _mixerUnit;
-    UInt32                        _mixCount;
-    AudioStreamBasicDescription _clientFormat;
-    AudioBufferList* _reanderBufferList;
-    AudioBufferList* _inputSource[MAX_MIX_COUNT];
-    int                 _intputCount;
-    NSMutableDictionary* _receiveSource;
-    int _currentCount;
-    int _receiveBox[MAX_MIX_COUNT];
+    AUGraph                         _graph;
+    AUNode                          _mixerNode;
+    AudioUnit                       _mixerUnit;
+    UInt32                          _mixCount;
+    AudioStreamBasicDescription     _clientFormat;
+    AudioBufferList*                _reanderBufferList;
+    AudioBufferList*                _inputSourcBufferCache[MAX_MIX_COUNT];
+    
+    
+    int                             _listenIntputCount;//add的source个数
+    UInt32                          _elementCount;
+    
+    NSMutableArray*                 _ignoreSource;
+    NSMutableDictionary*            _receiveSource;//收到的source
+    NSMutableArray*                 _unitReceiveBox;
+    
+    BOOL                            _needUpdateSource;//提高效率
 }
 @property(nonatomic,weak)AEAudioController* audioController;
 @end
 @implementation GJAudioMixer
+
+-(void)addIgnoreSource:(void*)source{
+    if (![_ignoreSource containsObject:@((long)source)]) {
+        [_ignoreSource addObject:@((long)source)];
+        _needUpdateSource = YES;
+    }
+}
+-(void)removeIgnoreSource:(void*)source{
+    if ([_ignoreSource containsObject:@((long)source)]) {
+        [_ignoreSource removeObject:@((long)source)];
+        [self refreshSource];
+        _needUpdateSource = YES;
+    }
+}
+
 static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretained AEAudioController *audioController,void *source,const AudioTimeStamp *time,UInt32 frames,AudioBufferList *audio){
+//    NSLog(@"source:%p  ,sampid:%f,hostTime:%lld",source,time->mSampleTime,time->mHostTime);
     GJAudioMixer* mixer = receiver;
-    NSNumber* index = mixer->_receiveSource[@((long)source)];
-    NSUInteger bus = 0;
-    if (index) {
-        bus = index.unsignedIntegerValue;
-        
-    }else{
-        for (bus = 0 ; bus < MAX_MIX_COUNT; bus++) {
-            if (![mixer->_receiveSource.allValues containsObject:@(bus)]) {
-                break;
+    NSNumber* sourceN = @((long)source);
+    if ([mixer->_ignoreSource containsObject:sourceN]) {
+        if (![mixer->_receiveSource.allKeys containsObject:sourceN]) {
+            [mixer->_receiveSource setObject:@(IGNORE_BUS) forKey:sourceN];
+            NSLog(@"添加新的 IGNORE_Source：%p",source);
+        }else{//已经存在
+            UInt32 v = ((NSNumber*)(mixer->_receiveSource[sourceN])).unsignedIntegerValue;
+            for (NSNumber* key in mixer->_receiveSource.allKeys) {
+                UInt32 cv = ((NSNumber*)(mixer->_receiveSource[key])).unsignedIntegerValue;
+                if (cv > v) {
+                    mixer->_receiveSource[key] = @(cv);
+                }
             }
+            mixer->_receiveSource[sourceN] = @(IGNORE_BUS);
+            NSLog(@"已存在的转换到IGNORE_Source：%p",source);
         }
-        if (bus<MAX_MIX_COUNT) {
-            [mixer->_receiveSource setObject:@(bus) forKey:@((long)source)];
+        [mixer->_unitReceiveBox addObject:@((long)source)];
+
+        if (mixer->_unitReceiveBox.count == mixer->_listenIntputCount) {
+            [mixer unitRenderWithCount:frames time:(int64_t)([[NSDate date]timeIntervalSince1970]*1000)];
+        }
+        
+        return;
+    }
+    NSNumber* busN = mixer->_receiveSource[@((long)source)];
+    NSUInteger bus = 0;
+    if (busN) {
+        if(busN.unsignedIntegerValue == IGNORE_BUS){
+            UInt32 maxBus = 0;
+            for (NSNumber* key in mixer->_receiveSource.allKeys) {
+                if (mixer->_receiveSource[key] != @(IGNORE_BUS) ) {
+                    maxBus++;
+                }
+            }
+            bus = maxBus;
+            busN = @(bus);
+            [mixer->_receiveSource setObject:busN forKey:@((long)source)];
+            NSLog(@"IGNORE_BUS转换到Source：%p",source);
+            [mixer refreshSource];
+        }else{
+            bus = busN.unsignedIntegerValue;
+        }
+    }else{
+        if (mixer->_receiveSource.count < MAX_MIX_COUNT) {
+            UInt32 maxBus = 0;
+            for (NSNumber* key in mixer->_receiveSource.allKeys) {
+                if (mixer->_receiveSource[key] != @(IGNORE_BUS) ) {
+                    maxBus++;
+                }
+            }
+            bus = maxBus;
+            busN = @(bus);
+            [mixer->_receiveSource setObject:busN forKey:@((long)source)];
+            NSLog(@"添加新的Source：%p",source);
+            [mixer refreshSource];
         }else{
             NSLog(@"混合流数量超过最大");
             return;
         }
     }
 
-    if (mixer->_intputCount == 1) {
+    
+    
+    if (mixer->_elementCount == 1) {
+        if (mixer->_unitReceiveBox.count > 0) {
+            for (NSNumber* key in mixer->_unitReceiveBox) {
+                if ([mixer->_receiveSource.allKeys containsObject:key] && ![mixer->_ignoreSource containsObject:key]) {
+                    NSNumber* v = mixer->_receiveSource[key];
+                    float dt = frames * 1000 /  mixer->_audioController.audioDescription.mSampleRate;
+                    [mixer.delegate audioMixerProduceFrameWith:mixer->_inputSourcBufferCache[v.unsignedIntegerValue] time:(int64_t)([[NSDate date]timeIntervalSince1970]*1000 - dt)];
+                }
+            }
+        }
         [mixer.delegate audioMixerProduceFrameWith:audio time:(int64_t)([[NSDate date]timeIntervalSince1970]*1000)];
-        mixer->_currentCount = 0;
-        mixer->_receiveBox[bus] = 0;
+        [mixer->_unitReceiveBox removeAllObjects];
     }else{
-        if (mixer->_receiveBox[bus] == 1) {//重复
-            [mixer unitRenderWithCount:frames];
-            
-            for (int i = 0; i<audio->mNumberBuffers; i++) {
-                memcpy(mixer->_inputSource[bus]->mBuffers[i].mData, audio->mBuffers[i].mData, audio->mBuffers[i].mDataByteSize);
-                mixer->_inputSource[bus]->mBuffers[i].mDataByteSize = audio->mBuffers[i].mDataByteSize;
+        if ([mixer->_unitReceiveBox containsObject:sourceN]) {//重复
+            NSLog(@"重复，出现错乱，重置状态！(teardown不及时导致，没有收到的数据置空)");
+            for (NSNumber* key in mixer->_receiveSource.allKeys) {
+                if (![mixer->_unitReceiveBox containsObject:key] && ![mixer->_ignoreSource containsObject:key]) {
+                    NSNumber* v = mixer->_receiveSource[key];
+                    UInt32 ncbus = v.unsignedIntegerValue;
+                    NSLog(@"clean source:%p",(void*)(v.longValue));
+                    for (int i = 0; i<mixer->_inputSourcBufferCache[ncbus]->mNumberBuffers; i++) {
+                        memset(mixer->_inputSourcBufferCache[ncbus]->mBuffers[i].mData, 0, mixer->_inputSourcBufferCache[ncbus]->mBuffers[i].mDataByteSize);
+                    }
+                }
             }
-            mixer->_receiveBox[bus] = 1;
-            mixer->_currentCount = 1;
+            float dt = frames * 1000 /  mixer->_audioController.audioDescription.mSampleRate;
+            [mixer unitRenderWithCount:frames time:(int64_t)([[NSDate date]timeIntervalSince1970]*1000 - dt)];
+            [mixer->_unitReceiveBox removeAllObjects];
+            [mixer->_receiveSource removeAllObjects];
+            bus = 0;
+            busN = @(bus);
+            [mixer->_receiveSource setObject:busN forKey:@((long)source)];
+            [mixer->_unitReceiveBox addObject:sourceN];
+            for (int i = 0; i<audio->mNumberBuffers; i++) {
+                memcpy(mixer->_inputSourcBufferCache[bus]->mBuffers[i].mData, audio->mBuffers[i].mData, audio->mBuffers[i].mDataByteSize);
+                mixer->_inputSourcBufferCache[bus]->mBuffers[i].mDataByteSize = audio->mBuffers[i].mDataByteSize;
+            }
         }else {
-            mixer->_currentCount++;
+            [mixer->_unitReceiveBox addObject:sourceN];
             for (int i = 0; i<audio->mNumberBuffers; i++) {
-                memcpy(mixer->_inputSource[bus]->mBuffers[i].mData, audio->mBuffers[i].mData, audio->mBuffers[i].mDataByteSize);
-                mixer->_inputSource[bus]->mBuffers[i].mDataByteSize = audio->mBuffers[i].mDataByteSize;
+                memcpy(mixer->_inputSourcBufferCache[bus]->mBuffers[i].mData, audio->mBuffers[i].mData, audio->mBuffers[i].mDataByteSize);
+                mixer->_inputSourcBufferCache[bus]->mBuffers[i].mDataByteSize = audio->mBuffers[i].mDataByteSize;
             }
-            if (mixer->_currentCount == mixer->_intputCount) {
-                [mixer unitRenderWithCount:frames];
-            }else if(mixer->_currentCount > mixer->_intputCount){
-                NSLog(@"err:%p  time:%f",source,time->mSampleTime);
-
+            if (mixer->_unitReceiveBox.count == mixer->_listenIntputCount) {
+                [mixer unitRenderWithCount:frames time:(int64_t)([[NSDate date]timeIntervalSince1970]*1000)];
+            }else if(mixer->_unitReceiveBox.count > mixer->_listenIntputCount){
+                NSLog(@"不可能出现的错误 source:%p  time:%f",source,time->mSampleTime);
+                assert(0);
             }
         }
     }
@@ -82,14 +172,20 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
 static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags, const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber, UInt32 inNumberFrames, AudioBufferList *ioData) {
     GJAudioMixer* audioMix = (__bridge GJAudioMixer *)(inRefCon);
     for ( int i=0; i<ioData->mNumberBuffers; i++ ) {
-        memcpy(ioData->mBuffers[i].mData,audioMix->_inputSource[inBusNumber]->mBuffers[i].mData,audioMix->_inputSource[inBusNumber]->mBuffers[i].mDataByteSize);
-        ioData->mBuffers[i].mNumberChannels = audioMix->_inputSource[inBusNumber]->mBuffers[i].mNumberChannels;
-        ioData->mBuffers[i].mDataByteSize = audioMix->_inputSource[inBusNumber]->mBuffers[i].mDataByteSize;
+        memcpy(ioData->mBuffers[i].mData,audioMix->_inputSourcBufferCache[inBusNumber]->mBuffers[i].mData,audioMix->_inputSourcBufferCache[inBusNumber]->mBuffers[i].mDataByteSize);
+        ioData->mBuffers[i].mNumberChannels = audioMix->_inputSourcBufferCache[inBusNumber]->mBuffers[i].mNumberChannels;
+        ioData->mBuffers[i].mDataByteSize = audioMix->_inputSourcBufferCache[inBusNumber]->mBuffers[i].mDataByteSize;
     }
 //    NSLog(@"inBusNumber:%d  time:%f",inBusNumber,inTimeStamp->mSampleTime);
     return noErr;
 }
--(void)unitRenderWithCount:(UInt32)frames{
+
+
+
+-(void)unitRenderWithCount:(UInt32)frames time:(int64_t)time{
+    if (_needUpdateSource) {
+        [self refreshSource];
+    }
     _mixCount+=frames;
     AudioUnitRenderActionFlags flags = 0;
     AudioTimeStamp renderTimestamp = {0};
@@ -99,35 +195,17 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
     if (result != noErr) {
         NSLog(@"AudioUnitRender error:%d",result);
     }else{
-        [self.delegate audioMixerProduceFrameWith:_reanderBufferList time:(int64_t)([[NSDate date]timeIntervalSince1970]*1000)];
+        [self.delegate audioMixerProduceFrameWith:_reanderBufferList time:time];
     }
-    
-    if (_intputCount < _receiveSource.allKeys.count) {
-        for (NSUInteger i = 0; i<MAX_MIX_COUNT; i++) {
-            if (_receiveBox[i] == 0) {
-                NSNumber* deleteKey;
-                for (NSNumber* key in _receiveSource.allKeys) {
-                    if (_receiveSource[key] == @(i)) {
-                        deleteKey = key;
-                        break;
-                    }
-                }
-                if(deleteKey){
-                    [_receiveSource removeObjectForKey:deleteKey];
-                    break;
-                }
-                
-            }
-        }
-    }
-    memset(_receiveBox, 0, sizeof(_receiveBox));
-    _currentCount = 0;
+    [_unitReceiveBox removeAllObjects];
 }
 - (instancetype)init
 {
     self = [super init];
     if (self) {
         _receiveSource = [NSMutableDictionary dictionaryWithCapacity:2];
+        _ignoreSource = [NSMutableArray arrayWithCapacity:2];
+        _unitReceiveBox = [NSMutableArray arrayWithCapacity:2];
     }
     return self;
 }
@@ -139,21 +217,25 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
         if (_reanderBufferList != NULL) {
             AEAudioBufferListFree(_reanderBufferList);
             for (int i = 0; i<MAX_MIX_COUNT; i++) {
-                AEAudioBufferListFree(_inputSource[i]);
+                AEAudioBufferListFree(_inputSourcBufferCache[i]);
             }
         }
         
         _reanderBufferList = AEAudioBufferListCreate(_clientFormat, 4096);
         for (int i = 0; i<MAX_MIX_COUNT; i++) {
-            _inputSource[i] = AEAudioBufferListCreate(_clientFormat, 4096);
+            _inputSourcBufferCache[i] = AEAudioBufferListCreate(_clientFormat, 4096);
         }
     }
-    [self refreshSourceCounts:_intputCount+1];
-    _intputCount++;
+    if (_listenIntputCount < MAX_MIX_COUNT) {
+        _listenIntputCount++;
+        _needUpdateSource = YES;
+    }
 }
 -(void)teardown{
-    [self refreshSourceCounts:_intputCount-1];
-    _intputCount--;
+    if (_listenIntputCount > 0) {
+        _listenIntputCount--;
+        _needUpdateSource = YES;
+    }
 }
 -(AEAudioReceiverCallback)receiverCallback{
     return receiverCallback;
@@ -207,10 +289,23 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
     return YES;
 }
 
--(BOOL)refreshSourceCounts:(int)counts{
+-(BOOL)refreshSource{
     // Set bus count
-    UInt32 busCount = counts;
-    if ( !AECheckOSStatus(AudioUnitSetProperty(_mixerUnit, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &busCount, sizeof(busCount)),
+    
+    if(_listenIntputCount != _receiveSource.allKeys.count)return NO;
+    
+    int counts = _listenIntputCount;
+    for (NSNumber* v in _ignoreSource) {
+        if ([_receiveSource.allKeys containsObject:v]) {
+            counts--;
+        }
+    }
+    if (_elementCount == counts) {
+        return YES;
+    }
+    _needUpdateSource = NO;
+    _elementCount = counts;
+    if ( !AECheckOSStatus(AudioUnitSetProperty(_mixerUnit, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &_elementCount, sizeof(_elementCount)),
                           "AudioUnitSetProperty(kAudioUnitProperty_ElementCount)") ) return NO;
     
     // The default volume for the MultiChannelMixer is 0 on OSX and 1 on iOS. ¯\_(ツ)_/¯
@@ -219,7 +314,7 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
                           "AudioUnitSetParameter(kMultiChannelMixerParam_Volume)") ) return NO;
 
     // Configure each bus
-    for ( int busNumber=0; busNumber<busCount; busNumber++ ) {
+    for ( int busNumber=0; busNumber<_elementCount; busNumber++ ) {
         // Set input stream format
         if(!AECheckOSStatus(AudioUnitSetProperty(_mixerUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, busNumber,  &_clientFormat, sizeof(AudioStreamBasicDescription)),
                    "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)")){
@@ -248,6 +343,7 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
         if ( result != kAUGraphErr_InvalidConnection /* Ignore this error */ )
             AECheckOSStatus(result, "AUGraphSetNodeInputCallback");
     }
+
     Boolean isInited = false;
     AUGraphIsInitialized(_graph, &isInited);
     if ( !isInited ) {
@@ -273,7 +369,7 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
     if (_reanderBufferList != NULL) {
         AEAudioBufferListFree(_reanderBufferList);
         for (int i = 0; i<MAX_MIX_COUNT; i++) {
-            AEAudioBufferListFree(_inputSource[i]);
+            AEAudioBufferListFree(_inputSourcBufferCache[i]);
         }
     }
 }

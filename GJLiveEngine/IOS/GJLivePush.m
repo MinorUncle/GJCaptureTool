@@ -82,6 +82,7 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     if (self) {
         _gaterFrequency = 2.0;
         _livePush = NULL;
+        _mixFileNeedToStream = YES;
         GJLivePush_Create(&_livePush, livePushCallback, (__bridge GHandle)(self));
     }
     return self;
@@ -152,6 +153,10 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
 
 -(BOOL)enableAudioInEarMonitoring:(BOOL)enable{
     return GJLivePush_EnableAudioInEarMonitoring(_livePush, enable);
+}
+-(void)setMixFileNeedToStream:(BOOL)mixFileNeedToStream{
+    _mixFileNeedToStream = mixFileNeedToStream;
+    GJLivePush_ShouldMixAudioToStream(_livePush, mixFileNeedToStream);
 }
 -(void)updateGaterInfo:(NSTimer*)timer{
     GJTrafficStatus vInfo = GJLivePush_GetVideoTrafficStatus(_livePush);

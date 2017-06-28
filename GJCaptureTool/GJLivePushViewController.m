@@ -125,6 +125,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @property (strong, nonatomic) UIButton *pull2Button;
 @property (strong, nonatomic) UIButton *audioMixBtn;
 @property (strong, nonatomic) UIButton *earPlay;
+@property (strong, nonatomic) UIButton *mixStream;
 
 @property (strong, nonatomic) UISlider *inputGain;
 @property (strong, nonatomic) UILabel *inputGainLab;
@@ -243,6 +244,15 @@ static char* url = "rtmp://10.0.1.142/live/room";
     [_earPlay addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     _earPlay.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_earPlay];
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _mixStream = [[UIButton alloc]initWithFrame:rect];
+    [_mixStream setTitle:@"允许混流" forState:UIControlStateNormal];
+    [_mixStream setTitle:@"禁止混流" forState:UIControlStateSelected];
+    [_mixStream setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_mixStream addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _mixStream.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_mixStream];
 
     rect.origin.y = CGRectGetMaxY(rect);
     rect.size.width *= 0.4;
@@ -384,7 +394,10 @@ static char* url = "rtmp://10.0.1.142/live/room";
         }
     }else if(btn == _earPlay){
         [_livePush enableAudioInEarMonitoring:btn.selected];
-    }else {
+    }else if(btn == _mixStream){
+        _livePush.mixFileNeedToStream = btn.selected;
+    }else
+    {
         GJLivePull* pull = NULL;
         for (PullShow* show in _pulls) {
             if (show.pullBtn == btn) {
