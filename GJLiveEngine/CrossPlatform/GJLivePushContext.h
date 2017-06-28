@@ -42,6 +42,8 @@ typedef struct _GJLivePushContext{
     GTime                   connentClock;
     GTime                   disConnentClock;
     
+    GInt32                  operationCount;//用来避免使用线程锁
+    
 //
     GJLivePushCallback      callback;
     GHandle                 userData;

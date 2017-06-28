@@ -753,6 +753,7 @@ GHandle  GJLivePlay_GetVideoDisplayView(GJLivePlayer* player){
 GVoid  GJLivePlay_Dealloc(GJLivePlayer** livePlayer){
     GJLOG(GJ_LOGDEBUG, "GJPlivePlayer dealloc");
     GJLivePlayer* player = *livePlayer;
+    player->videoPlayer->displayUnSetup(player->videoPlayer);
     GJ_PictureDisplayContextDealloc(&player->videoPlayer);
     GJ_AudioPlayContextDealloc(&player->audioPlayer);
     queueFree(&player->playControl.audioQueue);

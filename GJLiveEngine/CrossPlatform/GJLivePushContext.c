@@ -10,6 +10,7 @@
 #include "GJLog.h"
 #include "GJUtil.h"
 #include "GJLiveDefine.h"
+#include <unistd.h>
 #define I_P_RATE 4
 #define DROP_BITRATE_RATE 0.1
 
@@ -18,18 +19,26 @@ static GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong
 
 static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* frame){
     GJLivePushContext* context = userData;
-    
-    if (!context->videoMute && (context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
-        context->videoEncoder->encodeFrame(context->videoEncoder,frame,GFalse);
-    }else{
-        GJLOG(GJ_LOGWARNING, "丢视频帧");
-        context->dropVideoCount++;
+    if (context->stopPushClock == G_TIME_INVALID) {
+        context->operationCount ++;
+        if (!context->videoMute && (context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
+            context->videoEncoder->encodeFrame(context->videoEncoder,frame,GFalse);
+        }else{
+            GJLOG(GJ_LOGWARNING, "丢视频帧");
+            context->dropVideoCount++;
+        }
+        context->operationCount--;
     }
 }
 static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame){
     GJLivePushContext* context = userData;
-    if (!context->audioMute) {
-        context->audioEncoder->encodeFrame(context->audioEncoder,frame);
+    if (context->stopPushClock == G_TIME_INVALID) {
+        context->operationCount ++;
+
+        if (!context->audioMute) {
+            context->audioEncoder->encodeFrame(context->audioEncoder,frame);
+        }
+        context->operationCount--;
     }
 }
 static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
@@ -345,7 +354,7 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
                 return GFalse;
             }
             context->firstAudioEncodeClock = context->firstVideoEncodeClock = G_TIME_INVALID;
-            context->connentClock = context->disConnentClock = G_TIME_INVALID;
+            context->connentClock = context->disConnentClock = context->stopPushClock = G_TIME_INVALID;
             context->startPushClock = GJ_Gettime()/1000;
             
             if(context->videoProducer->obaque == GNULL){
@@ -405,6 +414,11 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
 GVoid GJLivePush_StopPush(GJLivePushContext* context){
     pthread_mutex_lock(&context->lock);
     if (context->videoPush) {
+        context->stopPushClock = GJ_Gettime()/1000;
+        while (context->operationCount) {
+            GJLOG(GJ_LOGDEBUG, "GJLivePush_StopPush wait 10 us");
+            usleep(10);
+        }
         GJRtmpPush_CloseAndDealloc(&context->videoPush);
         context->audioProducer->audioProduceStop(context->audioProducer);
         context->videoProducer->stopProduce(context->videoProducer);

@@ -80,7 +80,6 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
 {
     self = [super init];
     if (self) {
-        
         _gaterFrequency = 2.0;
         _livePush = NULL;
         GJLivePush_Create(&_livePush, livePushCallback, (__bridge GHandle)(self));
@@ -168,7 +167,7 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     _pushSessionStatus.audioStatus.bitrate = (aInfo.leave.byte - _audioInfo.leave.byte)/_gaterFrequency;
     _audioInfo = aInfo;
     [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
-    if (vInfo.enter.pts - vInfo.leave.pts > MAX_SEND_DELAY) {
+    if (vInfo.enter.pts - vInfo.leave.pts > MAX_SEND_DELAY) {//延迟过多重启
         [self reStartStreamPush];
     }
 }

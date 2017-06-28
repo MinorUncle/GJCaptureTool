@@ -34,14 +34,8 @@
     if (self) {
         _sourceFormat = *sFormat;
         _destFormat = *dFormat;
-        _bitrate = 64000; // 64kbs
+        _bitrate = 0; // 64kbs
         
-        if (_destFormat.mSampleRate >= 44100) {
-            _bitrate = 192000; // 192kbs
-        } else if (_destFormat.mSampleRate < 22000) {
-            _bitrate = 32000; // 32kbs
-        }
-
         [self initQueue];
     }
     return self;
@@ -141,6 +135,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
     queueBroadcastPop(_resumeQueue);
     if(_encodeConvert){
+        GJLOG(GJ_LOGINFO, "AACEncoderFromPCM :%p",_encodeConvert);
         AudioConverterDispose(_encodeConvert);
         _encodeConvert = nil;
     }
@@ -176,16 +171,6 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
        OSStatus status = AudioConverterGetProperty(_encodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
         _destMaxOutSize += PUSH_AAC_PACKET_PRE_SIZE + 7;//7字节aac头
         assert(!status);
-
-        UInt32 outputBitRate = _bitrate; // 64kbs
-        UInt32 propSize = sizeof(outputBitRate);
-        
-        // set the bit rate depending on the samplerate chosen
-        AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
-        
-        // get it back and print it out
-        AudioConverterGetProperty(_encodeConvert, kAudioConverterEncodeBitRate, &propSize, &outputBitRate);
-        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
     }
     if (_bufferPool) {
         GJRetainBufferPool* pool = _bufferPool;
@@ -200,7 +185,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     dispatch_async(_encoderQueue, ^{
         [self _converterStart];
     });
-    GJLOG(GJ_LOGDEBUG, "AudioConverterNewSpecific success");
+    GJLOG(GJ_LOGDEBUG, "AudioConverterNewSpecific success:%p",_encodeConvert);
     return YES;
 }
 -(void)setBitrate:(int)bitrate{

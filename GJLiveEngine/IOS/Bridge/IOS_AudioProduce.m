@@ -53,8 +53,8 @@
             GJLOG(GJ_LOGERROR, "setPrefferSampleRate error:%s",error.localizedDescription.UTF8String);
         }
         _audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat inputEnabled:YES];
-        _audioController.useMeasurementMode = NO;
-       
+        _audioController.useMeasurementMode = YES;
+//        _audioController.preferredBufferDuration = 0.015;
         _audioMixer = [[GJAudioMixer alloc]init];
         _audioMixer.delegate = self;
         [_audioController addInputReceiver:_audioMixer];
@@ -115,7 +115,8 @@
     }else{
         [_audioController addChannels:@[_mixfilePlay]];
         [_audioController performAsynchronousMessageExchangeWithBlock:^{
-             [_audioController addOutputReceiver:_audioMixer forChannel:_mixfilePlay];
+//             [_audioController addOutputReceiver:_audioMixer forChannel:_mixfilePlay];
+            [_audioController addOutputReceiver:_audioMixer];
         } responseBlock:nil];
        
         return GTrue;
@@ -135,7 +136,8 @@
         GJLOG(GJ_LOGWARNING, "重复stop mix");
     }else{
         [_audioController removeChannels:@[_mixfilePlay]];
-        [_audioController removeOutputReceiver:_audioMixer fromChannel:_mixfilePlay];
+        [_audioController removeOutputReceiver:_audioMixer];
+//        [_audioController removeOutputReceiver:_audioMixer fromChannel:_mixfilePlay];
         _mixfilePlay = nil;
     }
 }
@@ -146,7 +148,8 @@
     
     if (_mixfilePlay) {
         [play addObject:_mixfilePlay];
-        [_audioController removeOutputReceiver:_audioMixer fromChannel:_mixfilePlay];
+        [_audioController removeOutputReceiver:_audioMixer];
+//        [_audioController removeOutputReceiver:_audioMixer fromChannel:_mixfilePlay];
     }
     if (_playthrough) {
         [play addObject:_playthrough];

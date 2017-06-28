@@ -46,30 +46,35 @@ static char* url = "rtmp://10.0.1.142/live/room";
         _pullStateLab.numberOfLines = 0;
         _pullStateLab.text = @"未连接";
         _pullStateLab.textColor = [UIColor redColor];
+        _pullStateLab.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_pullStateLab];
         
         _pullRateLab = [[UILabel alloc]init];
         _pullRateLab.textColor = [UIColor redColor];
         _pullRateLab.text = @"Bitrate:0.0 KB/s";
         _pullRateLab.numberOfLines = 0;
+        _pullRateLab.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_pullRateLab];
         
         _videoCacheLab = [[UILabel alloc]init];
         _videoCacheLab.textColor = [UIColor redColor];
         _videoCacheLab.text = @"cache V:0.0 ms f:0";
         _videoCacheLab.numberOfLines = 0;
+        _videoCacheLab.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_videoCacheLab];
         
         _audioCacheLab = [[UILabel alloc]init];
         _audioCacheLab.numberOfLines = 0;
         _audioCacheLab.textColor = [UIColor redColor];
         _audioCacheLab.text = @"cache A:0.0 ms f:0";
+        _audioCacheLab.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_audioCacheLab];
         
         _netDelay = [[UILabel alloc]init];
         _netDelay.numberOfLines = 0;
         _netDelay.textColor = [UIColor redColor];
         _netDelay.text = @"NetDelay:0ms";
+        _netDelay.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_netDelay];
 
         
@@ -77,6 +82,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
         _playerBufferLab.numberOfLines = 0;
         _playerBufferLab.textColor = [UIColor redColor];
         _playerBufferLab.text = @"buffer：未缓冲";
+        _playerBufferLab.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_playerBufferLab];
     }
     return self;
@@ -250,6 +256,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _inputGain.maximumValue = 1.0;
     _inputGain.minimumValue = 0.0;
     _inputGain.continuous = NO;
+    _inputGain.value = 1.0;
     [_inputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_inputGain];
     
@@ -266,6 +273,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _mixGain = [[UISlider alloc]initWithFrame:rect];
     _mixGain.maximumValue = 1.0;
     _mixGain.minimumValue = 0.0;
+    _mixGain.value = 1.0;
     _mixGain.continuous = NO;
     [_mixGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_mixGain];
@@ -285,6 +293,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _outputGain.maximumValue = 1.0;
     _outputGain.minimumValue = 0.0;
     _outputGain.continuous = NO;
+    _outputGain.value = 1.0;
     [_outputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_outputGain];
     

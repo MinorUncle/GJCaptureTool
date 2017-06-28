@@ -106,9 +106,12 @@ GVoid GJLivePull_Dealloc(GJLivePullContext** pullContext){
     if (context == GNULL) {
         GJLOG(GJ_LOGERROR, "非法释放");
     }else{
+        
         GJLivePlay_Dealloc(&context->player);
+        context->videoDecoder->decodeUnSetup(context->videoDecoder);
         GJ_H264DecodeContextDealloc(&context->videoDecoder);
         GJ_AACDecodeContextDealloc(&context->audioDecoder);
+        
         free(context);
         *pullContext = GNULL;
     }
