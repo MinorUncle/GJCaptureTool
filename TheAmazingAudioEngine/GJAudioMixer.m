@@ -42,7 +42,6 @@
 -(void)removeIgnoreSource:(void*)source{
     if ([_ignoreSource containsObject:@((long)source)]) {
         [_ignoreSource removeObject:@((long)source)];
-        [self refreshSource];
         _needUpdateSource = YES;
     }
 }
@@ -52,10 +51,11 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
     GJAudioMixer* mixer = receiver;
     NSNumber* sourceN = @((long)source);
     if ([mixer->_ignoreSource containsObject:sourceN]) {
-        if (![mixer->_receiveSource.allKeys containsObject:sourceN]) {
+        NSNumber* sourcBusN = mixer->_receiveSource[sourceN];
+        if (!sourcBusN) {
             [mixer->_receiveSource setObject:@(IGNORE_BUS) forKey:sourceN];
             NSLog(@"添加新的 IGNORE_Source：%p",source);
-        }else{//已经存在
+        }else if(sourcBusN.unsignedIntegerValue != IGNORE_BUS){//已经存在
             UInt32 v = ((NSNumber*)(mixer->_receiveSource[sourceN])).unsignedIntegerValue;
             for (NSNumber* key in mixer->_receiveSource.allKeys) {
                 UInt32 cv = ((NSNumber*)(mixer->_receiveSource[key])).unsignedIntegerValue;
@@ -116,10 +116,11 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
     if (mixer->_elementCount == 1) {
         if (mixer->_unitReceiveBox.count > 0) {
             for (NSNumber* key in mixer->_unitReceiveBox) {
-                if ([mixer->_receiveSource.allKeys containsObject:key] && ![mixer->_ignoreSource containsObject:key]) {
+                if (mixer->_receiveSource[key] != @(IGNORE_BUS)) {
                     NSNumber* v = mixer->_receiveSource[key];
                     float dt = frames * 1000 /  mixer->_audioController.audioDescription.mSampleRate;
                     [mixer.delegate audioMixerProduceFrameWith:mixer->_inputSourcBufferCache[v.unsignedIntegerValue] time:(int64_t)([[NSDate date]timeIntervalSince1970]*1000 - dt)];
+                    NSLog(@"只有一个source 但是之前已经收到了一个相同的source:%p",(void*)key.longValue);
                 }
             }
         }

@@ -247,8 +247,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
     
     rect.origin.y = CGRectGetMaxY(rect);
     _mixStream = [[UIButton alloc]initWithFrame:rect];
-    [_mixStream setTitle:@"允许混流" forState:UIControlStateNormal];
-    [_mixStream setTitle:@"禁止混流" forState:UIControlStateSelected];
+    [_mixStream setTitle:@"禁止混流" forState:UIControlStateNormal];
+    [_mixStream setTitle:@"允许混流" forState:UIControlStateSelected];
     [_mixStream setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_mixStream addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     _mixStream.backgroundColor = [UIColor grayColor];
@@ -395,7 +395,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     }else if(btn == _earPlay){
         [_livePush enableAudioInEarMonitoring:btn.selected];
     }else if(btn == _mixStream){
-        _livePush.mixFileNeedToStream = btn.selected;
+        _livePush.mixFileNeedToStream = !btn.selected;
     }else
     {
         GJLivePull* pull = NULL;

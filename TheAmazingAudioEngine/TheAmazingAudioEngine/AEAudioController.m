@@ -228,7 +228,7 @@ typedef struct _channel_group_t {
     AudioUnit           _iAudioUnit;
 #endif
     
-    AEChannelGroupRef   _topGroup;
+//    AEChannelGroupRef   _topGroup;
     AEChannelRef        _topChannel;
     
     callback_table_t    _timingCallbacks;

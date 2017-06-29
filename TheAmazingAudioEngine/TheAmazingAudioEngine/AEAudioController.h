@@ -1665,6 +1665,11 @@ BOOL AECurrentThreadIsAudioThread(void);
  */
 @property (nonatomic, readonly) AUGraph audioGraph;
 
+/*!
+ * The audio topGroup handle
+ */
+@property (nonatomic, readonly) AEChannelGroupRef topGroup;
+
 #pragma mark - Timing
 
 /*!

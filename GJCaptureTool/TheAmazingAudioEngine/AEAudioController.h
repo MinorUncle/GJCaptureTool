@@ -804,6 +804,7 @@ typedef enum {
  */
 - (float)volumeForChannelGroup:(AEChannelGroupRef)group;
 
+
 /*!
  * Set the pan of a channel group
  *
@@ -1655,11 +1656,14 @@ BOOL AECurrentThreadIsAudioThread(void);
  */
 @property (nonatomic, readonly) AudioStreamBasicDescription audioDescription;
 
+
 /*!
  * The Remote IO audio unit used for input and output
  */
 @property (nonatomic, readonly) AudioUnit audioUnit;
 
+
+@property (nonatomic, readonly) AEChannelGroupRef topGroup;
 /*!
  * The audio graph handle
  */

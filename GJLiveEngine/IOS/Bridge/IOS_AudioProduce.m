@@ -65,6 +65,12 @@
 }
 
 -(void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time{
+    static int64_t p;
+    if (p == 0) {
+        p = time;
+    }
+    NSLog(@"pts:%lld,dt:%lld",time,time-p);
+    p = time;
     R_GJPCMFrame* pcmFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool, frame->mBuffers[0].mDataByteSize);
     memcpy(pcmFrame->retain.data, frame->mBuffers[0].mData, frame->mBuffers[0].mDataByteSize);
     pcmFrame->channel = frame->mBuffers[0].mNumberChannels;
@@ -103,16 +109,16 @@
 -(void)setMixToSream:(BOOL)mixToSream{
     _mixToSream = mixToSream;
     if (_mixToSream) {
-        [_audioMixer removeIgnoreSource:AEAudioSourceMainOutput];
+        [_audioMixer removeIgnoreSource:_audioController.topGroup];
     }else{
-        [_audioMixer addIgnoreSource:AEAudioSourceMainOutput];
+        [_audioMixer addIgnoreSource:_audioController.topGroup];
     }
 }
 -(BOOL)setMixFile:(NSURL*)file{
     if (_mixfilePlay != nil) {
         GJLOG(GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
         [_audioController removeChannels:@[_mixfilePlay]];
-        [_audioController removeOutputReceiver:_audioMixer fromChannel:_mixfilePlay];
+        [_audioController removeOutputReceiver:_audioMixer];
         _mixfilePlay = nil;
     }
     NSError* error;
@@ -122,11 +128,7 @@
         return GFalse;
     }else{
         [_audioController addChannels:@[_mixfilePlay]];
-        [_audioController performAsynchronousMessageExchangeWithBlock:^{
-//             [_audioController addOutputReceiver:_audioMixer forChannel:_mixfilePlay];
-            [_audioController addOutputReceiver:_audioMixer];
-        } responseBlock:nil];
-       
+        [_audioController addOutputReceiver:_audioMixer];
         return GTrue;
     }
 }
@@ -145,7 +147,6 @@
     }else{
         [_audioController removeChannels:@[_mixfilePlay]];
         [_audioController removeOutputReceiver:_audioMixer];
-//        [_audioController removeOutputReceiver:_audioMixer fromChannel:_mixfilePlay];
         _mixfilePlay = nil;
     }
 }
@@ -157,7 +158,6 @@
     if (_mixfilePlay) {
         [play addObject:_mixfilePlay];
         [_audioController removeOutputReceiver:_audioMixer];
-//        [_audioController removeOutputReceiver:_audioMixer fromChannel:_mixfilePlay];
     }
     if (_playthrough) {
         [play addObject:_playthrough];
