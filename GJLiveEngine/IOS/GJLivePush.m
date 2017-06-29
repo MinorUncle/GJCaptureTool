@@ -177,9 +177,11 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     }
 }
 -(void)setCameraPosition:(GJCameraPosition)cameraPosition{
+    _cameraPosition = cameraPosition;
     GJLivePush_SetCameraPosition(_livePush, cameraPosition);
 }
 -(void)setOutOrientation:(GJInterfaceOrientation)outOrientation{
+    _outOrientation = outOrientation;
     GJLivePush_SetOutOrientation(_livePush, outOrientation);
 }
 #pragma mark rtmp callback

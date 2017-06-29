@@ -13,6 +13,7 @@
 #import "GJImageView.h"
 #import "GJLiveDefine.h"
 #import "GJBufferPool.h"
+#import "GJImageBeautifyFilter.h"
 
 typedef void(^VideoRecodeCallback)(R_GJPixelFrame* frame);
 
@@ -100,6 +101,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property(nonatomic,strong)GPUImageVideoCamera* camera;
 @property(nonatomic,strong)GJImageView* imageView;
 @property(nonatomic,strong)GPUImageCropFilter* cropFilter;
+@property(nonatomic,strong)GPUImageBeautifyFilter* beautifyFilter;
 @property(nonatomic,strong)GPUImageFilter* videoSender;
 @property(nonatomic,assign)AVCaptureDevicePosition cameraPosition;
 @property(nonatomic,assign)UIInterfaceOrientation outputOrientation;
@@ -148,7 +150,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _camera.frameRate = _frameRate;
         _camera.outputImageOrientation = UIInterfaceOrientationPortrait;
         _cropFilter = [[GPUImageCropFilter alloc]init];
-        [_camera addTarget:_cropFilter];
+        [self.beautifyFilter addTarget:_cropFilter];
+        [_camera addTarget:_beautifyFilter];
     }
     return _camera;
 }
@@ -158,22 +161,13 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     }
     return _imageView;
 }
--(GPUImageCropFilter *)cropFilter{
-    if (_cropFilter == nil) {
-        CGSize size = _destSize;
-        if (_outputOrientation == UIInterfaceOrientationPortrait ||
-            _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
-            size.height += size.width;
-            size.width = size.height - size.width;
-            size.height = size.height - size.width;
-        }
-        NSString* preset = getCapturePresetWithSize(size);
-        _camera = [[GPUImageVideoCamera alloc]initWithSessionPreset:preset cameraPosition:_cameraPosition];
-        _cropFilter = [[GPUImageCropFilter alloc]init];
-        [_camera addTarget:_cropFilter];
+-(GPUImageBeautifyFilter *)beautifyFilter{
+    if (_beautifyFilter == nil) {
+        _beautifyFilter = [[GPUImageBeautifyFilter alloc]init];
     }
-    return _cropFilter;
+    return _beautifyFilter;
 }
+
 CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceOrientation orientation){
     //裁剪，
     CGSize targetSize = sourceSize;

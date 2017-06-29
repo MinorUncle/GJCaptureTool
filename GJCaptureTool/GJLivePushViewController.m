@@ -126,6 +126,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @property (strong, nonatomic) UIButton *audioMixBtn;
 @property (strong, nonatomic) UIButton *earPlay;
 @property (strong, nonatomic) UIButton *mixStream;
+@property (strong, nonatomic) UIButton *changeCamera;
 
 @property (strong, nonatomic) UISlider *inputGain;
 @property (strong, nonatomic) UILabel *inputGainLab;
@@ -229,6 +230,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     rect.origin = CGPointMake(self.view.bounds.size.width*0.5, 20);
     rect.size = CGSizeMake(self.view.bounds.size.width*0.5, 30);
     _audioMixBtn = [[UIButton alloc]initWithFrame:rect];
+    _audioMixBtn.backgroundColor = [UIColor clearColor];
     [_audioMixBtn setTitle:@"开始混音" forState:UIControlStateNormal];
     [_audioMixBtn setTitle:@"结束混音" forState:UIControlStateSelected];
     [_audioMixBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
@@ -238,6 +240,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 
     rect.origin.y = CGRectGetMaxY(rect);
     _earPlay = [[UIButton alloc]initWithFrame:rect];
+    _earPlay.backgroundColor = [UIColor clearColor];
     [_earPlay setTitle:@"开始耳返" forState:UIControlStateNormal];
     [_earPlay setTitle:@"结束耳返" forState:UIControlStateSelected];
     [_earPlay setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
@@ -247,6 +250,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     
     rect.origin.y = CGRectGetMaxY(rect);
     _mixStream = [[UIButton alloc]initWithFrame:rect];
+    _mixStream.backgroundColor = [UIColor clearColor];
     [_mixStream setTitle:@"禁止混流" forState:UIControlStateNormal];
     [_mixStream setTitle:@"允许混流" forState:UIControlStateSelected];
     [_mixStream setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
@@ -254,6 +258,15 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _mixStream.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_mixStream];
 
+    rect.origin.y = CGRectGetMaxY(rect);
+    _changeCamera = [[UIButton alloc]initWithFrame:rect];
+    _changeCamera.backgroundColor = [UIColor clearColor];
+    [_changeCamera setTitle:@"切换相机" forState:UIControlStateNormal];
+    [_changeCamera setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_changeCamera addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _changeCamera.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_changeCamera];
+    
     rect.origin.y = CGRectGetMaxY(rect);
     rect.size.width *= 0.4;
     _inputGainLab = [[UILabel alloc]initWithFrame:rect];
@@ -396,8 +409,14 @@ static char* url = "rtmp://10.0.1.142/live/room";
         [_livePush enableAudioInEarMonitoring:btn.selected];
     }else if(btn == _mixStream){
         _livePush.mixFileNeedToStream = !btn.selected;
-    }else
-    {
+    }else  if(btn == _changeCamera){
+        if (_livePush.cameraPosition == GJCameraPositionBack) {
+            _livePush.cameraPosition = GJCameraPositionFront;
+        }else{
+            _livePush.cameraPosition = GJCameraPositionBack;
+        }
+        
+    }else{
         GJLivePull* pull = NULL;
         for (PullShow* show in _pulls) {
             if (show.pullBtn == btn) {

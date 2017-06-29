@@ -69,7 +69,6 @@
     if (p == 0) {
         p = time;
     }
-    NSLog(@"pts:%lld,dt:%lld",time,time-p);
     p = time;
     R_GJPCMFrame* pcmFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool, frame->mBuffers[0].mDataByteSize);
     memcpy(pcmFrame->retain.data, frame->mBuffers[0].mData, frame->mBuffers[0].mDataByteSize);
