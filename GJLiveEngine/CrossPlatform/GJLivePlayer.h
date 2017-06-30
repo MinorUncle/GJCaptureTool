@@ -10,6 +10,8 @@
 #import "GJLiveDefine.h"
 #import "GJLiveDefine+internal.h"
 #import "GJBridegContext.h"
+
+#define SHOULD_BUFFER_IN_AUDIO_CLOCK
 typedef enum _GJPlayStatus{
     kPlayStatusStop,
     kPlayStatusRunning,

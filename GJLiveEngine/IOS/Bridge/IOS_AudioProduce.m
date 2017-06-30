@@ -59,14 +59,15 @@
         _audioMixer = [[GJAudioMixer alloc]init];
         _audioMixer.delegate = self;
         [_audioController addInputReceiver:_audioMixer];
+        self.mixToSream = YES;
         
-        _blockPlay = [AEBlockChannel channelWithBlock:^(const AudioTimeStamp *time, UInt32 frames, AudioBufferList *audio) {
-            for (int i = 0 ; i<audio->mNumberBuffers; i++) {
-                memset(audio->mBuffers[i].mData, 20, audio->mBuffers[i].mDataByteSize);
-            }
-            NSLog(@"block play time:%f",time->mSampleTime);
-        }];
-        [_audioController addChannels:@[_blockPlay]];
+//        _blockPlay = [AEBlockChannel channelWithBlock:^(const AudioTimeStamp *time, UInt32 frames, AudioBufferList *audio) {
+//            for (int i = 0 ; i<audio->mNumberBuffers; i++) {
+//                memset(audio->mBuffers[i].mData, 20, audio->mBuffers[i].mDataByteSize);
+//            }
+//            NSLog(@"block play time:%f",time->mSampleTime);
+//        }];
+//        [_audioController addChannels:@[_blockPlay]];
         GJRetainBufferPoolCreate(&_bufferPool, 0, GTrue, R_GJPCMFrameMalloc, GNULL);
     }
     return self;
@@ -115,17 +116,20 @@
 }
 -(void)setMixToSream:(BOOL)mixToSream{
     _mixToSream = mixToSream;
-    if (_mixToSream) {
-        [_audioMixer removeIgnoreSource:_audioController.topGroup];
-    }else{
-        [_audioMixer addIgnoreSource:_audioController.topGroup];
+    if (_mixfilePlay) {
+        if (_mixToSream) {
+            [_audioController addOutputReceiver:_audioMixer];
+            //        [_audioMixer removeIgnoreSource:_audioController.topGroup];
+        }else{
+            //        [_audioMixer addIgnoreSource:_audioController.topGroup];
+            [_audioController removeOutputReceiver:_audioMixer];
+        }
     }
 }
 -(BOOL)setMixFile:(NSURL*)file{
     if (_mixfilePlay != nil) {
         GJLOG(GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
         [_audioController removeChannels:@[_mixfilePlay]];
-        [_audioController removeOutputReceiver:_audioMixer];
         _mixfilePlay = nil;
     }
     NSError* error;
@@ -134,8 +138,15 @@
         GJLOG(GJ_LOGERROR, "AEAudioFilePlayer alloc error:%s",error.localizedDescription.UTF8String);
         return GFalse;
     }else{
+        __weak AEAudioController * wkAE = _audioController;
+        __weak GJAudioMixer *wkM = _audioMixer;
+        _mixfilePlay.completionBlock = ^{
+            [wkAE removeOutputReceiver:wkM];
+        };
         [_audioController addChannels:@[_mixfilePlay]];
-        [_audioController addOutputReceiver:_audioMixer];
+        if (_mixToSream) {
+            [_audioController addOutputReceiver:_audioMixer];
+        }
         return GTrue;
     }
 }

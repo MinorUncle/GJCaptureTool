@@ -123,7 +123,11 @@ static GHandle pullRunloop(GHandle parm){
                 }
                
                 packet.m_body=NULL;
-                pull->audioCallback(pull,aacPacket,pull->dataCallbackParm);
+                pthread_mutex_lock(&pull->mutex);
+                if (!pull->releaseRequest) {
+                    pull->audioCallback(pull,aacPacket,pull->dataCallbackParm);
+                }
+                pthread_mutex_unlock(&pull->mutex);
                 retainBufferUnRetain(retainBuffer);
                 
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
@@ -234,8 +238,11 @@ static GHandle pullRunloop(GHandle parm){
                 pull->videoPullInfo.byte += packet.m_nBodySize;
                 
                 
-                
-                pull->videoCallback(pull,h264Packet,pull->dataCallbackParm);
+                pthread_mutex_lock(&pull->mutex);
+                if (!pull->releaseRequest) {
+                    pull->videoCallback(pull,h264Packet,pull->dataCallbackParm);
+                }
+                pthread_mutex_unlock(&pull->mutex);
                 retainBufferUnRetain(retainBuffer);
                 packet.m_body=NULL;
             }else{
@@ -309,9 +316,9 @@ GVoid GJRtmpPull_Close(GJRtmpPull* pull){
 }
 GVoid GJRtmpPull_Release(GJRtmpPull* pull){
     GJLOG(GJ_LOGDEBUG, "GJRtmpPull_Release:%p",pull);
-    pull->messageCallback = NULL;
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
+    pull->messageCallback = NULL;
     pull->releaseRequest = GTrue;
     if (pull->pullThread == NULL) {
         shouldDelloc = GTrue;

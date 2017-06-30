@@ -10,6 +10,8 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import "AEAudioController.h"
 
+
+//#define ENABLE_IGNORE
 @protocol GJAudioMixerDelegate <NSObject>
 
 -(void)audioMixerProduceFrameWith:(AudioBufferList*)frame time:(int64_t)time;
@@ -20,7 +22,8 @@
 @property (nonatomic, readonly) AEAudioReceiverCallback receiverCallback;
 @property (nonatomic, weak)id<GJAudioMixerDelegate> delegate;
 
+#ifdef ENABLE_IGNORE
 -(void)addIgnoreSource:(void*)source;
 -(void)removeIgnoreSource:(void*)source;
-
+#endif
 @end

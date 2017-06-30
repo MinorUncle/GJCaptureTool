@@ -9,7 +9,10 @@
 #import "GJAudioMixer.h"
 #import "AEUtilities.h"
 #define MAX_MIX_COUNT 4
-#define IGNORE_BUS -1
+#ifdef ENABLE_IGNORE
+    #define IGNORE_BUS -1
+#endif
+
 @interface GJAudioMixer(){
     AUGraph                         _graph;
     AUNode                          _mixerNode;
@@ -23,7 +26,10 @@
     int                             _listenIntputCount;//add的source个数
     UInt32                          _elementCount;
     
+#ifdef ENABLE_IGNORE
     NSMutableArray*                 _ignoreSource;
+#endif
+    
     NSMutableDictionary*            _receiveSource;//收到的source
     NSMutableArray*                 _unitReceiveBox;
     
@@ -32,6 +38,8 @@
 @property(nonatomic,weak)AEAudioController* audioController;
 @end
 @implementation GJAudioMixer
+
+#ifdef ENABLE_IGNORE
 
 -(void)addIgnoreSource:(void*)source{
     if (![_ignoreSource containsObject:@((long)source)]) {
@@ -45,11 +53,13 @@
         _needUpdateSource = YES;
     }
 }
+#endif
 
 static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretained AEAudioController *audioController,void *source,const AudioTimeStamp *time,UInt32 frames,AudioBufferList *audio){
 //    NSLog(@"source:%p  ,sampid:%f,hostTime:%lld",source,time->mSampleTime,time->mHostTime);
     GJAudioMixer* mixer = receiver;
     NSNumber* sourceN = @((long)source);
+#ifdef ENABLE_IGNORE
     if ([mixer->_ignoreSource containsObject:sourceN]) {
         NSNumber* sourcBusN = mixer->_receiveSource[sourceN];
         if (!sourcBusN) {
@@ -74,8 +84,11 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
         
         return;
     }
+#endif
+    
     NSNumber* busN = mixer->_receiveSource[@((long)source)];
     NSUInteger bus = 0;
+#ifdef ENABLE_IGNORE
     if (busN) {
         if(busN.unsignedIntegerValue == IGNORE_BUS){
             UInt32 maxBus = 0;
@@ -110,18 +123,39 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
             return;
         }
     }
+#else
+    if (busN) {
+         bus = busN.unsignedIntegerValue;
+    }else{
+        if (mixer->_receiveSource.count < MAX_MIX_COUNT) {
+            UInt32 maxBus = mixer->_receiveSource.allKeys.count;
+            bus = maxBus;
+            busN = @(bus);
+            [mixer->_receiveSource setObject:busN forKey:@((long)source)];
+            NSLog(@"添加新的Source：%p",source);
+            [mixer refreshSource];
+        }else{
+            NSLog(@"混合流数量超过最大");
+            return;
+        }
+    }
+#endif
 
     
     
     if (mixer->_elementCount == 1) {
         if (mixer->_unitReceiveBox.count > 0) {
             for (NSNumber* key in mixer->_unitReceiveBox) {
+#ifdef ENABLE_IGNORE
                 if (mixer->_receiveSource[key] != @(IGNORE_BUS)) {
+#endif
                     NSNumber* v = mixer->_receiveSource[key];
                     float dt = frames * 1000 /  mixer->_audioController.audioDescription.mSampleRate;
                     [mixer.delegate audioMixerProduceFrameWith:mixer->_inputSourcBufferCache[v.unsignedIntegerValue] time:(int64_t)([[NSDate date]timeIntervalSince1970]*1000 - dt)];
                     NSLog(@"只有一个source 但是之前已经收到了一个相同的source:%p",(void*)key.longValue);
+#ifdef ENABLE_IGNORE
                 }
+#endif
             }
         }
         [mixer.delegate audioMixerProduceFrameWith:audio time:(int64_t)([[NSDate date]timeIntervalSince1970]*1000)];
@@ -130,7 +164,11 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
         if ([mixer->_unitReceiveBox containsObject:sourceN]) {//重复
             NSLog(@"重复，出现错乱，重置状态！(teardown不及时导致，没有收到的数据置空)");
             for (NSNumber* key in mixer->_receiveSource.allKeys) {
-                if (![mixer->_unitReceiveBox containsObject:key] && ![mixer->_ignoreSource containsObject:key]) {
+                if (![mixer->_unitReceiveBox containsObject:key]
+#ifdef ENABLE_IGNORE
+                    && ![mixer->_ignoreSource containsObject:key]
+#endif
+                    ) {
                     NSNumber* v = mixer->_receiveSource[key];
                     UInt32 ncbus = v.unsignedIntegerValue;
                     NSLog(@"clean source:%p",(void*)(v.longValue));
@@ -205,7 +243,9 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
     self = [super init];
     if (self) {
         _receiveSource = [NSMutableDictionary dictionaryWithCapacity:2];
+#ifdef ENABLE_IGNORE
         _ignoreSource = [NSMutableArray arrayWithCapacity:2];
+#endif
         _unitReceiveBox = [NSMutableArray arrayWithCapacity:2];
     }
     return self;
@@ -296,11 +336,15 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
     if(_listenIntputCount != _receiveSource.allKeys.count)return NO;
     
     int counts = _listenIntputCount;
+    
+#ifdef ENABLE_IGNORE
     for (NSNumber* v in _ignoreSource) {
         if ([_receiveSource.allKeys containsObject:v]) {
             counts--;
         }
     }
+#endif
+    
     if (_elementCount == counts) {
         return YES;
     }

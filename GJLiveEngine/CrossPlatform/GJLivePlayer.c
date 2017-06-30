@@ -387,7 +387,11 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm){
                     GJLOG(GJ_LOGDEBUG, "video play queue empty when kTimeSYNCVideo,start buffer");
                     GJLivePlay_StartBuffering(player);
                 }else{
+#ifdef SHOULD_BUFFER_IN_AUDIO_CLOCK
+                    GJLivePlay_StartBuffering(player);
+#else
                     GJLOG(GJ_LOGWARNING, "video play queue empty when kTimeSYNCAudio,do not buffer");
+#endif
                 }
                 
             }
