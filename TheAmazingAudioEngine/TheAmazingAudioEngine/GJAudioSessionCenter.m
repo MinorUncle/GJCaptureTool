@@ -50,12 +50,14 @@ static  GJAudioSessionCenter* _gjAudioSession;
         if(![_activeRequest containsObject:key]){
             [_activeRequest addObject:key];
             if (_activeRequest.count ==1) {
+                NSLog(@"AVAudioSession setActive:%d",active);
                 result = [[AVAudioSession sharedInstance] setActive:active error:error];
             }
         }
     }else if([_activeRequest containsObject:key]){
         [_activeRequest removeObject:key];
         if (_activeRequest.count == 0) {
+            NSLog(@"AVAudioSession setActive:%d",active);
             result = [[AVAudioSession sharedInstance] setActive:active error:error];
         }
     }
@@ -73,6 +75,7 @@ static  GJAudioSessionCenter* _gjAudioSession;
         _category = AVAudioSessionCategoryPlayback;
     }
     if (![_category isEqualToString:[AVAudioSession sharedInstance].category]) {
+        NSLog(@"set audiosession category:%@  optations:%d",_category,_categoryOptions);
         return [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
     }
     return YES;
@@ -86,6 +89,7 @@ static  GJAudioSessionCenter* _gjAudioSession;
         _categoryOptions |= AVAudioSessionCategoryOptionAllowBluetooth;
     }
     if ([AVAudioSession sharedInstance].categoryOptions != _categoryOptions) {
+        NSLog(@"set audiosession category:%@ optations:%d",_category,_categoryOptions);
         return [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
     }
     return YES;

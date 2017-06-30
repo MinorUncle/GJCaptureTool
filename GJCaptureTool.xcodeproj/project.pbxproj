@@ -8,6 +8,14 @@
 
 /* Begin PBXBuildFile section */
 		046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
+		6A0200F31F0621EF00F4255B /* liblibairfloat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0200E81F0621E000F4255B /* liblibairfloat.a */; };
+		6A0201001F06227800F4255B /* raopsession.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FA1F06227800F4255B /* raopsession.h */; };
+		6A0201011F06227800F4255B /* rtprecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FB1F06227800F4255B /* rtprecorder.h */; };
+		6A0201021F06227800F4255B /* rtpsocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FC1F06227800F4255B /* rtpsocket.h */; };
+		6A0201031F06227800F4255B /* webserver.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FD1F06227800F4255B /* webserver.h */; };
+		6A0201041F06227800F4255B /* webserverconnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FE1F06227800F4255B /* webserverconnection.h */; };
+		6A0201051F06227800F4255B /* zeroconf.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FF1F06227800F4255B /* zeroconf.h */; };
+		6A0201091F0622D500F4255B /* raopserver.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0201081F0622D500F4255B /* raopserver.h */; };
 		6A40DFB91EE8DAE80047E0F0 /* libTheAmazingAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFB41EE8DA4D0047E0F0 /* libTheAmazingAudioEngine.a */; };
 		6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
 		6A40E1A51EEAA2D70047E0F0 /* AEPlaythroughChannel.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A40E1A41EEAA2D70047E0F0 /* AEPlaythroughChannel.h */; };
@@ -159,6 +167,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = AEDBBB451DC5B2C200FD72D5;
 			remoteInfo = CommonUtilites;
+		};
+		6A0200E71F0621E000F4255B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = A1D0DC501950378A004717F5;
+			remoteInfo = libairfloat;
 		};
 		6A0E86DF1E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -442,6 +457,14 @@
 		04D15F771E7E69CA005F6DDD /* GPUImageWhiteBalanceFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUImageWhiteBalanceFilter.h; sourceTree = "<group>"; };
 		04D15F781E7E69CA005F6DDD /* GPUImageXYDerivativeFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUImageXYDerivativeFilter.h; sourceTree = "<group>"; };
 		04D15F791E7E69CA005F6DDD /* GPUImageZoomBlurFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GPUImageZoomBlurFilter.h; sourceTree = "<group>"; };
+		6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libairfloat.xcodeproj; path = libairfloat/libairfloat.xcodeproj; sourceTree = "<group>"; };
+		6A0200FA1F06227800F4255B /* raopsession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = raopsession.h; path = libairfloat/libairfloat/raopsession.h; sourceTree = SOURCE_ROOT; };
+		6A0200FB1F06227800F4255B /* rtprecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rtprecorder.h; path = libairfloat/libairfloat/rtprecorder.h; sourceTree = SOURCE_ROOT; };
+		6A0200FC1F06227800F4255B /* rtpsocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rtpsocket.h; path = libairfloat/libairfloat/rtpsocket.h; sourceTree = SOURCE_ROOT; };
+		6A0200FD1F06227800F4255B /* webserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = webserver.h; path = libairfloat/libairfloat/webserver.h; sourceTree = SOURCE_ROOT; };
+		6A0200FE1F06227800F4255B /* webserverconnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = webserverconnection.h; path = libairfloat/libairfloat/webserverconnection.h; sourceTree = SOURCE_ROOT; };
+		6A0200FF1F06227800F4255B /* zeroconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zeroconf.h; path = libairfloat/libairfloat/zeroconf.h; sourceTree = SOURCE_ROOT; };
+		6A0201081F0622D500F4255B /* raopserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = raopserver.h; path = libairfloat/libairfloat/raopserver.h; sourceTree = SOURCE_ROOT; };
 		6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RtmpCode.xcodeproj; path = ../rtmpAndOpenssl/RtmpCode.xcodeproj; sourceTree = "<group>"; };
 		6A0E86F61E84E881002A2A2D /* amf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = amf.h; sourceTree = "<group>"; };
 		6A0E86F71E84E881002A2A2D /* dh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dh.h; sourceTree = "<group>"; };
@@ -682,6 +705,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6A0200F31F0621EF00F4255B /* liblibairfloat.a in Frameworks */,
 				6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */,
 				6A40DFB91EE8DAE80047E0F0 /* libTheAmazingAudioEngine.a in Frameworks */,
 				AE70A5571ECB50FA0009E49A /* GJLiveEngine.framework in Frameworks */,
@@ -981,6 +1005,28 @@
 				04D15F791E7E69CA005F6DDD /* GPUImageZoomBlurFilter.h */,
 			);
 			path = GPUImage;
+			sourceTree = "<group>";
+		};
+		6A0200DE1F0621E000F4255B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6A0200E81F0621E000F4255B /* liblibairfloat.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6A0200F91F06225700F4255B /* airfloat */ = {
+			isa = PBXGroup;
+			children = (
+				6A0200FA1F06227800F4255B /* raopsession.h */,
+				6A0201081F0622D500F4255B /* raopserver.h */,
+				6A0200FB1F06227800F4255B /* rtprecorder.h */,
+				6A0200FC1F06227800F4255B /* rtpsocket.h */,
+				6A0200FD1F06227800F4255B /* webserver.h */,
+				6A0200FE1F06227800F4255B /* webserverconnection.h */,
+				6A0200FF1F06227800F4255B /* zeroconf.h */,
+			);
+			name = airfloat;
 			sourceTree = "<group>";
 		};
 		6A0E86D01E84BE3E002A2A2D /* Products */ = {
@@ -1345,6 +1391,7 @@
 			isa = PBXGroup;
 			children = (
 				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
+				6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */,
 				6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */,
 				6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */,
 				0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */,
@@ -1370,6 +1417,7 @@
 		C561ABE91D51D3DC00113453 /* GJCaptureTool */ = {
 			isa = PBXGroup;
 			children = (
+				6A0200F91F06225700F4255B /* airfloat */,
 				6A40DFBA1EE8DB630047E0F0 /* TheAmazingAudioEngine */,
 				04D15EC71E7E69C9005F6DDD /* include */,
 				0460FD921E2862C700F5A308 /* PlayMediaSDK */,
@@ -1434,18 +1482,23 @@
 				6A85FA1F1F01FA990037A64F /* GJQueue.h in Headers */,
 				AE70A53B1ECB4DFE0009E49A /* GJLivePush.h in Headers */,
 				AE70A52B1ECB4DFE0009E49A /* GJAudioQueueRecoder.h in Headers */,
+				6A0201031F06227800F4255B /* webserver.h in Headers */,
 				AE70A5111ECB4DFE0009E49A /* GJLive.h in Headers */,
+				6A0201041F06227800F4255B /* webserverconnection.h in Headers */,
 				AE70A5131ECB4DFE0009E49A /* GJLiveDefine+internal.h in Headers */,
 				6A85FA281F02397F0037A64F /* GJAudioMixer.h in Headers */,
 				6AE37BC01ED5955500B049EB /* IOS_AudioDrivePlayer.h in Headers */,
 				6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */,
+				6A0201011F06227800F4255B /* rtprecorder.h in Headers */,
 				6A85FA1D1F01FA990037A64F /* GJLog.h in Headers */,
 				AE70A5101ECB4DFE0009E49A /* GJFormats.h in Headers */,
 				6A85FA211F01FA990037A64F /* GJRetainBuffer.h in Headers */,
+				6A0201021F06227800F4255B /* rtpsocket.h in Headers */,
 				6AE37BD91ED5956800B049EB /* GJLivePushContext.h in Headers */,
 				6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */,
 				AE70A51C1ECB4DFE0009E49A /* sps_decode.h in Headers */,
 				AE70A5171ECB4DFE0009E49A /* GJRtmpPush.h in Headers */,
+				6A0201051F06227800F4255B /* zeroconf.h in Headers */,
 				6AE37BC21ED5955500B049EB /* IOS_AudioProduce.h in Headers */,
 				AE70A5371ECB4DFE0009E49A /* GJLivePull.h in Headers */,
 				6AE37BBE1ED5955500B049EB /* IOS_AACEncode.h in Headers */,
@@ -1453,6 +1506,7 @@
 				6A85FA1B1F01FA990037A64F /* GJBufferPool.h in Headers */,
 				AE70A5271ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h in Headers */,
 				6AE37BD51ED5956800B049EB /* GJLivePlayer.h in Headers */,
+				6A0201001F06227800F4255B /* raopsession.h in Headers */,
 				6A85FA1E1F01FA990037A64F /* GJPlatformHeader.h in Headers */,
 				AE70A51F1ECB4DFE0009E49A /* AACEncoderFromPCM.h in Headers */,
 				6AB4F4981EF270D300FD4172 /* GJAudioSessionCenter.h in Headers */,
@@ -1464,6 +1518,7 @@
 				AE70A5311ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h in Headers */,
 				6AE37BC41ED5955500B049EB /* IOS_H264Decode.h in Headers */,
 				6AE37BC81ED5955500B049EB /* IOS_PictureDisplay.h in Headers */,
+				6A0201091F0622D500F4255B /* raopserver.h in Headers */,
 				6A85FA221F01FA990037A64F /* GJRetainBufferPool.h in Headers */,
 				AE70A5151ECB4DFE0009E49A /* GJRtmpPull.h in Headers */,
 				6AB4F4321EF0082200FD4172 /* GJFLVPack.h in Headers */,
@@ -1569,6 +1624,10 @@
 					ProjectRef = 045E4E121E343F3A00289523 /* GJQueue.xcodeproj */;
 				},
 				{
+					ProductGroup = 6A0200DE1F0621E000F4255B /* Products */;
+					ProjectRef = 6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */;
+				},
+				{
 					ProductGroup = 045C61A01E1CE4380047E673 /* Products */;
 					ProjectRef = 045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */;
 				},
@@ -1644,6 +1703,13 @@
 			fileType = archive.ar;
 			path = libCommonUtilites.a;
 			remoteRef = 0460FDBC1E28680E00F5A308 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A0200E81F0621E000F4255B /* liblibairfloat.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = liblibairfloat.a;
+			remoteRef = 6A0200E71F0621E000F4255B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		6A0E86E01E84BE3F002A2A2D /* RtmpCode.app */ = {

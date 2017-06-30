@@ -109,7 +109,6 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property(nonatomic,assign)BOOL horizontallyMirror;
 @property(nonatomic,assign)CGSize captureSize;
 @property(nonatomic,assign)int frameRate;
-
 @property(nonatomic,copy)VideoRecodeCallback callback;
 
 @end

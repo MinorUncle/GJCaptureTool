@@ -10,6 +10,7 @@
 #include "GJLog.h"
 #include "GJUtil.h"
 #include "GJLiveDefine.h"
+
 #include <unistd.h>
 #define I_P_RATE 4
 #define DROP_BITRATE_RATE 0.1
@@ -293,6 +294,25 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
         context->callback(context->userData,GJLivePush_updateNetQuality,&quality);
     }
 }
+
+static void* thread_pthread_head(void* ctx) {
+    
+    GJLivePushContext* context = ctx;
+    
+    struct raop_server_settings_t setting;
+    setting.name = GNULL;
+    setting.password = GNULL;
+    setting.ignore_source_volume = GFalse;
+    context->server = raop_server_create(setting);
+    if (!raop_server_is_running(context->server)) {
+        
+        uint16_t port = 5000;
+        while (port < 5010 && !raop_server_start(context->server, port++));
+    }
+    context->serverThread = GNULL;
+    pthread_exit(0);
+    
+}
 GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callback,GHandle param){
     GBool result = GFalse;
     do{
@@ -310,6 +330,9 @@ GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callb
         GJ_AACEncodeContextCreate(&context->audioEncoder);
         GJ_VideoProduceContextCreate(&context->videoProducer);
         GJ_AudioProduceContextCreate(&context->audioProducer);
+        
+      
+        pthread_create(&context->serverThread, GNULL, thread_pthread_head, context);
         pthread_mutex_init(&context->lock, GNULL);
     }while (0);
     return result;
@@ -496,6 +519,9 @@ GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
             free(context->pushConfig);
         }
         pthread_mutex_destroy(&context->lock);
+        if (context->serverThread) {
+            pthread_join(context->serverThread, GNULL);
+        }
         free(context);
         *pushContext = GNULL;
     }

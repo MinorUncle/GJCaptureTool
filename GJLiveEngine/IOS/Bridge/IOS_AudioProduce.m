@@ -26,7 +26,7 @@
 #import "AEPlaythroughChannel.h"
 #import "AEAudioSender.h"
 #import "GJAudioMixer.h"
-
+#import "AEBlockChannel.h"
 
 @interface GJAudioManager : NSObject<GJAudioMixerDelegate>
 {
@@ -37,6 +37,7 @@
 @property (nonatomic, retain)AEAudioFilePlayer* mixfilePlay;
 @property (nonatomic, retain)AEAudioController *audioController;
 @property (nonatomic, retain)GJAudioMixer* audioMixer;
+@property (nonatomic, retain)AEBlockChannel* blockPlay;
 
 @property (nonatomic, readonly) AEAudioReceiverCallback receiverCallback;
 
@@ -55,10 +56,17 @@
         }
         _audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat inputEnabled:YES];
         _audioController.useMeasurementMode = YES;
-//        _audioController.preferredBufferDuration = 0.015;
         _audioMixer = [[GJAudioMixer alloc]init];
         _audioMixer.delegate = self;
         [_audioController addInputReceiver:_audioMixer];
+        
+        _blockPlay = [AEBlockChannel channelWithBlock:^(const AudioTimeStamp *time, UInt32 frames, AudioBufferList *audio) {
+            for (int i = 0 ; i<audio->mNumberBuffers; i++) {
+                memset(audio->mBuffers[i].mData, 20, audio->mBuffers[i].mDataByteSize);
+            }
+            NSLog(@"block play time:%f",time->mSampleTime);
+        }];
+        [_audioController addChannels:@[_blockPlay]];
         GJRetainBufferPoolCreate(&_bufferPool, 0, GTrue, R_GJPCMFrameMalloc, GNULL);
     }
     return self;
