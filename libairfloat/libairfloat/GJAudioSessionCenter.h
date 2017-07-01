@@ -15,6 +15,7 @@
 
 -(BOOL)requestPlay:(BOOL)play key:(NSString*)key error:(NSError**)error;
 
+-(BOOL)requestSpeaker:(BOOL)speaker key:(NSString*)key error:(NSError**)error;
 -(BOOL)requestRecode:(BOOL)recode key:(NSString*)key error:(NSError**)error;
 -(BOOL)requestMix:(BOOL)mix key:(NSString*)key error:(NSError**)error;
 -(BOOL)requestBluetooth:(BOOL)bluetooth key:(NSString*)key error:(NSError**)error;

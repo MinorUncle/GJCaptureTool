@@ -1310,13 +1310,13 @@ void AEAudioControllerSendAsynchronousMessageToMainThread(__unsafe_unretained AE
 /*!
  * Get output power level information for a particular group, since this method was last called
  *
- * @param averagePower If not NULL, each element of the array on output will be set to the average power level of the most recent audio for each channel, in decibels
- * @param peakLevel If not NULL, each element of the array on output will be set to the peak level of the most recent audio for each channel, in decibels
+ * @param averagePowers If not NULL, each element of the array on output will be set to the average power level of the most recent audio for each channel, in decibels
+ * @param peakLevels If not NULL, each element of the array on output will be set to the peak level of the most recent audio for each channel, in decibels
  * @param group The channel group
  * @param channelCount specifies the number of channels to fill in the averagePowers and peakLevels array parameters
  */
 
-- (void)averagePowerLevels:(Float32*)averagePowers peakHoldLevels:(Float32*)peakLevels forGroup:(AEChannelGroupRef)group channelCount:(UInt32)count;
+- (void)averagePowerLevels:(Float32*)averagePowers peakHoldLevels:(Float32*)peakLevels forGroup:(AEChannelGroupRef)group channelCount:(UInt32)channelCount;
 
 /*!
  * Get input power level information since this method was last called

@@ -32,10 +32,10 @@
 #include <assert.h>
 #include <string.h>
 
-#include "Endian.h"
+#include "endian.h"
 #include "log.h"
 
-#include "DMAP.h"
+#include "dmap.h"
 
 struct dmap_atom_type {
     const uint32_t tag;
