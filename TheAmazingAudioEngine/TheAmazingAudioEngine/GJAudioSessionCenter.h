@@ -22,7 +22,7 @@
 
 -(BOOL)activeSession:(BOOL)active key:(NSString*)key error:(NSError**)error;
 -(BOOL)setPrefferSampleRate:(double)sampleRate error:(NSError**)error;
--(void)lockConfig;
--(void)unLockConfig;
+-(void)lockBeginConfig;
+-(void)unLockApplyConfig:(NSError**)error;
 
 @end

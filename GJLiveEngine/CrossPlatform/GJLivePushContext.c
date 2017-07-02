@@ -15,6 +15,11 @@
 #define I_P_RATE 4
 #define DROP_BITRATE_RATE 0.1
 
+static raop_server_p           server;
+static pthread_t               serverThread;
+static GBool                   requestStopServer;
+static GBool                   requestDestoryServer;
+
 static GVoid _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong step);
 static GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step);
 
@@ -297,19 +302,22 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
 
 static void* thread_pthread_head(void* ctx) {
     
-    GJLivePushContext* context = ctx;
-    
     struct raop_server_settings_t setting;
     setting.name = GNULL;
     setting.password = GNULL;
     setting.ignore_source_volume = GFalse;
-    context->server = raop_server_create(setting);
-    if (!raop_server_is_running(context->server)) {
+    if (server == GNULL) {
+        server = raop_server_create(setting);
+    }
+    if (!raop_server_is_running(server)) {
         
         uint16_t port = 5000;
-        while (port < 5010 && !raop_server_start(context->server, port++));
+        while (port < 5010 && !raop_server_start(server, port++));
     }
-    context->serverThread = GNULL;
+    if (requestStopServer) {
+        raop_server_stop(server);
+    }
+    serverThread = GNULL;
     pthread_exit(0);
     
 }
@@ -330,9 +338,6 @@ GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callb
         GJ_AACEncodeContextCreate(&context->audioEncoder);
         GJ_VideoProduceContextCreate(&context->videoProducer);
         GJ_AudioProduceContextCreate(&context->audioProducer);
-        
-      
-        pthread_create(&context->serverThread, GNULL, thread_pthread_head, context);
         pthread_mutex_init(&context->lock, GNULL);
     }while (0);
     return result;
@@ -379,7 +384,7 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             context->firstAudioEncodeClock = context->firstVideoEncodeClock = G_TIME_INVALID;
             context->connentClock = context->disConnentClock = context->stopPushClock = G_TIME_INVALID;
             context->startPushClock = GJ_Gettime()/1000;
-            
+
             if(context->videoProducer->obaque == GNULL){
                 GJVideoFormat vFormat = {0};
                 vFormat.mFps = context->pushConfig->mFps;
@@ -421,14 +426,21 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             context->videoEncoder->encodeSetGop(context->videoEncoder,10);
             context->videoEncoder->encodeAllowBFrame(context->videoEncoder,GTrue);
             context->videoEncoder->encodeSetEntropy(context->videoEncoder,EntropyMode_CABAC);
+            
             if(!GJRtmpPush_Create(&context->videoPush, rtmpPushMessageCallback, (GHandle)context)){
                 result = GFalse;
                 break;
             };
+            
             if(!GJRtmpPush_StartConnect(context->videoPush, url)){
                 result = GFalse;
                 break;
             };
+            
+            requestStopServer = GFalse;
+            if (serverThread == GNULL) {
+                pthread_create(&serverThread, GNULL, thread_pthread_head, context);
+            }
         }
     }while (0);
     pthread_mutex_unlock(&context->lock);
@@ -447,6 +459,12 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context){
         context->videoProducer->stopProduce(context->videoProducer);
         context->audioEncoder->encodeUnSetup(context->audioEncoder);
         context->videoEncoder->encodeUnSetup(context->videoEncoder);
+        
+        if (serverThread == GNULL) {
+            raop_server_stop(server);
+        }else{
+            requestStopServer = GTrue;
+        }
     }else{
         GJLOG(GJ_LOGWARNING, "重复停止推流流");
     }
@@ -519,8 +537,10 @@ GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
             free(context->pushConfig);
         }
         pthread_mutex_destroy(&context->lock);
-        if (context->serverThread) {
-            pthread_join(context->serverThread, GNULL);
+        if (serverThread == GNULL) {
+            raop_server_destroy(server);
+        }else{
+            requestDestoryServer = GTrue;
         }
         free(context);
         *pushContext = GNULL;

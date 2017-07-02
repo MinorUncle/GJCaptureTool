@@ -60,6 +60,10 @@
 		6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BCF1ED5956800B049EB /* GJLivePullContext.h */; };
 		6AE37BD81ED5956800B049EB /* GJLivePushContext.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AE37BD01ED5956800B049EB /* GJLivePushContext.c */; };
 		6AE37BD91ED5956800B049EB /* GJLivePushContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BD11ED5956800B049EB /* GJLivePushContext.h */; };
+		AE3634111F0810E000E3C0AD /* decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C341F07FE0400C24BAA /* decoder.h */; };
+		AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */ = {isa = PBXBuildFile; fileRef = AE3634131F08120600E3C0AD /* decoder_alac_apple.m */; };
+		AE3634161F08122100E3C0AD /* alac_format.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3634151F08122100E3C0AD /* alac_format.h */; };
+		AE3634181F08123B00E3C0AD /* endian.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3634171F08123B00E3C0AD /* endian.h */; };
 		AE3A2C171F07F69800C24BAA /* AirTunesPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C151F07F69800C24BAA /* AirTunesPlay.h */; };
 		AE3A2C181F07F69800C24BAA /* AirTunesPlay.m in Sources */ = {isa = PBXBuildFile; fileRef = AE3A2C161F07F69800C24BAA /* AirTunesPlay.m */; };
 		AE3A2C2C1F07F74500C24BAA /* GJAudioManager.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C2A1F07F74500C24BAA /* GJAudioManager.h */; };
@@ -67,7 +71,6 @@
 		AE3A2C2F1F07F8C200C24BAA /* audioqueue.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C2E1F07F8C200C24BAA /* audioqueue.h */; };
 		AE3A2C311F07F92700C24BAA /* AEBlockChannel.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C301F07F92700C24BAA /* AEBlockChannel.h */; };
 		AE3A2C331F07FDD900C24BAA /* audiooutput.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C321F07FDD900C24BAA /* audiooutput.h */; };
-		AE3A2C351F07FE0400C24BAA /* decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C341F07FE0400C24BAA /* decoder.h */; };
 		AE70A5101ECB4DFE0009E49A /* GJFormats.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4C91ECB4DFE0009E49A /* GJFormats.h */; };
 		AE70A5111ECB4DFE0009E49A /* GJLive.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4CA1ECB4DFE0009E49A /* GJLive.h */; };
 		AE70A5121ECB4DFE0009E49A /* GJLiveDefine+internal.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4CB1ECB4DFE0009E49A /* GJLiveDefine+internal.c */; };
@@ -161,20 +164,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = 04300FDA1E13669C0059262A;
 			remoteInfo = libQueue;
-		};
-		0460FDBA1E28680E00F5A308 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = AEDBBB271DC5B24E00FD72D5;
-			remoteInfo = DarwinStreamCode;
-		};
-		0460FDBC1E28680E00F5A308 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = AEDBBB451DC5B2C200FD72D5;
-			remoteInfo = CommonUtilites;
 		};
 		6A0200E71F0621E000F4255B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -284,7 +273,6 @@
 		0460FD9D1E2862C700F5A308 /* PlayMediaFormat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlayMediaFormat.cpp; sourceTree = "<group>"; };
 		0460FD9E1E2862C700F5A308 /* PlayMediaSDK.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlayMediaSDK.cpp; sourceTree = "<group>"; };
 		0460FD9F1E2862C700F5A308 /* PlayMediaSDK.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PlayMediaSDK.h; sourceTree = "<group>"; };
-		0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = DarwinStreamCode.xcodeproj; path = ../DarwinStreamingServerCode/DarwinStreamCode/DarwinStreamCode.xcodeproj; sourceTree = "<group>"; };
 		046F599D1E2E1C38007901EB /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
 		046F5B321E305714007901EB /* x264_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264_config.h; path = ../../../../x264Code/x264/include/x264_config.h; sourceTree = "<group>"; };
 		046F5B331E305714007901EB /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264.h; path = ../../../../x264Code/x264/include/x264.h; sourceTree = "<group>"; };
@@ -542,6 +530,9 @@
 		6AE37BD11ED5956800B049EB /* GJLivePushContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePushContext.h; sourceTree = "<group>"; };
 		6AE37BD21ED5956800B049EB /* Mp4Writer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Mp4Writer.c; sourceTree = "<group>"; };
 		6AE37BD31ED5956800B049EB /* Mp4Writer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp4Writer.h; sourceTree = "<group>"; };
+		AE3634131F08120600E3C0AD /* decoder_alac_apple.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = decoder_alac_apple.m; sourceTree = "<group>"; };
+		AE3634151F08122100E3C0AD /* alac_format.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = alac_format.h; path = libairfloat/libairfloat/alac_format.h; sourceTree = SOURCE_ROOT; };
+		AE3634171F08123B00E3C0AD /* endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = endian.h; path = libairfloat/libairfloat/endian.h; sourceTree = SOURCE_ROOT; };
 		AE3A2C151F07F69800C24BAA /* AirTunesPlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AirTunesPlay.h; sourceTree = "<group>"; };
 		AE3A2C161F07F69800C24BAA /* AirTunesPlay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AirTunesPlay.m; sourceTree = "<group>"; };
 		AE3A2C2A1F07F74500C24BAA /* GJAudioManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioManager.h; sourceTree = "<group>"; };
@@ -812,15 +803,6 @@
 			path = PlayMediaSDK;
 			sourceTree = "<group>";
 		};
-		0460FDB61E28680E00F5A308 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				0460FDBB1E28680E00F5A308 /* DarwinStreamCode.app */,
-				0460FDBD1E28680E00F5A308 /* libCommonUtilites.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		04D15EC71E7E69C9005F6DDD /* include */ = {
 			isa = PBXGroup;
 			children = (
@@ -1034,12 +1016,14 @@
 		6A0200F91F06225700F4255B /* airfloat */ = {
 			isa = PBXGroup;
 			children = (
+				AE3634151F08122100E3C0AD /* alac_format.h */,
 				AE3A2C2E1F07F8C200C24BAA /* audioqueue.h */,
 				6A0200FA1F06227800F4255B /* raopsession.h */,
 				AE3A2C341F07FE0400C24BAA /* decoder.h */,
 				6A0201081F0622D500F4255B /* raopserver.h */,
 				AE3A2C321F07FDD900C24BAA /* audiooutput.h */,
 				6A0200FB1F06227800F4255B /* rtprecorder.h */,
+				AE3634171F08123B00E3C0AD /* endian.h */,
 				6A0200FC1F06227800F4255B /* rtpsocket.h */,
 				6A0200FD1F06227800F4255B /* webserver.h */,
 				6A0200FE1F06227800F4255B /* webserverconnection.h */,
@@ -1236,6 +1220,7 @@
 				AE70A4DF1ECB4DFE0009E49A /* AudioPraseStream.m */,
 				AE70A4E01ECB4DFE0009E49A /* AudioUnitCapture.h */,
 				AE70A4E11ECB4DFE0009E49A /* AudioUnitCapture.m */,
+				AE3634131F08120600E3C0AD /* decoder_alac_apple.m */,
 				AE70A4E21ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h */,
 				AE70A4E31ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m */,
 				AE70A4E41ECB4DFE0009E49A /* GJAudioQueuePlayer.h */,
@@ -1420,7 +1405,6 @@
 				6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */,
 				0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */,
 				045E4E121E343F3A00289523 /* GJQueue.xcodeproj */,
-				0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */,
 				045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */,
 				C561ABE91D51D3DC00113453 /* GJCaptureTool */,
 				AE70A4C51ECB4DFE0009E49A /* GJLiveEngine */,
@@ -1512,6 +1496,7 @@
 				AE3A2C2F1F07F8C200C24BAA /* audioqueue.h in Headers */,
 				AE70A5131ECB4DFE0009E49A /* GJLiveDefine+internal.h in Headers */,
 				6A85FA281F02397F0037A64F /* GJAudioMixer.h in Headers */,
+				AE3634161F08122100E3C0AD /* alac_format.h in Headers */,
 				6AE37BC01ED5955500B049EB /* IOS_AudioDrivePlayer.h in Headers */,
 				6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */,
 				6A0201011F06227800F4255B /* rtprecorder.h in Headers */,
@@ -1540,6 +1525,7 @@
 				6A85FA1C1F01FA990037A64F /* GJBufferPool+cplus.h in Headers */,
 				AE70A5141ECB4DFE0009E49A /* GJLiveDefine.h in Headers */,
 				AE70A51A1ECB4DFE0009E49A /* GJUtil.h in Headers */,
+				AE3634181F08123B00E3C0AD /* endian.h in Headers */,
 				AE70A53F1ECB4DFE0009E49A /* GJH264Encoder.h in Headers */,
 				AE70A5311ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h in Headers */,
 				6AE37BC41ED5955500B049EB /* IOS_H264Decode.h in Headers */,
@@ -1550,7 +1536,7 @@
 				6A85FA221F01FA990037A64F /* GJRetainBufferPool.h in Headers */,
 				AE70A5151ECB4DFE0009E49A /* GJRtmpPull.h in Headers */,
 				6AB4F4321EF0082200FD4172 /* GJFLVPack.h in Headers */,
-				AE3A2C351F07FE0400C24BAA /* decoder.h in Headers */,
+				AE3634111F0810E000E3C0AD /* decoder.h in Headers */,
 				6A85FA201F01FA990037A64F /* GJQueue+cplus.h in Headers */,
 				AE70A5391ECB4DFE0009E49A /* GJLivePush+advanced.h in Headers */,
 				AE3A2C331F07FDD900C24BAA /* audiooutput.h in Headers */,
@@ -1642,10 +1628,6 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 0460FDB61E28680E00F5A308 /* Products */;
-					ProjectRef = 0460FDB51E28680E00F5A308 /* DarwinStreamCode.xcodeproj */;
-				},
-				{
 					ProductGroup = 0417FED81E5ECB8C00D5B5D9 /* Products */;
 					ProjectRef = 0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */;
 				},
@@ -1719,20 +1701,6 @@
 			fileType = archive.ar;
 			path = liblibQueue.a;
 			remoteRef = 045E4E191E343F3A00289523 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		0460FDBB1E28680E00F5A308 /* DarwinStreamCode.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = DarwinStreamCode.app;
-			remoteRef = 0460FDBA1E28680E00F5A308 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		0460FDBD1E28680E00F5A308 /* libCommonUtilites.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libCommonUtilites.a;
-			remoteRef = 0460FDBC1E28680E00F5A308 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		6A0200E81F0621E000F4255B /* liblibairfloat.a */ = {
@@ -1852,6 +1820,7 @@
 				6AE37BC71ED5955500B049EB /* IOS_H264Encode.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
 				AE70A5401ECB4DFE0009E49A /* GJH264Encoder.m in Sources */,
+				AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */,
 				6AE37BD41ED5956800B049EB /* GJLivePlayer.c in Sources */,
 				AE70A5321ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m in Sources */,
 				AE70A5181ECB4DFE0009E49A /* GJRtmpPush.m in Sources */,

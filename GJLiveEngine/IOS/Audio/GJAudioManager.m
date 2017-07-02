@@ -25,12 +25,6 @@ static GJAudioManager* _staticManager;
         if (error != nil) {
             GJLOG(GJ_LOGERROR, "setPrefferSampleRate error:%s",error.description.UTF8String);
         }
-        [[GJAudioSessionCenter shareSession] lockConfig];
-        [[GJAudioSessionCenter shareSession]requestPlay:YES key:self.description error:&error];
-        [[GJAudioSessionCenter shareSession]requestRecode:YES key:self.description error:&error];
-        [[GJAudioSessionCenter shareSession]requestDefaultToSpeaker:YES key:self.description error:&error];
-        [[GJAudioSessionCenter shareSession]requestAllowAirPlay:YES key:self.description error:&error];
-        [[GJAudioSessionCenter shareSession] unLockConfig];
         _audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat inputEnabled:YES];
         _audioController.useMeasurementMode = YES;
         _audioMixer = [[GJAudioMixer alloc]init];
@@ -66,6 +60,16 @@ static GJAudioManager* _staticManager;
 }
 
 -(BOOL)startRecode:(NSError**)error{
+    NSError* configError;
+    [[GJAudioSessionCenter shareSession] lockBeginConfig];
+    [[GJAudioSessionCenter shareSession]requestPlay:YES key:self.description error:&configError];
+    [[GJAudioSessionCenter shareSession]requestRecode:YES key:self.description error:&configError];
+    [[GJAudioSessionCenter shareSession]requestDefaultToSpeaker:YES key:self.description error:&configError];
+    [[GJAudioSessionCenter shareSession]requestAllowAirPlay:YES key:self.description error:&configError];
+    [[GJAudioSessionCenter shareSession] unLockApplyConfig:&configError];
+    if (configError) {
+        GJLOG(GJ_LOGERROR, "Apply audio session Config error:%@",configError.description.UTF8String);
+    }
     if (![_audioController start:error]) {
         GJLOG(GJ_LOGERROR, "AEAudioController start error:%@",(*error).description.UTF8String);
     }
@@ -73,6 +77,16 @@ static GJAudioManager* _staticManager;
 }
 -(void)stopRecode{
     [_audioController stop];
+    NSError* configError;
+    [[GJAudioSessionCenter shareSession] lockBeginConfig];
+    [[GJAudioSessionCenter shareSession]requestPlay:NO key:self.description error:nil];
+    [[GJAudioSessionCenter shareSession]requestRecode:NO key:self.description error:nil];
+    [[GJAudioSessionCenter shareSession]requestDefaultToSpeaker:NO key:self.description error:nil];
+    [[GJAudioSessionCenter shareSession]requestAllowAirPlay:NO key:self.description error:nil];
+    [[GJAudioSessionCenter shareSession] unLockApplyConfig:&configError];
+    if (configError) {
+        GJLOG(GJ_LOGERROR, "Apply audio session Config error:%@",configError.description.UTF8String);
+    }
 }
 -(AEPlaythroughChannel *)playthrough{
     if (_playthrough == nil) {
@@ -160,11 +174,6 @@ static GJAudioManager* _staticManager;
     }
     [_audioController removeChannels:play];
     
-    [[GJAudioSessionCenter shareSession] lockConfig];
-    [[GJAudioSessionCenter shareSession]requestPlay:NO key:self.description error:nil];
-    [[GJAudioSessionCenter shareSession]requestRecode:NO key:self.description error:nil];
-    [[GJAudioSessionCenter shareSession]requestDefaultToSpeaker:NO key:self.description error:nil];
-    [[GJAudioSessionCenter shareSession]requestAllowAirPlay:NO key:self.description error:nil];
-    [[GJAudioSessionCenter shareSession] unLockConfig];
+ 
 }
 @end

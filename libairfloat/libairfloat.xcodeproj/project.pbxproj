@@ -25,7 +25,6 @@
 		A1D0DC88195037EE004717F5 /* thread_posix.c in Sources */ = {isa = PBXBuildFile; fileRef = A14583AA16DAE43400911FE6 /* thread_posix.c */; };
 		A1D0DC89195037FD004717F5 /* alac.c in Sources */ = {isa = PBXBuildFile; fileRef = A19E4B0C16CA95AC00E5D60F /* alac.c */; };
 		A1D0DC8A195037FD004717F5 /* alac_format.c in Sources */ = {isa = PBXBuildFile; fileRef = A1E9741116DBB24D000AD9E4 /* alac_format.c */; };
-		A1D0DC8C195037FD004717F5 /* decoder.c in Sources */ = {isa = PBXBuildFile; fileRef = A1E9740816DBAE79000AD9E4 /* decoder.c */; };
 		A1D0DC8E19503826004717F5 /* audioqueue.c in Sources */ = {isa = PBXBuildFile; fileRef = A19E4AF616CA959700E5D60F /* audioqueue.c */; };
 		A1D0DC8F1950382F004717F5 /* zeroconf_apple.c in Sources */ = {isa = PBXBuildFile; fileRef = A150076016ED019900B1A877 /* zeroconf_apple.c */; };
 		A1D0DC9019503833004717F5 /* socket.c in Sources */ = {isa = PBXBuildFile; fileRef = A19E4B1116CA95C900E5D60F /* socket.c */; };
@@ -47,9 +46,9 @@
 		A1D0DCAC19504234004717F5 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1D0DCAB19504234004717F5 /* AVFoundation.framework */; };
 		A1EB94051DD7C05B00ED8159 /* crypt_cc.c in Sources */ = {isa = PBXBuildFile; fileRef = A1FE60E21B7BFB6500C314ED /* crypt_cc.c */; };
 		A1EB940B1DD7E33100ED8159 /* decoder_alac_other.c in Sources */ = {isa = PBXBuildFile; fileRef = A1E9740E16DBAEAA000AD9E4 /* decoder_alac_other.c */; };
-		A1EB940C1DD7E33800ED8159 /* decoder_alac_apple.c in Sources */ = {isa = PBXBuildFile; fileRef = A1E9740C16DBAE9B000AD9E4 /* decoder_alac_apple.c */; };
 		A1EB940D1DD7E35600ED8159 /* crypt_openssl.c in Sources */ = {isa = PBXBuildFile; fileRef = A179A2FE16DC275F00A1E58F /* crypt_openssl.c */; };
 		A1FE60E81B7BFD9800C314ED /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A1FE60E71B7BFD9800C314ED /* Security.framework */; };
+		AE3634121F08110700E3C0AD /* decoder.c in Sources */ = {isa = PBXBuildFile; fileRef = A1E9740816DBAE79000AD9E4 /* decoder.c */; };
 		C80FE37F1C83F56D00E4A847 /* DeviceIDRetriver.m in Sources */ = {isa = PBXBuildFile; fileRef = C80FE37D1C83F56D00E4A847 /* DeviceIDRetriver.m */; };
 /* End PBXBuildFile section */
 
@@ -496,6 +495,7 @@
 				A1D0DC951950383D004717F5 /* webtools.c in Sources */,
 				A1EB94051DD7C05B00ED8159 /* crypt_cc.c in Sources */,
 				A1D0DCA01950384F004717F5 /* rtprecorder.c in Sources */,
+				AE3634121F08110700E3C0AD /* decoder.c in Sources */,
 				A1D0DC9019503833004717F5 /* socket.c in Sources */,
 				A1D0DCA11950384F004717F5 /* raopsession.c in Sources */,
 				A1D0DC971950383D004717F5 /* webresponse.c in Sources */,
@@ -503,7 +503,6 @@
 				A1D0DC9119503833004717F5 /* sockaddr.c in Sources */,
 				A1D0DC921950383D004717F5 /* webclientconnection.c in Sources */,
 				A1D0DC89195037FD004717F5 /* alac.c in Sources */,
-				A1D0DC8C195037FD004717F5 /* decoder.c in Sources */,
 				C80FE37F1C83F56D00E4A847 /* DeviceIDRetriver.m in Sources */,
 				A1D0DC85195037EE004717F5 /* log.c in Sources */,
 				A1D0DC81195037EE004717F5 /* base64.c in Sources */,
@@ -512,7 +511,6 @@
 				A1D0DC86195037EE004717F5 /* mutex_posix.c in Sources */,
 				A1EB940D1DD7E35600ED8159 /* crypt_openssl.c in Sources */,
 				A1D0DC941950383D004717F5 /* webserver.c in Sources */,
-				A1EB940C1DD7E33800ED8159 /* decoder_alac_apple.c in Sources */,
 				A1D0DC8F1950382F004717F5 /* zeroconf_apple.c in Sources */,
 				A1D0DC8E19503826004717F5 /* audioqueue.c in Sources */,
 				A1D0DC87195037EE004717F5 /* condition_posix.c in Sources */,

@@ -69,9 +69,6 @@ typedef struct _GJLivePushContext{
     
     GBool                   audioMute;
     GBool                   videoMute;
-    
-    raop_server_p           server;
-    pthread_t               serverThread;
 }GJLivePushContext;
 
 GBool GJLivePush_Create(GJLivePushContext** context,GJLivePushCallback callback,GHandle param);

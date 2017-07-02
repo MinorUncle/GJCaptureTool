@@ -224,11 +224,11 @@ static  GJAudioSessionCenter* _gjAudioSession;
     return [[AVAudioSession sharedInstance]setPreferredSampleRate:sampleRate error:error];
 
 }
--(void)lockConfig{
+-(void)lockBeginConfig{
     _lock = YES;
 }
--(void)unLockConfig{
+-(void)unLockApplyConfig:(NSError**)error{
     _lock = NO;
-    [self updateCategoryOptionsWithError:nil];
+    [self updateCategoryOptionsWithError:error];
 }
 @end
