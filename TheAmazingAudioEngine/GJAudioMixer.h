@@ -11,7 +11,7 @@
 #import "AEAudioController.h"
 
 
-//#define ENABLE_IGNORE
+#define ENABLE_IGNORE
 @protocol GJAudioMixerDelegate <NSObject>
 
 -(void)audioMixerProduceFrameWith:(AudioBufferList*)frame time:(int64_t)time;

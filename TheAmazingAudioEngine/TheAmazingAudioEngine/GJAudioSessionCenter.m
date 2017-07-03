@@ -29,8 +29,24 @@ static  GJAudioSessionCenter* _gjAudioSession;
 +(instancetype)shareSession{
     if (_gjAudioSession == nil) {
         _gjAudioSession = [[GJAudioSessionCenter alloc]init];
+        [[NSNotificationCenter defaultCenter]addObserver:_gjAudioSession selector:@selector(receiveNotification:) name:AVAudioSessionRouteChangeNotification object:nil];
     }
     return _gjAudioSession;
+}
+-(void)receiveNotification:(NSNotification*)notic{
+   AVAudioSessionRouteChangeReason reason = [notic.userInfo[AVAudioSessionRouteChangeReasonKey] longValue];
+    NSError* error;
+    if (reason == AVAudioSessionRouteChangeReasonNewDeviceAvailable) {
+        [[AVAudioSession sharedInstance]overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:&error];
+        NSLog(@"override out to none result:%@",error);
+        
+    }else if (reason == AVAudioSessionRouteChangeReasonOldDeviceUnavailable){
+        
+        [[AVAudioSession sharedInstance]overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&error];
+        NSLog(@"override out to speaker result:%@",error);
+    }
+
+
 }
 +(instancetype)allocWithZone:(struct _NSZone *)zone{
     if (_gjAudioSession == nil) {

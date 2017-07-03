@@ -1,4 +1,4 @@
-//
+ //
 //  GJAudioManager.m
 //  GJCaptureTool
 //
@@ -27,9 +27,11 @@ static GJAudioManager* _staticManager;
         }
         _audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat inputEnabled:YES];
         _audioController.useMeasurementMode = YES;
+        [_audioController setPreferredBufferDuration:0.023];
         _audioMixer = [[GJAudioMixer alloc]init];
         _audioMixer.delegate = self;
         [_audioController addInputReceiver:_audioMixer];
+        _staticManager = self;
         self.mixToSream = YES;
         
         //        _blockPlay = [AEBlockChannel channelWithBlock:^(const AudioTimeStamp *time, UInt32 frames, AudioBufferList *audio) {
@@ -107,14 +109,10 @@ static GJAudioManager* _staticManager;
 }
 -(void)setMixToSream:(BOOL)mixToSream{
     _mixToSream = mixToSream;
-    if (_mixfilePlay) {
-        if (_mixToSream) {
-            [_audioController addOutputReceiver:_audioMixer];
-            //        [_audioMixer removeIgnoreSource:_audioController.topGroup];
-        }else{
-            //        [_audioMixer addIgnoreSource:_audioController.topGroup];
-            [_audioController removeOutputReceiver:_audioMixer];
-        }
+    if (_mixToSream) {
+        [_audioMixer removeIgnoreSource:_audioController.topGroup];
+    }else{
+        [_audioMixer addIgnoreSource:_audioController.topGroup];
     }
 }
 -(BOOL)setMixFile:(NSURL*)file{
@@ -135,9 +133,7 @@ static GJAudioManager* _staticManager;
             [wkAE removeOutputReceiver:wkM];
         };
         [_audioController addChannels:@[_mixfilePlay]];
-        if (_mixToSream) {
-            [_audioController addOutputReceiver:_audioMixer];
-        }
+        [_audioController addOutputReceiver:_audioMixer];
         return GTrue;
     }
 }

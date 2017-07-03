@@ -135,19 +135,19 @@ dispatch_block_t helperBackgroundTaskBlock = ^{
     });
 }
 - (void)applicationDidEnterBackground:(UIApplication *)application {
-    NSLog(@"handleBackgroundTasks called");
-    UIDevice *device = [UIDevice currentDevice];
-    BOOL backgroundSupported = NO;
-    if ([device respondsToSelector:@selector(isMultitaskingSupported)]) {
-        backgroundSupported = device.multitaskingSupported;
-    }
-    if (backgroundSupported) { // perform a background task
-        
-        [self setBackgroundTaskTimeLimit];
-        [self doBackgroundTaskAsync:@selector(keepAlive)];
-        [self performSelector:@selector(doBackgroundTaskAsync:) withObject:nil afterDelay:[self getBackgroundTaskStartupDelay]];
-        
-    }
+//    NSLog(@"handleBackgroundTasks called");
+//    UIDevice *device = [UIDevice currentDevice];
+//    BOOL backgroundSupported = NO;
+//    if ([device respondsToSelector:@selector(isMultitaskingSupported)]) {
+//        backgroundSupported = device.multitaskingSupported;
+//    }
+//    if (backgroundSupported) { // perform a background task
+//        
+//        [self setBackgroundTaskTimeLimit];
+//        [self doBackgroundTaskAsync:@selector(keepAlive)];
+//        [self performSelector:@selector(doBackgroundTaskAsync:) withObject:nil afterDelay:[self getBackgroundTaskStartupDelay]];
+//        
+//    }
     // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
 }
@@ -166,10 +166,10 @@ dispatch_block_t helperBackgroundTaskBlock = ^{
     NSLog(@"keepAlive");
 }
 - (void)applicationWillEnterForeground:(UIApplication *)application {
-    NSLog(@"handleForegroundTasks called");
-    [self resetBackgroundTaskCount];
-    [self stopHelperBackgroundTask];
-    [self stopBackgroundTask];
+//    NSLog(@"handleForegroundTasks called");
+//    [self resetBackgroundTaskCount];
+//    [self stopHelperBackgroundTask];
+//    [self stopBackgroundTask];
 
     // Called as part of the transition from the background to the inactive state; here you can undo many of the changes made on entering the background.
 }

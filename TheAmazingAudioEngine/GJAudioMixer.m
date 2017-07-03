@@ -21,7 +21,7 @@
     AudioStreamBasicDescription     _clientFormat;
     AudioBufferList*                _reanderBufferList;
     AudioBufferList*                _inputSourcBufferCache[MAX_MIX_COUNT];
-    
+    UInt32                          _bytePerFrame;
     
     int                             _listenIntputCount;//add的source个数
     UInt32                          _elementCount;
@@ -230,7 +230,18 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
     AudioTimeStamp renderTimestamp = {0};
     renderTimestamp.mFlags = kAudioTimeStampSampleTimeValid;
     renderTimestamp.mSampleTime = (Float64)_mixCount;
-    OSStatus result = AudioUnitRender(_mixerUnit, &flags, &renderTimestamp, 0, frames, _reanderBufferList);
+    OSStatus result = noErr;
+    if (frames %2 == 1) {
+        frames--;
+        result = AudioUnitRender(_mixerUnit, &flags, &renderTimestamp, 0, frames, _reanderBufferList);
+//        for (int i = 0; i<_reanderBufferList->mNumberBuffers; i++) {
+//            memset(_reanderBufferList->mBuffers[0].mData+_reanderBufferList->mBuffers[0].mDataByteSize,0, _bytePerFrame);
+//            _reanderBufferList->mBuffers[0].mDataByteSize += _bytePerFrame;
+//        }
+
+    }else{
+        result = AudioUnitRender(_mixerUnit, &flags, &renderTimestamp, 0, frames, _reanderBufferList);
+    }
     if (result != noErr) {
         NSLog(@"AudioUnitRender error:%d",result);
     }else{
@@ -266,6 +277,7 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
         for (int i = 0; i<MAX_MIX_COUNT; i++) {
             _inputSourcBufferCache[i] = AEAudioBufferListCreate(_clientFormat, 4096);
         }
+        _bytePerFrame = audioController.audioDescription.mBytesPerFrame;
     }
     if (_listenIntputCount < MAX_MIX_COUNT) {
         _listenIntputCount++;
@@ -348,6 +360,7 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
     if (_elementCount == counts) {
         return YES;
     }
+
     _needUpdateSource = NO;
     _elementCount = counts;
     if ( !AECheckOSStatus(AudioUnitSetProperty(_mixerUnit, kAudioUnitProperty_ElementCount, kAudioUnitScope_Input, 0, &_elementCount, sizeof(_elementCount)),
@@ -416,6 +429,10 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
         for (int i = 0; i<MAX_MIX_COUNT; i++) {
             AEAudioBufferListFree(_inputSourcBufferCache[i]);
         }
+    }
+    if (_graph) {
+        AUGraphClose(_graph);
+        DisposeAUGraph(_graph);
     }
 }
 @end
