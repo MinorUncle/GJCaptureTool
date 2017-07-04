@@ -12,6 +12,7 @@
 		6A0200F61F06224500F4255B /* rtpsocket.h in Copy Files */ = {isa = PBXBuildFile; fileRef = A1D490C016D4EB000082AFDD /* rtpsocket.h */; };
 		6A0200F71F06224500F4255B /* rtprecorder.h in Copy Files */ = {isa = PBXBuildFile; fileRef = A150075816E94BEF00B1A877 /* rtprecorder.h */; };
 		6A0200F81F06224500F4255B /* raopserver.c in Copy Files */ = {isa = PBXBuildFile; fileRef = A150074916E8E87B00B1A877 /* raopserver.c */; };
+		6ABF2B8C1F0B7E1D00721DB3 /* rvopserver.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B8A1F0B7E1D00721DB3 /* rvopserver.c */; };
 		A12364281B7C111100E1605D /* hex.c in Sources */ = {isa = PBXBuildFile; fileRef = A12364261B7C111100E1605D /* hex.c */; };
 		A123642C1B7C15FC00E1605D /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CF856416F3C02B009114B2 /* libcrypto.a */; };
 		A1D0DC80195037EE004717F5 /* hardware_apple.c in Sources */ = {isa = PBXBuildFile; fileRef = A150B60D16E6A03800C369C5 /* hardware_apple.c */; };
@@ -74,6 +75,8 @@
 		4898F9F213CDAAD1006EC97E /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		4898F9F413CDAAD1006EC97E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		6ABAA98F1F0628AE000AA764 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
+		6ABF2B8A1F0B7E1D00721DB3 /* rvopserver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rvopserver.c; sourceTree = "<group>"; };
+		6ABF2B8B1F0B7E1D00721DB3 /* rvopserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rvopserver.h; sourceTree = "<group>"; };
 		A12364261B7C111100E1605D /* hex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hex.c; sourceTree = "<group>"; };
 		A12364271B7C111100E1605D /* hex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hex.h; sourceTree = "<group>"; };
 		A14583A916DAE42900911FE6 /* thread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = thread.h; sourceTree = "<group>"; };
@@ -323,6 +326,8 @@
 				A150075216E935A500B1A877 /* raopsession.c */,
 				A150074816E8E86C00B1A877 /* raopserver.h */,
 				A150074916E8E87B00B1A877 /* raopserver.c */,
+				6ABF2B8A1F0B7E1D00721DB3 /* rvopserver.c */,
+				6ABF2B8B1F0B7E1D00721DB3 /* rvopserver.h */,
 			);
 			name = Server;
 			sourceTree = "<group>";
@@ -516,6 +521,7 @@
 				A1D0DC87195037EE004717F5 /* condition_posix.c in Sources */,
 				A1D0DCA319503854004717F5 /* dacpclient.c in Sources */,
 				A1D0DC84195037EE004717F5 /* parameters.c in Sources */,
+				6ABF2B8C1F0B7E1D00721DB3 /* rvopserver.c in Sources */,
 				A1D0DC961950383D004717F5 /* webheaders.c in Sources */,
 				A1D0DC9F1950384F004717F5 /* rtpsocket.c in Sources */,
 				A1D0DC83195037EE004717F5 /* dmap.c in Sources */,

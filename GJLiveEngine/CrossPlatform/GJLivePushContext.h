@@ -9,8 +9,14 @@
 #ifndef GJLivePushContext_h
 #define GJLivePushContext_h
 #include "webserver.h"
-#include "raopserver.h"
+#define RAOP
 
+#ifdef RAOP
+#include "raopserver.h"
+#endif
+#ifdef RVOP
+#include "rvopserver.h"
+#endif
 #include <stdio.h>
 #include "GJPlatformHeader.h"
 #include "GJRtmpPush.h"

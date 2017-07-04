@@ -53,6 +53,14 @@ struct zeroconf_raop_ad_t {
     condition_p condition;
     uint16_t port;
 };
+struct zeroconf_rvop_ad_t {
+    CFNetServiceRef service;
+    CFRunLoopRef run_loop;
+    thread_p thread;
+    mutex_p mutex;
+    condition_p condition;
+    uint16_t port;
+};
 
 void zeroconf_raop_ad_destroy(struct zeroconf_raop_ad_t* za);
 
@@ -103,6 +111,53 @@ void _zeroconf_raop_ad_run_loop_thread(void* ctx) {
     
 }
 
+zeroconf_rvop_ad_p zeroconf_rvop_ad_create(uint16_t port, const char* name){
+    struct zeroconf_rvop_ad_t* za = (struct zeroconf_rvop_ad_t*)malloc(sizeof(struct zeroconf_rvop_ad_t));
+    
+    CFStringRef service_name = CFStringCreateWithCString(kCFAllocatorDefault, name, kCFStringEncodingASCII);
+    uint64_t hardware_id = hardware_identifier();
+    
+    uint8_t* hardware_chars = (uint8_t*)&hardware_id;
+    
+    CFStringRef hardware_identifier = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%02X:%02X:%02X:%02X:%02X:%02X"), hardware_chars[2], hardware_chars[3], hardware_chars[4], hardware_chars[5], hardware_chars[6], hardware_chars[7]);
+    
+//    CFStringRef combined_name = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@@%@"), hardware_identifier, service_name);
+    
+    za->service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_airplay._tcp."),service_name, port);
+    za->port = port;
+    
+    
+    CFUUIDRef puuid = CFUUIDCreate( nil );
+    CFStringRef uuidString = CFUUIDCreateString( nil, puuid );
+    CFRelease(puuid);
+    
+    CFStringRef keys[] = { CFSTR("vv"), CFSTR("model"), CFSTR("srcvers"), CFSTR("flags"),CFSTR("features"), CFSTR("pi"), CFSTR("pk"),CFSTR("deviceid")};
+    CFStringRef values[] = { CFSTR("2"), CFSTR("AppleTV3,2"), CFSTR("220.68"), CFSTR("0x44"), CFSTR("0x5A7FFFF7,0xE"), uuidString, CFSTR("dd820b76333c9ccee0ed42d2abbba6de59025ed432e22727422ccbd604147b18"),hardware_identifier};
+    
+    CFDictionaryRef txt_dictionary = CFDictionaryCreate(kCFAllocatorDefault, (const void**)&keys, (const void**)&values, 8, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    CFDataRef txt_data = CFNetServiceCreateTXTDataWithDictionary(kCFAllocatorDefault, txt_dictionary);
+    
+    CFNetServiceSetTXTData(za->service, txt_data);
+    
+    za->mutex = mutex_create();
+    za->condition = condition_create();
+    
+    mutex_lock(za->mutex);
+    za->thread = thread_create_a(_zeroconf_raop_ad_run_loop_thread, za);
+    condition_wait(za->condition, za->mutex);
+    mutex_unlock(za->mutex);
+    
+    log_message(LOG_INFO, "_airplay configured");
+    
+    CFRelease(txt_data);
+    CFRelease(txt_dictionary);
+//    CFRelease(combined_name);
+    CFRelease(hardware_identifier);
+    CFRelease(service_name);
+    CFRelease(uuidString);
+    
+    return za;
+}
 struct zeroconf_raop_ad_t* zeroconf_raop_ad_create(uint16_t port, const char *name) {
     
     struct zeroconf_raop_ad_t* za = (struct zeroconf_raop_ad_t*)malloc(sizeof(struct zeroconf_raop_ad_t));
@@ -146,7 +201,21 @@ struct zeroconf_raop_ad_t* zeroconf_raop_ad_create(uint16_t port, const char *na
     return za;
     
 }
-
+void zeroconf_rvop_ad_destroy(struct zeroconf_rvop_ad_t* za) {
+    
+    CFRunLoopStop(za->run_loop);
+    
+    condition_destroy(za->condition);
+    mutex_destroy(za->mutex);
+    thread_join(za->thread);
+    
+    CFRelease(za->service);
+    
+    thread_destroy(za->thread);
+    
+    free(za);
+    
+}
 void zeroconf_raop_ad_destroy(struct zeroconf_raop_ad_t* za) {
     
     CFRunLoopStop(za->run_loop);

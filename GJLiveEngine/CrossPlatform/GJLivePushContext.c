@@ -15,7 +15,12 @@
 #define I_P_RATE 4
 #define DROP_BITRATE_RATE 0.1
 
+#ifdef RVOP
+static rvop_server_p           rvopserver;
+#endif
+#ifdef RAOP
 static raop_server_p           server;
+#endif
 static pthread_t               serverThread;
 static GBool                   requestStopServer;
 static GBool                   requestDestoryServer;
@@ -24,6 +29,7 @@ static GVoid _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong
 static GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step);
 
 static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* frame){
+    return;
     GJLivePushContext* context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
         context->operationCount ++;
@@ -37,6 +43,7 @@ static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* fram
     }
 }
 static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame){
+    return;
     GJLivePushContext* context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
         context->operationCount ++;
@@ -302,6 +309,7 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
 
 static void* thread_pthread_head(void* ctx) {
     
+#ifdef RAOP
     struct raop_server_settings_t setting;
     setting.name = GNULL;
     setting.password = GNULL;
@@ -309,6 +317,7 @@ static void* thread_pthread_head(void* ctx) {
     if (server == GNULL) {
         server = raop_server_create(setting);
     }
+    
     if (!raop_server_is_running(server)) {
         
         uint16_t port = 5000;
@@ -318,6 +327,27 @@ static void* thread_pthread_head(void* ctx) {
         raop_server_stop(server);
     }
     serverThread = GNULL;
+#endif
+    
+#ifdef RVOP
+    struct rvop_server_settings_t setting;
+    setting.name = GNULL;
+    setting.password = GNULL;
+    setting.ignore_source_volume = GFalse;
+    if (rvopserver == GNULL) {
+        rvopserver = rvop_server_create(setting);
+    }
+    
+    if (!rvop_server_is_running(rvopserver)) {
+        
+        uint16_t port = 5000;
+        while (port < 5010 && !rvop_server_start(rvopserver, port++));
+    }
+    if (requestStopServer) {
+        rvop_server_stop(rvopserver);
+    }
+    serverThread = GNULL;
+#endif
     pthread_exit(0);
     
 }
@@ -339,6 +369,11 @@ GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callb
         GJ_VideoProduceContextCreate(&context->videoProducer);
         GJ_AudioProduceContextCreate(&context->audioProducer);
         pthread_mutex_init(&context->lock, GNULL);
+        
+        requestStopServer = GFalse;
+        if (serverThread == GNULL) {
+            pthread_create(&serverThread, GNULL, thread_pthread_head, context);
+        }
     }while (0);
     return result;
 }
@@ -461,7 +496,14 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context){
         context->videoEncoder->encodeUnSetup(context->videoEncoder);
         
         if (serverThread == GNULL) {
+#ifdef RAOP
             raop_server_stop(server);
+#endif
+            
+#ifdef RVOP
+            rvop_server_stop(rvopserver);
+
+#endif
         }else{
             requestStopServer = GTrue;
         }
@@ -538,7 +580,12 @@ GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
         }
         pthread_mutex_destroy(&context->lock);
         if (serverThread == GNULL) {
+#ifdef RAOP
             raop_server_destroy(server);
+#endif
+#ifdef RVOP
+            rvop_server_destroy(rvopserver);
+#endif
         }else{
             requestDestoryServer = GTrue;
         }

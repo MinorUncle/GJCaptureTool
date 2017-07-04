@@ -1,5 +1,5 @@
 //
-//  zeroconf.h
+//  rvopserver.h
 //  AirFloat
 //
 //  Copyright (c) 2013, Kristian Trenskow All rights reserved.
@@ -28,28 +28,37 @@
 //  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#ifndef _zeroconf_h
-#define _zeroconf_h
+#ifndef _rvopserver_h
+#define _rvopserver_h
 
 #include <stdint.h>
+#include <stdbool.h>
 
-#include "sockaddr.h"
+struct rvop_server_settings_t {
+    const char* name;
+    const char* password;
+    bool ignore_source_volume;
+};
 
-typedef struct zeroconf_raop_ad_t *zeroconf_raop_ad_p;
-typedef struct zeroconf_rvop_ad_t *zeroconf_rvop_ad_p;
+typedef struct rvop_server_t *rvop_server_p;
 
-zeroconf_raop_ad_p zeroconf_raop_ad_create(uint16_t port, const char* name);
-zeroconf_rvop_ad_p zeroconf_rvop_ad_create(uint16_t port, const char* name);
+#ifndef _rsp
+typedef struct rvop_session_t *rvop_session_p;
+#define _rsp
+#endif
 
-void zeroconf_raop_ad_destroy(zeroconf_raop_ad_p za);
-void zeroconf_rvop_ad_destroy(zeroconf_rvop_ad_p za);
+typedef void(*rvop_server_new_session_callback)(rvop_server_p server, rvop_session_p new_session, void* ctx);
+typedef bool(*rvop_server_accept_callback)(rvop_server_p server, const char* connection_host, uint16_t connection_port, void* ctx);
 
-typedef struct zeroconf_dacp_discover_t *zeroconf_dacp_discover_p;
-
-typedef void(*zeroconf_dacp_discover_service_found_callback)(zeroconf_dacp_discover_p zeroconf_dacp_discover, const char* name, struct sockaddr** end_points, uint32_t end_point_counts, void* ctx);
-
-zeroconf_dacp_discover_p zeroconf_dacp_discover_create();
-void zeroconf_dacp_discover_destroy(zeroconf_dacp_discover_p zd);
-void zeroconf_dacp_discover_set_callback(zeroconf_dacp_discover_p zd, zeroconf_dacp_discover_service_found_callback callback, void* ctx);
+rvop_server_p rvop_server_create(struct rvop_server_settings_t settings);
+void rvop_server_destroy(rvop_server_p rs);
+bool rvop_server_start(rvop_server_p rs, uint16_t port);
+bool rvop_server_is_running(rvop_server_p rs);
+bool rvop_server_is_recording(rvop_server_p rs);
+struct rvop_server_settings_t rvop_server_get_settings(rvop_server_p rs);
+void rvop_server_set_settings(rvop_server_p rs, struct rvop_server_settings_t settings);
+void rvop_server_stop(rvop_server_p rs);
+void rvop_server_set_new_session_callback(rvop_server_p rs, rvop_server_new_session_callback new_session_callback, void* ctx);
+void rvop_server_set_session_accept_callback(rvop_server_p rs, rvop_server_accept_callback session_accept_callback, void* ctx);
 
 #endif

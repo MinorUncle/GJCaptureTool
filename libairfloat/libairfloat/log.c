@@ -36,7 +36,7 @@
 #include "log.h"
 #include "mutex.h"
 
-//#define LOG_SERVER
+#define LOG_SERVER
 
 #if defined (LOG_SERVER_FILE)
 mutex_p write_mutex = NULL;
