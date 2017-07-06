@@ -16,8 +16,6 @@
 #include "GJUtil.h"
 #include <pthread.h>
 
-#define RTMP_RECEIVE_TIMEOUT    3
-
 #define BUFFER_CACHE_SIZE 300
 
 typedef struct _GJRTMP_Packet {
@@ -40,7 +38,7 @@ static GHandle sendRunloop(GHandle parm){
     GJLOG(GJ_LOGINFO, "RTMP_SetupURL success");
     RTMP_EnableWrite(push->rtmp);
     
-    push->rtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
+    push->rtmp->Link.timeout = SEND_TIMEOUT;
     GJLOG(GJ_LOGINFO, "开始连接服务器。。。");
     ret = RTMP_Connect(push->rtmp, GNULL);
     if (!ret) {

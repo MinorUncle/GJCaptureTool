@@ -16,6 +16,9 @@
 #define SEND_DELAY_TIME 1500
 #define SEND_DELAY_COUNT 25
 
+#define SEND_TIMEOUT 3
+
+
 #define SEND_SEI
 //#define TEST
 
@@ -34,6 +37,13 @@ typedef struct TrafficStatus{
     GJTrafficUnit leave;
     GJTrafficUnit enter;
 }GJTrafficStatus;
+typedef struct GJPacket{
+    GJRetainBuffer retain;
+    GInt64 pts;
+    GLong dataOffset;
+    GInt32 dataSize;
+    GInt32  flag;
+}R_GJPacket;
 typedef struct H264Packet{
     GJRetainBuffer retain;
     GInt64 pts;

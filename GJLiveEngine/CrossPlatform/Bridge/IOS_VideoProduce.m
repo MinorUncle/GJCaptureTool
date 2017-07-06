@@ -113,7 +113,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 @end
 @implementation IOS_VideoProduce
-- (instancetype)initWithFormat:(GJVideoFormat)format
+- (instancetype)initWithFormat:(GJPixelFormat)format fps:(GInt32)fps
 {
     self = [super init];
     if (self) {
@@ -121,7 +121,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _cameraPosition = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
         _destSize = CGSizeMake((CGFloat)format.mWidth, (CGFloat)format.mHeight);
-        _frameRate = format.mFps;
+        _frameRate = fps;
     }
     return self;
 }
@@ -276,9 +276,9 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
 }
 
 @end
-inline static GBool videoProduceSetup(struct _GJVideoProduceContext* context,GJVideoFormat format,VideoFrameOutCallback callback,GHandle userData){
+inline static GBool videoProduceSetup(struct _GJVideoProduceContext* context,GJPixelFormat format,GInt32 fps,VideoFrameOutCallback callback,GHandle userData){
     GJAssert(context->obaque == GNULL, "上一个视频生产器没有释放");
-    IOS_VideoProduce* recode = [[IOS_VideoProduce alloc]initWithFormat:format];
+    IOS_VideoProduce* recode = [[IOS_VideoProduce alloc]initWithFormat:format fps:fps];
     recode.callback = ^(R_GJPixelFrame *frame) {
         callback(userData,frame);
     };

@@ -32,7 +32,7 @@ typedef struct _GJPictureDisplayContext{
 }GJPictureDisplayContext;
 typedef struct _GJVideoProduceContext{
     GHandle obaque;
-    GBool (*videoProduceSetup)      (struct _GJVideoProduceContext* context,GJVideoFormat format,VideoFrameOutCallback callback,GHandle userData);
+    GBool (*videoProduceSetup)      (struct _GJVideoProduceContext* context,GJPixelFormat format,GInt32 fps,VideoFrameOutCallback callback,GHandle userData);
     GVoid (*videoProduceUnSetup)    (struct _GJVideoProduceContext* context);
     GBool (*startProduce)           (struct _GJVideoProduceContext* context);
     GVoid (*stopProduce)            (struct _GJVideoProduceContext* context);

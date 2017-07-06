@@ -29,7 +29,6 @@ static GVoid _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong
 static GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step);
 
 static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* frame){
-    return;
     GJLivePushContext* context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
         context->operationCount ++;
@@ -43,7 +42,6 @@ static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* fram
     }
 }
 static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame){
-    return;
     GJLivePushContext* context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
         context->operationCount ++;
@@ -79,23 +77,23 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
                 free(pps);
                 return;
             }else{
-                if(!GJRtmpPush_SendAVCSequenceHeader(context->videoPush, sps, spsSize, pps, ppsSize, packet->pts)){
-                    if (context->videoPush != GNULL) {
-                        GJLOG(GJ_LOGERROR, "SendAVCSequenceHeader 失败");
-                    }
-                    context->firstVideoEncodeClock = G_TIME_INVALID;
-                    free(sps);
-                    free(pps);
-                    return;
-                }else{
-                    free(sps);
-                    free(pps);
-                }
+//                if(!GJRtmpPush_SendAVCSequenceHeader(context->videoPush, sps, spsSize, pps, ppsSize, packet->pts)){
+//                    if (context->videoPush != GNULL) {
+//                        GJLOG(GJ_LOGERROR, "SendAVCSequenceHeader 失败");
+//                    }
+//                    context->firstVideoEncodeClock = G_TIME_INVALID;
+//                    free(sps);
+//                    free(pps);
+//                    return;
+//                }else{
+//                    free(sps);
+//                    free(pps);
+//                }
             }
         }
     }
-    GJRtmpPush_SendH264Data(context->videoPush, packet);
-    GJTrafficStatus bufferStatus = GJRtmpPush_GetVideoBufferCacheInfo(context->videoPush);
+    GJStreamPush_SendVideoData(context->videoPush, packet);
+    GJTrafficStatus bufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
     if (bufferStatus.enter.count % context->dynamicAlgorithm.den == 0) {
         GLong cacheInCount = bufferStatus.enter.count - bufferStatus.leave.count;
         if(cacheInCount == 1 && context->videoBitrate < context->pushConfig->mVideoBitrate){
@@ -125,23 +123,23 @@ static GVoid aacPacketOutCallback(GHandle userData,R_GJAACPacket* packet){
     packet->pts = GJ_Gettime()/1000-context->connentClock;
     if (context->firstAudioEncodeClock == G_TIME_INVALID) {
         context->firstAudioEncodeClock = GJ_Gettime();
-        if (!GJRtmpPush_SendAACSequenceHeader(context->videoPush, 2, context->pushConfig->mAudioSampleRate,  context->pushConfig->mAudioChannel, packet->pts)) {
-            if (context->videoPush!= GNULL) {
-                GJLOG(GJ_LOGFORBID, "SendAACSequenceHeader 失败");
-            }
-            context->firstAudioEncodeClock = G_TIME_INVALID;
-            return;
-        }
+//        if (!GJRtmpPush_SendAACSequenceHeader(context->videoPush, 2, context->pushConfig->mAudioSampleRate,  context->pushConfig->mAudioChannel, packet->pts)) {
+//            if (context->videoPush!= GNULL) {
+//                GJLOG(GJ_LOGFORBID, "SendAACSequenceHeader 失败");
+//            }
+//            context->firstAudioEncodeClock = G_TIME_INVALID;
+//            return;
+//        }
     }
-    GJRtmpPush_SendAACData(context->videoPush, packet);
+    GJStreamPush_SendAudioData(context->videoPush, packet);
 }
 
 
 
-GVoid rtmpPushMessageCallback(GHandle userData, GJRTMPPushMessageType messageType,GHandle messageParm){
+GVoid streamPushMessageCallback(GHandle userData, GJStreamPushMessageType messageType,GHandle messageParm){
     GJLivePushContext* context = userData;
     switch (messageType) {
-        case GJRTMPPushMessageType_connectSuccess:
+        case GJStreamPushMessageType_connectSuccess:
         {
             GJLOG(GJ_LOGINFO, "推流连接成功");
             context->connentClock = GJ_Gettime()/1000;
@@ -154,20 +152,20 @@ GVoid rtmpPushMessageCallback(GHandle userData, GJRTMPPushMessageType messageTyp
 
         }
             break;
-        case GJRTMPPushMessageType_closeComplete:{
+        case GJStreamPushMessageType_closeComplete:{
             GJPushSessionInfo info = {0};
             context->disConnentClock = GJ_Gettime()/1000;
             info.sessionDuring = (GLong)(context->disConnentClock - context->connentClock);
             context->callback(context->userData,GJLivePush_closeComplete,&info);
         }
             break;
-        case GJRTMPPushMessageType_urlPraseError:
-        case GJRTMPPushMessageType_connectError:
+        case GJStreamPushMessageType_urlPraseError:
+        case GJStreamPushMessageType_connectError:
             GJLOG(GJ_LOGINFO, "推流连接失败");
             context->callback(context->userData,GJLivePush_connectError,"rtmp连接失败");
             GJLivePush_StopPush(context);
             break;
-        case GJRTMPPushMessageType_sendPacketError:
+        case GJStreamPushMessageType_sendPacketError:
             context->callback(context->userData,GJLivePush_sendPacketError,"发送失败");
             GJLivePush_StopPush(context);
             break;
@@ -419,14 +417,12 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             context->firstAudioEncodeClock = context->firstVideoEncodeClock = G_TIME_INVALID;
             context->connentClock = context->disConnentClock = context->stopPushClock = G_TIME_INVALID;
             context->startPushClock = GJ_Gettime()/1000;
-
+            GJPixelFormat vFormat = {0};
+            vFormat.mHeight = (GUInt32)context->pushConfig->mPushSize.height;
+            vFormat.mWidth = (GUInt32)context->pushConfig->mPushSize.width;
+            vFormat.mType = GJPixelType_YpCbCr8BiPlanar_Full;
             if(context->videoProducer->obaque == GNULL){
-                GJVideoFormat vFormat = {0};
-                vFormat.mFps = context->pushConfig->mFps;
-                vFormat.mHeight = (GUInt32)context->pushConfig->mPushSize.height;
-                vFormat.mWidth = (GUInt32)context->pushConfig->mPushSize.width;
-                vFormat.mType = GJPixelType_YpCbCr8BiPlanar_Full;
-                context->videoProducer->videoProduceSetup(context->videoProducer,vFormat,videoCaptureFrameOutCallback,context);
+                context->videoProducer->videoProduceSetup(context->videoProducer,vFormat,context->pushConfig->mFps,videoCaptureFrameOutCallback,context);
             }
             
             if (context->audioProducer->obaque == GNULL) {
@@ -451,23 +447,30 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             aDFormat.mType = GJAudioType_AAC;
             context->audioEncoder->encodeSetup(context->audioEncoder,aFormat,aDFormat,aacPacketOutCallback,context);
             context->audioEncoder->encodeSetBitrate(context->audioEncoder,context->pushConfig->mAudioBitrate);
-            GJPixelFormat vformat = {0};
-            vformat.mHeight = context->pushConfig->mPushSize.height;
-            vformat.mWidth = context->pushConfig->mPushSize.width;
-            vformat.mType = GJPixelType_YpCbCr8BiPlanar_Full;
-            context->videoEncoder->encodeSetup(context->videoEncoder,vformat,h264PacketOutCallback,context);
+
+            context->videoEncoder->encodeSetup(context->videoEncoder,vFormat,h264PacketOutCallback,context);
             context->videoEncoder->encodeSetBitrate(context->videoEncoder,context->pushConfig->mVideoBitrate);
             context->videoEncoder->encodeSetProfile(context->videoEncoder,profileLevelMain);
             context->videoEncoder->encodeSetGop(context->videoEncoder,10);
             context->videoEncoder->encodeAllowBFrame(context->videoEncoder,GTrue);
             context->videoEncoder->encodeSetEntropy(context->videoEncoder,EntropyMode_CABAC);
             
-            if(!GJRtmpPush_Create(&context->videoPush, rtmpPushMessageCallback, (GHandle)context)){
+            GJVideoStreamFormat vf ;
+            vf.format.mFps = context->pushConfig->mFps;
+            vf.format.mWidth = vFormat.mWidth;
+            vf.format.mHeight = vFormat.mHeight;
+            vf.format.mType = GJVideoType_H264;
+            vf.bitrate = context->pushConfig->mVideoBitrate;
+            
+            GJAudioStreamFormat af;
+            af.format = aDFormat;
+            af.bitrate = context->pushConfig->mAudioBitrate;
+            if(!GJStreamPush_Create(&context->videoPush, streamPushMessageCallback, (GHandle)context,af,vf)){
                 result = GFalse;
                 break;
             };
             
-            if(!GJRtmpPush_StartConnect(context->videoPush, url)){
+            if(!GJStreamPush_StartConnect(context->videoPush, url)){
                 result = GFalse;
                 break;
             };
@@ -489,7 +492,7 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context){
             GJLOG(GJ_LOGDEBUG, "GJLivePush_StopPush wait 10 us");
             usleep(10);
         }
-        GJRtmpPush_CloseAndDealloc(&context->videoPush);
+        GJStreamPush_CloseAndDealloc(&context->videoPush);
         context->audioProducer->audioProduceStop(context->audioProducer);
         context->videoProducer->stopProduce(context->videoProducer);
         context->audioEncoder->encodeUnSetup(context->audioEncoder);
@@ -594,20 +597,19 @@ GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
     }
 }
 GJTrafficStatus GJLivePush_GetVideoTrafficStatus(GJLivePushContext* context){
-    return GJRtmpPush_GetVideoBufferCacheInfo(context->videoPush);
+    return GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
 }
 GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext* context){
-    return GJRtmpPush_GetAudioBufferCacheInfo(context->videoPush);
+    return GJStreamPush_GetAudioBufferCacheInfo(context->videoPush);
 }
 GHandle GJLivePush_GetDisplayView(GJLivePushContext* context){
     if (context->videoProducer->obaque == GNULL) {
         if (context->pushConfig != GNULL) {
-            GJVideoFormat vFormat = {0};
-            vFormat.mFps = context->pushConfig->mFps;
+            GJPixelFormat vFormat = {0};
             vFormat.mHeight = (GUInt32)context->pushConfig->mPushSize.height;
             vFormat.mWidth = (GUInt32)context->pushConfig->mPushSize.width;
             vFormat.mType = GJPixelType_YpCbCr8BiPlanar_Full;
-            context->videoProducer->videoProduceSetup(context->videoProducer,vFormat,videoCaptureFrameOutCallback,context);
+            context->videoProducer->videoProduceSetup(context->videoProducer,vFormat,context->pushConfig->mFps,videoCaptureFrameOutCallback,context);
         }else{
             GJLOG(GJ_LOGERROR, "请先配置pushConfig");
         }

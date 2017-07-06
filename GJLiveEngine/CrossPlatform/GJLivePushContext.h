@@ -19,7 +19,7 @@
 #endif
 #include <stdio.h>
 #include "GJPlatformHeader.h"
-#include "GJRtmpPush.h"
+#include "GJFFmpegPush.h"
 #include "GJBridegContext.h"
 typedef enum _GJLivePushMessageType{
     GJLivePush_messageInvalid,
@@ -33,7 +33,7 @@ typedef enum _GJLivePushMessageType{
 }GJLivePushMessageType;
 typedef GVoid (*GJLivePushCallback)(GHandle userDate,GJLivePushMessageType message,GHandle param);
 typedef struct _GJLivePushContext{
-    GJRtmpPush*             videoPush;
+    GJStreamPush*             videoPush;
 //    GJPushSessionStatus     PushSessionStatus;
     GJEncodeToH264eContext*    videoEncoder;
     GJEncodeToAACContext*     audioEncoder;
