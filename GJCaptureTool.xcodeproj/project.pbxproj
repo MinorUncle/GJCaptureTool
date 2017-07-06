@@ -524,6 +524,8 @@
 		6ABF2B181F0B413600721DB3 /* IOS_VideoProduce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_VideoProduce.h; sourceTree = "<group>"; };
 		6ABF2B191F0B413600721DB3 /* IOS_VideoProduce.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_VideoProduce.m; sourceTree = "<group>"; };
 		6ABF2B8D1F0B810F00721DB3 /* rvopserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rvopserver.h; sourceTree = "<group>"; };
+		6ABF316E1F0DCCAA00721DB3 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
+		6ABF31701F0DCCB400721DB3 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		6AE37BCC1ED5956800B049EB /* GJLivePlayer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJLivePlayer.c; sourceTree = "<group>"; };
 		6AE37BCD1ED5956800B049EB /* GJLivePlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePlayer.h; sourceTree = "<group>"; };
 		6AE37BCE1ED5956800B049EB /* GJLivePullContext.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJLivePullContext.c; sourceTree = "<group>"; };
@@ -1378,6 +1380,8 @@
 		AEFEF2291DB3B9A80004CF39 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6ABF31701F0DCCB400721DB3 /* CoreMotion.framework */,
+				6ABF316E1F0DCCAA00721DB3 /* GameController.framework */,
 				6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */,
 				C573F1751D4B417B002607B6 /* VideoToolbox.framework */,
 				C573F1731D4B4175002607B6 /* libbz2.tbd */,
@@ -1881,6 +1885,10 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				MACH_O_TYPE = staticlib;
 				PRODUCT_BUNDLE_IDENTIFIER = EW.GJLiveEngine;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -1909,6 +1917,10 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				MACH_O_TYPE = staticlib;
 				PRODUCT_BUNDLE_IDENTIFIER = EW.GJLiveEngine;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2020,8 +2032,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COMPRESS_PNG_FILES = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = X33DX68294;
+				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"/**";
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -2038,6 +2052,7 @@
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_PNG_TEXT = NO;
 			};
 			name = Debug;
 		};
@@ -2047,7 +2062,9 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COMPRESS_PNG_FILES = NO;
 				DEVELOPMENT_TEAM = X33DX68294;
+				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"/**";
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -2065,6 +2082,7 @@
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				STRIP_PNG_TEXT = NO;
 			};
 			name = Release;
 		};

@@ -42,9 +42,9 @@ struct rvop_server_settings_t {
 
 typedef struct rvop_server_t *rvop_server_p;
 
-#ifndef _rsp
+#ifndef _v_rsp
 typedef struct rvop_session_t *rvop_session_p;
-#define _rsp
+#define _v_rsp
 #endif
 
 typedef void(*rvop_server_new_session_callback)(rvop_server_p server, rvop_session_p new_session, void* ctx);

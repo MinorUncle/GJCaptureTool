@@ -310,12 +310,12 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
 static void* thread_pthread_head(void* ctx) {
     
 #ifdef RAOP
-    struct raop_server_settings_t setting;
-    setting.name = GNULL;
-    setting.password = GNULL;
-    setting.ignore_source_volume = GFalse;
+    struct raop_server_settings_t asetting;
+    asetting.name = GNULL;
+    asetting.password = GNULL;
+    asetting.ignore_source_volume = GFalse;
     if (server == GNULL) {
-        server = raop_server_create(setting);
+        server = raop_server_create(asetting);
     }
     
     if (!raop_server_is_running(server)) {
@@ -330,12 +330,12 @@ static void* thread_pthread_head(void* ctx) {
 #endif
     
 #ifdef RVOP
-    struct rvop_server_settings_t setting;
-    setting.name = GNULL;
-    setting.password = GNULL;
-    setting.ignore_source_volume = GFalse;
+    struct rvop_server_settings_t vsetting;
+    vsetting.name = GNULL;
+    vsetting.password = GNULL;
+    vsetting.ignore_source_volume = GFalse;
     if (rvopserver == GNULL) {
-        rvopserver = rvop_server_create(setting);
+        rvopserver = rvop_server_create(vsetting);
     }
     
     if (!rvop_server_is_running(rvopserver)) {

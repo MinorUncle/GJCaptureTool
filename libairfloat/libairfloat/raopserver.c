@@ -105,7 +105,7 @@ struct raop_server_t* raop_server_create(struct raop_server_settings_t settings)
     
     rs->mutex = mutex_create();
     
-    rs->server = web_server_create((sockaddr_type)( sockaddr_type_inet_6));
+    rs->server = web_server_create((sockaddr_type)(sockaddr_type_inet_4));
     web_server_set_accept_callback(rs->server, _raop_server_web_connection_accept_callback, rs);
     
     return rs;

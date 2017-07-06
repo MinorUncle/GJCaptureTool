@@ -156,7 +156,10 @@ ssize_t web_request_parse(struct web_request_t* wr, const void* data, size_t dat
     }
     
     free(buffer);
-    
+    printf("content:");
+    for (int i = 0; i<wr->content_length; i++) {
+        printf("%c",((char*)wr->content)[i]);
+    }
     return ret;
     
 }

@@ -8,14 +8,16 @@
 
 #ifndef GJLivePushContext_h
 #define GJLivePushContext_h
-#include "webserver.h"
-#define RAOP
+//#define RVOP
+//#define RAOP
 
 #ifdef RAOP
 #include "raopserver.h"
+#include "webserver.h"
 #endif
 #ifdef RVOP
 #include "rvopserver.h"
+#include "webserver.h"
 #endif
 #include <stdio.h>
 #include "GJPlatformHeader.h"
@@ -61,14 +63,14 @@ typedef struct _GJLivePushContext{
     GJNetworkQuality        netQuality;
     
     GJTrafficStatus         preVideoTraffic;
-    //     .den帧中丢.num帧或多发.num帧则出发敏感算法默认（4，8）,给了den帧数据，但是只发送了小于nun帧，则主动降低质量
+    //      .den帧中丢.num帧或多发.num帧则出发敏感算法默认（4，8）,给了den帧数据，但是只发送了小于nun帧，则主动降低质量
 
     GRational               dynamicAlgorithm;
     GRational               videoDropStep;//每den帧丢num帧
-    //     表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
+    //      表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
     GRational               videoMinDropStep;//
     GInt32                  videoBitrate;  //当前码率
-    //不丢帧情况下允许的最小码率。用于动态码率
+    //      不丢帧情况下允许的最小码率。用于动态码率
     GInt32                  videoMinBitrate;
     GInt32                  captureVideoCount;
     GInt32                  dropVideoCount;

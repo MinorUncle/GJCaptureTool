@@ -65,7 +65,7 @@ ssize_t _web_server_connection_socket_recieve_callback(socket_p socket, const vo
     ssize_t ret = 0;
     
     web_request_p request = web_request_create();
-    printf("\nreceive from socket:%p ip:%s begin data:<<<\n",socket,sockaddr_get_host(socket_get_remote_end_point(socket)));
+    printf("\nreceive from socket:%p ip:%s:%d begin data:<<<\n",socket,sockaddr_get_host(socket_get_remote_end_point(socket)),sockaddr_get_port(socket_get_remote_end_point(socket)));
     for (int i = 0; i<data_size; i++) {
         printf("%c",((char*)data)[i]);
     }

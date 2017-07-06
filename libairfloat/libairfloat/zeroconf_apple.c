@@ -123,7 +123,7 @@ zeroconf_rvop_ad_p zeroconf_rvop_ad_create(uint16_t port, const char* name){
     
 //    CFStringRef combined_name = CFStringCreateWithFormat(kCFAllocatorDefault, NULL, CFSTR("%@@%@"), hardware_identifier, service_name);
     
-    za->service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_airplay._tcp."),service_name, port);
+    za->service = CFNetServiceCreate(kCFAllocatorDefault, CFSTR("local."), CFSTR("_airplay._tcp"),service_name, port);
     za->port = port;
     
     
@@ -132,7 +132,7 @@ zeroconf_rvop_ad_p zeroconf_rvop_ad_create(uint16_t port, const char* name){
     CFRelease(puuid);
     
     CFStringRef keys[] = { CFSTR("vv"), CFSTR("model"), CFSTR("srcvers"), CFSTR("flags"),CFSTR("features"), CFSTR("pi"), CFSTR("pk"),CFSTR("deviceid")};
-    CFStringRef values[] = { CFSTR("2"), CFSTR("AppleTV3,2"), CFSTR("220.68"), CFSTR("0x44"), CFSTR("0x5A7FFFF7,0xE"), uuidString, CFSTR("dd820b76333c9ccee0ed42d2abbba6de59025ed432e22727422ccbd604147b18"),hardware_identifier};
+    CFStringRef values[] = { CFSTR("2"), CFSTR("AppleTV1,1"), CFSTR("220.68"), CFSTR("0x44"), CFSTR("0x5A7FFFF7,0xE"), uuidString, CFSTR("dd820b76333c9ccee0ed42d2abbba6de59025ed432e22727422ccbd604147b18"),hardware_identifier};
     
     CFDictionaryRef txt_dictionary = CFDictionaryCreate(kCFAllocatorDefault, (const void**)&keys, (const void**)&values, 8, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     CFDataRef txt_data = CFNetServiceCreateTXTDataWithDictionary(kCFAllocatorDefault, txt_dictionary);

@@ -38,12 +38,12 @@ static  GJAudioSessionCenter* _gjAudioSession;
     NSError* error;
     if (reason == AVAudioSessionRouteChangeReasonNewDeviceAvailable) {
         [[AVAudioSession sharedInstance]overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:&error];
-        NSLog(@"override out to none result:%@",error);
+        NSLog(@"GJAudioSessionCenter override out to none result:%@",error);
         
     }else if (reason == AVAudioSessionRouteChangeReasonOldDeviceUnavailable){
         
         [[AVAudioSession sharedInstance]overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&error];
-        NSLog(@"override out to speaker result:%@",error);
+        NSLog(@"GJAudioSessionCenter override out to speaker result:%@",error);
     }
 
 
@@ -67,19 +67,20 @@ static  GJAudioSessionCenter* _gjAudioSession;
     return _gjAudioSession;
 }
 -(BOOL)activeSession:(BOOL)active key:(NSString*)key error:(NSError**)error{
+    return YES;
     BOOL result = YES;
     if (active){
         if(![_activeRequest containsObject:key]){
             [_activeRequest addObject:key];
             if (_activeRequest.count ==1) {
-                NSLog(@"AVAudioSession setActive:%d",active);
+                NSLog(@"GJAudioSessionCenter setActive:%d",active);
                 result = [[AVAudioSession sharedInstance] setActive:active error:error];
             }
         }
     }else if([_activeRequest containsObject:key]){
         [_activeRequest removeObject:key];
         if (_activeRequest.count == 0) {
-            NSLog(@"AVAudioSession setActive:%d",active);
+            NSLog(@"GJAudioSessionCenter setActive:%d",active);
             result = [[AVAudioSession sharedInstance] setActive:active error:error];
         }
     }
@@ -119,121 +120,78 @@ static  GJAudioSessionCenter* _gjAudioSession;
         _category = category;
         _categoryOptions = options;
         if ([AVAudioSession sharedInstance].categoryOptions != _categoryOptions) {
-            NSLog(@"set audiosession category:%@ optations:%d",_category,_categoryOptions);
+            NSLog(@"GJAudioSessionCenter set audiosession category:%@ optations:%d",_category,_categoryOptions);
             return [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
         }
     }
     return YES;
 }
 -(BOOL)requestPlay:(BOOL)play key:(NSString*)key error:(NSError**)error{
-    BOOL result = YES;
     if (play){
         if(![_playeRequest containsObject:key]){
             [_playeRequest addObject:key];
-            if (_playeRequest.count ==1) {
-                result = [self updateCategoryOptionsWithError:error];
-            }
         }
     }else if([_playeRequest containsObject:key]){
         [_playeRequest removeObject:key];
-        if (_playeRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
-        }
     }
-    return result;
+    return [self updateCategoryOptionsWithError:error];
 }
 
 -(BOOL)requestRecode:(BOOL)recode key:(NSString*)key error:(NSError**)error{
-    BOOL result = YES;
     if (recode) {
         if(![_recodeRequest containsObject:key]){
             [_recodeRequest addObject:key];
-            if (_recodeRequest.count ==1) {
-                result = [self updateCategoryOptionsWithError:error];
-            }
         }
     }else if([_recodeRequest containsObject:key]){
-        [_playeRequest removeObject:key];
-        if (_playeRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
-        }
+        [_recodeRequest removeObject:key];
     }
-    return result;
+    return [self updateCategoryOptionsWithError:error];
 }
 -(BOOL)requestMix:(BOOL)mix key:(NSString*)key error:(NSError**)error{
-    BOOL result = YES;
-
     if (mix) {
         if (![_mixingRequest containsObject:key]) {
             [_mixingRequest addObject:key];
-            if (_mixingRequest.count ==1) {
-                result = [self updateCategoryOptionsWithError:error];
-            }
         }
-       
     }else if ([_mixingRequest containsObject:key]) {
         [_mixingRequest removeObject:key];
-        if (_mixingRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
-        }
     }
-    return result;
+    return [self updateCategoryOptionsWithError:error];
 }
 -(BOOL)requestAllowAirPlay:(BOOL)allowAirPlay key:(NSString*)key error:(NSError**)error
 {
-    BOOL result = YES;
+    return YES;
     if (allowAirPlay) {
         if (![_airplayRequest containsObject:key]) {
             [_airplayRequest addObject:key];
-            if (_airplayRequest.count ==1) {
-                result = [self updateCategoryOptionsWithError:error];
-            }
         }
     }else if ([_airplayRequest containsObject:key]) {
         [_airplayRequest removeObject:key];
-        if (_airplayRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
-        }
     }
     
-    return result;
+    return [self updateCategoryOptionsWithError:error];
 }
 -(BOOL)requestDefaultToSpeaker:(BOOL)speaker key:(NSString*)key error:(NSError**)error{
-    BOOL result = YES;
     if (speaker) {
         if (![_speakerRequest containsObject:key]) {
             [_speakerRequest addObject:key];
-            if (_speakerRequest.count ==1) {
-                result = [self updateCategoryOptionsWithError:error];
-            }
         }
     }else if ([_speakerRequest containsObject:key]) {
         [_speakerRequest removeObject:key];
-        if (_speakerRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
-        }
     }
     
-    return result;
+    return [self updateCategoryOptionsWithError:error];
 }
 -(BOOL)requestBluetooth:(BOOL)bluetooth key:(NSString*)key error:(NSError**)error{
-    BOOL result = YES;
    
     if (bluetooth) {
         if (![_bluetoothRequest containsObject:key]) {
             [_bluetoothRequest addObject:key];
-            if (_bluetoothRequest.count ==1) {
-                result = [self updateCategoryOptionsWithError:error];
-            }
         }
     }else if ([_bluetoothRequest containsObject:key]) {
         [_bluetoothRequest removeObject:key];
-        if (_bluetoothRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
-        }
     }
     
-    return result;
+    return [self updateCategoryOptionsWithError:error];;
 }
 
 -(BOOL)setPrefferSampleRate:(double)sampleRate error:(NSError**)error{

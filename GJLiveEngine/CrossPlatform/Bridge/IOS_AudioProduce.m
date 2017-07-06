@@ -64,7 +64,8 @@ inline static GBool audioProduceSetup(struct _GJAudioProduceContext* context,GJA
     audioFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
     audioFormat.mFormatID = kAudioFormatLinearPCM;
 
-    GJAudioManager* manager = [[GJAudioManager alloc]initWithFormat:audioFormat];
+    GJAudioManager* manager = [GJAudioManager shareAudioManager];
+    [manager.audioController setAudioDescription:audioFormat error:nil];
     manager.audioCallback = ^(R_GJPCMFrame *frame) {
         callback(userData,frame);
     };

@@ -12,6 +12,9 @@
 static GJAudioManager* _staticManager;
 @implementation GJAudioManager
 +(GJAudioManager*)shareAudioManager{
+    if (_staticManager == nil) {
+        _staticManager = [[GJAudioManager alloc]initWithFormat:[AEAudioController nonInterleaved16BitStereoAudioDescription]];
+    }
     return _staticManager;
 };
 
