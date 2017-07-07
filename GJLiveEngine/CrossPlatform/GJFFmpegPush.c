@@ -22,12 +22,17 @@ static GHandle sendRunloop(GHandle parm){
     GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl,  AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, GNULL);
     if (ret < 0) {
         GJLOG(GJ_LOGERROR, "avio_open2 error:%d",ret);
-        return GFalse;
+        errType = GJStreamPushMessageType_connectError;
+        goto END;
+    }
+    if(push->messageCallback){
+        push->messageCallback(push->streamPushParm, GJStreamPushMessageType_connectSuccess,GNULL);
     }
     ret = avformat_write_header(push->formatContext, GNULL);
     if (ret < 0) {
         GJLOG(GJ_LOGERROR, "avformat_write_header error:%d",ret);
-        return GFalse;
+        errType = GJStreamPushMessageType_connectError;
+        goto END;
     }
     
     R_GJPacket* packet;
@@ -36,7 +41,9 @@ static GHandle sendRunloop(GHandle parm){
         packet->packet.m_nTimeStamp -= startPts;
 #endif
         AVPacket* sendPacket =  av_mallocz(sizeof(AVPacket));
+        av_init_packet(sendPacket);
         sendPacket->pts = packet->pts;
+        sendPacket->dts = packet->pts;
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
@@ -45,32 +52,31 @@ static GHandle sendRunloop(GHandle parm){
         sendPacket->size = packet->dataSize;
         
         GInt32 iRet = av_write_frame(push->formatContext, sendPacket);
-        if (iRet) {
-//            if (packet->packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
-//                GJLOGFREQ("send video pts:%d size:%d",packet->packet.m_nTimeStamp,packet->packet.m_nBodySize);
-//                push->videoStatus.leave.byte+=packet->packet.m_nBodySize;
-//                push->videoStatus.leave.count++;
-//                push->videoStatus.leave.pts = packet->packet.m_nTimeStamp;
-//            }else{
-//                GJLOGFREQ("send audio pts:%d size:%d",packet->packet.m_nTimeStamp,packet->packet.m_nBodySize);
-//                push->audioStatus.leave.byte+=packet->packet.m_nBodySize;
-//                push->audioStatus.leave.count++;
-//                push->audioStatus.leave.pts = packet->packet.m_nTimeStamp;
-//            }
-//            retainBufferUnRetain(packet->retainBuffer);
-//            GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);
+        if (iRet >= 0) {
+            if (packet->type == GJMediaType_Video) {
+                printf("send video pts:%lld size:%d",packet->pts,packet->dataSize);
+//                GJLOGFREQ("send video pts:%d size:%d",packet->pts,packet->dataSize);
+                push->videoStatus.leave.byte+=packet->dataSize;
+                push->videoStatus.leave.count++;
+                push->videoStatus.leave.pts = packet->pts;
+            }else{
+                GJLOGFREQ("send audio pts:%d size:%d",packet->pts,packet->dataSize);
+                push->audioStatus.leave.byte+=packet->dataSize;
+                push->audioStatus.leave.count++;
+                push->audioStatus.leave.pts = packet->pts;
+            }
+            retainBufferUnRetain(&packet->retain);
         }else{
             GJLOG(GJ_LOGFORBID, "error send video FRAME");
             errType = GJStreamPushMessageType_sendPacketError;
             retainBufferUnRetain(&packet->retain);
-            GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);
-            goto ERROR;
+            goto END;
         };
     }
 
     
     errType = GJStreamPushMessageType_closeComplete;
-ERROR:
+END:
     
     if (push->messageCallback) {
         push->messageCallback(push->streamPushParm, errType,errParm);
@@ -233,15 +239,31 @@ GVoid GJStreamPush_CloseAndDealloc(GJStreamPush** push){
     *push = GNULL;
 
 }
-GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* data){
-    data->type = push->vStream->index;
-    queuePush(push->sendBufferQueue, data, 0);
+GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
+    retainBufferRetain(&packet->retain);
+    packet->type = push->vStream->index;
+    if (queuePush(push->sendBufferQueue, packet, 0)) {
+        push->videoStatus.enter.pts = packet->pts;
+        push->videoStatus.enter.count++;
+        push->videoStatus.enter.byte += packet->dataSize;
+        
+    }else{
+        retainBufferUnRetain(&packet->retain);
+
+    }
     
     return GTrue;
 }
-GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* data){
-    data->type = push->aStream->index;
-    queuePush(push->sendBufferQueue, data, 0);
+GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
+    retainBufferRetain(&packet->retain);
+    packet->type = push->aStream->index;
+    if (queuePush(push->sendBufferQueue, packet, 0)) {
+        push->audioStatus.enter.pts = packet->pts;
+        push->audioStatus.enter.count++;
+        push->audioStatus.enter.byte += packet->dataSize;
+    }else{
+        retainBufferUnRetain(&packet->retain);
+    }
     return GTrue;
 }
 GFloat32 GJStreamPush_GetBufferRate(GJStreamPush* push){

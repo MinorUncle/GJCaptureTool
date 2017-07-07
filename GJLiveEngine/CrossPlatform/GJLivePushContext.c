@@ -42,6 +42,7 @@ static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* fram
     }
 }
 static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame){
+    return;
     GJLivePushContext* context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
         context->operationCount ++;
@@ -55,43 +56,6 @@ static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame)
 static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
     GJLivePushContext* context = userData;
     packet->pts = GJ_Gettime()/1000-context->connentClock;
-    if (context->firstVideoEncodeClock == G_TIME_INVALID) {
-        context->firstVideoEncodeClock = GJ_Gettime()/1000;
-        GUInt8* sps,*pps;
-        GInt32 spsSize,ppsSize;
-        sps = pps = GNULL;
-        
-        context->videoEncoder->encodeGetSPS_PPS(context->videoEncoder,sps,&spsSize,pps,&ppsSize);
-        if (spsSize <= 0 || ppsSize <= 0) {
-            GJLOG(GJ_LOGERROR, "无法获得sps,pps2");
-            context->firstVideoEncodeClock = G_TIME_INVALID;
-            return;
-        }else{
-            sps = (GUInt8*)malloc(spsSize);
-            pps = (GUInt8*)malloc(ppsSize);
-            context->videoEncoder->encodeGetSPS_PPS(context->videoEncoder,sps,&spsSize,pps,&ppsSize);
-            if (sps == GNULL || pps == GNULL) {
-                GJLOG(GJ_LOGERROR, "无法获得sps,pps2");
-                context->firstVideoEncodeClock = G_TIME_INVALID;
-                free(sps);
-                free(pps);
-                return;
-            }else{
-//                if(!GJRtmpPush_SendAVCSequenceHeader(context->videoPush, sps, spsSize, pps, ppsSize, packet->pts)){
-//                    if (context->videoPush != GNULL) {
-//                        GJLOG(GJ_LOGERROR, "SendAVCSequenceHeader 失败");
-//                    }
-//                    context->firstVideoEncodeClock = G_TIME_INVALID;
-//                    free(sps);
-//                    free(pps);
-//                    return;
-//                }else{
-//                    free(sps);
-//                    free(pps);
-//                }
-            }
-        }
-    }
     GJStreamPush_SendVideoData(context->videoPush, packet);
     GJTrafficStatus bufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
     if (bufferStatus.enter.count % context->dynamicAlgorithm.den == 0) {

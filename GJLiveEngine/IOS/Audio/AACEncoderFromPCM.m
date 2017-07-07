@@ -272,7 +272,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         if(audioBuffer->frontSize<PUSH_AAC_PACKET_PRE_SIZE){
             retainBufferMoveDataPoint(audioBuffer, PUSH_AAC_PACKET_PRE_SIZE,GFalse);
         }
-        outCacheBufferList.mBuffers[0].mData = audioBuffer->data+7;
+        outCacheBufferList.mBuffers[0].mData = audioBuffer->data;
         outCacheBufferList.mBuffers[0].mDataByteSize = _destMaxOutSize;
 
         OSStatus status = AudioConverterFillComplexBuffer(_encodeConvert, encodeInputDataProc, (__bridge void*)self, &outputDataPacketSize, &outCacheBufferList, &packetDesc);
@@ -294,7 +294,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 //        packet->adtsOffset = 0;
 //        packet->adtsSize = 0;
         packet->type = GJMediaType_Audio;
-        packet->dataOffset = 7;
+        packet->dataOffset = 0;
         packet->dataSize = outCacheBufferList.mBuffers[0].mDataByteSize;
         packet->pts = _currentPts;
         _currentPts = -1;

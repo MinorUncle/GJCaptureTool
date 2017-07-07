@@ -267,39 +267,42 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
             return;
         }
-        size_t spsppsSize = sparameterSetSize+pparameterSetSize;
+        size_t spsppsSize = sparameterSetSize+pparameterSetSize+8;
         int needSize = (int)(spsppsSize+totalLength+PUSH_H264_PACKET_PRE_SIZE);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
-        if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
-            retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE,GFalse);
-        }
+        pushPacket->flag = GJPacketFlag_KEY;
+        pushPacket->dataOffset = 0;
+        pushPacket->dataSize = (GInt32)(totalLength + spsppsSize + 8);
+        
         uint8_t* data = retainBuffer->data;
-        memcpy(&data[0], sparameterSet, sparameterSetSize);
+        memcpy(data, "\x00\x00\x00\x01", 4);
+        memcpy(data+4, sparameterSet, sparameterSetSize);
         encoder.sps = [NSData dataWithBytes:data length:sparameterSetSize];
 //        pushPacket->spsOffset=data - retainBuffer->data;
 //        pushPacket->spsSize=(int)sparameterSetSize;
         
-        memcpy(&data[sparameterSetSize], pparameterSet, pparameterSetSize);
+        memcpy(data+4+sparameterSetSize, "\x00\x00\x00\x01", 4);
+        memcpy(data+ 8+ sparameterSetSize, pparameterSet, pparameterSetSize);
         encoder.pps = [NSData dataWithBytes:data + sparameterSetSize length:pparameterSetSize];
 //        pushPacket->ppsOffset = sparameterSetSize;
 //        pushPacket->ppsSize = (int)pparameterSetSize;
 //        拷贝keyframe;
-        memcpy(data+spsppsSize, inDataPointer, totalLength);
-        inDataPointer = data + spsppsSize;
+        memcpy(data+spsppsSize + 8, inDataPointer, totalLength);
+        inDataPointer = data + spsppsSize +8;
     }else{
         int needSize = (int)(totalLength+PUSH_H264_PACKET_PRE_SIZE);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
-        if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
-            retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE,GFalse);
-        }
+        pushPacket->dataOffset = 0;
+        pushPacket->dataSize = (GInt32)(totalLength);
+
+
 //拷贝
         uint8_t* rDate = retainBuffer->data;
         memcpy(rDate, inDataPointer, totalLength);
         inDataPointer = rDate;
     }
     
-    pushPacket->dataOffset = inDataPointer - retainBuffer->data;
-    pushPacket->dataSize = (GInt32)totalLength;
+    pushPacket->type = GJMediaType_Video;
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
     pushPacket->pts = pts.value;
     
@@ -318,32 +321,23 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     GJLOG(GJ_LOGINFO,"encode dts:%f pts:%f\n",dts.value*1.0 / dts.timescale,pts.value*1.0/pts.timescale);
 #endif
     
+    int bufferOffset = 0;
+    
+    
+    static const uint32_t AVCCHeaderLength = 4;
+    while (bufferOffset < totalLength) {
+        // Read the NAL unit length
+        uint32_t NALUnitLength = 0;
+        memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
+        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
+
+        uint8_t* data = inDataPointer + bufferOffset;
+        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
+        bufferOffset += AVCCHeaderLength + NALUnitLength;
+    }
+    
     encoder.completeCallback(pushPacket);
     retainBufferUnRetain(retainBuffer);
-    
-//    int type;
-//    static const uint32_t AVCCHeaderLength = 4;
-//    while (bufferOffset < totalLength) {
-//        // Read the NAL unit length
-//        uint32_t NALUnitLength = 0;
-//        memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
-//        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
-//        type = inDataPointer[bufferOffset+AVCCHeaderLength] & 0x1F;
-//        if (type == 6) {//SEI
-//            
-//            pushPacket->seiOffset = inDataPointer+bufferOffset - retainBuffer->data;
-//            pushPacket->seiSize =(int)(NALUnitLength+4);
-//        }else if (type == 1 || type == 5){//pp
-//            pushPacket->ppOffset = inDataPointer+bufferOffset - retainBuffer->data;
-//            pushPacket->ppSize =(int)(NALUnitLength+4);
-//        }
-//        uint8_t* data = inDataPointer + bufferOffset;
-//        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
-//        bufferOffset += AVCCHeaderLength + NALUnitLength;
-//  
-//    }
-    
- 
 }
 
 //
