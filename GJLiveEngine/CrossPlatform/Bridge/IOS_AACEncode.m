@@ -40,7 +40,7 @@ GBool encodeSetup(struct _GJEncodeToAACContext* context,GJAudioFormat sourceForm
     source.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
     AACEncoderFromPCM* encoder = [[AACEncoderFromPCM alloc]initWithSourceForamt:&source DestDescription:&dest];
     [encoder start];
-    encoder.completeCallback = ^(R_GJAACPacket *packet) {
+    encoder.completeCallback = ^(R_GJPacket *packet) {
         callback(userData,packet);
     };
     context->obaque = (__bridge_retained GHandle)(encoder);

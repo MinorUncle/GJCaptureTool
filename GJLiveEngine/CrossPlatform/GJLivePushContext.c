@@ -52,7 +52,7 @@ static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame)
         context->operationCount--;
     }
 }
-static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
+static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
     GJLivePushContext* context = userData;
     packet->pts = GJ_Gettime()/1000-context->connentClock;
     if (context->firstVideoEncodeClock == G_TIME_INVALID) {
@@ -118,7 +118,7 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJH264Packet* packet){
         context->preVideoTraffic = bufferStatus;
     }
 }
-static GVoid aacPacketOutCallback(GHandle userData,R_GJAACPacket* packet){
+static GVoid aacPacketOutCallback(GHandle userData,R_GJPacket* packet){
     GJLivePushContext* context = userData;
     packet->pts = GJ_Gettime()/1000-context->connentClock;
     if (context->firstAudioEncodeClock == G_TIME_INVALID) {

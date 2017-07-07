@@ -211,8 +211,8 @@ void *av_mallocz(size_t size) av_malloc_attrib av_alloc_size(1);
  * zero all the bytes of the block.
  * The allocation will fail if nmemb * size is greater than or equal
  * to INT_MAX.
- * @param nmemb
- * @param size
+ * @param nmemb nmemb
+ * @param size size
  * @return Pointer to the allocated block, NULL if it cannot be allocated.
  */
 void *av_calloc(size_t nmemb, size_t size) av_malloc_attrib;

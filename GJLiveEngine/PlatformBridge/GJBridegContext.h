@@ -12,10 +12,10 @@
 #include "GJFormats.h"
 
 typedef GVoid (*AudioFrameOutCallback) (GHandle userData,R_GJPCMFrame* frame);
-typedef GVoid (*AACPacketOutCallback) (GHandle userData,R_GJAACPacket* packet);
+typedef GVoid (*AACPacketOutCallback) (GHandle userData,R_GJPacket* packet);
 
 typedef GVoid (*VideoFrameOutCallback) (GHandle userData,R_GJPixelFrame* frame);
-typedef GVoid (*H264PacketOutCallback) (GHandle userData,R_GJH264Packet* packet);
+typedef GVoid (*H264PacketOutCallback) (GHandle userData,R_GJPacket* packet);
 typedef GBool (*FillDataCallback)(GHandle userData,GVoid* data,GInt32* size);
 
 
@@ -91,14 +91,14 @@ typedef struct _GJAACDecodeContext{
 
     GBool (*decodeSetup)            (struct _GJAACDecodeContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AudioFrameOutCallback callback,GHandle userData);
     GVoid (*decodeUnSetup)          (struct _GJAACDecodeContext* context);
-    GBool (*decodePacket)           (struct _GJAACDecodeContext* context,R_GJAACPacket* packet);
+    GBool (*decodePacket)           (struct _GJAACDecodeContext* context,R_GJPacket* packet);
     AudioFrameOutCallback           decodeeCompleteCallback;
 }GJAACDecodeContext;
 typedef struct _GJH264DecodeContext{
     GHandle obaque;
     GBool (*decodeSetup)            (struct _GJH264DecodeContext* context,GJPixelType format,VideoFrameOutCallback callback,GHandle userData);
     GVoid (*decodeUnSetup)          (struct _GJH264DecodeContext* context);
-    GBool (*decodePacket)           (struct _GJH264DecodeContext* context,R_GJH264Packet* packet);
+    GBool (*decodePacket)           (struct _GJH264DecodeContext* context,R_GJPacket* packet);
     VideoFrameOutCallback      decodeeCompleteCallback;
 }GJH264DecodeContext;
 typedef struct _GJEncodeToH264eContext{

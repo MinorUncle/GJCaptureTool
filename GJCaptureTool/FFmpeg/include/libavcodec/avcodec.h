@@ -1627,10 +1627,10 @@ struct AVCodecInternal;
 enum AVFieldOrder {
     AV_FIELD_UNKNOWN,
     AV_FIELD_PROGRESSIVE,
-    AV_FIELD_TT,          //< Top coded_first, top displayed first
-    AV_FIELD_BB,          //< Bottom coded first, bottom displayed first
-    AV_FIELD_TB,          //< Top coded first, bottom displayed first
-    AV_FIELD_BT,          //< Bottom coded first, top displayed first
+    AV_FIELD_TT,          ///< Top coded_first, top displayed first
+    AV_FIELD_BB,          ///< Bottom coded first, bottom displayed first
+    AV_FIELD_TB,          ///< Top coded first, bottom displayed first
+    AV_FIELD_BT,          ///< Bottom coded first, top displayed first
 };
 
 /**
@@ -3826,7 +3826,7 @@ typedef struct AVHWAccel {
  *
  * Up to four components can be stored into it, the last component is
  * alpha.
- * @deprecated use AVFrame or imgutils functions instead
+ * deprecated use AVFrame or imgutils functions instead
  */
 typedef struct AVPicture {
     attribute_deprecated
@@ -4129,7 +4129,7 @@ void avcodec_free_context(AVCodecContext **avctx);
 
 #if FF_API_GET_CONTEXT_DEFAULTS
 /**
- * @deprecated This function should not be used, as closing and opening a codec
+ * deprecated This function should not be used, as closing and opening a codec
  * context multiple time is not supported. A new codec context should be
  * allocated for each new use.
  */
@@ -4324,7 +4324,7 @@ AVPacket *av_packet_clone(AVPacket *src);
  * Free the packet, if the packet is reference counted, it will be
  * unreferenced first.
  *
- * @param packet packet to be freed. The pointer will be set to NULL.
+ * @param pkt packet to be freed. The pointer will be set to NULL.
  * @note passing NULL is a no-op.
  */
 void av_packet_free(AVPacket **pkt);
@@ -4914,10 +4914,10 @@ int avcodec_receive_packet(AVCodecContext *avctx, AVPacket *avpkt);
  */
 
 enum AVPictureStructure {
-    AV_PICTURE_STRUCTURE_UNKNOWN,      //< unknown
-    AV_PICTURE_STRUCTURE_TOP_FIELD,    //< coded as top field
-    AV_PICTURE_STRUCTURE_BOTTOM_FIELD, //< coded as bottom field
-    AV_PICTURE_STRUCTURE_FRAME,        //< coded as frame
+    AV_PICTURE_STRUCTURE_UNKNOWN,      ///< unknown
+    AV_PICTURE_STRUCTURE_TOP_FIELD,    ///< coded as top field
+    AV_PICTURE_STRUCTURE_BOTTOM_FIELD, ///< coded as bottom field
+    AV_PICTURE_STRUCTURE_FRAME,        ///< coded as frame
 };
 
 typedef struct AVCodecParserContext {
@@ -5149,7 +5149,7 @@ int av_parser_parse2(AVCodecParserContext *s,
 int av_parser_change(AVCodecParserContext *s,
                      AVCodecContext *avctx,
                      uint8_t **poutbuf, int *poutbuf_size,
-                     const uint8_t *buf, int buf_size, int keyframe);
+                     const uint8_t *buf, int buf_size, int keyframe) attribute_deprecated;
 void av_parser_close(AVCodecParserContext *s);
 
 /**
@@ -5273,7 +5273,7 @@ int avcodec_encode_subtitle(AVCodecContext *avctx, uint8_t *buf, int buf_size,
 /**
  * @defgroup lavc_resample Audio resampling
  * @ingroup libavc
- * @deprecated use libswresample instead
+ * deprecated use libswresample instead
  *
  * @{
  */
@@ -5475,7 +5475,7 @@ unsigned int avcodec_pix_fmt_to_codec_tag(enum AVPixelFormat pix_fmt);
  * @deprecated see av_get_pix_fmt_loss()
  */
 int avcodec_get_pix_fmt_loss(enum AVPixelFormat dst_pix_fmt, enum AVPixelFormat src_pix_fmt,
-                             int has_alpha);
+                             int has_alpha) attribute_deprecated;
 
 /**
  * Find the best pixel format to convert to given a certain source pixel
@@ -5502,7 +5502,7 @@ enum AVPixelFormat avcodec_find_best_pix_fmt_of_list(const enum AVPixelFormat *p
  * @deprecated see av_find_best_pix_fmt_of_2()
  */
 enum AVPixelFormat avcodec_find_best_pix_fmt_of_2(enum AVPixelFormat dst_pix_fmt1, enum AVPixelFormat dst_pix_fmt2,
-                                            enum AVPixelFormat src_pix_fmt, int has_alpha, int *loss_ptr);
+                                            enum AVPixelFormat src_pix_fmt, int has_alpha, int *loss_ptr) attribute_deprecated;
 
 attribute_deprecated
 #if AV_HAVE_INCOMPATIBLE_LIBAV_ABI

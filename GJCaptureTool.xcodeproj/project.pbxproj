@@ -58,12 +58,12 @@
 		6ABF329C1F0E2C7E00721DB3 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ABF32801F0E2C7000721DB3 /* libavcodec.a */; };
 		6ABF329D1F0E2C7E00721DB3 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ABF327E1F0E2C7000721DB3 /* libavformat.a */; };
 		6ABF329E1F0E2C7E00721DB3 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ABF32881F0E2C7000721DB3 /* libavutil.a */; };
-		6ABF33131F0E2CE000721DB3 /* GJFFmpegPush.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF33111F0E2CE000721DB3 /* GJFFmpegPush.c */; };
 		6ABF33141F0E2CE000721DB3 /* GJFFmpegPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF33121F0E2CE000721DB3 /* GJFFmpegPush.h */; };
 		6ABF33501F0E5F7000721DB3 /* x264.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF334A1F0E5F7000721DB3 /* x264.h */; };
 		6ABF33511F0E5F7000721DB3 /* x264_config.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF334B1F0E5F7000721DB3 /* x264_config.h */; };
 		6ABF33521F0E5F7000721DB3 /* libx264.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ABF334D1F0E5F7000721DB3 /* libx264.a */; };
 		6ABF33531F0E5F7000721DB3 /* x264.pc in Resources */ = {isa = PBXBuildFile; fileRef = 6ABF334F1F0E5F7000721DB3 /* x264.pc */; };
+		6ABF33BF1F0F7B4700721DB3 /* GJFFmpegPush.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF33111F0E2CE000721DB3 /* GJFFmpegPush.c */; };
 		6AE37BD41ED5956800B049EB /* GJLivePlayer.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AE37BCC1ED5956800B049EB /* GJLivePlayer.c */; };
 		6AE37BD51ED5956800B049EB /* GJLivePlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BCD1ED5956800B049EB /* GJLivePlayer.h */; };
 		6AE37BD61ED5956800B049EB /* GJLivePullContext.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AE37BCE1ED5956800B049EB /* GJLivePullContext.c */; };
@@ -2322,7 +2322,7 @@
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
 				6ABF2B251F0B413600721DB3 /* IOS_H264Encode.m in Sources */,
 				AE70A5401ECB4DFE0009E49A /* GJH264Encoder.m in Sources */,
-				6ABF33131F0E2CE000721DB3 /* GJFFmpegPush.c in Sources */,
+				6ABF33BF1F0F7B4700721DB3 /* GJFFmpegPush.c in Sources */,
 				AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */,
 				6AE37BD41ED5956800B049EB /* GJLivePlayer.c in Sources */,
 				AE70A5321ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m in Sources */,

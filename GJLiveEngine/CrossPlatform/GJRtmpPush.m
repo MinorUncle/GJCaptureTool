@@ -196,7 +196,7 @@ GBool GJRtmpPush_SendAVCSequenceHeader(GJRtmpPush* push,GUInt8* sps,GInt32 spsSi
         return GFalse;
     }
 }
-GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
+GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJPacket* packet){
     if (sender == GNULL) {
         return GFalse;
     }
@@ -205,17 +205,13 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     GInt32 ppSize = 0;
     GInt32 ppPreSize = 0;//flv tag前置预留大小大小
     GUInt8 fristByte = 0x27;
-    if (packet->ppSize > 0) {
+    if (packet->flag == GJPacketFlag_KEY) {
         ppPreSize = 5;
-        ppSize = packet->ppSize;
-        pp = packet->ppOffset+packet->retain.data;
+        ppSize = packet->dataSize;
+        pp = packet->dataOffset+packet->retain.data;
         if ((pp[0] & 0x1F) == 5 || (pp[0] & 0x1F) == 6) {
             isKey = GTrue;
             fristByte = 0x17;
-            if (packet->seiSize != 0) {
-                pp = packet->seiOffset + packet->retain.data;
-                ppSize += packet->seiSize;
-            }
         }
     }else{
         GJAssert(0, "没有pp");
@@ -227,12 +223,8 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
         GJLOG(GJ_LOGDEBUG, "预留位置过小,扩大");
         retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+ppPreSize, GTrue);
 
-        if (packet->ppSize > 0) {
-            pp = packet->ppOffset+packet->retain.data;
-        }
-        if (packet->seiSize != 0) {
-            pp = packet->seiOffset + packet->retain.data;
-            ppSize += packet->seiSize;
+        if (packet->dataSize > 0) {
+            pp = packet->dataOffset+packet->retain.data;
         }
     }
     
@@ -256,7 +248,7 @@ GBool GJRtmpPush_SendH264Data(GJRtmpPush* sender,R_GJH264Packet* packet){
     sendPacket->m_headerType = RTMP_PACKET_SIZE_LARGE;
     sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
     sendPacket->m_nTimeStamp = (uint32_t)packet->pts;
-    if (packet->ppSize > 0) {
+    if (packet->dataSize > 0) {
         body[iIndex++] = fristByte;
         body[iIndex++] = 0x01;// AVC NALU
         
@@ -328,7 +320,7 @@ GBool GJRtmpPush_SendAACSequenceHeader(GJRtmpPush* push,GInt32 aactype, GInt32 s
         return GFalse;
     }
 }
-GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
+GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJPacket* buffer){
     if (sender == GNULL) {
         return GFalse;
     }
@@ -341,13 +333,13 @@ GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJAACPacket* buffer){
     
     RTMPPacket* sendPacket = &pushPacket->packet;
     RTMPPacket_Reset(sendPacket);
-    if (buffer->adtsOffset+buffer->retain.frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
+    if (buffer->dataOffset+buffer->retain.frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
         GJLOG(GJ_LOGWARNING, "产生内存移动");
         retainBufferMoveDataToPoint(&buffer->retain, RTMP_MAX_HEADER_SIZE+preSize, GTrue);
     }
 
-    sendPacket->m_body = (GChar*)(buffer->aacOffset +buffer->retain.data - preSize);
-    sendPacket->m_nBodySize = buffer->aacSize+preSize;
+    sendPacket->m_body = (GChar*)(buffer->dataOffset +buffer->retain.data - preSize);
+    sendPacket->m_nBodySize = buffer->dataSize+preSize;
 
     body = (GUChar *)sendPacket->m_body;
     

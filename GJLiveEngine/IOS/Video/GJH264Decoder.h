@@ -24,5 +24,5 @@ typedef void(^H264DecodeComplete)(CVImageBufferRef image,int64_t pts);
 @property(nonatomic,assign)OSType outPutImageFormat;
 @property(nonatomic,copy)H264DecodeComplete completeCallback;
 
--(void)decodePacket:(R_GJH264Packet *)packet;
+-(void)decodePacket:(R_GJPacket *)packet;
 @end

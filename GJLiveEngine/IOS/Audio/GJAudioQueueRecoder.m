@@ -267,7 +267,7 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
         }else{
             maxPacketSize = maxPacketSize*1.0/_format.mFramesPerPacket*_format.mSampleRate*0.5+7;
         }
-        GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize, true,R_GJAACPacketMalloc,GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize, true,R_GJPacketMalloc,GNULL);
     }
     _maxOutSize = maxPacketSize;
     _status = kRecoderStopStatus;

@@ -10,7 +10,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <CoreMedia/CoreMedia.h>
 #import "GJLiveDefine+internal.h"
-typedef void(^AACEncodeComplete)(R_GJAACPacket* packet);
+typedef void(^AACEncodeComplete)(R_GJPacket* packet);
 #define MAX_PCM_LENTH 2048+10
 //@class AACEncoderFromPCM;
 //@protocol AACEncoderFromPCMDelegate<NSObject>

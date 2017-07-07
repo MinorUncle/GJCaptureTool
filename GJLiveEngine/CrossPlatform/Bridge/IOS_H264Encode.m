@@ -14,7 +14,7 @@ inline static GBool encodeSetup (struct _GJEncodeToH264eContext* context,GJPixel
     GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
     GJH264Encoder* encoder = [[GJH264Encoder alloc]initWithSourceSize:CGSizeMake((CGFloat)format.mWidth, (CGFloat)format.mHeight)];
     GJLOG(GJ_LOGINFO, "GJH264Encoder setup:%p",encoder);
-    encoder.completeCallback = ^(R_GJH264Packet *packet) {
+    encoder.completeCallback = ^(R_GJPacket *packet) {
         callback(userData,packet);
     };
     context->obaque = (__bridge_retained GHandle)encoder;

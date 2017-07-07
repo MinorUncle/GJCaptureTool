@@ -230,14 +230,14 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         return;
     }
     GJH264Encoder* encoder = (__bridge GJH264Encoder *)(outputCallbackRefCon);
-    R_GJH264Packet* pushPacket = (R_GJH264Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJH264Packet));
+    R_GJPacket* pushPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
     GJRetainBuffer* retainBuffer = &pushPacket->retain;
-    memset(pushPacket, 0, sizeof(R_GJH264Packet));
+    memset(pushPacket, 0, sizeof(R_GJPacket));
 #define PUSH_H264_PACKET_PRE_SIZE 45
     
     CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sample);
     size_t length, totalLength;
-    size_t bufferOffset = 0;
+//    size_t bufferOffset = 0;
     uint8_t *inDataPointer;
     CMBlockBufferGetDataPointer(dataBuffer, 0, &length, &totalLength, (char**)&inDataPointer);
 
@@ -276,13 +276,13 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         uint8_t* data = retainBuffer->data;
         memcpy(&data[0], sparameterSet, sparameterSetSize);
         encoder.sps = [NSData dataWithBytes:data length:sparameterSetSize];
-        pushPacket->spsOffset=data - retainBuffer->data;
-        pushPacket->spsSize=(int)sparameterSetSize;
+//        pushPacket->spsOffset=data - retainBuffer->data;
+//        pushPacket->spsSize=(int)sparameterSetSize;
         
         memcpy(&data[sparameterSetSize], pparameterSet, pparameterSetSize);
         encoder.pps = [NSData dataWithBytes:data + sparameterSetSize length:pparameterSetSize];
-        pushPacket->ppsOffset = sparameterSetSize;
-        pushPacket->ppsSize = (int)pparameterSetSize;
+//        pushPacket->ppsOffset = sparameterSetSize;
+//        pushPacket->ppsSize = (int)pparameterSetSize;
 //        拷贝keyframe;
         memcpy(data+spsppsSize, inDataPointer, totalLength);
         inDataPointer = data + spsppsSize;
@@ -298,8 +298,8 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         inDataPointer = rDate;
     }
     
-    pushPacket->ppOffset = inDataPointer - retainBuffer->data;
-    pushPacket->ppSize = (GInt32)totalLength;
+    pushPacket->dataOffset = inDataPointer - retainBuffer->data;
+    pushPacket->dataSize = (GInt32)totalLength;
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
     pushPacket->pts = pts.value;
     

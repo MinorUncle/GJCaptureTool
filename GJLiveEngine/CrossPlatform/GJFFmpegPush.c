@@ -9,6 +9,86 @@
 #include "GJFFmpegPush.h"
 #include "GJLiveDefine+internal.h"
 #include "GJLog.h"
+#include "GJBufferPool.h"
+GVoid GJStreamPush_Delloc(GJStreamPush* push);
+GVoid GJStreamPush_Close(GJStreamPush* sender);
+
+static GHandle sendRunloop(GHandle parm){
+    pthread_setname_np("FFMPEGPushLoop");
+    GJStreamPush* push = (GJStreamPush*)parm;
+    GJStreamPushMessageType errType = GJStreamPushMessageType_connectError;
+    GHandle errParm = GNULL;
+  
+    GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl,  AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, GNULL);
+    if (ret < 0) {
+        GJLOG(GJ_LOGERROR, "avio_open2 error:%d",ret);
+        return GFalse;
+    }
+    ret = avformat_write_header(push->formatContext, GNULL);
+    if (ret < 0) {
+        GJLOG(GJ_LOGERROR, "avformat_write_header error:%d",ret);
+        return GFalse;
+    }
+    
+    R_GJPacket* packet;
+    while (!push->stopRequest && queuePop(push->sendBufferQueue, (GHandle*)&packet, INT32_MAX)) {
+#ifdef NETWORK_DELAY
+        packet->packet.m_nTimeStamp -= startPts;
+#endif
+        AVPacket* sendPacket =  av_mallocz(sizeof(AVPacket));
+        sendPacket->pts = packet->pts;
+        if (packet->flag == GJPacketFlag_KEY) {
+            sendPacket->flags = AV_PKT_FLAG_KEY;
+        }
+        sendPacket->stream_index = packet->type;
+        sendPacket->data = packet->retain.data + packet->dataOffset;
+        sendPacket->size = packet->dataSize;
+        
+        GInt32 iRet = av_write_frame(push->formatContext, sendPacket);
+        if (iRet) {
+//            if (packet->packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
+//                GJLOGFREQ("send video pts:%d size:%d",packet->packet.m_nTimeStamp,packet->packet.m_nBodySize);
+//                push->videoStatus.leave.byte+=packet->packet.m_nBodySize;
+//                push->videoStatus.leave.count++;
+//                push->videoStatus.leave.pts = packet->packet.m_nTimeStamp;
+//            }else{
+//                GJLOGFREQ("send audio pts:%d size:%d",packet->packet.m_nTimeStamp,packet->packet.m_nBodySize);
+//                push->audioStatus.leave.byte+=packet->packet.m_nBodySize;
+//                push->audioStatus.leave.count++;
+//                push->audioStatus.leave.pts = packet->packet.m_nTimeStamp;
+//            }
+//            retainBufferUnRetain(packet->retainBuffer);
+//            GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);
+        }else{
+            GJLOG(GJ_LOGFORBID, "error send video FRAME");
+            errType = GJStreamPushMessageType_sendPacketError;
+            retainBufferUnRetain(&packet->retain);
+            GJBufferPoolSetData(defauleBufferPool(), (GHandle)packet);
+            goto ERROR;
+        };
+    }
+
+    
+    errType = GJStreamPushMessageType_closeComplete;
+ERROR:
+    
+    if (push->messageCallback) {
+        push->messageCallback(push->streamPushParm, errType,errParm);
+    }
+    GBool shouldDelloc = GFalse;
+    pthread_mutex_lock(&push->mutex);
+    push->sendThread = GNULL;
+    if (push->releaseRequest == GTrue) {
+        shouldDelloc = GTrue;
+    }
+    pthread_mutex_unlock(&push->mutex);
+    if (shouldDelloc) {
+        GJStreamPush_Delloc(push);
+    }
+    GJLOG(GJ_LOGINFO,"sendRunloop end");
+    
+    return GNULL;
+}
 
 
 GBool GJStreamPush_Create(GJStreamPush** sender,StreamPushMessageCallback callback,void* streamPushParm,GJAudioStreamFormat audioFormat,GJVideoStreamFormat videoFormat){
@@ -38,7 +118,24 @@ GBool GJStreamPush_Create(GJStreamPush** sender,StreamPushMessageCallback callba
 
 }
 GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl){
-    GInt32 ret = avformat_alloc_output_context2(&push->formatContext, GNULL, GNULL, sendUrl);
+    
+    GJLOG(GJ_LOGINFO,"GJRtmpPush_StartConnect:%p",push);
+    
+    size_t length = strlen(sendUrl);
+    memset(&push->videoStatus, 0, sizeof(GJTrafficStatus));
+    memset(&push->audioStatus, 0, sizeof(GJTrafficStatus));
+    GJAssert(length <= 100-1, "sendURL 长度不能大于：%d",100-1);
+    memcpy(push->pushUrl, sendUrl, length+1);
+    if (push->sendThread) {
+        GJLOG(GJ_LOGWARNING,"上一个push没有释放，开始释放并等待");
+        GJStreamPush_Close(push);
+        pthread_join(push->sendThread, GNULL);
+        GJLOG(GJ_LOGWARNING,"等待push释放结束");
+    }
+    push->stopRequest = GFalse;
+    
+    
+    GInt32 ret = avformat_alloc_output_context2(&push->formatContext, GNULL, "flv", sendUrl);
     if (ret < 0) {
         GJLOG(GJ_LOGFORBID, "ffmpeg 不知道该封装格式");
         return GFalse;
@@ -59,7 +156,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl){
     }
     switch (push->videoFormat.format.mType) {
         case GJVideoType_H264:
-            audioCode = avcodec_find_encoder(AV_CODEC_ID_H264);
+            videoCode = avcodec_find_encoder(AV_CODEC_ID_H264);
             break;
         default:
             break;
@@ -69,12 +166,31 @@ GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl){
         return GFalse;
     }
     AVStream* vs = avformat_new_stream(push->formatContext, videoCode);
+    vs->codecpar->bit_rate = push->videoFormat.bitrate;
+    vs->codecpar->width = push->videoFormat.format.mWidth;
+    vs->codecpar->height = push->videoFormat.format.mHeight;
+    vs->codecpar->format = AV_PIX_FMT_YUV420P;
+    vs->codecpar->codec_type = AVMEDIA_TYPE_VIDEO;
+    vs->codecpar->codec_id = AV_CODEC_ID_H264;
+    vs->time_base.num = 1;
+    vs->time_base.den = 1000;
+    push->vStream = vs;
+    
     AVStream* as = avformat_new_stream(push->formatContext, audioCode);
-    ret = avio_open2(&push->formatContext->pb, sendUrl, 0, GNULL, GNULL);
-    if (ret < 0) {
-        GJLOG(GJ_LOGFORBID, "avio_open2 error:%d",ret);
-        return GFalse;
-    }
+    as->codecpar->channels = push->audioFormat.format.mChannelsPerFrame;
+    as->codecpar->bit_rate = push->audioFormat.bitrate;
+    as->codecpar->sample_rate = push->audioFormat.format.mSampleRate;
+    as->codecpar->format = AV_SAMPLE_FMT_S16;
+    as->codecpar->codec_type = AVMEDIA_TYPE_AUDIO;
+    as->codecpar->codec_id = AV_CODEC_ID_AAC;
+    as->time_base.num = 1;
+    as->time_base.den = 1000;
+    push->aStream = as;
+    AVDictionary *option = GNULL;
+    av_dict_set_int(&option, "timeout", 2000, 0);
+
+    
+    pthread_create(&push->sendThread, GNULL, sendRunloop, push);
     return GTrue;
 }
 
@@ -117,10 +233,15 @@ GVoid GJStreamPush_CloseAndDealloc(GJStreamPush** push){
     *push = GNULL;
 
 }
-GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJH264Packet* data){
+GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* data){
+    data->type = push->vStream->index;
+    queuePush(push->sendBufferQueue, data, 0);
+    
     return GTrue;
 }
-GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJAACPacket* data){
+GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* data){
+    data->type = push->aStream->index;
+    queuePush(push->sendBufferQueue, data, 0);
     return GTrue;
 }
 GFloat32 GJStreamPush_GetBufferRate(GJStreamPush* push){

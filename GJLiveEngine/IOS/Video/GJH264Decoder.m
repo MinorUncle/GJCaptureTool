@@ -96,7 +96,7 @@ void decodeOutputCallback(
     return codeIndex;
 }
 
--(void)decodePacket:(R_GJH264Packet *)packet
+-(void)decodePacket:(R_GJPacket *)packet
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     
@@ -106,9 +106,18 @@ void decodeOutputCallback(
     CMSampleBufferRef sampleBuffer = NULL;
     CMBlockBufferRef blockBuffer = NULL;
     
-    if (packet->spsSize > 0) {
-        uint8_t*  parameterSetPointers[2] = {packet->spsOffset+packet->retain.data, packet->ppsOffset+packet->retain.data};
-        size_t parameterSetSizes[2] = {packet->spsSize, packet->ppsSize};
+    if (packet->flag == GJPacketFlag_KEY) {
+        int32_t spsSize,ppsSize;
+        uint8_t* sps,*pps;
+        memcpy(&spsSize, packet->retain.data + packet->dataOffset, 4);
+        spsSize = ntohl(spsSize);
+        sps = packet->retain.data+4;
+        memcpy(&ppsSize, spsSize+sps, 4);
+        ppsSize = ntohl(ppsSize);
+        pps = sps+spsSize+4;
+        
+        uint8_t*  parameterSetPointers[2] = {sps, pps};
+        size_t parameterSetSizes[2] = {spsSize,ppsSize};
         
         CMVideoFormatDescriptionRef  desc;
         status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,
@@ -153,6 +162,8 @@ void decodeOutputCallback(
             GJLOG(GJ_LOGWARNING, "reCreate decoder ,format:%p",_formatDesc);
             [self createDecompSession];
         }
+        
+        return;
     }else{
         if (_decompressionSession == NULL) {
             GJLOG(GJ_LOGFORBID, "解码器为空，且缺少关键帧，丢帧");
@@ -161,15 +172,10 @@ void decodeOutputCallback(
 
     }
     
-    if (packet->ppSize>0) {
-        blockLength = (int)(packet->ppSize);
-        void* data = NULL;
-        if (packet->seiSize>0) {
-            data = packet->seiOffset+packet->retain.data;
-            blockLength = packet->seiSize + packet->ppSize;
-        }else{
-            data = packet->ppOffset+packet->retain.data;
-        }
+    if (packet->dataSize>0) {
+        blockLength = (int)(packet->dataSize);
+        void* data = packet->dataOffset+packet->retain.data;
+        
 //        uint32_t dataLength32 = htonl (blockLength - 4);
 //        memcpy (data, &dataLength32, sizeof (uint32_t));
         status = CMBlockBufferCreateWithMemoryBlock(NULL, data,

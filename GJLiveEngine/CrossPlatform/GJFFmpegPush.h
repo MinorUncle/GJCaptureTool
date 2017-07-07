@@ -26,6 +26,8 @@ typedef GVoid(*StreamPushMessageCallback)(GHandle userData, GJStreamPushMessageT
 
 typedef struct _GJStreamPush{
     AVFormatContext*        formatContext;
+    AVStream*               vStream;
+    AVStream*               aStream;
     GJAudioStreamFormat           audioFormat;
     GJVideoStreamFormat           videoFormat;
     
@@ -46,8 +48,8 @@ typedef struct _GJStreamPush{
 
 GBool GJStreamPush_Create(GJStreamPush** push,StreamPushMessageCallback callback,void* streamPushParm,GJAudioStreamFormat audioFormat,GJVideoStreamFormat videoFormat);
 GVoid GJStreamPush_CloseAndDealloc(GJStreamPush** push);
-GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJH264Packet* data);
-GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJAACPacket* data);
+GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* data);
+GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* data);
 GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl);
 GFloat32 GJStreamPush_GetBufferRate(GJStreamPush* push);
 GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush* push);

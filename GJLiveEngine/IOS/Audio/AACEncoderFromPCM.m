@@ -180,7 +180,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         });
         _bufferPool = NULL;
     }
-    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJAACPacketMalloc,GNULL);
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJPacketMalloc,GNULL);
 //    [self performSelectorInBackground:@selector(_converterStart) withObject:nil];
     dispatch_async(_encoderQueue, ^{
         [self _converterStart];
@@ -267,7 +267,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
     while (_isRunning) {
 //        memset(&packetDesc, 0, sizeof(packetDesc));
-        R_GJAACPacket* packet = (R_GJAACPacket*)GJRetainBufferPoolGetData(_bufferPool);
+        R_GJPacket* packet = (R_GJPacket*)GJRetainBufferPoolGetData(_bufferPool);
         GJRetainBuffer* audioBuffer = &packet->retain;
         if(audioBuffer->frontSize<PUSH_AAC_PACKET_PRE_SIZE){
             retainBufferMoveDataPoint(audioBuffer, PUSH_AAC_PACKET_PRE_SIZE,GFalse);
@@ -291,10 +291,11 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
         audioBuffer->size = outCacheBufferList.mBuffers[0].mDataByteSize+7;
 //        adtsDataForPacketLength(outCacheBufferList.mBuffers[0].mDataByteSize, audioBuffer->data, _destFormat.mSampleRate, _destFormat.mChannelsPerFrame);
-        packet->adtsOffset = 0;
-        packet->adtsSize = 0;
-        packet->aacOffset = 7;
-        packet->aacSize = outCacheBufferList.mBuffers[0].mDataByteSize;
+//        packet->adtsOffset = 0;
+//        packet->adtsSize = 0;
+        packet->type = GJMediaType_Audio;
+        packet->dataOffset = 7;
+        packet->dataSize = outCacheBufferList.mBuffers[0].mDataByteSize;
         packet->pts = _currentPts;
         _currentPts = -1;
         self.completeCallback(packet);

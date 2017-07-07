@@ -12,8 +12,8 @@
 #include <string.h>
 static void pullMessageCallback(GJRtmpPull* pull, GJRTMPPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm);
 static GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle param);
-static GVoid pullVideoDataCallback(GJRtmpPull* pull,R_GJH264Packet* streamPacket,GHandle parm);
-static GVoid pullAudioDataCallback(GJRtmpPull* pull,R_GJAACPacket* streamPacket,GHandle parm);
+static GVoid pullVideoDataCallback(GJRtmpPull* pull,R_GJPacket* streamPacket,GHandle parm);
+static GVoid pullAudioDataCallback(GJRtmpPull* pull,R_GJPacket* streamPacket,GHandle parm);
 
 static GVoid aacDecodeCompleteCallback(GHandle userData,R_GJPCMFrame* frame);
 static GVoid h264DecodeCompleteCallback(GHandle userData,R_GJPixelFrame* frame);
@@ -178,18 +178,18 @@ static const GInt32 mpeg4audio_sample_rates[16] = {
     24000, 22050, 16000, 12000, 11025, 8000, 7350
 };
 
-void pullVideoDataCallback(GJRtmpPull* pull,R_GJH264Packet* h264Packet,void* parm){
+void pullVideoDataCallback(GJRtmpPull* pull,R_GJPacket* h264Packet,void* parm){
     GJLivePullContext* livePull = parm;
     livePull->videoUnDecodeByte += h264Packet->retain.size;
     livePull->videoDecoder->decodePacket(livePull->videoDecoder,h264Packet);
 }
-void pullAudioDataCallback(GJRtmpPull* pull,R_GJAACPacket* aacPacket,void* parm){
+void pullAudioDataCallback(GJRtmpPull* pull,R_GJPacket* aacPacket,void* parm){
     GJLivePullContext* livePull = parm;
     livePull->audioUnDecodeByte += aacPacket->retain.size;
     if (livePull->fristAudioPullClock == G_TIME_INVALID) {
-        if (aacPacket->adtsSize >0) {
+        if (aacPacket->dataSize >0 && aacPacket->flag == GJPacketFlag_KEY) {
             livePull->fristAudioPullClock = GJ_Gettime()/1000.0;
-            uint8_t* adts = aacPacket->adtsOffset+aacPacket->retain.data;
+            uint8_t* adts = aacPacket->dataOffset+aacPacket->retain.data;
             uint8_t sampleIndex = adts[2] << 2;
             sampleIndex = sampleIndex>>4;
             int sampleRate = mpeg4audio_sample_rates[sampleIndex];
@@ -229,6 +229,7 @@ void pullAudioDataCallback(GJRtmpPull* pull,R_GJAACPacket* aacPacket,void* parm)
             //            [livePull.audioDecoder start];
             //            livePull.player.audioFormat = destformat;
             pthread_mutex_unlock(&livePull->lock);
+            return;
         }else{
             GJLOG(GJ_LOGERROR,"音频没有adts");
             return;

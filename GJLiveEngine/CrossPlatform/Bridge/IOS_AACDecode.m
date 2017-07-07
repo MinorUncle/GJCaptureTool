@@ -64,7 +64,7 @@ inline static GVoid decodeUnSetup (struct _GJAACDecodeContext* context){
     }
     pthread_mutex_unlock(&context->lock);
 }
-inline static GBool decodePacket (struct _GJAACDecodeContext* context,R_GJAACPacket* packet){
+inline static GBool decodePacket (struct _GJAACDecodeContext* context,R_GJPacket* packet){
     pthread_mutex_lock(&context->lock);
     GJPCMDecodeFromAAC* decode = (__bridge GJPCMDecodeFromAAC *)(context->obaque);
     [decode decodePacket:packet];

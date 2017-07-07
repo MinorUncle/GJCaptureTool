@@ -23,7 +23,7 @@
 
     
     
-    R_GJAACPacket* _prePacket;
+    R_GJPacket* _prePacket;
     AudioStreamPacketDescription tPacketDesc;
 }
 
@@ -90,7 +90,7 @@
         GJLOG(GJ_LOGINFO, "AudioConverterDispose");
         _decodeConvert = nil;
     }
-    R_GJAACPacket* packet = NULL;
+    R_GJPacket* packet = NULL;
     while (queuePop(_resumeQueue, (GVoid**)&packet, 0)) {
         retainBufferUnRetain(&packet->retain);
     }
@@ -109,12 +109,12 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     GJQueue* param =   decode->_resumeQueue;
     GJRetainBuffer* retainBuffer;
-    R_GJAACPacket* packet;    
+    R_GJPacket* packet;    
     if (decode.running && queuePop(param,(void**)&packet,INT_MAX)) {
         retainBuffer = &packet->retain;
-        ioData->mBuffers[0].mData = packet->retain.data + packet->aacOffset;
+        ioData->mBuffers[0].mData = packet->retain.data + packet->dataOffset;
         ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
-        ioData->mBuffers[0].mDataByteSize = packet->aacSize;
+        ioData->mBuffers[0].mDataByteSize = packet->dataSize;
         *ioNumberDataPackets = 1;
     }else{
         *ioNumberDataPackets = 0;
@@ -124,7 +124,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     
     if (outDataPacketDescription) {
         decode->tPacketDesc.mStartOffset = decode->tPacketDesc.mVariableFramesInPacket=0;
-        decode->tPacketDesc.mDataByteSize = packet->aacSize;
+        decode->tPacketDesc.mDataByteSize = packet->dataSize;
         outDataPacketDescription[0] = &(decode->tPacketDesc);
     }
     if (decode.currentPts <= 0) {
@@ -134,7 +134,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     return noErr;
 }
 
--(void)decodePacket:(R_GJAACPacket*)packet{
+-(void)decodePacket:(R_GJPacket*)packet{
     retainBufferRetain(&packet->retain);
     if(!_running || !queuePush(_resumeQueue, packet,0)) {
         retainBufferUnRetain(&packet->retain);
@@ -155,9 +155,9 @@ static const int mpeg4audio_sample_rates[16] = {
     
     if(_sourceFormat.mFormatID <= 0){
     // get audio format
-        R_GJAACPacket* packet;
-        if (queuePeekWaitValue(_resumeQueue, 0,(void**)&packet, INT_MAX) && _running) {
-            uint8_t* adts = packet->adtsOffset+packet->retain.data;
+        R_GJPacket* packet;
+        if (queuePeekWaitValue(_resumeQueue, 0,(void**)&packet, INT_MAX) && packet->flag == GJPacketFlag_KEY && _running) {
+            uint8_t* adts = packet->dataOffset+packet->retain.data;
             uint8_t sampleIndex = adts[2] << 2;
             sampleIndex = sampleIndex>>4;
             int sampleRate = mpeg4audio_sample_rates[sampleIndex];

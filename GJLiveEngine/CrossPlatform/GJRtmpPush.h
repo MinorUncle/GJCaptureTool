@@ -58,10 +58,10 @@ GVoid GJRtmpPush_CloseAndDealloc(GJRtmpPush** push);
  @param push push description
  @param data data description
  */
-GBool GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJH264Packet* data);
+GBool GJRtmpPush_SendH264Data(GJRtmpPush* push,R_GJPacket* data);
 GBool GJRtmpPush_SendAVCSequenceHeader(GJRtmpPush* push,GUInt8* sps,GInt32 spsSize,GUInt8* pps,GInt32 ppsSize,GUInt64 dts);
 
-GBool GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJAACPacket* data);
+GBool GJRtmpPush_SendAACData(GJRtmpPush* push,R_GJPacket* data);
 GBool GJRtmpPush_SendAACSequenceHeader(GJRtmpPush* push,GInt32 aactype, GInt32 sampleRate, GInt32 channels,GUInt64 dts);
 GBool GJRtmpPush_StartConnect(GJRtmpPush* push,const char* sendUrl);
 GFloat32 GJRtmpPush_GetBufferRate(GJRtmpPush* push);

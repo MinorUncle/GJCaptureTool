@@ -30,8 +30,8 @@ typedef enum _GJRTMPPullMessageType{
 struct _GJRtmpPull;
 
 typedef GVoid(*PullMessageCallback)(struct _GJRtmpPull* rtmpPull, GJRTMPPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm);
-typedef GVoid(*PullVideoDataCallback)(struct _GJRtmpPull* rtmpPull,R_GJH264Packet* packet,GHandle rtmpPullParm);
-typedef GVoid(*PullAudioDataCallback)(struct _GJRtmpPull* rtmpPull,R_GJAACPacket* packet,GHandle rtmpPullParm);
+typedef GVoid(*PullVideoDataCallback)(struct _GJRtmpPull* rtmpPull,R_GJPacket* packet,GHandle rtmpPullParm);
+typedef GVoid(*PullAudioDataCallback)(struct _GJRtmpPull* rtmpPull,R_GJPacket* packet,GHandle rtmpPullParm);
 
 
 

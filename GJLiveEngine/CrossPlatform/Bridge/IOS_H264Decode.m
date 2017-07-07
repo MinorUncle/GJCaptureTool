@@ -45,7 +45,7 @@ inline static GVoid decodeUnSetup (struct _GJH264DecodeContext* context){
         GJLOG(GJ_LOGINFO, "GJH264Decoder unsetup");
     }
 }
-inline static GBool decodePacket (struct _GJH264DecodeContext* context,R_GJH264Packet* packet){
+inline static GBool decodePacket (struct _GJH264DecodeContext* context,R_GJPacket* packet){
     GJH264Decoder* decode = (__bridge GJH264Decoder *)(context->obaque);
     [decode decodePacket:packet];
     

@@ -393,7 +393,10 @@ static char* url = "rtmp://10.0.1.142/live/room";
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
             path = [path stringByAppendingPathComponent:@"test.mp4"];
 //            [_livePush videoRecodeWithPath:path];
-            [_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]];
+            if(![_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]]){
+                [_livePush stopStreamPush];
+                btn.selected = NO;
+            }
         }else{
              [_livePush stopStreamPush];
         }
@@ -429,7 +432,9 @@ static char* url = "rtmp://10.0.1.142/live/room";
 //        }
         
         if (btn.selected) {
-            [pull startStreamPullWithUrl:url];
+            if(![pull startStreamPullWithUrl:url]){
+                btn.selected = NO;
+            };
         }else{
             [pull stopStreamPull];
         }
