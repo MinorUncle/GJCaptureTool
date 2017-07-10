@@ -28,6 +28,63 @@ static GHandle sendRunloop(GHandle parm){
     if(push->messageCallback){
         push->messageCallback(push->streamPushParm, GJStreamPushMessageType_connectSuccess,GNULL);
     }
+    
+    
+
+    R_GJPacket* packet;
+
+    GInt32 videoIndex = 0;
+    while (queuePeekWaitValue(push->sendBufferQueue, videoIndex, (GHandle)&packet, GINT32_MAX)) {
+        if (push->stopRequest) {
+            goto END;
+        }
+        if (packet->type == GJMediaType_Video && (packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY) {
+            GUInt8* start = packet->dataOffset + packet->retain.data;
+            
+            GInt32 index = 0;
+            GUInt8* sps = GNULL,*pps = GNULL;
+            while (index < packet->dataSize) {
+                if (packet->dataSize > index+4 && start[index] == 0x00 && start[index+1] == 0x00) {
+                    if (start[index+2] == 0x01 ) {
+                        if ((start[index+3] & 0x1f) == 7) {
+                            sps = start+index;
+                            index+=2;
+                        }else if ((start[index+3] & 0x1f) == 8){
+                            pps = start + index;
+                            index+=2;
+                        }else{
+                            break;
+                        }
+                    }else if (start[index+2] == 00 && start[index+3] == 01){
+                        if ((start[index+4] & 0x1f) == 7) {
+                            sps = start+index;
+                            index+=3;
+                        }else if((start[index+4] & 0x1f) == 8){
+                            pps = start + index;
+                            index+=3;
+                        }else{
+                            break;
+                        }
+                    }
+                }
+                index++;
+            }
+            if (sps && pps) {
+                index++;
+                push->vStream->codecpar->extradata_size = (GInt32)(start+index - sps);
+                push->vStream->codecpar->extradata = av_malloc(push->vStream->codecpar->extradata_size);
+                memcpy(push->vStream->codecpar->extradata, sps, push->vStream->codecpar->extradata_size);
+                break;
+            }else{
+                GJLOG(GJ_LOGERROR, "没有sps，pps，丢弃该帧");
+            }
+            break;
+        }else{
+            videoIndex++;
+        }
+    }
+    
+    
     ret = avformat_write_header(push->formatContext, GNULL);
     if (ret < 0) {
         GJLOG(GJ_LOGERROR, "avformat_write_header error:%d",ret);
@@ -35,8 +92,11 @@ static GHandle sendRunloop(GHandle parm){
         goto END;
     }
     
-    R_GJPacket* packet;
-    while (!push->stopRequest && queuePop(push->sendBufferQueue, (GHandle*)&packet, INT32_MAX)) {
+    while (queuePop(push->sendBufferQueue, (GHandle*)&packet, INT32_MAX)) {
+        if (push->stopRequest) {
+            retainBufferUnRetain(&packet->retain);
+            break;
+        }
 #ifdef NETWORK_DELAY
         packet->packet.m_nTimeStamp -= startPts;
 #endif
@@ -44,6 +104,11 @@ static GHandle sendRunloop(GHandle parm){
         av_init_packet(sendPacket);
         sendPacket->pts = packet->pts;
         sendPacket->dts = packet->pts;
+        if (packet->type == GJMediaType_Video) {
+            sendPacket->stream_index = push->vStream->index;
+        }else{
+            sendPacket->stream_index = push->aStream->index;
+        }
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
@@ -54,7 +119,7 @@ static GHandle sendRunloop(GHandle parm){
         GInt32 iRet = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
             if (packet->type == GJMediaType_Video) {
-                printf("send video pts:%lld size:%d",packet->pts,packet->dataSize);
+//                printf("send video pts:%lld size:%d\n",packet->pts,packet->dataSize);
 //                GJLOGFREQ("send video pts:%d size:%d",packet->pts,packet->dataSize);
                 push->videoStatus.leave.byte+=packet->dataSize;
                 push->videoStatus.leave.count++;
@@ -241,7 +306,6 @@ GVoid GJStreamPush_CloseAndDealloc(GJStreamPush** push){
 }
 GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
     retainBufferRetain(&packet->retain);
-    packet->type = push->vStream->index;
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         push->videoStatus.enter.pts = packet->pts;
         push->videoStatus.enter.count++;
@@ -256,7 +320,6 @@ GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
 }
 GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
     retainBufferRetain(&packet->retain);
-    packet->type = push->aStream->index;
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         push->audioStatus.enter.pts = packet->pts;
         push->audioStatus.enter.count++;

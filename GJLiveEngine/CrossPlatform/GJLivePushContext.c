@@ -42,7 +42,6 @@ static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* fram
     }
 }
 static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame){
-    return;
     GJLivePushContext* context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
         context->operationCount ++;
