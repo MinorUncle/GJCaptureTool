@@ -79,10 +79,10 @@ typedef struct _GJAudioPlayContext{
 }GJAudioPlayContext;
 typedef struct _GJEncodeToAACContext{
     GHandle obaque;
-    GBool (*encodeSetup)            (struct _GJEncodeToAACContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AACPacketOutCallback callback,GHandle userData);
+    GBool (*encodeSetup)            (struct _GJEncodeToAACContext* context,GJAudioFormat sourceFormat,GJAudioStreamFormat destForamt,AACPacketOutCallback callback,GHandle userData);
     GVoid (*encodeUnSetup)          (struct _GJEncodeToAACContext* context);
     GVoid (*encodeFrame)            (struct _GJEncodeToAACContext* context,R_GJPCMFrame* frame);
-    GBool (*encodeSetBitrate)       (struct _GJEncodeToAACContext* context,GInt32 bitrate);
+//    GBool (*encodeSetBitrate)       (struct _GJEncodeToAACContext* context,GInt32 bitrate);//只能初始化时配置
     AACPacketOutCallback       encodeCompleteCallback;
 }GJEncodeToAACContext;
 typedef struct _GJAACDecodeContext{

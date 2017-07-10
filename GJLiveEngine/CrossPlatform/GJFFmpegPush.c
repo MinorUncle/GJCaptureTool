@@ -10,6 +10,10 @@
 #include "GJLiveDefine+internal.h"
 #include "GJLog.h"
 #include "GJBufferPool.h"
+
+
+static GJTrafficStatus error_Status;
+
 GVoid GJStreamPush_Delloc(GJStreamPush* push);
 GVoid GJStreamPush_Close(GJStreamPush* sender);
 
@@ -18,8 +22,10 @@ static GHandle sendRunloop(GHandle parm){
     GJStreamPush* push = (GJStreamPush*)parm;
     GJStreamPushMessageType errType = GJStreamPushMessageType_connectError;
     GHandle errParm = GNULL;
-  
-    GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl,  AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, GNULL);
+    AVDictionary *option = GNULL;
+    av_dict_set_int(&option, "timeout", 2000, 0);
+    GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl,  AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, &option);
+    av_dict_free(&option);
     if (ret < 0) {
         GJLOG(GJ_LOGERROR, "avio_open2 error:%d",ret);
         errType = GJStreamPushMessageType_connectError;
@@ -91,7 +97,9 @@ static GHandle sendRunloop(GHandle parm){
         errType = GJStreamPushMessageType_connectError;
         goto END;
     }
-    
+    AVPacket* sendPacket =  av_mallocz(sizeof(AVPacket));
+    errType = GJStreamPushMessageType_closeComplete;
+
     while (queuePop(push->sendBufferQueue, (GHandle*)&packet, INT32_MAX)) {
         if (push->stopRequest) {
             retainBufferUnRetain(&packet->retain);
@@ -100,7 +108,6 @@ static GHandle sendRunloop(GHandle parm){
 #ifdef NETWORK_DELAY
         packet->packet.m_nTimeStamp -= startPts;
 #endif
-        AVPacket* sendPacket =  av_mallocz(sizeof(AVPacket));
         av_init_packet(sendPacket);
         sendPacket->pts = packet->pts;
         sendPacket->dts = packet->pts;
@@ -123,24 +130,33 @@ static GHandle sendRunloop(GHandle parm){
 //                GJLOGFREQ("send video pts:%d size:%d",packet->pts,packet->dataSize);
                 push->videoStatus.leave.byte+=packet->dataSize;
                 push->videoStatus.leave.count++;
-                push->videoStatus.leave.pts = packet->pts;
+                push->videoStatus.leave.pts = (GLong)packet->pts;
             }else{
                 GJLOGFREQ("send audio pts:%d size:%d",packet->pts,packet->dataSize);
                 push->audioStatus.leave.byte+=packet->dataSize;
                 push->audioStatus.leave.count++;
-                push->audioStatus.leave.pts = packet->pts;
+                push->audioStatus.leave.pts = (GLong)packet->pts;
             }
             retainBufferUnRetain(&packet->retain);
         }else{
             GJLOG(GJ_LOGFORBID, "error send video FRAME");
             errType = GJStreamPushMessageType_sendPacketError;
             retainBufferUnRetain(&packet->retain);
-            goto END;
+            break;
         };
     }
+    av_freep(sendPacket);
+    GInt32 result =  av_write_trailer(push->formatContext);
+    if (result < 0) {
+        GJLOG(GJ_LOGERROR, "av_write_trailer error:%d",result);
+    }else{
+        GJLOG(GJ_LOGDEBUG, "av_write_trailer success");
 
-    
-    errType = GJStreamPushMessageType_closeComplete;
+    }
+    result = avio_close(push->formatContext->pb);
+    if (result < 0) {
+        GJLOG(GJ_LOGERROR, "avio_close error:%d",result);
+    }
 END:
     
     if (push->messageCallback) {
@@ -257,8 +273,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl){
     as->time_base.num = 1;
     as->time_base.den = 1000;
     push->aStream = as;
-    AVDictionary *option = GNULL;
-    av_dict_set_int(&option, "timeout", 2000, 0);
+
 
     
     pthread_create(&push->sendThread, GNULL, sendRunloop, push);
@@ -267,7 +282,27 @@ GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl){
 
 GVoid GJStreamPush_Delloc(GJStreamPush* push){
     
+    
+    GInt32 length = queueGetLength(push->sendBufferQueue);
+    if (length>0) {
+        R_GJPacket** packet = (R_GJPacket**)malloc(sizeof(R_GJPacket*)*length);
+        //queuepop已经关闭
+        if (queueClean(push->sendBufferQueue, (GHandle*)packet, &length)) {
+            for (GInt32 i = 0; i<length; i++) {
+                retainBufferUnRetain(&packet[i]->retain);
+            }
+            
+        }
+        free(packet);
+    }
     queueFree(&push->sendBufferQueue);
+_Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+    avcodec_close(push->vStream->codec);
+    avcodec_close(push->aStream->codec);
+_Pragma("GCC diagnostic warning \"-Wdeprecated-declarations\"")
+    if (push->formatContext) {
+        avformat_free_context(push->formatContext);
+    }
     free(push);
     GJLOG(GJ_LOGDEBUG, "GJRtmpPush_Delloc:%p",push);
     
@@ -304,10 +339,12 @@ GVoid GJStreamPush_CloseAndDealloc(GJStreamPush** push){
     *push = GNULL;
 
 }
-GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
+GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){    return GTrue;
+
+    if(push == GNULL)return GFalse;
     retainBufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-        push->videoStatus.enter.pts = packet->pts;
+        push->videoStatus.enter.pts = (GLong)packet->pts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
         
@@ -319,9 +356,11 @@ GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
     return GTrue;
 }
 GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
+    return GTrue;
+    if(push == GNULL)return GFalse;
     retainBufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-        push->audioStatus.enter.pts = packet->pts;
+        push->audioStatus.enter.pts = (GLong)packet->pts;
         push->audioStatus.enter.count++;
         push->audioStatus.enter.byte += packet->dataSize;
     }else{
@@ -333,8 +372,10 @@ GFloat32 GJStreamPush_GetBufferRate(GJStreamPush* push){
     return 1.0;
 }
 GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush* push){
+    if (!push) return error_Status;
     return push->videoStatus;
 }
 GJTrafficStatus GJStreamPush_GetAudioBufferCacheInfo(GJStreamPush* push){
+    if (!push) return error_Status;
     return push->audioStatus;
 }

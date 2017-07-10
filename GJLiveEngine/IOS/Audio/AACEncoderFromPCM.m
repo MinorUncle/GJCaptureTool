@@ -22,19 +22,20 @@
     
     GJRetainBufferPool* _bufferPool;
     GInt64 _currentPts;
+    int _errorTimes;
 }
 @property (nonatomic,assign) BOOL isRunning;
 
 @end
 
 @implementation AACEncoderFromPCM
-- (instancetype)initWithSourceForamt:(const AudioStreamBasicDescription*)sFormat DestDescription:(const AudioStreamBasicDescription*)dFormat
+- (instancetype)initWithSourceForamt:(const AudioStreamBasicDescription*)sFormat DestDescription:(const AudioStreamBasicDescription*)dFormat bitrate:(int)bitrate
 {
     self = [super init];
     if (self) {
         _sourceFormat = *sFormat;
         _destFormat = *dFormat;
-        _bitrate = 0; // 64kbs
+        _bitrate = bitrate; // 64kbs
         
         [self initQueue];
     }
@@ -132,16 +133,22 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 }
 -(BOOL)stop{
     _isRunning = NO;
-
+    queueEnablePush(_resumeQueue, GFalse);
+    queueEnablePop(_resumeQueue, GFalse);
     queueBroadcastPop(_resumeQueue);
+    int length = queueGetLength(_resumeQueue);
+    if(length > 0){
+        R_GJPCMFrame** frame = (R_GJPCMFrame**)malloc(sizeof(R_GJPCMFrame)*length);
+        queueClean(_resumeQueue, (GHandle*)frame, &length);
+        for (int i = 0; i<length; i++) {
+            retainBufferUnRetain(&frame[i]->retain);
+        }
+    }
+
     if(_encodeConvert){
         GJLOG(GJ_LOGINFO, "AACEncoderFromPCM :%p",_encodeConvert);
         AudioConverterDispose(_encodeConvert);
         _encodeConvert = nil;
-    }
-    GJRetainBuffer* buffer;
-    while (queuePop(_resumeQueue, (void**)&buffer, 0)) {
-        retainBufferUnRetain(buffer);
     }
     if (_preBlockBuffer) {
         retainBufferUnRetain(&_preBlockBuffer->retain);
@@ -166,6 +173,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     
     AudioConverterGetProperty(_encodeConvert, kAudioConverterCurrentOutputStreamDescription, &size, &_destFormat);
     
+    [self setBitrate:_bitrate];
     if (_destFormat.mFormatID == kAudioFormatMPEG4AAC) {//VCR
         UInt32 size;
        OSStatus status = AudioConverterGetProperty(_encodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
@@ -218,13 +226,13 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     
     UInt32 outputBitRate = (UInt32)current;
     propSize = sizeof(outputBitRate);
-    result = AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
-    if(result == noErr){
-        _bitrate = (int)outputBitRate;
-        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
-    }else{
-        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps error:%d\n", (unsigned int)outputBitRate/1000,result);
-    }
+//    result = AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
+//    if(result == noErr){
+//        _bitrate = (int)outputBitRate;
+//        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
+//    }else{
+//        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps error:%d\n", (unsigned int)outputBitRate/1000,result);
+//    }
     free(arry);
 }
 -(OSStatus)_getAudioClass:(AudioClassDescription*)audioClass WithType:(UInt32)type fromManufacturer:(UInt32)manufacturer{
@@ -280,7 +288,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         if (status != noErr ) {
             retainBufferUnRetain(audioBuffer);
             if(_isRunning){
-                GJLOG(GJ_LOGFORBID, "running状态编码错误");
+                GJLOG(GJ_LOGERROR, "running状态编码错误 times:%d",_errorTimes++);
                 _isRunning = NO;
             }else{
                 GJLOG(GJ_LOGWARNING, "编码结束");

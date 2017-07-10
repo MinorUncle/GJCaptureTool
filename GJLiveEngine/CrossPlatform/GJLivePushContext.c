@@ -405,11 +405,13 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             aFormat.mSampleRate = context->pushConfig->mAudioSampleRate;
             aFormat.mChannelsPerFrame = context->pushConfig->mAudioChannel;
             
-            GJAudioFormat aDFormat = aFormat;
-            aDFormat.mFramePerPacket = 1024;
-            aDFormat.mType = GJAudioType_AAC;
+            GJAudioStreamFormat aDFormat;
+            aDFormat.bitrate = context->pushConfig->mAudioBitrate;
+            aDFormat.format= aFormat;
+            aDFormat.format.mFramePerPacket = 1024;
+            aDFormat.format.mType = GJAudioType_AAC;
             context->audioEncoder->encodeSetup(context->audioEncoder,aFormat,aDFormat,aacPacketOutCallback,context);
-            context->audioEncoder->encodeSetBitrate(context->audioEncoder,context->pushConfig->mAudioBitrate);
+//            context->audioEncoder->encodeSetBitrate(context->audioEncoder,context->pushConfig->mAudioBitrate);
 
             context->videoEncoder->encodeSetup(context->videoEncoder,vFormat,h264PacketOutCallback,context);
             context->videoEncoder->encodeSetBitrate(context->videoEncoder,context->pushConfig->mVideoBitrate);
@@ -425,10 +427,8 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             vf.format.mType = GJVideoType_H264;
             vf.bitrate = context->pushConfig->mVideoBitrate;
             
-            GJAudioStreamFormat af;
-            af.format = aDFormat;
-            af.bitrate = context->pushConfig->mAudioBitrate;
-            if(!GJStreamPush_Create(&context->videoPush, streamPushMessageCallback, (GHandle)context,af,vf)){
+
+            if(!GJStreamPush_Create(&context->videoPush, streamPushMessageCallback, (GHandle)context,aDFormat,vf)){
                 result = GFalse;
                 break;
             };

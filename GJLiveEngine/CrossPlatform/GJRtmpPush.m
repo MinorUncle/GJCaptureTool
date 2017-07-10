@@ -369,8 +369,7 @@ GBool GJRtmpPush_SendAACData(GJRtmpPush* sender,R_GJPacket* buffer){
 }
 
 GBool  GJRtmpPush_StartConnect(GJRtmpPush* sender,const GChar* sendUrl){
-//    GChar* p = "GJRtmpPush_StartConnect__test";
-//    GJ_Log(GJ_LOGINFO,p,p);
+
     GJLOG(GJ_LOGINFO,"GJRtmpPush_StartConnect:%p",sender);
 
     size_t length = strlen(sendUrl);

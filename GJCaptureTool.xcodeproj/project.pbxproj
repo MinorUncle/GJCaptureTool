@@ -31,6 +31,9 @@
 		6A85FA211F01FA990037A64F /* GJRetainBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA191F01FA990037A64F /* GJRetainBuffer.h */; };
 		6A85FA221F01FA990037A64F /* GJRetainBufferPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA1A1F01FA990037A64F /* GJRetainBufferPool.h */; };
 		6A85FA281F02397F0037A64F /* GJAudioMixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA271F02397F0037A64F /* GJAudioMixer.h */; };
+		6AA453571F139CCA0009FB64 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA4534A1F139CB70009FB64 /* libavcodec.a */; };
+		6AA453581F139CCA0009FB64 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA453481F139CB70009FB64 /* libavformat.a */; };
+		6AA453591F139CCA0009FB64 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA453521F139CB70009FB64 /* libavutil.a */; };
 		6AA71EEB1EBABDF000F2E8DB /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
 		6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */; };
@@ -55,9 +58,6 @@
 		6ABF2B281F0B413600721DB3 /* IOS_VideoProduce.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF2B181F0B413600721DB3 /* IOS_VideoProduce.h */; };
 		6ABF2B291F0B413600721DB3 /* IOS_VideoProduce.m in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B191F0B413600721DB3 /* IOS_VideoProduce.m */; };
 		6ABF2B8E1F0B810F00721DB3 /* rvopserver.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF2B8D1F0B810F00721DB3 /* rvopserver.h */; };
-		6ABF329C1F0E2C7E00721DB3 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ABF32801F0E2C7000721DB3 /* libavcodec.a */; };
-		6ABF329D1F0E2C7E00721DB3 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ABF327E1F0E2C7000721DB3 /* libavformat.a */; };
-		6ABF329E1F0E2C7E00721DB3 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ABF32881F0E2C7000721DB3 /* libavutil.a */; };
 		6ABF33141F0E2CE000721DB3 /* GJFFmpegPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF33121F0E2CE000721DB3 /* GJFFmpegPush.h */; };
 		6ABF33501F0E5F7000721DB3 /* x264.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF334A1F0E5F7000721DB3 /* x264.h */; };
 		6ABF33511F0E5F7000721DB3 /* x264_config.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF334B1F0E5F7000721DB3 /* x264_config.h */; };
@@ -238,72 +238,72 @@
 			remoteGlobalIDString = 17BB5B401BECD101007A2892;
 			remoteInfo = "TheAmazingAudioEngine tvOS";
 		};
-		6ABF32791F0E2C7000721DB3 /* PBXContainerItemProxy */ = {
+		6AA453431F139CB70009FB64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+			containerPortal = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C53791C91CF6A4CE00B5CD50;
 			remoteInfo = ffmpegCode;
 		};
-		6ABF327B1F0E2C7000721DB3 /* PBXContainerItemProxy */ = {
+		6AA453451F139CB70009FB64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+			containerPortal = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C52104321D98FE7000DAB2E1;
 			remoteInfo = swresample;
 		};
-		6ABF327D1F0E2C7000721DB3 /* PBXContainerItemProxy */ = {
+		6AA453471F139CB70009FB64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+			containerPortal = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C52104571D9900A800DAB2E1;
 			remoteInfo = avformat;
 		};
-		6ABF327F1F0E2C7000721DB3 /* PBXContainerItemProxy */ = {
+		6AA453491F139CB70009FB64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+			containerPortal = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58145551D9E4CF100B9118F;
 			remoteInfo = avcodec;
 		};
-		6ABF32811F0E2C7000721DB3 /* PBXContainerItemProxy */ = {
+		6AA4534B1F139CB70009FB64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+			containerPortal = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58153931D9E4F1D00B9118F;
 			remoteInfo = avdevice;
 		};
-		6ABF32831F0E2C7000721DB3 /* PBXContainerItemProxy */ = {
+		6AA4534D1F139CB70009FB64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+			containerPortal = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58153EE1D9E515500B9118F;
 			remoteInfo = avfilter;
 		};
-		6ABF32851F0E2C7000721DB3 /* PBXContainerItemProxy */ = {
+		6AA4534F1F139CB70009FB64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+			containerPortal = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C581556D1D9E520600B9118F;
 			remoteInfo = avresample;
 		};
-		6ABF32871F0E2C7000721DB3 /* PBXContainerItemProxy */ = {
+		6AA453511F139CB70009FB64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+			containerPortal = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58155AB1D9E52AF00B9118F;
 			remoteInfo = avutil;
 		};
-		6ABF32891F0E2C7000721DB3 /* PBXContainerItemProxy */ = {
+		6AA453531F139CB70009FB64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+			containerPortal = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58156EA1D9E531000B9118F;
 			remoteInfo = postproc;
 		};
-		6ABF328B1F0E2C7000721DB3 /* PBXContainerItemProxy */ = {
+		6AA453551F139CB70009FB64 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+			containerPortal = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58157021D9E537800B9118F;
 			remoteInfo = swscale;
@@ -583,6 +583,7 @@
 		6A85FA191F01FA990037A64F /* GJRetainBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJRetainBuffer.h; path = ../../../../GJQueue/GJRetainBuffer.h; sourceTree = "<group>"; };
 		6A85FA1A1F01FA990037A64F /* GJRetainBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJRetainBufferPool.h; path = ../../../../GJQueue/GJRetainBufferPool.h; sourceTree = "<group>"; };
 		6A85FA271F02397F0037A64F /* GJAudioMixer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJAudioMixer.h; path = TheAmazingAudioEngine/GJAudioMixer.h; sourceTree = SOURCE_ROOT; };
+		6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ffmpegCode.xcodeproj; path = ../ffmpegCode/ffmpegCode.xcodeproj; sourceTree = "<group>"; };
 		6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFLVPack.c; sourceTree = "<group>"; };
 		6AB4F4301EF0082200FD4172 /* GJFLVPack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJFLVPack.h; sourceTree = "<group>"; };
 		6AB4F4971EF270D200FD4172 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
@@ -603,7 +604,6 @@
 		6ABF2B181F0B413600721DB3 /* IOS_VideoProduce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_VideoProduce.h; sourceTree = "<group>"; };
 		6ABF2B191F0B413600721DB3 /* IOS_VideoProduce.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_VideoProduce.m; sourceTree = "<group>"; };
 		6ABF2B8D1F0B810F00721DB3 /* rvopserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rvopserver.h; sourceTree = "<group>"; };
-		6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ffmpegCode.xcodeproj; path = ../ffmpegCode/ffmpegCode.xcodeproj; sourceTree = "<group>"; };
 		6ABF32A11F0E2CB600721DB3 /* avcodec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = avcodec.h; sourceTree = "<group>"; };
 		6ABF32A21F0E2CB600721DB3 /* avdct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = avdct.h; sourceTree = "<group>"; };
 		6ABF32A31F0E2CB600721DB3 /* avfft.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = avfft.h; sourceTree = "<group>"; };
@@ -906,9 +906,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6ABF329C1F0E2C7E00721DB3 /* libavcodec.a in Frameworks */,
-				6ABF329D1F0E2C7E00721DB3 /* libavformat.a in Frameworks */,
-				6ABF329E1F0E2C7E00721DB3 /* libavutil.a in Frameworks */,
+				6AA453571F139CCA0009FB64 /* libavcodec.a in Frameworks */,
+				6AA453581F139CCA0009FB64 /* libavformat.a in Frameworks */,
+				6AA453591F139CCA0009FB64 /* libavutil.a in Frameworks */,
 				6A0200F31F0621EF00F4255B /* liblibairfloat.a in Frameworks */,
 				6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */,
 				6A40DFB91EE8DAE80047E0F0 /* libTheAmazingAudioEngine.a in Frameworks */,
@@ -1312,6 +1312,23 @@
 			path = libQueue;
 			sourceTree = "<group>";
 		};
+		6AA453371F139CB60009FB64 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6AA453441F139CB70009FB64 /* ffmpegCode.app */,
+				6AA453461F139CB70009FB64 /* libswresample.a */,
+				6AA453481F139CB70009FB64 /* libavformat.a */,
+				6AA4534A1F139CB70009FB64 /* libavcodec.a */,
+				6AA4534C1F139CB70009FB64 /* libavdevice.a */,
+				6AA4534E1F139CB70009FB64 /* libavfilter.a */,
+				6AA453501F139CB70009FB64 /* libavresample.a */,
+				6AA453521F139CB70009FB64 /* libavutil.a */,
+				6AA453541F139CB70009FB64 /* libpostproc.a */,
+				6AA453561F139CB70009FB64 /* libswscale.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		6ABF2B091F0B413600721DB3 /* Bridge */ = {
 			isa = PBXGroup;
 			children = (
@@ -1333,23 +1350,6 @@
 				6ABF2B191F0B413600721DB3 /* IOS_VideoProduce.m */,
 			);
 			path = Bridge;
-			sourceTree = "<group>";
-		};
-		6ABF326D1F0E2C6F00721DB3 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				6ABF327A1F0E2C7000721DB3 /* ffmpegCode.app */,
-				6ABF327C1F0E2C7000721DB3 /* libswresample.a */,
-				6ABF327E1F0E2C7000721DB3 /* libavformat.a */,
-				6ABF32801F0E2C7000721DB3 /* libavcodec.a */,
-				6ABF32821F0E2C7000721DB3 /* libavdevice.a */,
-				6ABF32841F0E2C7000721DB3 /* libavfilter.a */,
-				6ABF32861F0E2C7000721DB3 /* libavresample.a */,
-				6ABF32881F0E2C7000721DB3 /* libavutil.a */,
-				6ABF328A1F0E2C7000721DB3 /* libpostproc.a */,
-				6ABF328C1F0E2C7000721DB3 /* libswscale.a */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		6ABF329F1F0E2CB600721DB3 /* include */ = {
@@ -1822,7 +1822,7 @@
 			isa = PBXGroup;
 			children = (
 				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
-				6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */,
+				6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */,
 				6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */,
 				6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */,
 				6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */,
@@ -2026,7 +2026,7 @@
 					};
 					C54FA8A71D21006000A0D3C3 = {
 						CreatedOnToolsVersion = 7.3;
-						DevelopmentTeam = X33DX68294;
+						DevelopmentTeam = K7MDP8Y272;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
 							com.apple.BackgroundModes = {
@@ -2055,8 +2055,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 6ABF326D1F0E2C6F00721DB3 /* Products */;
-					ProjectRef = 6ABF326C1F0E2C6F00721DB3 /* ffmpegCode.xcodeproj */;
+					ProductGroup = 6AA453371F139CB60009FB64 /* Products */;
+					ProjectRef = 6AA453361F139CB60009FB64 /* ffmpegCode.xcodeproj */;
 				},
 				{
 					ProductGroup = 0417FED81E5ECB8C00D5B5D9 /* Products */;
@@ -2197,74 +2197,74 @@
 			remoteRef = 6A40DFB71EE8DA4D0047E0F0 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6ABF327A1F0E2C7000721DB3 /* ffmpegCode.app */ = {
+		6AA453441F139CB70009FB64 /* ffmpegCode.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
 			path = ffmpegCode.app;
-			remoteRef = 6ABF32791F0E2C7000721DB3 /* PBXContainerItemProxy */;
+			remoteRef = 6AA453431F139CB70009FB64 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6ABF327C1F0E2C7000721DB3 /* libswresample.a */ = {
+		6AA453461F139CB70009FB64 /* libswresample.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libswresample.a;
-			remoteRef = 6ABF327B1F0E2C7000721DB3 /* PBXContainerItemProxy */;
+			remoteRef = 6AA453451F139CB70009FB64 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6ABF327E1F0E2C7000721DB3 /* libavformat.a */ = {
+		6AA453481F139CB70009FB64 /* libavformat.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavformat.a;
-			remoteRef = 6ABF327D1F0E2C7000721DB3 /* PBXContainerItemProxy */;
+			remoteRef = 6AA453471F139CB70009FB64 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6ABF32801F0E2C7000721DB3 /* libavcodec.a */ = {
+		6AA4534A1F139CB70009FB64 /* libavcodec.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavcodec.a;
-			remoteRef = 6ABF327F1F0E2C7000721DB3 /* PBXContainerItemProxy */;
+			remoteRef = 6AA453491F139CB70009FB64 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6ABF32821F0E2C7000721DB3 /* libavdevice.a */ = {
+		6AA4534C1F139CB70009FB64 /* libavdevice.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavdevice.a;
-			remoteRef = 6ABF32811F0E2C7000721DB3 /* PBXContainerItemProxy */;
+			remoteRef = 6AA4534B1F139CB70009FB64 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6ABF32841F0E2C7000721DB3 /* libavfilter.a */ = {
+		6AA4534E1F139CB70009FB64 /* libavfilter.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavfilter.a;
-			remoteRef = 6ABF32831F0E2C7000721DB3 /* PBXContainerItemProxy */;
+			remoteRef = 6AA4534D1F139CB70009FB64 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6ABF32861F0E2C7000721DB3 /* libavresample.a */ = {
+		6AA453501F139CB70009FB64 /* libavresample.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavresample.a;
-			remoteRef = 6ABF32851F0E2C7000721DB3 /* PBXContainerItemProxy */;
+			remoteRef = 6AA4534F1F139CB70009FB64 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6ABF32881F0E2C7000721DB3 /* libavutil.a */ = {
+		6AA453521F139CB70009FB64 /* libavutil.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavutil.a;
-			remoteRef = 6ABF32871F0E2C7000721DB3 /* PBXContainerItemProxy */;
+			remoteRef = 6AA453511F139CB70009FB64 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6ABF328A1F0E2C7000721DB3 /* libpostproc.a */ = {
+		6AA453541F139CB70009FB64 /* libpostproc.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libpostproc.a;
-			remoteRef = 6ABF32891F0E2C7000721DB3 /* PBXContainerItemProxy */;
+			remoteRef = 6AA453531F139CB70009FB64 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6ABF328C1F0E2C7000721DB3 /* libswscale.a */ = {
+		6AA453561F139CB70009FB64 /* libswscale.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libswscale.a;
-			remoteRef = 6ABF328B1F0E2C7000721DB3 /* PBXContainerItemProxy */;
+			remoteRef = 6AA453551F139CB70009FB64 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -2376,7 +2376,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				ENABLE_BITCODE = YES;
+				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = GJLiveEngine/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -2409,7 +2409,7 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				ENABLE_BITCODE = YES;
+				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = GJLiveEngine/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -2419,6 +2419,7 @@
 					"$(PROJECT_DIR)/GJLiveEngine/lib",
 				);
 				MACH_O_TYPE = staticlib;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = EW.GJLiveEngine;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2452,6 +2453,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_BITCODE = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -2502,6 +2504,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_BITCODE = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -2530,7 +2533,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = X33DX68294;
+				DEVELOPMENT_TEAM = K7MDP8Y272;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"/**";
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
@@ -2543,6 +2546,7 @@
 					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
 					"$(PROJECT_DIR)/GJCaptureTool",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/lib",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool.TEST";
 				PRODUCT_NAME = GJCaptureTool;
@@ -2557,7 +2561,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = X33DX68294;
+				DEVELOPMENT_TEAM = K7MDP8Y272;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"/**";
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
@@ -2570,8 +2574,9 @@
 					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
 					"$(PROJECT_DIR)/GJCaptureTool",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/lib",
 				);
-				ONLY_ACTIVE_ARCH = NO;
+				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool.TEST";
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
