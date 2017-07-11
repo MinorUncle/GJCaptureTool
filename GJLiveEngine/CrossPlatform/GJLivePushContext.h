@@ -19,7 +19,7 @@
 #endif
 #include <stdio.h>
 #include "GJPlatformHeader.h"
-#include "GJFFmpegPush.h"
+#include "GJStreamPush.h"
 #include "GJBridegContext.h"
 typedef enum _GJLivePushMessageType{
     GJLivePush_messageInvalid,

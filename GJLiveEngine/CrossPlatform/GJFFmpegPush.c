@@ -6,11 +6,32 @@
 //  Copyright © 2017年 MinorUncle. All rights reserved.
 //
 
-#include "GJFFmpegPush.h"
+#include "GJStreamPush.h"
 #include "GJLiveDefine+internal.h"
 #include "GJLog.h"
 #include "GJBufferPool.h"
 
+struct _GJStreamPush{
+    AVFormatContext*        formatContext;
+    AVStream*               vStream;
+    AVStream*               aStream;
+    GJAudioStreamFormat           audioFormat;
+    GJVideoStreamFormat           videoFormat;
+    
+    GJQueue*                sendBufferQueue;
+    char                    pushUrl[100];
+    
+    pthread_t                sendThread;
+    pthread_mutex_t          mutex;
+    
+    StreamPushMessageCallback      messageCallback;
+    void*                   streamPushParm;
+    int                     stopRequest;
+    int                     releaseRequest;
+    
+    GJTrafficStatus         audioStatus;
+    GJTrafficStatus         videoStatus;
+};
 
 static GJTrafficStatus error_Status;
 
@@ -23,7 +44,7 @@ static GHandle sendRunloop(GHandle parm){
     GJStreamPushMessageType errType = GJStreamPushMessageType_connectError;
     GHandle errParm = GNULL;
     AVDictionary *option = GNULL;
-    av_dict_set_int(&option, "timeout", 2000, 0);
+//    av_dict_set_int(&option, "timeout", 8000, 0);
     GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl,  AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, &option);
     av_dict_free(&option);
     if (ret < 0) {
@@ -145,6 +166,7 @@ static GHandle sendRunloop(GHandle parm){
             break;
         };
     }
+    
     av_freep(sendPacket);
     GInt32 result =  av_write_trailer(push->formatContext);
     if (result < 0) {
@@ -339,7 +361,7 @@ GVoid GJStreamPush_CloseAndDealloc(GJStreamPush** push){
     *push = GNULL;
 
 }
-GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){    return GTrue;
+GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
 
     if(push == GNULL)return GFalse;
     retainBufferRetain(&packet->retain);
@@ -356,8 +378,8 @@ GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){    retu
     return GTrue;
 }
 GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
-    return GTrue;
     if(push == GNULL)return GFalse;
+    
     retainBufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         push->audioStatus.enter.pts = (GLong)packet->pts;
@@ -366,6 +388,12 @@ GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
     }else{
         retainBufferUnRetain(&packet->retain);
     }
+    return GTrue;
+}
+GBool GJStreamPush_SendUncodeVideoData(GJStreamPush* push,R_GJPixelFrame* data){
+    return GTrue;
+}
+GBool GJStreamPush_SendUncodeAudioData(GJStreamPush* push,R_GJPCMFrame* data){
     return GTrue;
 }
 GFloat32 GJStreamPush_GetBufferRate(GJStreamPush* push){

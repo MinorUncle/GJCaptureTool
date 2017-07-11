@@ -8,7 +8,6 @@
 
 #import <stdlib.h>
 #include "GJRetainBuffer.h"
-#include "rtmp.h"
 #include "GJBufferPool.h"
 #include "GJQueue.h"
 #import "GJLiveDefine.h"
@@ -31,23 +30,7 @@ typedef enum _GJRTMPPushMessageType{
 struct _GJRtmpPush;
 typedef GVoid(*PushMessageCallback)(GHandle userData, GJRTMPPushMessageType messageType,GHandle messageParm);
 
-#define MAX_URL_LENGTH 100
-typedef struct _GJRtmpPush{
-    RTMP*                   rtmp;
-    GJQueue*                sendBufferQueue;
-    char                    pushUrl[MAX_URL_LENGTH];
-    
-    pthread_t                sendThread;
-    pthread_mutex_t          mutex;
 
-    PushMessageCallback      messageCallback;
-    void*                   rtmpPushParm;
-    int                     stopRequest;
-    int                     releaseRequest;
-    
-    GJTrafficStatus         audioStatus;
-    GJTrafficStatus         videoStatus;
-}GJRtmpPush;
 
 GBool GJRtmpPush_Create(GJRtmpPush** push,PushMessageCallback callback,void* rtmpPushParm);
 GVoid GJRtmpPush_CloseAndDealloc(GJRtmpPush** push);

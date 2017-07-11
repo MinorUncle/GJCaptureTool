@@ -78,7 +78,7 @@ typedef enum _GJMediaType{
     GJMediaType_Audio,
 }GJMediaType;
 typedef enum _GJPacketFlag{
-    GJPacketFlag_KEY,
+    GJPacketFlag_KEY = 1 << 0,
 }GJPacketFlag;
 typedef struct GJPacket{
     GJRetainBuffer retain;

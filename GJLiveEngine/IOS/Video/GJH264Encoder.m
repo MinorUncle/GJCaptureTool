@@ -267,9 +267,14 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
             return;
         }
-        size_t spsppsSize = sparameterSetSize+pparameterSetSize+8;
+        
+        size_t spsppsSize = sparameterSetSize+pparameterSetSize;
         int needSize = (int)(spsppsSize+totalLength+PUSH_H264_PACKET_PRE_SIZE);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
+        
+        if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
+            retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
+        }
         pushPacket->flag = GJPacketFlag_KEY;
         pushPacket->dataOffset = 0;
         pushPacket->dataSize = (GInt32)(totalLength + spsppsSize + 8);
@@ -278,20 +283,22 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         memcpy(data, "\x00\x00\x00\x01", 4);
         memcpy(data+4, sparameterSet, sparameterSetSize);
         encoder.sps = [NSData dataWithBytes:data length:sparameterSetSize];
-//        pushPacket->spsOffset=data - retainBuffer->data;
-//        pushPacket->spsSize=(int)sparameterSetSize;
-        
+
         memcpy(data+4+sparameterSetSize, "\x00\x00\x00\x01", 4);
         memcpy(data+ 8+ sparameterSetSize, pparameterSet, pparameterSetSize);
         encoder.pps = [NSData dataWithBytes:data + sparameterSetSize length:pparameterSetSize];
-//        pushPacket->ppsOffset = sparameterSetSize;
-//        pushPacket->ppsSize = (int)pparameterSetSize;
-//        拷贝keyframe;
+
         memcpy(data+spsppsSize + 8, inDataPointer, totalLength);
         inDataPointer = data + spsppsSize +8;
+        
+
     }else{
         int needSize = (int)(totalLength+PUSH_H264_PACKET_PRE_SIZE);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
+        if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
+            retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
+        }
+        pushPacket->flag = 0;
         pushPacket->dataOffset = 0;
         pushPacket->dataSize = (GInt32)(totalLength);
 

@@ -94,6 +94,7 @@ static GHandle pullRunloop(GHandle parm){
                 if (body[1] == GJ_flv_a_aac_package_type_aac_raw) {
                     aacPacket->dataOffset = RTMP_MAX_HEADER_SIZE+2;
                     aacPacket->dataSize = (GInt32)(packet.m_nBodySize - 2);
+                    aacPacket->flag = 0;
                 }else if (body[1] == GJ_flv_a_aac_package_type_aac_sequence_header){
                     GUInt8 profile = body[2]>>3;
                     GUInt8 freqIdx = ((body[2] & 0x07) << 1) |(body[3]&0x01);
@@ -109,8 +110,9 @@ static GHandle pullRunloop(GHandle parm){
                     adts[5] = (char)(((fullLength&7)<<5) + 0x1F);
                     adts[6] = (char)0xFC;
                     
-                    aacPacket->dataOffset = RTMP_MAX_HEADER_SIZE+2;
-                    aacPacket->dataSize = (GInt32)(packet.m_nBodySize - 2);
+                    aacPacket->dataOffset = 0;
+                    aacPacket->dataSize = adtsLength;
+                    aacPacket->flag = GJPacketFlag_KEY;
                 }else{
                     GJLOG(GJ_LOGFORBID,"音频流格式错误");
                     packet.m_body=NULL;
@@ -233,33 +235,28 @@ static GHandle pullRunloop(GHandle parm){
                     }
                 }
                
-                
+                if (!pp) {
+                    RTMPPacket_Free(&packet);
+                    continue;
+                }
                 R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
                 memset(h264Packet, 0, sizeof(R_GJPacket));
                 GJRetainBuffer* retainBuffer = &h264Packet->retain;
                 retainBufferPack(&retainBuffer, packet.m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet.m_nBodySize,packetBufferRelease, NULL);
                
                 
-//                h264Packet->spsOffset = sps - retainBuffer->data;
-//                h264Packet->spsSize = spsSize;
-//                h264Packet->ppsOffset = pps - retainBuffer->data;
-//                h264Packet->ppsSize = ppsSize;
-//                h264Packet->ppOffset = pp - retainBuffer->data;
-//                h264Packet->ppSize = ppSize;
-//                h264Packet->seiOffset = sei - retainBuffer->data;
-//                h264Packet->seiSize = seiSize;
                 h264Packet->pts = packet.m_nTimeStamp;
                 h264Packet->type = GJMediaType_Video;
                 if (sei) {
                     h264Packet->dataOffset = sei - retainBuffer->data;
-                    if (pps) {
-                        h264Packet->dataSize = seiSize+ppsSize;
+                    if (pp) {
+                        h264Packet->dataSize = seiSize+ppSize;
                     }else{
                         h264Packet->dataSize = seiSize;
                     }
                 }else{
-                    h264Packet->dataOffset = pps - retainBuffer->data;
-                    h264Packet->dataSize = ppsSize;
+                    h264Packet->dataOffset = pp - retainBuffer->data;
+                    h264Packet->dataSize = ppSize;
                 }
                 
                 

@@ -106,7 +106,7 @@ void decodeOutputCallback(
     CMSampleBufferRef sampleBuffer = NULL;
     CMBlockBufferRef blockBuffer = NULL;
     
-    if (packet->flag == GJPacketFlag_KEY) {
+    if (packet->flag == GJPacketFlag_KEY && _decompressionSession == nil) {
         int32_t spsSize,ppsSize;
         uint8_t* sps,*pps;
         memcpy(&spsSize, packet->retain.data + packet->dataOffset, 4);
@@ -115,6 +115,12 @@ void decodeOutputCallback(
         memcpy(&ppsSize, spsSize+sps, 4);
         ppsSize = ntohl(ppsSize);
         pps = sps+spsSize+4;
+        
+        
+        printf("source sps size:%d:",spsSize);
+        GJ_LogHexString(GJ_LOGERROR, sps, (GUInt32)spsSize);
+        printf("source pps size:%d:",ppsSize);
+        GJ_LogHexString(GJ_LOGERROR, pps, (GUInt32)ppsSize);
         
         uint8_t*  parameterSetPointers[2] = {sps, pps};
         size_t parameterSetSizes[2] = {spsSize,ppsSize};
