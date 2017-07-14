@@ -346,6 +346,7 @@ GVoid GJLivePush_SetConfig(GJLivePushContext* context,const GJPushConfig* config
         if (context->pushConfig == GNULL) {
             context->pushConfig = (GJPushConfig*)malloc(sizeof(GJPushConfig));
         }else{
+
             if (context->videoProducer->obaque != GNULL) {
                 if (context->pushConfig->mFps != config->mFps) {
                     context->videoProducer->setFrameRate(context->videoProducer,config->mFps);
@@ -390,6 +391,7 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             if(context->videoProducer->obaque == GNULL){
                 context->videoProducer->videoProduceSetup(context->videoProducer,vFormat,context->pushConfig->mFps,videoCaptureFrameOutCallback,context);
             }
+                   
             
             if (context->audioProducer->obaque == GNULL) {
                 GJAudioFormat aFormat = {0};

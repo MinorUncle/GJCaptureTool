@@ -149,6 +149,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _camera.frameRate = _frameRate;
         _camera.outputImageOrientation = UIInterfaceOrientationPortrait;
         _cropFilter = [[GPUImageCropFilter alloc]init];
+        [self setDestSize:_destSize];
         [self.beautifyFilter addTarget:_cropFilter];
         [_camera addTarget:_beautifyFilter];
     }
@@ -163,6 +164,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 -(GPUImageBeautifyFilter *)beautifyFilter{
     if (_beautifyFilter == nil) {
         _beautifyFilter = [[GPUImageBeautifyFilter alloc]init];
+        
     }
     return _beautifyFilter;
 }
@@ -194,12 +196,13 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
         region.size.height = 1-2*region.origin.y;
     }else{
         float scale = scaleY;
-        CGSize scaleSize = CGSizeMake(destSize.width * scale, destSize.height * scale);
+        CGSize scaleSize = CGSizeMake(destSize.width * scale,destSize.height * scale);
         region.origin.y = 0;
         region.size.height = 1.0;
         region.origin.x = (targetSize.width - scaleSize.width)*0.5/targetSize.width;
         region.size.width = 1-2*region.origin.x;
     }
+
     return region;
 }
 -(BOOL)startProduce{
@@ -236,12 +239,15 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
     CGSize capture = getCaptureSizeWithSize(_destSize);
     CGRect region = getCropRectWithSourceSize(capture, _destSize, self.outputOrientation);
     _cropFilter.cropRegion = region;
+    [_cropFilter forceProcessingAtSize:_destSize];
+
 }
 -(void)setOutputOrientation:(UIInterfaceOrientation)outputOrientation{
     _outputOrientation = outputOrientation;
     CGSize capture = getCaptureSizeWithSize(_destSize);
     CGRect region = getCropRectWithSourceSize(capture, _destSize, self.outputOrientation);
     _cropFilter.cropRegion = region;
+    [_cropFilter forceProcessingAtSize:_destSize];
 }
 -(void)setHorizontallyMirror:(BOOL)horizontallyMirror{
     _horizontallyMirror = horizontallyMirror;

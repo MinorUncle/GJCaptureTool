@@ -226,13 +226,13 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     
     UInt32 outputBitRate = (UInt32)current;
     propSize = sizeof(outputBitRate);
-//    result = AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
-//    if(result == noErr){
-//        _bitrate = (int)outputBitRate;
-//        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
-//    }else{
-//        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps error:%d\n", (unsigned int)outputBitRate/1000,result);
-//    }
+    result = AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
+    if(result == noErr){
+        _bitrate = (int)outputBitRate;
+        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
+    }else{
+        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps error:%d\n", (unsigned int)outputBitRate/1000,result);
+    }
     free(arry);
 }
 -(OSStatus)_getAudioClass:(AudioClassDescription*)audioClass WithType:(UInt32)type fromManufacturer:(UInt32)manufacturer{
