@@ -254,7 +254,7 @@ static void prepareSkipFadeBufferForSource(AEMixerBuffer *THIS, source_t* source
 }
 
 void AEMixerBufferEnqueue(__unsafe_unretained AEMixerBuffer *THIS, AEMixerBufferSource sourceID, AudioBufferList *audio, UInt32 lengthInFrames, const AudioTimeStamp *timestamp) {
-    dprintf(THIS, 1, "Enqueue %u frames at time %0.5lfs for source %p", (unsigned int)lengthInFrames, timestamp ? AESecondsFromHostTicks(timestamp->mHostTime) : 0, sourceID);
+//    dprintf(THIS, 1, "Enqueue %u frames at time %0.5lfs for source %p", (unsigned int)lengthInFrames, timestamp ? AESecondsFromHostTicks(timestamp->mHostTime) : 0, sourceID);
     source_t *source = sourceWithID(THIS, sourceID, NULL);
     if ( !source ) {
         if ( pthread_main_np() != 0 ) {

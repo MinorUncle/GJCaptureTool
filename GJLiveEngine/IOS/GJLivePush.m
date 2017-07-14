@@ -109,6 +109,8 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
         GJLOG(GJ_LOGFORBID, "请先关闭上一个流");
         return NO;
     }else{
+        memset(&_videoInfo, 0, sizeof(_videoInfo));
+        memset(&_audioInfo, 0, sizeof(_audioInfo));
         _pushUrl = url;
         _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency target:self selector:@selector(updateGaterInfo:) userInfo:nil repeats:YES];
         return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
@@ -173,6 +175,7 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     _audioInfo = aInfo;
     [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
     if (vInfo.enter.pts - vInfo.leave.pts > MAX_SEND_DELAY) {//延迟过多重启
+        GJLOG(GJ_LOGWARNING, "推流缓存过多，重新启动推流");
         [self reStartStreamPush];
     }
 }

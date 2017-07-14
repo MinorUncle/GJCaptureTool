@@ -28,7 +28,12 @@ static GJAudioManager* _staticManager;
         _audioController = [[AEAudioController alloc]initWithAudioDescription:audioFormat inputEnabled:YES];
         _audioController.useMeasurementMode = YES;
         [_audioController setPreferredBufferDuration:0.023];
+#ifdef AUDIO_SEND_TEST
+        _audioMixer = [[AEAudioSender alloc]init];
+
+#else
         _audioMixer = [[GJAudioMixer alloc]init];
+#endif
         _audioMixer.delegate = self;
         [_audioController addInputReceiver:_audioMixer];
         _staticManager = self;
@@ -45,7 +50,16 @@ static GJAudioManager* _staticManager;
     }
     return self;
 }
+-(void)AEAudioSenderPushData:(AudioBufferList *)frame withTime:(const AudioTimeStamp *)lAudioTime{
 
+    R_GJPCMFrame* pcmFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool, frame->mBuffers[0].mDataByteSize);
+    memcpy(pcmFrame->retain.data, frame->mBuffers[0].mData, frame->mBuffers[0].mDataByteSize);
+    pcmFrame->channel = frame->mBuffers[0].mNumberChannels;
+    pcmFrame->pts = 0;
+    pcmFrame->retain.size = frame->mBuffers[0].mDataByteSize;
+    self.audioCallback(pcmFrame);
+    retainBufferUnRetain(&pcmFrame->retain);
+}
 -(void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time{
     static int64_t p;
     if (p == 0) {
@@ -109,11 +123,13 @@ static GJAudioManager* _staticManager;
 }
 -(void)setMixToSream:(BOOL)mixToSream{
     _mixToSream = mixToSream;
+#ifndef AUDIO_SEND_TEST
     if (_mixToSream) {
         [_audioMixer removeIgnoreSource:_audioController.topGroup];
     }else{
         [_audioMixer addIgnoreSource:_audioController.topGroup];
     }
+#endif
 }
 -(BOOL)setMixFile:(NSURL*)file{
     if (_mixfilePlay != nil) {
@@ -128,7 +144,7 @@ static GJAudioManager* _staticManager;
         return GFalse;
     }else{
         __weak AEAudioController * wkAE = _audioController;
-        __weak GJAudioMixer *wkM = _audioMixer;
+        __weak id<AEAudioReceiver> wkM = _audioMixer;
         _mixfilePlay.completionBlock = ^{
             [wkAE removeOutputReceiver:wkM];
         };

@@ -367,6 +367,7 @@ GVoid GJLivePush_SetConfig(GJLivePushContext* context,const GJPushConfig* config
 }
 
 GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
+    GJLOG(GJ_LOGINFO, "GJLivePush_StartPush url:%s",url);
     GBool result = GTrue;
     pthread_mutex_lock(&context->lock);
     do{
@@ -380,6 +381,8 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             context->firstAudioEncodeClock = context->firstVideoEncodeClock = G_TIME_INVALID;
             context->connentClock = context->disConnentClock = context->stopPushClock = G_TIME_INVALID;
             context->startPushClock = GJ_Gettime()/1000;
+            memset(&context->preVideoTraffic, 0, sizeof(context->preVideoTraffic));
+
             GJPixelFormat vFormat = {0};
             vFormat.mHeight = (GUInt32)context->pushConfig->mPushSize.height;
             vFormat.mWidth = (GUInt32)context->pushConfig->mPushSize.width;
@@ -429,11 +432,13 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             
 
             if(!GJStreamPush_Create(&context->videoPush, streamPushMessageCallback, (GHandle)context,aDFormat,vf)){
+                GJLOG(GJ_LOGERROR, "GJStreamPush_Create error");
                 result = GFalse;
                 break;
             };
             
             if(!GJStreamPush_StartConnect(context->videoPush, url)){
+                GJLOG(GJ_LOGERROR, "GJStreamPush_StartConnect error");
                 result = GFalse;
                 break;
             };

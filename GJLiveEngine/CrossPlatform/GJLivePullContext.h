@@ -11,7 +11,7 @@
 
 #include <stdio.h>
 #include "GJLiveDefine+internal.h"
-#include "GJRtmpPull.h"
+#include "GJStreamPull.h"
 #include "GJLivePlayer.h"
 
 #include "GJBridegContext.h"
@@ -32,7 +32,7 @@ typedef enum _GJLivePullMessageType{
 typedef GVoid (*GJLivePullCallback)(GHandle userDate,GJLivePullMessageType message,GHandle param);
 
 typedef struct _GJLivePullContext{
-    GJRtmpPull*             videoPull;
+    GJStreamPull*             videoPull;
     pthread_t               playThread;
     GJPullSessionStatus     pullSessionStatus;
     GJH264DecodeContext*    videoDecoder;

@@ -14,6 +14,7 @@
 #endif
 
 #define MAX_FRAME_COUNT 4096
+
 @interface GJAudioMixer(){
     AUGraph                         _graph;
     AUNode                          _mixerNode;
@@ -102,7 +103,7 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
             busN = @(bus);
             [mixer->_receiveSource setObject:busN forKey:@((long)source)];
             NSLog(@"IGNORE_BUS转换到Source：%p",source);
-            [mixer refreshSource];
+            [mixer refreshSourceFource:NO];
         }else{
             bus = busN.unsignedIntegerValue;
         }
@@ -118,7 +119,7 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
             busN = @(bus);
             [mixer->_receiveSource setObject:busN forKey:@((long)source)];
             NSLog(@"添加新的Source：%p",source);
-            [mixer refreshSource];
+            [mixer refreshSourceFource:NO];
         }else{
             NSLog(@"混合流数量超过最大");
             return;
@@ -216,7 +217,7 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
         ioData->mBuffers[i].mNumberChannels = audioMix->_inputSourcBufferCache[inBusNumber]->mBuffers[i].mNumberChannels;
         ioData->mBuffers[i].mDataByteSize = audioMix->_inputSourcBufferCache[inBusNumber]->mBuffers[i].mDataByteSize;
     }
-//    NSLog(@"inBusNumber:%d  time:%f",inBusNumber,inTimeStamp->mSampleTime);
+//    NSLog(@"inBusNumber:%d  time:%f frames:%d",inBusNumber,inTimeStamp->mSampleTime,inNumberFrames);
     return noErr;
 }
 
@@ -224,18 +225,23 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
 
 -(void)unitRenderWithCount:(UInt32)frames time:(int64_t)time{
     if (_needUpdateSource) {
-        [self refreshSource];
+        [self refreshSourceFource:NO];
     }
     _mixCount+=frames;
+//    NSLog(@"request frames:%d",frames);
     AudioUnitRenderActionFlags flags = 0;
     AudioTimeStamp renderTimestamp = {0};
     renderTimestamp.mFlags = kAudioTimeStampSampleTimeValid;
     renderTimestamp.mSampleTime = (Float64)_mixCount;
+    OSStatus result = noErr;
     for (int i = 0; i<_reanderBufferList->mNumberBuffers; i++) {
         _reanderBufferList->mBuffers[i].mNumberChannels = _clientFormat.mChannelsPerFrame;
         _reanderBufferList->mBuffers[i].mDataByteSize = _clientFormat.mBytesPerFrame * MAX_FRAME_COUNT;
     }
-    OSStatus result = AudioUnitRender(_mixerUnit, &flags, &renderTimestamp, 0, frames, _reanderBufferList);
+
+        
+    result = AudioUnitRender(_mixerUnit, &flags, &renderTimestamp, 0, frames, _reanderBufferList);
+  
     if (result != noErr) {
         NSLog(@"AudioUnitRender error:%d",result);
     }else{
@@ -336,24 +342,27 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
     return YES;
 }
 
--(BOOL)refreshSource{
+-(BOOL)refreshSourceFource:(BOOL)fource{
     // Set bus count
-    
     if(_listenIntputCount != _receiveSource.allKeys.count)return NO;
-    
     int counts = _listenIntputCount;
+
     
+        
 #ifdef ENABLE_IGNORE
-    for (NSNumber* v in _ignoreSource) {
-        if ([_receiveSource.allKeys containsObject:v]) {
-            counts--;
+        for (NSNumber* v in _ignoreSource) {
+            if ([_receiveSource.allKeys containsObject:v]) {
+                counts--;
+            }
+        }
+#endif
+    if (!fource) {
+
+        if (_elementCount == counts) {
+            return YES;
         }
     }
-#endif
-    
-    if (_elementCount == counts) {
-        return YES;
-    }
+
 
     _needUpdateSource = NO;
     _elementCount = counts;
@@ -416,6 +425,15 @@ static OSStatus sourceInputCallback(void *inRefCon, AudioUnitRenderActionFlags *
         return result;
     }
 
+}
+-(void)restart{
+    if (_graph) {
+        AUGraphClose(_graph);
+        DisposeAUGraph(_graph);
+        _graph = nil;
+    }
+    [self createMixingGraph];
+    [self refreshSourceFource:YES];
 }
 -(void)dealloc{
     if (_reanderBufferList != NULL) {

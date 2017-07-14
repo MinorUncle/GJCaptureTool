@@ -65,7 +65,12 @@ static GHandle sendRunloop(GHandle parm){
         if (push->stopRequest) {
             goto END;
         }
-        if (packet->type == GJMediaType_Video && (packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY) {
+        if (packet->type == GJMediaType_Video) {
+            if((packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY){
+                GJLOG(GJ_LOGFORBID, "第一帧视频非关键帧");
+                videoIndex++;
+                continue;
+            }
             GUInt8* start = packet->dataOffset + packet->retain.data;
             
             GInt32 index = 0;
@@ -104,8 +109,9 @@ static GHandle sendRunloop(GHandle parm){
                 break;
             }else{
                 GJLOG(GJ_LOGERROR, "没有sps，pps，丢弃该帧");
+                videoIndex++;
+                continue;
             }
-            break;
         }else{
             videoIndex++;
         }

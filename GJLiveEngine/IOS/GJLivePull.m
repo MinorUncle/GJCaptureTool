@@ -7,7 +7,6 @@
 //
 
 #import "GJLivePull.h"
-#import "GJRtmpPull.h"
 #import "GJH264Decoder.h"
 #import "GJLivePlayer.h"
 #import "GJLog.h"
