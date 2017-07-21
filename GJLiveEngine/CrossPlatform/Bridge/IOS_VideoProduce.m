@@ -230,12 +230,22 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
     });
 }
 -(void)setDestSize:(CGSize)destSize{
+    if (CGSizeEqualToSize(destSize, _destSize)) {
+        return;
+    }
     _destSize = destSize;
-    NSString* preset = getCapturePresetWithSize(_destSize);
+    CGSize size = destSize;
+    if (_outputOrientation == UIInterfaceOrientationPortrait ||
+        _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        size.height += size.width;
+        size.width = size.height - size.width;
+        size.height = size.height - size.width;
+    }
+    NSString* preset = getCapturePresetWithSize(size);
     if (![preset isEqualToString:self.camera.captureSessionPreset]) {
         self.camera.captureSessionPreset = preset;
     }
-    [_cropFilter forceProcessingAtSize:_destSize];
+    
     CGSize capture = getCaptureSizeWithSize(_destSize);
     CGRect region = getCropRectWithSourceSize(capture, _destSize, self.outputOrientation);
     _cropFilter.cropRegion = region;
@@ -243,6 +253,9 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
 
 }
 -(void)setOutputOrientation:(UIInterfaceOrientation)outputOrientation{
+    if (outputOrientation == _outputOrientation) {
+        return;
+    }
     _outputOrientation = outputOrientation;
     CGSize capture = getCaptureSizeWithSize(_destSize);
     CGRect region = getCropRectWithSourceSize(capture, _destSize, self.outputOrientation);

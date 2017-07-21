@@ -44,7 +44,7 @@ struct _GJStreamPull{
 
 GVoid GJStreamPull_Delloc(GJStreamPull* pull);
 
-GBool packetBufferRelease(GJRetainBuffer* buffer){
+static GBool packetBufferRelease(GJRetainBuffer* buffer){
     if (buffer->data) {
         free(buffer->data);
     }
