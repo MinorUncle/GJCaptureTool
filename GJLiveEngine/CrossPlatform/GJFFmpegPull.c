@@ -66,6 +66,12 @@ GBool GJStreamPull_Create(GJStreamPull** pullP,StreamPullMessageCallback callbac
     }else{
         pull = *pullP;
     }
+    GInt32 ret = avformat_network_init();
+    if (ret < 0) {
+        return GFalse;
+    }
+    av_register_all();
+
     memset(pull, 0, sizeof(GJStreamPull));
     pull->formatContext = avformat_alloc_context();
     
