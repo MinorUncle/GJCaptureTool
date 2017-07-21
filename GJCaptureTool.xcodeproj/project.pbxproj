@@ -33,12 +33,12 @@
 		6A85FA281F02397F0037A64F /* GJAudioMixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA271F02397F0037A64F /* GJAudioMixer.h */; };
 		6A96CCA41F2195C5000DC4FE /* GJScreenRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */; };
 		6A96CCA51F2195C5000DC4FE /* GJScreenRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */; };
+		6A96CCC21F21EA62000DC4FE /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4CF1ECB4DFE0009E49A /* GJRtmpPull.m */; };
 		6AA453571F139CCA0009FB64 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA4534A1F139CB70009FB64 /* libavcodec.a */; };
 		6AA453581F139CCA0009FB64 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA453481F139CB70009FB64 /* libavformat.a */; };
 		6AA453591F139CCA0009FB64 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA453521F139CB70009FB64 /* libavutil.a */; };
 		6AA453681F146A1A0009FB64 /* GJStreamPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453661F146A1A0009FB64 /* GJStreamPush.h */; };
 		6AA453851F14C16C0009FB64 /* GJStreamPull.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453841F14C16C0009FB64 /* GJStreamPull.h */; };
-		6AA453871F14D4950009FB64 /* GJFFmpegPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA453861F14D4950009FB64 /* GJFFmpegPull.c */; };
 		6AA4A8D91F18C3980009FB64 /* GJFFmpegPush.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF33111F0E2CE000721DB3 /* GJFFmpegPush.c */; };
 		6AA71EEB1EBABDF000F2E8DB /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
@@ -2319,8 +2319,8 @@
 				6ABF2B271F0B413600721DB3 /* IOS_PictureDisplay.m in Sources */,
 				6AE37BD61ED5956800B049EB /* GJLivePullContext.c in Sources */,
 				AE70A5201ECB4DFE0009E49A /* AACEncoderFromPCM.m in Sources */,
+				6A96CCC21F21EA62000DC4FE /* GJRtmpPull.m in Sources */,
 				AE3A2C181F07F69800C24BAA /* AirTunesPlay.m in Sources */,
-				6AA453871F14D4950009FB64 /* GJFFmpegPull.c in Sources */,
 				AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */,
 				6ABF2B211F0B413600721DB3 /* IOS_AudioProduce.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
