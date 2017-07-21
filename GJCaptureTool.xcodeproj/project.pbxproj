@@ -33,7 +33,7 @@
 		6A85FA281F02397F0037A64F /* GJAudioMixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA271F02397F0037A64F /* GJAudioMixer.h */; };
 		6A96CCA41F2195C5000DC4FE /* GJScreenRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */; };
 		6A96CCA51F2195C5000DC4FE /* GJScreenRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */; };
-		6A96CCE91F21F7D9000DC4FE /* GJFFmpegPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA453861F14D4950009FB64 /* GJFFmpegPull.c */; };
+		6A96CD0D1F223B9A000DC4FE /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4CF1ECB4DFE0009E49A /* GJRtmpPull.m */; };
 		6AA453571F139CCA0009FB64 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA4534A1F139CB70009FB64 /* libavcodec.a */; };
 		6AA453581F139CCA0009FB64 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA453481F139CB70009FB64 /* libavformat.a */; };
 		6AA453591F139CCA0009FB64 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AA453521F139CB70009FB64 /* libavutil.a */; };
@@ -2304,7 +2304,6 @@
 				AE70A5191ECB4DFE0009E49A /* GJUtil.c in Sources */,
 				6ABF2B291F0B413600721DB3 /* IOS_VideoProduce.m in Sources */,
 				AE70A51B1ECB4DFE0009E49A /* sps_decode.c in Sources */,
-				6A96CCE91F21F7D9000DC4FE /* GJFFmpegPull.c in Sources */,
 				6ABF2B1B1F0B413600721DB3 /* IOS_AACDecode.m in Sources */,
 				6ABF2B1F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m in Sources */,
 				AE70A53A1ECB4DFE0009E49A /* GJLivePush+advanced.m in Sources */,
@@ -2316,6 +2315,7 @@
 				AE70A53C1ECB4DFE0009E49A /* GJLivePush.m in Sources */,
 				6AE37BD81ED5956800B049EB /* GJLivePushContext.c in Sources */,
 				6ABF2B231F0B413600721DB3 /* IOS_H264Decode.m in Sources */,
+				6A96CD0D1F223B9A000DC4FE /* GJRtmpPull.m in Sources */,
 				AE70A5281ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m in Sources */,
 				6ABF2B271F0B413600721DB3 /* IOS_PictureDisplay.m in Sources */,
 				6AE37BD61ED5956800B049EB /* GJLivePullContext.c in Sources */,

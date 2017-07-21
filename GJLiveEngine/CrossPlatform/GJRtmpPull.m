@@ -117,9 +117,9 @@ static GHandle pullRunloop(GHandle parm){
                     aacPacket->dataSize = (GInt32)(packet.m_nBodySize - 2);
                     aacPacket->flag = 0;
                 }else if (body[1] == GJ_flv_a_aac_package_type_aac_sequence_header){
-                    GUInt8 profile = body[2]>>3;
-                    GUInt8 freqIdx = ((body[2] & 0x07) << 1) |(body[3]&0x01);
-                    GUInt8 chanCfg = (body[3] & 0x78) >> 3;
+                    GUInt8 profile = (body[2] & 0xF8)>>3;
+                    GUInt8 freqIdx = ((body[2] & 0x07) << 1) |(body[3] >> 7);
+                    GUInt8 chanCfg = (body[3] >> 3) & 0x0f;
                     int adtsLength = 7;
                     GUInt8* adts = body - RTMP_MAX_HEADER_SIZE;
                     GInt32 fullLength = adtsLength + 0;
