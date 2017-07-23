@@ -23,11 +23,12 @@ inline static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelTyp
     GJLOG(GJ_LOGINFO, "GJH264Decoder setup");
 
     GJH264Decoder* decode = [[GJH264Decoder alloc]init];
-    decode.completeCallback = ^(CVImageBufferRef image, int64_t pts){
+    decode.completeCallback = ^(CVImageBufferRef image, int64_t pts,int64_t dts){
         R_GJPixelFrame* frame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
         frame->height = (GInt32)CVPixelBufferGetHeight(image);
         frame->width = (GInt32)CVPixelBufferGetWidth(image);
         frame->pts = pts;
+        frame->dts = dts;
         frame->type = CVPixelBufferGetPixelFormatType(image);
         CVPixelBufferRetain(image);
         retainBufferPack((GJRetainBuffer**)&frame, image, sizeof(image), cvImagereleaseCallBack, GNULL);

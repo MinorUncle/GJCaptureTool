@@ -235,7 +235,7 @@ static const int mpeg4audio_sample_rates[16] = {
         UInt32 numPackets = AAC_FRAME_PER_PACKET;
 
         OSStatus status = AudioConverterFillComplexBuffer(_decodeConvert, decodeInputDataProc, (__bridge void*)self, &numPackets, &outCacheBufferList, &packetDesc);
-        if (status != noErr || status == -1) {
+        if (status != noErr && status != -1) {
             retainBufferUnRetain(&frame->retain);
             queueEnablePop(_resumeQueue, GTrue);
             char* codeChar = (char*)&status;
@@ -250,6 +250,7 @@ static const int mpeg4audio_sample_rates[16] = {
         
         frame->retain.size = _destFormat.mBytesPerPacket*numPackets;
         frame->pts = _currentPts;
+        frame->dts = _currentPts;
         _currentPts = -1;
         self.decodeCallback(frame);
         retainBufferUnRetain(&frame->retain);

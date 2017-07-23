@@ -99,7 +99,7 @@ static GHandle pullRunloop(GHandle parm){
             
             if (packet.m_packetType == RTMP_PACKET_TYPE_AUDIO) {
                 GJLOGFREQ("receive audio pts:%d",packet.m_nTimeStamp);
-                pull->audioPullInfo.pts = packet.m_nTimeStamp;
+                pull->audioPullInfo.ts = packet.m_nTimeStamp;
                 pull->audioPullInfo.count++;
                 pull->audioPullInfo.byte += packet.m_nBodySize;
                 GUInt8* body = (GUInt8*)packet.m_body;
@@ -125,8 +125,8 @@ static GHandle pullRunloop(GHandle parm){
                     GInt32 fullLength = adtsLength + 0;
                     adts[0] = (char)0xFF;	// 11111111  	= syncword
                     adts[1] = (char)0xF1;	   // 1111 0 00 1 = syncword+id(MPEG-4) + Layer + absent
-                    adts[2] = (char)(((profile)<<6) + (freqIdx<<2) +(chanCfg>>2));// profile(2)+sampling(4)+privatebit(1)+channel_config(1)
-                    adts[3] = (char)(((chanCfg&3)<<6) + (fullLength>>11));
+                    adts[2] = (char)(((profile-1)<<6) + (freqIdx<<2) +(chanCfg>>2));// profile(2)+sampling(4)+privatebit(1)+channel_config(1)
+                    adts[3] = (char)(((chanCfg&0x3)<<6) + (fullLength>>11));
                     adts[4] = (char)((fullLength&0x7FF) >> 3);
                     adts[5] = (char)(((fullLength&7)<<5) + 0x1F);
                     adts[6] = (char)0xFC;
@@ -157,7 +157,7 @@ static GHandle pullRunloop(GHandle parm){
                 GUInt8 *pbody = body;
                 GInt32 isKey = 0;
                 GInt32 index = 0;
-                
+                GInt32 ct = 0;
                             
                 while (index < packet.m_nBodySize) {
                     if ((pbody[index] & 0x0F) == 0x07) {
@@ -198,44 +198,70 @@ static GHandle pullRunloop(GHandle parm){
                             retainBufferUnRetain(retainBuffer);
                             
                         }else if (pbody[index] == 1) {
-                            index += 4;
-                            if ((pbody[index+4] & 0x0F) == 0x6) {
-                                isKey = GTrue;
-                                seiSize += pbody[index]<<24;
-                                seiSize += pbody[index+1]<<16;
-                                seiSize += pbody[index+2]<<8;
-                                seiSize += pbody[index+3];
-                                sei = pbody + index;
-                                seiSize += 4;
-                                index += seiSize;
-                                if(index < packet.m_nBodySize && (pbody[index+4] & 0x0F) == 0x5){
-                                    ppSize += pbody[index]<<24;
-                                    ppSize += pbody[index+1]<<16;
-                                    ppSize += pbody[index+2]<<8;
-                                    ppSize += pbody[index+3];
+                            index ++;
+                            ct = pbody[index] << 16;
+                            ct |= pbody[index++] << 8;
+                            ct |= pbody[index++];
+
+                            while (index < packet.m_nBodySize) {
+                                GInt8 type = pbody[index+4] & 0x0F;
+                                GInt32 size;
+                                size = pbody[index]<<24;
+                                size += pbody[index+1]<<16;
+                                size += pbody[index+2]<<8;
+                                size += pbody[index+3];
+                                if (type == 0x6) {
+                                    seiSize = size+4;
+                                    sei = body+index;
+                                }else if (type == 0x5){
+                                    isKey = GTrue;
+                                    ppSize = size + 4;
                                     pp = pbody + index;
-                                    ppSize += 4;
-                                    index += ppSize;
+                                }else if (type == 0x1){
+                                    isKey = GFalse;
+                                    ppSize = size + 4;
+                                    pp = pbody + index;
                                 }
-                            }else if((pbody[index+4] & 0x0F) == 0x5){
-                                isKey = GTrue;
-                                ppSize += pbody[index]<<24;
-                                ppSize += pbody[index+1]<<16;
-                                ppSize += pbody[index+2]<<8;
-                                ppSize += pbody[index+3];
-                                pp = pbody + index;
-                                ppSize += 4;
-                                index += ppSize;
-                            }else if((pbody[index+4] & 0x0F) == 0x1){
-                                isKey = GFalse;
-                                ppSize += pbody[index]<<24;
-                                ppSize += pbody[index+1]<<16;
-                                ppSize += pbody[index+2]<<8;
-                                ppSize += pbody[index+3];
-                                pp = pbody + index;
-                                ppSize += 4;
-                                index += ppSize;
+                                index += size + 4;
+
                             }
+//                            if ((pbody[index+4] & 0x0F) == 0x6) {
+//                                isKey = GTrue;
+//                                seiSize += pbody[index]<<24;
+//                                seiSize += pbody[index+1]<<16;
+//                                seiSize += pbody[index+2]<<8;
+//                                seiSize += pbody[index+3];
+//                                sei = pbody + index;
+//                                seiSize += 4;
+//                                index += seiSize;
+//                                if(index < packet.m_nBodySize && (pbody[index+4] & 0x0F) == 0x5){
+//                                    ppSize += pbody[index]<<24;
+//                                    ppSize += pbody[index+1]<<16;
+//                                    ppSize += pbody[index+2]<<8;
+//                                    ppSize += pbody[index+3];
+//                                    pp = pbody + index;
+//                                    ppSize += 4;
+//                                    index += ppSize;
+//                                }
+//                            }else if((pbody[index+4] & 0x0F) == 0x5){
+//                                isKey = GTrue;
+//                                ppSize += pbody[index]<<24;
+//                                ppSize += pbody[index+1]<<16;
+//                                ppSize += pbody[index+2]<<8;
+//                                ppSize += pbody[index+3];
+//                                pp = pbody + index;
+//                                ppSize += 4;
+//                                index += ppSize;
+//                            }else if((pbody[index+4] & 0x0F) == 0x1){
+//                                isKey = GFalse;
+//                                ppSize += pbody[index]<<24;
+//                                ppSize += pbody[index+1]<<16;
+//                                ppSize += pbody[index+2]<<8;
+//                                ppSize += pbody[index+3];
+//                                pp = pbody + index;
+//                                ppSize += 4;
+//                                index += ppSize;
+//                            }
                             
                         }else  if (pbody[index] == 2){
                             GJLOG(GJ_LOGDEBUG,"直播结束\n");
@@ -266,7 +292,8 @@ static GHandle pullRunloop(GHandle parm){
                 retainBufferPack(&retainBuffer, packet.m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet.m_nBodySize,packetBufferRelease, NULL);
                
                 
-                h264Packet->pts = packet.m_nTimeStamp;
+                h264Packet->dts = packet.m_nTimeStamp;
+                h264Packet->pts = h264Packet->dts + ct;
                 h264Packet->type = GJMediaType_Video;
                 if (sei) {
                     h264Packet->dataOffset = sei - retainBuffer->data;
@@ -281,7 +308,7 @@ static GHandle pullRunloop(GHandle parm){
                 }
                 
                 
-                pull->videoPullInfo.pts = packet.m_nTimeStamp;
+                pull->videoPullInfo.ts = packet.m_nTimeStamp;
                 pull->videoPullInfo.count++;
                 pull->videoPullInfo.byte += packet.m_nBodySize;
                 

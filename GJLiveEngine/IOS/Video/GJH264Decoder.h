@@ -12,7 +12,7 @@
 #import "GJQueue.h"
 #import "GJRetainBuffer.h"
 #import "GJLiveDefine+internal.h"
-typedef void(^H264DecodeComplete)(CVImageBufferRef image,int64_t pts);
+typedef void(^H264DecodeComplete)(CVImageBufferRef image,int64_t pts,int64_t dts);
 
 //@protocol GJH264DecoderDelegate <NSObject>
 //-(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts;

@@ -71,11 +71,12 @@ void decodeOutputCallback(
         return;
     }
     GInt64 pts = presentationTimeStamp.value*1000/presentationTimeStamp.timescale;
+    GLong dts = (GLong)sourceFrameRefCon;
     GJLOGFREQ("decode packet output pts:%lld",pts);
 
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
 
-    decoder.completeCallback(imageBuffer, pts);
+    decoder.completeCallback(imageBuffer, pts,(GInt64)dts);
 }
 
 -(uint8_t*)startCodeIndex:(uint8_t*)sour size:(long)size codeSize:(uint8_t*)codeSize{
@@ -225,8 +226,8 @@ RETRY:
             //                assert(status == 0);
             VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
             VTDecodeInfoFlags flagOut;
-            
-            OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
+            GLong dts = packet->dts;
+            OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,(GVoid*)dts, &flagOut);
             if (status < 0) {
                 if(kVTInvalidSessionErr == status){
                     VTDecompressionSessionInvalidate(_decompressionSession);

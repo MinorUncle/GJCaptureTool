@@ -33,6 +33,7 @@ static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* fram
     if (context->stopPushClock == G_TIME_INVALID) {
         context->operationCount ++;
         if (!context->videoMute && (context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
+            frame->pts = GJ_Gettime()/1000-context->connentClock;
             context->videoEncoder->encodeFrame(context->videoEncoder,frame,GFalse);
         }else{
             GJLOG(GJ_LOGWARNING, "丢视频帧");
@@ -47,6 +48,7 @@ static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame)
         context->operationCount ++;
 
         if (!context->audioMute) {
+            frame->pts = GJ_Gettime()/1000-context->connentClock;
             context->audioEncoder->encodeFrame(context->audioEncoder,frame);
         }
         context->operationCount--;
@@ -54,7 +56,9 @@ static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame)
 }
 static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
     GJLivePushContext* context = userData;
-    packet->pts = GJ_Gettime()/1000-context->connentClock;
+//    packet->dts -= 1000 / context->pushConfig->mFps;
+    
+    
     GJStreamPush_SendVideoData(context->videoPush, packet);
     GJTrafficStatus bufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
     if (bufferStatus.enter.count % context->dynamicAlgorithm.den == 0) {
@@ -71,7 +75,7 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
                 GJLOG(GJ_LOGINFO, "敏感检测出提高音频质量");
                 _GJLivePush_AppendQualityWithStep(context, diffInCount - context->dynamicAlgorithm.den - context->dynamicAlgorithm.num);
             }else{
-                GLong cacheInPts = bufferStatus.enter.pts - bufferStatus.leave.pts;
+                GLong cacheInPts = bufferStatus.enter.ts - bufferStatus.leave.ts;
                 if (diffInCount < context->dynamicAlgorithm.den && cacheInPts > SEND_DELAY_TIME && cacheInCount > SEND_DELAY_COUNT) {
                     GJLOG(GJ_LOGWARNING, "宏观检测出降低视频质量 (很少可能会出现)");
                     _GJLivePush_reduceQualityWithStep(context, context->dynamicAlgorithm.den - diffInCount);
@@ -83,16 +87,12 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
 }
 static GVoid aacPacketOutCallback(GHandle userData,R_GJPacket* packet){
     GJLivePushContext* context = userData;
-    packet->pts = GJ_Gettime()/1000-context->connentClock;
     if (context->firstAudioEncodeClock == G_TIME_INVALID) {
-        context->firstAudioEncodeClock = GJ_Gettime();
-//        if (!GJRtmpPush_SendAACSequenceHeader(context->videoPush, 2, context->pushConfig->mAudioSampleRate,  context->pushConfig->mAudioChannel, packet->pts)) {
-//            if (context->videoPush!= GNULL) {
-//                GJLOG(GJ_LOGFORBID, "SendAACSequenceHeader 失败");
-//            }
-//            context->firstAudioEncodeClock = G_TIME_INVALID;
-//            return;
-//        }
+        if (GJStreamPush_GetVideoBufferCacheInfo(context->videoPush).enter.ts > packet->dts) {
+            return;
+        }else{
+            context->firstAudioEncodeClock = GJ_Gettime();
+        }
     }
     GJStreamPush_SendAudioData(context->videoPush, packet);
 }

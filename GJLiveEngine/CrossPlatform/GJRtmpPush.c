@@ -141,7 +141,7 @@ static GHandle sendRunloop(GHandle parm){
                             packet->dataSize -= index;
                             push->videoStatus.leave.byte =avcPacket.m_nBodySize;
                             push->videoStatus.leave.count = 1;
-                            push->videoStatus.leave.pts = packet->pts;
+                            push->videoStatus.leave.ts = packet->pts;
                         }else{
                             retainBufferUnRetain(&packet->retain);
                             continue;
@@ -251,7 +251,7 @@ static GHandle sendRunloop(GHandle parm){
             
             GInt32 iRet = RTMP_SendPacket(push->rtmp,&rtmpPacket,0);
             if (iRet) {
-                push->videoStatus.leave.pts = rtmpPacket.m_nTimeStamp;
+                push->videoStatus.leave.ts = rtmpPacket.m_nTimeStamp;
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.byte += rtmpPacket.m_nBodySize;
                 retainBufferUnRetain(&packet->retain);
@@ -270,7 +270,7 @@ static GHandle sendRunloop(GHandle parm){
                     if (iRet) {
                         push->audioStatus.leave.byte = aacPacket.m_nBodySize;
                         push->audioStatus.leave.count = 1;
-                        push->audioStatus.leave.pts = packet->pts;
+                        push->audioStatus.leave.ts = packet->pts;
                     }else{
                         retainBufferUnRetain(&packet->retain);
                         continue;
@@ -311,7 +311,7 @@ static GHandle sendRunloop(GHandle parm){
             if (iRet) {
                 push->audioStatus.leave.byte+=rtmpPacket.m_nBodySize;
                 push->audioStatus.leave.count++;
-                push->audioStatus.leave.pts = rtmpPacket.m_nTimeStamp;
+                push->audioStatus.leave.ts = rtmpPacket.m_nTimeStamp;
                 retainBufferUnRetain(&packet->retain);
             }else{
                 GJLOG(GJ_LOGFORBID, "error send packet FRAME");
@@ -483,7 +483,7 @@ GBool RTMP_AllocAndPakcetAVCSequenceHeader(GJStreamPush* push,GUInt8* sps,GInt32
 //
 //    retainBufferRetain(retainBuffer);
 //    if (queuePush(sender->sendBufferQueue, pushPacket, 0)) {
-//        sender->videoStatus.enter.pts = pushPacket->packet.m_nTimeStamp;
+//        sender->videoStatus.enter.ts = pushPacket->packet.m_nTimeStamp;
 //        sender->videoStatus.enter.count++;
 //        sender->videoStatus.enter.byte += pushPacket->packet.m_nBodySize;
 //        return GTrue;
@@ -568,7 +568,7 @@ GBool RTMP_AllocAndPackAACSequenceHeader(GJStreamPush* push,GInt32 aactype, GInt
 //    retainBufferRetain(retainBuffer);
 //    
 //    if (queuePush(sender->sendBufferQueue, pushPacket, 0)) {
-//        sender->audioStatus.enter.pts = pushPacket->packet.m_nTimeStamp;
+//        sender->audioStatus.enter.ts = pushPacket->packet.m_nTimeStamp;
 //        sender->audioStatus.enter.count++;
 //        sender->audioStatus.enter.byte += pushPacket->packet.m_nBodySize;
 //        return GTrue;
@@ -584,7 +584,7 @@ GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
     if(push == GNULL)return GFalse;
     retainBufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-        push->videoStatus.enter.pts = (GLong)packet->pts;
+        push->videoStatus.enter.ts = (GLong)packet->pts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
         
@@ -600,7 +600,7 @@ GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
     
     retainBufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-        push->audioStatus.enter.pts = (GLong)packet->pts;
+        push->audioStatus.enter.ts = (GLong)packet->pts;
         push->audioStatus.enter.count++;
         push->audioStatus.enter.byte += packet->dataSize;
     }else{

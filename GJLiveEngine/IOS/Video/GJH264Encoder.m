@@ -19,6 +19,8 @@
 @interface GJH264Encoder()
 {
     GRational _dropStep;//每den帧丢num帧
+    GInt64 _fristPts;
+    GInt32 _dtsDelta;
     
 }
 @property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
@@ -48,7 +50,8 @@
         
         _profileLevel = profileLevelMain;
         _entropyMode = EntropyMode_CABAC;
-        
+        _fristPts = GINT64_MAX;
+        _dtsDelta = 0;
         [self creatEnCodeSession];
         
     }
@@ -92,6 +95,7 @@
             properties = [[NSMutableDictionary alloc]init];
             [properties setObject:@YES forKey:(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame];
         }
+//        printf("encode pts:%lld\n",pts);
         OSStatus status = VTCompressionSessionEncodeFrame(
                                                           _enCodeSession,
                                                           imageBuffer,
@@ -311,7 +315,35 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     
     pushPacket->type = GJMediaType_Video;
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
+    CMTime dts = CMSampleBufferGetDecodeTimeStamp(sample);
+    printf("encode pts:%lld dts:%lld data size:%zu\n",pts.value,dts.value,totalLength);
+
     pushPacket->pts = pts.value;
+    if (encoder->_allowBFrame) {
+        if (encoder->_fristPts > pushPacket->pts) {
+            encoder->_fristPts = pushPacket->pts;
+            encoder->_dtsDelta = 0;
+        }else if(encoder->_dtsDelta <= 0){
+            encoder->_dtsDelta = (GInt32)(pushPacket->pts - encoder->_fristPts);
+        }
+        if (dts.value > 0) {
+            pushPacket->dts = dts.value;
+        }else{
+            pushPacket->dts = pushPacket->pts;
+        }
+        pushPacket->dts -= encoder->_dtsDelta*2;
+
+    }else{
+        pushPacket->dts = pts.value;
+    }
+//    if (CMTIME_IS_INVALID(dts)) {
+//        pushPacket->dts = pts.value;
+//    }else{
+//        pushPacket->dts = dts.value;
+//    }
+    
+    printf("encode over pts:%lld dts:%lld data size:%zu\n",pts.value,pushPacket->dts,totalLength);
+    
     
 //    NSData* seid = [NSData dataWithBytes:pushPacket->ppOffset+pushPacket->retain.data length:30];
 //    NSData* spsd = [NSData dataWithBytes:pushPacket->spsOffset+pushPacket->retain.data  length:pushPacket->spsSize];

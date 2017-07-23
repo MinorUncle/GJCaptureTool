@@ -195,7 +195,7 @@ void pullDataCallback(GJStreamPull* pull,R_GJPacket* packet,void* parm){
                 uint8_t sampleIndex = adts[2] << 2;
                 sampleIndex = sampleIndex>>4;
                 int sampleRate = mpeg4audio_sample_rates[sampleIndex];
-                uint8_t channel = adts[2] & 0x1 <<2;
+                uint8_t channel = (adts[2] & 0x1) <<2;
                 channel += (adts[3] & 0xc0)>>6;
                 
                 GJAudioFormat sourceformat = {0};

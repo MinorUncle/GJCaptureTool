@@ -14,9 +14,11 @@
 #import "log.h"
 #import "GJBufferPool.h"
 
-static char* url = "rtmp://10.0.1.142/live/room";
+//static char* url = "rtmp://10.0.1.142/live/room";
 //static char* url = "rtmp://192.168.199.187/live/room";
-//rtmp://live.hkstv.hk.lxdns.com/live/hks
+static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
+
+//
 @interface PullShow : NSObject
 {
     
@@ -37,11 +39,22 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @end
 
 @implementation PullShow
-- (instancetype)initWithView:(UIView*)view
+-(void)fullTap:(UITapGestureRecognizer*)tap{
+    if(!CGRectEqualToRect(_view.frame, [UIScreen mainScreen].bounds)){
+        _view.frame = [UIScreen mainScreen].bounds;
+    }else{
+        _view.frame = _frame;
+    }
+    [_view.superview bringSubviewToFront:_view];
+}
+- (instancetype)initWithPull:(GJLivePull*)pull
 {
     self = [super init];
     if (self) {
-        _view = view;
+        _view = [pull getPreviewView];
+        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+        [_view addGestureRecognizer:tap];
+        _pull = pull;
         _pullStateLab = [[UILabel alloc]init];
         _pullStateLab.numberOfLines = 0;
         _pullStateLab.text = @"未连接";
@@ -112,6 +125,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     rect.origin.y = CGRectGetMaxY(rect);
     _playerBufferLab.frame = rect;
 }
+
 @end
 @interface GJLivePushViewController ()<GJLivePushDelegate,GJLivePullDelegate>
 {
@@ -159,7 +173,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     GJ_LogSetLevel(GJ_LOGINFO);
     RTMP_LogSetLevel(RTMP_LOGERROR);
     
-    _livePush = [[GJLivePush alloc]init];
+//    _livePush = [[GJLivePush alloc]init];
 //    _livePush.videoMute = YES;
 //    _livePush.audioMute = YES;
     
@@ -176,7 +190,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
     
     CGRect rect = self.view.bounds;
     rect.size.height *= 0.45;
-    self.topView = _livePush.previewView;//[[UIView alloc]initWithFrame:rect];
+//    self.topView = _livePush.previewView;//
+    self.topView = [[UIView alloc]initWithFrame:rect];
     self.topView.contentMode = UIViewContentModeScaleAspectFit;
     self.topView.frame = rect;
     self.topView.backgroundColor = [UIColor blackColor];
@@ -356,13 +371,12 @@ static char* url = "rtmp://10.0.1.142/live/room";
         GJLivePull* livePull = [[GJLivePull alloc]init];
         livePull.delegate = self;
         
-        PullShow* show = [[PullShow alloc]initWithView:[livePull getPreviewView]];
+        PullShow* show = [[PullShow alloc]initWithPull:livePull];
         show.pullBtn = pullButton;
         show.frame = sRect;
         show.view.backgroundColor = [UIColor yellowColor];
         show.view.contentMode = UIViewContentModeScaleAspectFit;
         sRect.origin.x = CGRectGetMaxX(sRect);
-        show.pull = livePull;
         [_pulls addObject:show];
         [self.view addSubview:show.view];
     }
@@ -569,8 +583,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
     });
 }
 -(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
-    UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"提示" message:@"是否测试释放推拉流对象" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:@"取消", nil];
-    [alert show];
+//    UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"提示" message:@"是否测试释放推拉流对象" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:@"取消", nil];
+//    [alert show];
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{

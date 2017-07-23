@@ -53,7 +53,7 @@ static GHandle pullRunloop(GHandle parm){
         goto END;
     }
     av_format_inject_global_side_data(pull->formatContext);
-
+    pull->formatContext->fps_probe_size = 0;
     result = avformat_find_stream_info(pull->formatContext, GNULL);
     if (result < 0) {
         GJLOG(GJ_LOGERROR, "avformat_find_stream_info");
@@ -69,7 +69,6 @@ static GHandle pullRunloop(GHandle parm){
     if (vsIndex < 0) {
         GJLOG(GJ_LOGWARNING, "not found video stream");
     }else{
-        R_GJPacket* packet = NULL;
         AVStream* vStream = pull->formatContext->streams[vsIndex];
         GUInt8* avcc = vStream->codecpar->extradata;
         GInt32 avccSize = vStream->codecpar->extradata_size;
@@ -84,7 +83,7 @@ static GHandle pullRunloop(GHandle parm){
 
                 if (avccSize >= 8+spsSize+3 + ppsSize) {
                     R_GJPacket* avccPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
-                    retainBufferAlloc((GJRetainBuffer**)&avccPacket, 8+spsSize+ppsSize, GNULL, GNULL);
+                    retainBufferAlloc((GJRetainBuffer**)&avccPacket, 8+spsSize+ppsSize, packetBufferRelease, GNULL);
                     avccPacket->type = GJMediaType_Video;
                     avccPacket->flag = GJPacketFlag_KEY;
                     
@@ -98,6 +97,7 @@ static GHandle pullRunloop(GHandle parm){
                     memcpy(packetData+4+spsSize, &ppsNsize, 4);
                     memcpy(packetData+8+spsSize, pps, ppsSize);
                     pull->dataCallback(pull,avccPacket,pull->dataCallbackParm);
+                    retainBufferUnRetain(&avccPacket->retain);
 
                 }
             }
@@ -107,17 +107,17 @@ static GHandle pullRunloop(GHandle parm){
         
         
     }
+    
     GInt32 asIndex = av_find_best_stream(pull->formatContext, AVMEDIA_TYPE_AUDIO,-1, -1, NULL, 0);
     if (asIndex < 0) {
         GJLOG(GJ_LOGWARNING, "not found audio stream");
     }else{
-        R_GJPacket* packet = NULL;
         AVStream* aStream = pull->formatContext->streams[asIndex];
         GUInt8* aacc = aStream->codecpar->extradata;
         GInt32 aaccSize = aStream->codecpar->extradata_size;
         if (aaccSize >= 2) {
             R_GJPacket* aaccPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
-            retainBufferAlloc((GJRetainBuffer**)&aaccPacket, 7, GNULL, GNULL);
+            retainBufferAlloc((GJRetainBuffer**)&aaccPacket, 7, packetBufferRelease, GNULL);
             aaccPacket->type = GJMediaType_Audio;
             aaccPacket->flag = GJPacketFlag_KEY;
             
@@ -140,6 +140,7 @@ static GHandle pullRunloop(GHandle parm){
             adts[6] = (char)0xFC;
 
             pull->dataCallback(pull,aaccPacket,pull->dataCallbackParm);
+            retainBufferUnRetain(&aaccPacket->retain);
 
         }
 
@@ -158,19 +159,27 @@ static GHandle pullRunloop(GHandle parm){
             retainBufferPack((GJRetainBuffer**)&h264Packet, pkt.data, pkt.size, packetBufferRelease, buffer);
             h264Packet->dataOffset = 0;
             h264Packet->dataSize = pkt.size;
-            h264Packet->pts = pkt.dts;
+            h264Packet->pts = pkt.pts;
+            h264Packet->dts = pkt.dts;
             h264Packet->type = GJMediaType_Video;
+//            printf("video pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
             pull->dataCallback(pull,h264Packet,pull->dataCallbackParm);
+            retainBufferUnRetain(&h264Packet->retain);
 
         }else if (pkt.stream_index == asIndex){
+//            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
+
             R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
             retainBufferPack((GJRetainBuffer**)&aacPacket, pkt.data, pkt.size, packetBufferRelease, buffer);
             aacPacket->dataOffset = 0;
             aacPacket->dataSize = pkt.size;
-            aacPacket->pts = pkt.dts;
+            aacPacket->pts = pkt.pts;
+            aacPacket->dts = pkt.dts;
             aacPacket->type = GJMediaType_Audio;
+//            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
             pull->dataCallback(pull,aacPacket,pull->dataCallbackParm);
+            retainBufferUnRetain(&aacPacket->retain);
         }
         
             av_packet_unref(&pkt);

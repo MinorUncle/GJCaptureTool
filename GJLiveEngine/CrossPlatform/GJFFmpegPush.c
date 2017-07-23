@@ -65,6 +65,7 @@ static GHandle sendRunloop(GHandle parm){
         if (push->stopRequest) {
             goto END;
         }
+        printf("peek index:%d type:%d, pts:%lld\n",videoIndex,packet->type,packet->pts);
         if (packet->type == GJMediaType_Video) {
             if((packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY){
                 GJLOG(GJ_LOGFORBID, "第一帧视频非关键帧");
@@ -154,7 +155,7 @@ static GHandle sendRunloop(GHandle parm){
 #endif
         av_init_packet(sendPacket);
         sendPacket->pts = packet->pts;
-        sendPacket->dts = packet->pts;
+        sendPacket->dts = packet->dts;
         if (packet->type == GJMediaType_Video) {
             sendPacket->stream_index = push->vStream->index;
         }else{
@@ -174,12 +175,12 @@ static GHandle sendRunloop(GHandle parm){
 //                GJLOGFREQ("send video pts:%d size:%d",packet->pts,packet->dataSize);
                 push->videoStatus.leave.byte+=packet->dataSize;
                 push->videoStatus.leave.count++;
-                push->videoStatus.leave.pts = (GLong)packet->pts;
+                push->videoStatus.leave.ts = (GLong)packet->dts;
             }else{
                 GJLOGFREQ("send audio pts:%d size:%d",packet->pts,packet->dataSize);
                 push->audioStatus.leave.byte+=packet->dataSize;
                 push->audioStatus.leave.count++;
-                push->audioStatus.leave.pts = (GLong)packet->pts;
+                push->audioStatus.leave.ts = (GLong)packet->dts;
             }
             retainBufferUnRetain(&packet->retain);
         }else{
@@ -386,10 +387,12 @@ GVoid GJStreamPush_CloseAndDealloc(GJStreamPush** push){
 }
 GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
 
+    printf("send index:%d type:%d, pts:%lld dts:%lld\n",queueGetLength(push->sendBufferQueue),packet->type,packet->pts,packet->dts);
+
     if(push == GNULL)return GFalse;
     retainBufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-        push->videoStatus.enter.pts = (GLong)packet->pts;
+        push->videoStatus.enter.ts = (GLong)packet->pts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
         
@@ -405,7 +408,7 @@ GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
     
     retainBufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-        push->audioStatus.enter.pts = (GLong)packet->pts;
+        push->audioStatus.enter.ts = (GLong)packet->pts;
         push->audioStatus.enter.count++;
         push->audioStatus.enter.byte += packet->dataSize;
     }else{

@@ -10,7 +10,7 @@
 #import "GJRetainBufferPool.h"
 
 #define PUSH_AAC_PACKET_PRE_SIZE 25
-
+//#define AAC_GOP_FRAMES 1024
 @interface AACEncoderFromPCM ()
 {
     AudioConverterRef _encodeConvert;
@@ -77,13 +77,18 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (encoder.isRunning && queuePop(blockQueue, (void**)&buffer,GINT32_MAX)) {
         
         ioData->mBuffers[0].mData = buffer->retain.data;
-        ioData->mBuffers[0].mNumberChannels =encoder.sourceFormat.mChannelsPerFrame;
+        ioData->mBuffers[0].mNumberChannels =encoder->_sourceFormat.mChannelsPerFrame;
         ioData->mBuffers[0].mDataByteSize = (UInt32)buffer->retain.size;
         AudioStreamBasicDescription* baseDescription = &(encoder->_sourceFormat);
+        UInt32 needPackets = *ioNumberDataPackets;
         *ioNumberDataPackets = ioData->mBuffers[0].mDataByteSize / baseDescription->mBytesPerPacket;
         encoder->_preBlockBuffer = buffer;
         if (encoder->_currentPts <=0) {
-            encoder->_currentPts = buffer->pts;
+            if (needPackets < encoder->_destFormat.mFramesPerPacket) {
+                encoder->_currentPts = buffer->pts - (encoder->_destFormat.mFramesPerPacket - needPackets)*1000/encoder.sourceFormat.mSampleRate;
+            }else{
+                encoder->_currentPts = buffer->pts;
+            }
         }
         return noErr;
     }else{
@@ -305,6 +310,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         packet->dataOffset = 7;
         packet->dataSize = outCacheBufferList.mBuffers[0].mDataByteSize;
         packet->pts = _currentPts;
+        packet->dts = _currentPts;
         _currentPts = -1;
         self.completeCallback(packet);
         retainBufferUnRetain(audioBuffer);

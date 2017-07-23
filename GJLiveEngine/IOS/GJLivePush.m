@@ -164,20 +164,20 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     GJTrafficStatus vInfo = GJLivePush_GetVideoTrafficStatus(_livePush);
     GJTrafficStatus aInfo = GJLivePush_GetAudioTrafficStatus(_livePush);
     
-    _pushSessionStatus.videoStatus.cacheTime = vInfo.enter.pts - vInfo.leave.pts;
+    _pushSessionStatus.videoStatus.cacheTime = vInfo.enter.ts - vInfo.leave.ts;
     _pushSessionStatus.videoStatus.frameRate = (vInfo.leave.count - _videoInfo.leave.count)/_gaterFrequency;
     _pushSessionStatus.videoStatus.bitrate = (vInfo.leave.byte - _videoInfo.leave.byte)/_gaterFrequency;
     _videoInfo = vInfo;
     
-    _pushSessionStatus.audioStatus.cacheTime = aInfo.enter.pts - aInfo.leave.pts;
+    _pushSessionStatus.audioStatus.cacheTime = aInfo.enter.ts - aInfo.leave.ts;
     _pushSessionStatus.audioStatus.frameRate = (aInfo.leave.count - _audioInfo.leave.count)*1024.0/_gaterFrequency;
     _pushSessionStatus.audioStatus.bitrate = (aInfo.leave.byte - _audioInfo.leave.byte)/_gaterFrequency;
     _audioInfo = aInfo;
     [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
-    if (vInfo.enter.pts - vInfo.leave.pts > MAX_SEND_DELAY) {//延迟过多重启
-        GJLOG(GJ_LOGWARNING, "推流缓存过多，重新启动推流");
-        [self reStartStreamPush];
-    }
+//    if (vInfo.enter.ts - vInfo.leave.ts > MAX_SEND_DELAY) {//延迟过多重启
+//        GJLOG(GJ_LOGWARNING, "推流缓存过多，重新启动推流");
+//        [self reStartStreamPush];
+//    }
 }
 -(void)setCameraPosition:(GJCameraPosition)cameraPosition{
     _cameraPosition = cameraPosition;

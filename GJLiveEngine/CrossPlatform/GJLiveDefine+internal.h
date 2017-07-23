@@ -29,7 +29,7 @@ typedef struct GRational{
 #define GRationalMake(num,den) (GRational){(GInt32)(num),(GInt32)(den)}
 #define GRationalValue(rational) (GFloat32)(rational).num*1.0/(rational).den
 typedef struct TrafficUnit{
-    GLong pts;//ms
+    GLong ts;//ms
     GLong count;
     GLong byte;
 }GJTrafficUnit;
@@ -62,6 +62,7 @@ typedef struct TrafficStatus{
 typedef struct PCMFrame{
     GJRetainBuffer retain;
     GInt64 pts;
+    GInt64 dts;
     GInt32 channel;
 }R_GJPCMFrame;
 
@@ -69,6 +70,7 @@ typedef struct PixelFrame{
     GJRetainBuffer retain;
     GJPixelType type;
     GInt64 pts;
+    GInt64 dts;
     GInt32 width;
     GInt32 height;
 }R_GJPixelFrame;
@@ -84,6 +86,7 @@ typedef struct GJPacket{
     GJRetainBuffer retain;
     GJMediaType type;
     GInt64 pts;
+    GInt64 dts;
     GInt64 dataOffset;
     GInt32 dataSize;
     GJPacketFlag  flag;
