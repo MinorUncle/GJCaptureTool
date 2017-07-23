@@ -336,9 +336,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player,void *data ,GInt32* outSize){
         _syncControl->audioInfo.cPTS = (GLong)audioBuffer->pts;
         _syncControl->audioInfo.clock = GJ_Gettime()/1000;
         GJLOGFREQ("audio show pts:%d",audioBuffer->pts);
-        if (*outSize == 0) {
-            GJAssert(0, "");
-        }
+        GJAssert(*outSize, "size 不能为0");
         retainBufferUnRetain(&audioBuffer->retain);
         return GTrue;
     }else{

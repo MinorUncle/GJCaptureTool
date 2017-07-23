@@ -20,27 +20,21 @@
 {
     self = [super init];
     if (self) {
-//        _displayView = [[GJImageView alloc]init];
-        _displayView = [[UIImageView alloc]init];
+        _displayView = [[GJImageView alloc]init];
     }
     return self;
 }
 -(BOOL)displaySetFormat:(GJPixelType)format{
-//    _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:(GJYUVPixelImageFormat)format];
-//    if (_imageInput == nil) {
-//        GJLOG(GJ_LOGFORBID, "GJImagePixelImageInput 创建失败！");
-//        return NO;
-//    }
-//    [_imageInput addTarget:(GPUImageView*)_displayView];
+    _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:(GJYUVPixelImageFormat)format];
+    if (_imageInput == nil) {
+        GJLOG(GJ_LOGFORBID, "GJImagePixelImageInput 创建失败！");
+        return NO;
+    }
+    [_imageInput addTarget:(GPUImageView*)_displayView];
     return YES;
 }
 -(void)displayImage:(CVImageBufferRef)image{
-    CIImage* cg = [CIImage imageWithCVImageBuffer:image];
-    UIImage* ci = [UIImage imageWithCIImage:cg];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        ((UIImageView*)_displayView).image = ci;
-    });
-//    [_imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
+    [_imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
 }
 @end
 static GBool IOS_PictureDisplaySetup(GJPictureDisplayContext* context){

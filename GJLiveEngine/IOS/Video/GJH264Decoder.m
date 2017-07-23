@@ -26,6 +26,7 @@
     if (self) {
         _decodeQueue = dispatch_queue_create("GJDecodeQueue", DISPATCH_QUEUE_SERIAL);
         _outPutImageFormat = kCVPixelFormatType_32BGRA;
+//        _outPutImageFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
     }
     return self;
 }
