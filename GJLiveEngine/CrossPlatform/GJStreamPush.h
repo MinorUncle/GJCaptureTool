@@ -34,7 +34,7 @@ typedef GVoid(*StreamPushMessageCallback)(GHandle userData, GJStreamPushMessageT
 typedef struct _GJStreamPush GJStreamPush;
 
 
-GBool GJStreamPush_Create(GJStreamPush** push,StreamPushMessageCallback callback,GHandle streamPushParm,GJAudioStreamFormat audioFormat,GJVideoStreamFormat videoFormat);
+GBool GJStreamPush_Create(GJStreamPush** push,StreamPushMessageCallback callback,GHandle streamPushParm,const GJAudioStreamFormat* audioFormat,const GJVideoStreamFormat* videoFormat);
 GVoid GJStreamPush_CloseAndDealloc(GJStreamPush** push);
 GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* data);
 GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* data);

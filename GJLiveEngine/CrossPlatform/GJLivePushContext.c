@@ -433,7 +433,7 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             vf.bitrate = context->pushConfig->mVideoBitrate;
             
 
-            if(!GJStreamPush_Create(&context->videoPush, streamPushMessageCallback, (GHandle)context,aDFormat,vf)){
+            if(!GJStreamPush_Create(&context->videoPush, streamPushMessageCallback, (GHandle)context,&aDFormat,&vf)){
                 GJLOG(GJ_LOGERROR, "GJStreamPush_Create error");
                 result = GFalse;
                 break;

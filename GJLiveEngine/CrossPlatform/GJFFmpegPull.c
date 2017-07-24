@@ -44,8 +44,10 @@ static GBool packetBufferRelease(GJRetainBuffer* buffer){
 }
 
 static GHandle pullRunloop(GHandle parm){
+    pthread_setname_np("Loop.GJStreamPull");
     GJStreamPull* pull = parm;
     GJStreamPullMessageType message = 0;
+    
     GInt32 result = avformat_open_input(&pull->formatContext, pull->pullUrl, GNULL, GNULL);
     if (result < 0) {
         GJLOG(GJ_LOGERROR, "avformat_open_input error");
@@ -205,6 +207,11 @@ END:
     GJLOG(GJ_LOGDEBUG, "pullRunloop end");
     return GNULL;
 }
+
+static int interrupt_callback(void* parm){
+    GJStreamPull* pull = (GJStreamPull*)parm;
+    return pull->stopRequest;
+}
 //所有不阻塞
 GBool GJStreamPull_Create(GJStreamPull** pullP,StreamPullMessageCallback callback,GHandle streamPullParm){
     GJStreamPull* pull = NULL;
@@ -221,7 +228,8 @@ GBool GJStreamPull_Create(GJStreamPull** pullP,StreamPullMessageCallback callbac
 
     memset(pull, 0, sizeof(GJStreamPull));
     pull->formatContext = avformat_alloc_context();
-    
+    AVIOInterruptCB cb = {.callback = interrupt_callback, .opaque = pull };
+    pull->formatContext->interrupt_callback = cb;
     pull->messageCallback = callback;
     pull->messageCallbackParm = streamPullParm;
     pull->stopRequest = GFalse;

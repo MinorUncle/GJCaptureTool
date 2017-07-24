@@ -15,8 +15,8 @@ struct _GJStreamPush{
     AVFormatContext*        formatContext;
     AVStream*               vStream;
     AVStream*               aStream;
-    GJAudioStreamFormat           audioFormat;
-    GJVideoStreamFormat           videoFormat;
+    GJAudioStreamFormat*           audioFormat;
+    GJVideoStreamFormat*           videoFormat;
     
     GJQueue*                sendBufferQueue;
     char                    pushUrl[100];
@@ -39,7 +39,7 @@ GVoid GJStreamPush_Delloc(GJStreamPush* push);
 GVoid GJStreamPush_Close(GJStreamPush* sender);
 
 static GHandle sendRunloop(GHandle parm){
-    pthread_setname_np("FFMPEGPushLoop");
+    pthread_setname_np("Loop.GJStreamPush");
     GJStreamPush* push = (GJStreamPush*)parm;
     GJStreamPushMessageType errType = GJStreamPushMessageType_connectError;
     GHandle errParm = GNULL;
@@ -60,81 +60,86 @@ static GHandle sendRunloop(GHandle parm){
 
     R_GJPacket* packet;
 
-    GInt32 videoIndex = 0;
-    while (queuePeekWaitValue(push->sendBufferQueue, videoIndex, (GHandle)&packet, GINT32_MAX)) {
-        if (push->stopRequest) {
-            goto END;
-        }
-        printf("peek index:%d type:%d, pts:%lld\n",videoIndex,packet->type,packet->pts);
-        if (packet->type == GJMediaType_Video) {
-            if((packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY){
-                GJLOG(GJ_LOGFORBID, "第一帧视频非关键帧");
-                videoIndex++;
-                continue;
+    if (push->videoFormat) {
+        GInt32 videoIndex = 0;
+        while (queuePeekWaitValue(push->sendBufferQueue, videoIndex, (GHandle)&packet, GINT32_MAX)) {
+            if (push->stopRequest) {
+                goto END;
             }
-            GUInt8* start = packet->dataOffset + packet->retain.data;
-            
-            GInt32 index = 0;
-            GUInt8* sps = GNULL,*pps = GNULL;
-            while (index < packet->dataSize) {
-                if (packet->dataSize > index+4 && start[index] == 0x00 && start[index+1] == 0x00) {
-                    if (start[index+2] == 0x01 ) {
-                        if ((start[index+3] & 0x1f) == 7) {
-                            sps = start+index;
-                            index+=2;
-                        }else if ((start[index+3] & 0x1f) == 8){
-                            pps = start + index;
-                            index+=2;
-                        }else{
-                            break;
-                        }
-                    }else if (start[index+2] == 00 && start[index+3] == 01){
-                        if ((start[index+4] & 0x1f) == 7) {
-                            sps = start+index;
-                            index+=3;
-                        }else if((start[index+4] & 0x1f) == 8){
-                            pps = start + index;
-                            index+=3;
-                        }else{
-                            break;
+            printf("peek index:%d type:%d, pts:%lld\n",videoIndex,packet->type,packet->pts);
+            if (packet->type == GJMediaType_Video) {
+                if((packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY){
+                    GJLOG(GJ_LOGFORBID, "第一帧视频非关键帧");
+                    videoIndex++;
+                    continue;
+                }
+                GUInt8* start = packet->dataOffset + packet->retain.data;
+                
+                GInt32 index = 0;
+                GUInt8* sps = GNULL,*pps = GNULL;
+                while (index < packet->dataSize) {
+                    if (packet->dataSize > index+4 && start[index] == 0x00 && start[index+1] == 0x00) {
+                        if (start[index+2] == 0x01 ) {
+                            if ((start[index+3] & 0x1f) == 7) {
+                                sps = start+index;
+                                index+=2;
+                            }else if ((start[index+3] & 0x1f) == 8){
+                                pps = start + index;
+                                index+=2;
+                            }else{
+                                break;
+                            }
+                        }else if (start[index+2] == 00 && start[index+3] == 01){
+                            if ((start[index+4] & 0x1f) == 7) {
+                                sps = start+index;
+                                index+=3;
+                            }else if((start[index+4] & 0x1f) == 8){
+                                pps = start + index;
+                                index+=3;
+                            }else{
+                                break;
+                            }
                         }
                     }
+                    index++;
                 }
-                index++;
-            }
-            if (sps && pps) {
-                index++;
-                push->vStream->codecpar->extradata_size = (GInt32)(start+index - sps);
-                push->vStream->codecpar->extradata = av_malloc(push->vStream->codecpar->extradata_size);
-                memcpy(push->vStream->codecpar->extradata, sps, push->vStream->codecpar->extradata_size);
-                break;
+                if (sps && pps) {
+                    index++;
+                    push->vStream->codecpar->extradata_size = (GInt32)(start+index - sps);
+                    push->vStream->codecpar->extradata = av_malloc(push->vStream->codecpar->extradata_size);
+                    memcpy(push->vStream->codecpar->extradata, sps, push->vStream->codecpar->extradata_size);
+                    break;
+                }else{
+                    GJLOG(GJ_LOGERROR, "没有sps，pps，丢弃该帧");
+                    videoIndex++;
+                    continue;
+                }
             }else{
-                GJLOG(GJ_LOGERROR, "没有sps，pps，丢弃该帧");
                 videoIndex++;
-                continue;
             }
-        }else{
-            videoIndex++;
         }
     }
     
-    GUInt8 aactype = 2;
-    GUInt8 srIndex = 0;
-    if (push->audioFormat.format.mSampleRate == 44100) {
-        srIndex = 4;
-    }else if (push->audioFormat.format.mSampleRate == 22050){
-        srIndex = 7;
-    }else if (push->audioFormat.format.mSampleRate == 11025){
-        srIndex = 10;
-    }else{
-        GJLOG(GJ_LOGFORBID, "sampleRate error");
-        return GFalse;
+    if (push->audioFormat) {
+        GUInt8 aactype = 2;
+        GUInt8 srIndex = 0;
+        if (push->audioFormat->format.mSampleRate == 44100) {
+            srIndex = 4;
+        }else if (push->audioFormat->format.mSampleRate == 22050){
+            srIndex = 7;
+        }else if (push->audioFormat->format.mSampleRate == 11025){
+            srIndex = 10;
+        }else{
+            GJLOG(GJ_LOGFORBID, "sampleRate error");
+            return GFalse;
+        }
+        GUInt8 channels = push->audioFormat->format.mChannelsPerFrame;
+        push->aStream->codecpar->extradata_size = 2;
+        push->aStream->codecpar->extradata = av_malloc(2);
+        push->aStream->codecpar->extradata[0] = (aactype << 3) | ((srIndex & 0xe) >> 1);
+        push->aStream->codecpar->extradata[1] = ((srIndex & 0x1) << 7) | (channels << 3);
     }
-    GUInt8 channels = push->audioFormat.format.mChannelsPerFrame;
-    push->aStream->codecpar->extradata_size = 2;
-    push->aStream->codecpar->extradata = av_malloc(2);
-    push->aStream->codecpar->extradata[0] = (aactype << 3) | ((srIndex & 0xe) >> 1);
-    push->aStream->codecpar->extradata[1] = ((srIndex & 0x1) << 7) | (channels << 3);
+   
     
     ret = avformat_write_header(push->formatContext, GNULL);
     if (ret < 0) {
@@ -224,7 +229,7 @@ END:
 }
 
 
-GBool GJStreamPush_Create(GJStreamPush** sender,StreamPushMessageCallback callback,void* streamPushParm,GJAudioStreamFormat audioFormat,GJVideoStreamFormat videoFormat){
+GBool GJStreamPush_Create(GJStreamPush** sender,StreamPushMessageCallback callback,void* streamPushParm,const GJAudioStreamFormat* audioFormat, const GJVideoStreamFormat* videoFormat){
     GJStreamPush* push = GNULL;
     if (*sender == GNULL) {
         push = (GJStreamPush*)malloc(sizeof(GJStreamPush));
@@ -243,12 +248,22 @@ GBool GJStreamPush_Create(GJStreamPush** sender,StreamPushMessageCallback callba
     push->streamPushParm = streamPushParm;
     push->stopRequest = GFalse;
     push->releaseRequest = GFalse;
-    push->audioFormat = audioFormat;
-    push->videoFormat = videoFormat;
+    if (audioFormat) {
+        push->audioFormat = (GJAudioStreamFormat*)malloc(sizeof(GJAudioStreamFormat));
+        *push->audioFormat = *audioFormat;
+    }
+    if (videoFormat) {
+        push->videoFormat = (GJVideoStreamFormat*)malloc(sizeof(GJVideoStreamFormat));
+        *push->videoFormat = *videoFormat;
+    }
     pthread_mutex_init(&push->mutex, GNULL);
     *sender = push;
     return GTrue;
 
+}
+static int interrupt_callback(void* parm){
+    GJStreamPush* push = (GJStreamPush*)parm;
+    return push->stopRequest;
 }
 GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl){
     
@@ -273,54 +288,61 @@ GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl){
         GJLOG(GJ_LOGFORBID, "ffmpeg 不知道该封装格式");
         return GFalse;
     }
+    AVIOInterruptCB cb = {.callback = interrupt_callback, .opaque = push };
+    push->formatContext->interrupt_callback = cb;
+    
     memcpy(push->pushUrl, sendUrl, strlen(sendUrl)+1);
     AVCodec* audioCode = GNULL;
     AVCodec* videoCode = GNULL;
-    switch (push->audioFormat.format.mType) {
-        case GJAudioType_AAC:
-            audioCode = avcodec_find_encoder(AV_CODEC_ID_AAC);
-            break;
-        default:
-            break;
+    if (push->audioFormat) {
+        switch (push->audioFormat->format.mType) {
+            case GJAudioType_AAC:
+                audioCode = avcodec_find_encoder(AV_CODEC_ID_AAC);
+                break;
+            default:
+                break;
+        }
+        if(audioCode == GNULL){
+            GJLOG(GJ_LOGFORBID, "ffmpeg 找不到音频编码器");
+            return GFalse;
+        }
+        
+        AVStream* as = avformat_new_stream(push->formatContext, audioCode);
+        as->codecpar->channels = push->audioFormat->format.mChannelsPerFrame;
+        as->codecpar->bit_rate = push->audioFormat->bitrate;
+        as->codecpar->sample_rate = push->audioFormat->format.mSampleRate;
+        as->codecpar->format = AV_SAMPLE_FMT_S16;
+        as->codecpar->codec_type = AVMEDIA_TYPE_AUDIO;
+        as->codecpar->codec_id = AV_CODEC_ID_AAC;
+        as->time_base.num = 1;
+        as->time_base.den = 1000;
+        push->aStream = as;
     }
-    if(audioCode == GNULL){
-        GJLOG(GJ_LOGFORBID, "ffmpeg 找不到音频编码器");
-        return GFalse;
-    }
-    switch (push->videoFormat.format.mType) {
-        case GJVideoType_H264:
-            videoCode = avcodec_find_encoder(AV_CODEC_ID_H264);
-            break;
-        default:
-            break;
-    }
-    if(videoCode == GNULL){
-        GJLOG(GJ_LOGFORBID, "ffmpeg 找不到视频编码器");
-        return GFalse;
-    }
-    AVStream* vs = avformat_new_stream(push->formatContext, videoCode);
-    vs->codecpar->bit_rate = push->videoFormat.bitrate;
-    vs->codecpar->width = push->videoFormat.format.mWidth;
-    vs->codecpar->height = push->videoFormat.format.mHeight;
-    vs->codecpar->format = AV_PIX_FMT_YUV420P;
-    vs->codecpar->codec_type = AVMEDIA_TYPE_VIDEO;
-    vs->codecpar->codec_id = AV_CODEC_ID_H264;
-    vs->time_base.num = 1;
-    vs->time_base.den = 1000;
-    push->vStream = vs;
     
-    AVStream* as = avformat_new_stream(push->formatContext, audioCode);
-    as->codecpar->channels = push->audioFormat.format.mChannelsPerFrame;
-    as->codecpar->bit_rate = push->audioFormat.bitrate;
-    as->codecpar->sample_rate = push->audioFormat.format.mSampleRate;
-    as->codecpar->format = AV_SAMPLE_FMT_S16;
-    as->codecpar->codec_type = AVMEDIA_TYPE_AUDIO;
-    as->codecpar->codec_id = AV_CODEC_ID_AAC;
-    as->time_base.num = 1;
-    as->time_base.den = 1000;
-    push->aStream = as;
-
-
+    if (push->videoFormat) {
+        switch (push->videoFormat->format.mType) {
+            case GJVideoType_H264:
+                videoCode = avcodec_find_encoder(AV_CODEC_ID_H264);
+                break;
+            default:
+                break;
+        }
+        if(videoCode == GNULL){
+            GJLOG(GJ_LOGFORBID, "ffmpeg 找不到视频编码器");
+            return GFalse;
+        }
+        
+        AVStream* vs = avformat_new_stream(push->formatContext, videoCode);
+        vs->codecpar->bit_rate = push->videoFormat->bitrate;
+        vs->codecpar->width = push->videoFormat->format.mWidth;
+        vs->codecpar->height = push->videoFormat->format.mHeight;
+        vs->codecpar->format = AV_PIX_FMT_YUV420P;
+        vs->codecpar->codec_type = AVMEDIA_TYPE_VIDEO;
+        vs->codecpar->codec_id = AV_CODEC_ID_H264;
+        vs->time_base.num = 1;
+        vs->time_base.den = 1000;
+        push->vStream = vs;
+    }
     
     pthread_create(&push->sendThread, GNULL, sendRunloop, push);
     return GTrue;
@@ -349,6 +371,8 @@ _Pragma("GCC diagnostic warning \"-Wdeprecated-declarations\"")
     if (push->formatContext) {
         avformat_free_context(push->formatContext);
     }
+    if (push->videoFormat)free(push->videoFormat);
+    if (push->audioFormat)free(push->audioFormat);
     free(push);
     GJLOG(GJ_LOGDEBUG, "GJRtmpPush_Delloc:%p",push);
     

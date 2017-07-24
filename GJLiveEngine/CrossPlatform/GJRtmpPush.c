@@ -35,8 +35,8 @@ struct _GJStreamPush{
     GJTrafficStatus         audioStatus;
     GJTrafficStatus         videoStatus;
     
-    GJAudioStreamFormat           audioFormat;
-    GJVideoStreamFormat           videoFormat;
+    GJAudioStreamFormat*           audioFormat;
+    GJVideoStreamFormat*           videoFormat;
 };
 
 
@@ -56,7 +56,7 @@ GBool RTMP_AllocAndPackAACSequenceHeader(GJStreamPush* push,GInt32 aactype, GInt
 GBool RTMP_AllocAndPakcetAVCSequenceHeader(GJStreamPush* push,GUInt8* sps,GInt32 spsSize,GUInt8* pps,GInt32 ppsSize,GUInt64 dts,RTMPPacket* sendPacket);
 
 static GHandle sendRunloop(GHandle parm){
-    pthread_setname_np("rtmpPushLoop");
+    pthread_setname_np("Loop.GJStreamPush");
     GJStreamPush* push = (GJStreamPush*)parm;
     GJStreamPushMessageType errType = GJStreamPushMessageType_connectError;
     GHandle errParm = GNULL;
@@ -265,7 +265,7 @@ static GHandle sendRunloop(GHandle parm){
         }else{
             if (push->audioStatus.leave.count == 0) {
                 RTMPPacket aacPacket;
-                if(RTMP_AllocAndPackAACSequenceHeader(push, 2, push->audioFormat.format.mSampleRate, push->audioFormat.format.mChannelsPerFrame, packet->pts, &aacPacket)){
+                if(RTMP_AllocAndPackAACSequenceHeader(push, 2, push->audioFormat->format.mSampleRate, push->audioFormat->format.mChannelsPerFrame, packet->pts, &aacPacket)){
                     GInt32 iRet = RTMP_SendPacket(push->rtmp,&aacPacket,0);
                     RTMPPacket_Free(&aacPacket);
                     if (iRet) {
@@ -345,7 +345,7 @@ ERROR:
     return GNULL;
 }
 
-GBool GJStreamPush_Create(GJStreamPush** sender,StreamPushMessageCallback callback,GHandle streamPushParm,GJAudioStreamFormat audioFormat,GJVideoStreamFormat videoFormat){
+GBool GJStreamPush_Create(GJStreamPush** sender,StreamPushMessageCallback callback,GHandle streamPushParm,const GJAudioStreamFormat* audioFormat,const GJVideoStreamFormat* videoFormat){
     GJStreamPush* push = GNULL;
     if (*sender == GNULL) {
         push = (GJStreamPush*)malloc(sizeof(GJStreamPush));
@@ -361,8 +361,14 @@ GBool GJStreamPush_Create(GJStreamPush** sender,StreamPushMessageCallback callba
     push->rtmpPushParm = streamPushParm;
     push->stopRequest = GFalse;
     push->releaseRequest = GFalse;
-    push->audioFormat = audioFormat;
-    push->videoFormat = videoFormat;
+    if (audioFormat) {
+        push->audioFormat = (GJAudioStreamFormat*)malloc(sizeof(GJAudioStreamFormat));
+        *push->audioFormat = *audioFormat;
+    }
+    if (videoFormat) {
+        push->videoFormat = (GJVideoStreamFormat*)malloc(sizeof(GJVideoStreamFormat));
+        *push->videoFormat = *videoFormat;
+    }
     pthread_mutex_init(&push->mutex, GNULL);
     *sender = push;
     return GTrue;
@@ -644,6 +650,10 @@ GVoid GJStreamPush_Delloc(GJStreamPush* push){
         free(packet);
     }
     queueFree(&push->sendBufferQueue);
+    
+    if (push->videoFormat)free(push->videoFormat);
+    if (push->audioFormat)free(push->audioFormat);
+    
     free(push);
     GJLOG(GJ_LOGDEBUG, "GJStreamPush_Delloc:%p",push);
 

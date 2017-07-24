@@ -53,7 +53,7 @@ static GBool packetBufferRelease(GJRetainBuffer* buffer){
 }
 
 static GHandle pullRunloop(GHandle parm){
-    pthread_setname_np("rtmpPullLoop");
+    pthread_setname_np("Loop.GJStreamPull");
     GJStreamPull* pull = (GJStreamPull*)parm;
     GJStreamPullMessageType errType = GJStreamPullMessageType_connectError;
     GHandle errParm = NULL;
