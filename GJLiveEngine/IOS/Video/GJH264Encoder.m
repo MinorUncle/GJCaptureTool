@@ -316,7 +316,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     pushPacket->type = GJMediaType_Video;
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
     CMTime dts = CMSampleBufferGetDecodeTimeStamp(sample);
-    printf("encode pts:%lld dts:%lld data size:%zu\n",pts.value,dts.value,totalLength);
+//    printf("encode pts:%lld dts:%lld data size:%zu\n",pts.value,dts.value,totalLength);
 
     pushPacket->pts = pts.value;
     if (encoder->_allowBFrame) {
@@ -342,7 +342,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //        pushPacket->dts = dts.value;
 //    }
     
-    printf("encode over pts:%lld dts:%lld data size:%zu\n",pts.value,pushPacket->dts,totalLength);
+//    printf("encode over pts:%lld dts:%lld data size:%zu\n",pts.value,pushPacket->dts,totalLength);
     
     
 //    NSData* seid = [NSData dataWithBytes:pushPacket->ppOffset+pushPacket->retain.data length:30];

@@ -225,43 +225,7 @@ static GHandle pullRunloop(GHandle parm){
                                 index += size + 4;
 
                             }
-//                            if ((pbody[index+4] & 0x0F) == 0x6) {
-//                                isKey = GTrue;
-//                                seiSize += pbody[index]<<24;
-//                                seiSize += pbody[index+1]<<16;
-//                                seiSize += pbody[index+2]<<8;
-//                                seiSize += pbody[index+3];
-//                                sei = pbody + index;
-//                                seiSize += 4;
-//                                index += seiSize;
-//                                if(index < packet.m_nBodySize && (pbody[index+4] & 0x0F) == 0x5){
-//                                    ppSize += pbody[index]<<24;
-//                                    ppSize += pbody[index+1]<<16;
-//                                    ppSize += pbody[index+2]<<8;
-//                                    ppSize += pbody[index+3];
-//                                    pp = pbody + index;
-//                                    ppSize += 4;
-//                                    index += ppSize;
-//                                }
-//                            }else if((pbody[index+4] & 0x0F) == 0x5){
-//                                isKey = GTrue;
-//                                ppSize += pbody[index]<<24;
-//                                ppSize += pbody[index+1]<<16;
-//                                ppSize += pbody[index+2]<<8;
-//                                ppSize += pbody[index+3];
-//                                pp = pbody + index;
-//                                ppSize += 4;
-//                                index += ppSize;
-//                            }else if((pbody[index+4] & 0x0F) == 0x1){
-//                                isKey = GFalse;
-//                                ppSize += pbody[index]<<24;
-//                                ppSize += pbody[index+1]<<16;
-//                                ppSize += pbody[index+2]<<8;
-//                                ppSize += pbody[index+3];
-//                                pp = pbody + index;
-//                                ppSize += 4;
-//                                index += ppSize;
-//                            }
+
                             
                         }else  if (pbody[index] == 2){
                             GJLOG(GJ_LOGDEBUG,"直播结束\n");

@@ -14,9 +14,9 @@
 #import "log.h"
 #import "GJBufferPool.h"
 
-//static char* url = "rtmp://10.0.1.142/live/room";
+static char* url = "rtmp://10.0.1.142/live/room";
 //static char* url = "rtmp://192.168.199.187/live/room";
-static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
+//static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
 
 //
 @interface PullShow : NSObject
@@ -173,7 +173,7 @@ static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
     GJ_LogSetLevel(GJ_LOGINFO);
     RTMP_LogSetLevel(RTMP_LOGERROR);
     
-//    _livePush = [[GJLivePush alloc]init];
+    _livePush = [[GJLivePush alloc]init];
 //    _livePush.videoMute = YES;
 //    _livePush.audioMute = YES;
     
@@ -190,8 +190,8 @@ static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
     
     CGRect rect = self.view.bounds;
     rect.size.height *= 0.45;
-//    self.topView = _livePush.previewView;//
-    self.topView = [[UIView alloc]initWithFrame:rect];
+    self.topView = _livePush.previewView;//
+//    self.topView = [[UIView alloc]initWithFrame:rect];
     self.topView.contentMode = UIViewContentModeScaleAspectFit;
     self.topView.frame = rect;
     self.topView.backgroundColor = [UIColor blackColor];

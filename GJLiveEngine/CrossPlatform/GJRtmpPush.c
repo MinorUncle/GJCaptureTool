@@ -238,14 +238,15 @@ static GHandle sendRunloop(GHandle parm){
             rtmpPacket.m_hasAbsTimestamp = 0;
             rtmpPacket.m_headerType = RTMP_PACKET_SIZE_LARGE;
             rtmpPacket.m_nInfoField2 = push->rtmp->m_stream_id;
-            rtmpPacket.m_nTimeStamp = (uint32_t)packet->pts;
+            rtmpPacket.m_nTimeStamp = (uint32_t)packet->dts;
             if (packet->dataSize > 0) {
                 body[iIndex++] = fristByte;
                 body[iIndex++] = 0x01;// AVC NALU
+                GInt32 ct = (GInt32)(packet->pts - packet->dts);
                 
-                body[iIndex++] = 0x00;
-                body[iIndex++] = 0x00;
-                body[iIndex++] = 0x00;
+                body[iIndex++] = ct & 0xff0000;
+                body[iIndex++] = ct & 0xff00;
+                body[iIndex++] = ct & 0xff;
             }
 
             

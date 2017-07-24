@@ -338,7 +338,6 @@ GBool GJAudioDrivePlayerCallback(GHandle player,void *data ,GInt32* outSize){
         _syncControl->audioInfo.cPTS = (GLong)audioBuffer->pts;
         _syncControl->audioInfo.clock = GJ_Gettime()/1000;
         GJLOGFREQ("audio show pts:%d",audioBuffer->pts);
-        GJAssert(*outSize, "size 不能为0");
         retainBufferUnRetain(&audioBuffer->retain);
         return GTrue;
     }else{
@@ -391,12 +390,12 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm){
                     GJLivePlay_StartBuffering(player);
                 }else{
 #ifdef SHOULD_BUFFER_IN_AUDIO_CLOCK
+                    GJLOG(GJ_LOGDEBUG, "video play queue empty when kTimeSYNCAudio,start buffer");
                     GJLivePlay_StartBuffering(player);
 #else
                     GJLOG(GJ_LOGWARNING, "video play queue empty when kTimeSYNCAudio,do not buffer");
 #endif
                 }
-                
             }
             usleep(30*1000);
             continue;
@@ -420,6 +419,9 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm){
                 R_GJPixelFrame nextBuffer = {0};
                 GBool peekResult = GFalse;
                 while ((peekResult = queuePeekWaitCopyValue(_playControl->imageQueue, 0, (GHandle)&nextBuffer, sizeof(R_GJPixelFrame), VIDEO_PTS_PRECISION))) {
+                    if (_playControl->status == kPlayStatusStop) {
+                        goto DROP;
+                    }
                     if(nextBuffer.pts < cImageBuf->pts){
                         GJLOG(GJ_LOGWARNING, "视频PTS重新开始，直接显示");
                         delay = 0;
