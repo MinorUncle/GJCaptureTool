@@ -19,7 +19,7 @@
 		6A40DFB91EE8DAE80047E0F0 /* libTheAmazingAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFB41EE8DA4D0047E0F0 /* libTheAmazingAudioEngine.a */; };
 		6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
 		6A40E1A51EEAA2D70047E0F0 /* AEPlaythroughChannel.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A40E1A41EEAA2D70047E0F0 /* AEPlaythroughChannel.h */; };
-		6A435C911F261F0D0046CEA3 /* GJRtmpPush.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4D11ECB4DFE0009E49A /* GJRtmpPush.c */; };
+		6A435C931F262D360046CEA3 /* GJRtmpPush.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4D11ECB4DFE0009E49A /* GJRtmpPush.c */; };
 		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
 		6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85F9E91F0140AF0037A64F /* AEAudioSender.h */; };
@@ -2304,7 +2304,6 @@
 				AE70A5191ECB4DFE0009E49A /* GJUtil.c in Sources */,
 				6ABF2B291F0B413600721DB3 /* IOS_VideoProduce.m in Sources */,
 				AE70A51B1ECB4DFE0009E49A /* sps_decode.c in Sources */,
-				6A435C911F261F0D0046CEA3 /* GJRtmpPush.c in Sources */,
 				6ABF2B1B1F0B413600721DB3 /* IOS_AACDecode.m in Sources */,
 				6ABF2B1F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m in Sources */,
 				AE70A53A1ECB4DFE0009E49A /* GJLivePush+advanced.m in Sources */,
@@ -2323,6 +2322,7 @@
 				AE3A2C181F07F69800C24BAA /* AirTunesPlay.m in Sources */,
 				AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */,
 				6A96CD741F25D683000DC4FE /* GJFFmpegPull.c in Sources */,
+				6A435C931F262D360046CEA3 /* GJRtmpPush.c in Sources */,
 				6ABF2B211F0B413600721DB3 /* IOS_AudioProduce.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
 				6ABF2B251F0B413600721DB3 /* IOS_H264Encode.m in Sources */,
