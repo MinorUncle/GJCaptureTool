@@ -199,7 +199,7 @@ static GHandle pullRunloop(GHandle parm){
                             
                         }else if (pbody[index] == 1) {
                             index ++;
-                            ct = pbody[index] << 16;
+                            ct = pbody[index++] << 16;
                             ct |= pbody[index++] << 8;
                             ct |= pbody[index++];
 

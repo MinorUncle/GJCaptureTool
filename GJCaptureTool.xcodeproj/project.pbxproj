@@ -33,6 +33,10 @@
 		6A85FA281F02397F0037A64F /* GJAudioMixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA271F02397F0037A64F /* GJAudioMixer.h */; };
 		6A96CCA41F2195C5000DC4FE /* GJScreenRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */; };
 		6A96CCA51F2195C5000DC4FE /* GJScreenRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */; };
+		6A96CD681F258750000DC4FE /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A96CD5B1F258740000DC4FE /* libavcodec.a */; };
+		6A96CD691F258750000DC4FE /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A96CD591F258740000DC4FE /* libavformat.a */; };
+		6A96CD6A1F258750000DC4FE /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A96CD631F258740000DC4FE /* libavutil.a */; };
+		6A96CD741F25D683000DC4FE /* GJFFmpegPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA453861F14D4950009FB64 /* GJFFmpegPull.c */; };
 		6AA453681F146A1A0009FB64 /* GJStreamPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453661F146A1A0009FB64 /* GJStreamPush.h */; };
 		6AA453851F14C16C0009FB64 /* GJStreamPull.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453841F14C16C0009FB64 /* GJStreamPull.h */; };
 		6AA4A8D91F18C3980009FB64 /* GJFFmpegPush.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF33111F0E2CE000721DB3 /* GJFFmpegPush.c */; };
@@ -70,10 +74,6 @@
 		6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BCF1ED5956800B049EB /* GJLivePullContext.h */; };
 		6AE37BD81ED5956800B049EB /* GJLivePushContext.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AE37BD01ED5956800B049EB /* GJLivePushContext.c */; };
 		6AE37BD91ED5956800B049EB /* GJLivePushContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BD11ED5956800B049EB /* GJLivePushContext.h */; };
-		AE1DBCA01F23AFB40002101A /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AE1DBC931F23AF8B0002101A /* libavcodec.a */; };
-		AE1DBCA11F23AFB40002101A /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AE1DBC911F23AF8B0002101A /* libavformat.a */; };
-		AE1DBCA21F23AFB40002101A /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = AE1DBC9B1F23AF8B0002101A /* libavutil.a */; };
-		AE1DBD2C1F2486BE0002101A /* GJFFmpegPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA453861F14D4950009FB64 /* GJFFmpegPull.c */; };
 		AE3634111F0810E000E3C0AD /* decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C341F07FE0400C24BAA /* decoder.h */; };
 		AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */ = {isa = PBXBuildFile; fileRef = AE3634131F08120600E3C0AD /* decoder_alac_apple.m */; };
 		AE3634161F08122100E3C0AD /* alac_format.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3634151F08122100E3C0AD /* alac_format.h */; };
@@ -238,72 +238,72 @@
 			remoteGlobalIDString = 17BB5B401BECD101007A2892;
 			remoteInfo = "TheAmazingAudioEngine tvOS";
 		};
-		AE1DBC8C1F23AF8B0002101A /* PBXContainerItemProxy */ = {
+		6A96CD541F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C53791C91CF6A4CE00B5CD50;
 			remoteInfo = ffmpegCode;
 		};
-		AE1DBC8E1F23AF8B0002101A /* PBXContainerItemProxy */ = {
+		6A96CD561F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C52104321D98FE7000DAB2E1;
 			remoteInfo = swresample;
 		};
-		AE1DBC901F23AF8B0002101A /* PBXContainerItemProxy */ = {
+		6A96CD581F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C52104571D9900A800DAB2E1;
 			remoteInfo = avformat;
 		};
-		AE1DBC921F23AF8B0002101A /* PBXContainerItemProxy */ = {
+		6A96CD5A1F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58145551D9E4CF100B9118F;
 			remoteInfo = avcodec;
 		};
-		AE1DBC941F23AF8B0002101A /* PBXContainerItemProxy */ = {
+		6A96CD5C1F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58153931D9E4F1D00B9118F;
 			remoteInfo = avdevice;
 		};
-		AE1DBC961F23AF8B0002101A /* PBXContainerItemProxy */ = {
+		6A96CD5E1F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58153EE1D9E515500B9118F;
 			remoteInfo = avfilter;
 		};
-		AE1DBC981F23AF8B0002101A /* PBXContainerItemProxy */ = {
+		6A96CD601F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C581556D1D9E520600B9118F;
 			remoteInfo = avresample;
 		};
-		AE1DBC9A1F23AF8B0002101A /* PBXContainerItemProxy */ = {
+		6A96CD621F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58155AB1D9E52AF00B9118F;
 			remoteInfo = avutil;
 		};
-		AE1DBC9C1F23AF8B0002101A /* PBXContainerItemProxy */ = {
+		6A96CD641F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58156EA1D9E531000B9118F;
 			remoteInfo = postproc;
 		};
-		AE1DBC9E1F23AF8B0002101A /* PBXContainerItemProxy */ = {
+		6A96CD661F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = C58157021D9E537800B9118F;
 			remoteInfo = swscale;
@@ -585,6 +585,7 @@
 		6A85FA271F02397F0037A64F /* GJAudioMixer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJAudioMixer.h; path = TheAmazingAudioEngine/GJAudioMixer.h; sourceTree = SOURCE_ROOT; };
 		6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJScreenRecorder.h; sourceTree = "<group>"; };
 		6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJScreenRecorder.m; sourceTree = "<group>"; };
+		6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ffmpegCode.xcodeproj; path = ../ffmpegCode/ffmpegCode.xcodeproj; sourceTree = "<group>"; };
 		6AA453661F146A1A0009FB64 /* GJStreamPush.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJStreamPush.h; sourceTree = "<group>"; };
 		6AA453841F14C16C0009FB64 /* GJStreamPull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJStreamPull.h; sourceTree = "<group>"; };
 		6AA453861F14D4950009FB64 /* GJFFmpegPull.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFFmpegPull.c; sourceTree = "<group>"; };
@@ -726,7 +727,6 @@
 		6AE37BD11ED5956800B049EB /* GJLivePushContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePushContext.h; sourceTree = "<group>"; };
 		6AE37BD21ED5956800B049EB /* Mp4Writer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Mp4Writer.c; sourceTree = "<group>"; };
 		6AE37BD31ED5956800B049EB /* Mp4Writer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp4Writer.h; sourceTree = "<group>"; };
-		AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ffmpegCode.xcodeproj; path = "../ijkplayer-ffmpeg/ijkplayer-master/ios/ffmpegCode/ffmpegCode.xcodeproj"; sourceTree = "<group>"; };
 		AE3634131F08120600E3C0AD /* decoder_alac_apple.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = decoder_alac_apple.m; sourceTree = "<group>"; };
 		AE3634151F08122100E3C0AD /* alac_format.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = alac_format.h; path = libairfloat/libairfloat/alac_format.h; sourceTree = SOURCE_ROOT; };
 		AE3634171F08123B00E3C0AD /* endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = endian.h; path = libairfloat/libairfloat/endian.h; sourceTree = SOURCE_ROOT; };
@@ -896,9 +896,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				AE1DBCA01F23AFB40002101A /* libavcodec.a in Frameworks */,
-				AE1DBCA11F23AFB40002101A /* libavformat.a in Frameworks */,
-				AE1DBCA21F23AFB40002101A /* libavutil.a in Frameworks */,
+				6A96CD681F258750000DC4FE /* libavcodec.a in Frameworks */,
+				6A96CD691F258750000DC4FE /* libavformat.a in Frameworks */,
+				6A96CD6A1F258750000DC4FE /* libavutil.a in Frameworks */,
 				AE70A5531ECB50A20009E49A /* libGJImageFilters.a in Frameworks */,
 				AE70A5541ECB50A20009E49A /* liblibQueue.a in Frameworks */,
 				6ABF33521F0E5F7000721DB3 /* libx264.a in Frameworks */,
@@ -1314,6 +1314,23 @@
 			path = libQueue;
 			sourceTree = "<group>";
 		};
+		6A96CD481F25873E000DC4FE /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6A96CD551F258740000DC4FE /* ffmpegCode.app */,
+				6A96CD571F258740000DC4FE /* libswresample.a */,
+				6A96CD591F258740000DC4FE /* libavformat.a */,
+				6A96CD5B1F258740000DC4FE /* libavcodec.a */,
+				6A96CD5D1F258740000DC4FE /* libavdevice.a */,
+				6A96CD5F1F258740000DC4FE /* libavfilter.a */,
+				6A96CD611F258740000DC4FE /* libavresample.a */,
+				6A96CD631F258740000DC4FE /* libavutil.a */,
+				6A96CD651F258740000DC4FE /* libpostproc.a */,
+				6A96CD671F258740000DC4FE /* libswscale.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		6ABF2B091F0B413600721DB3 /* Bridge */ = {
 			isa = PBXGroup;
 			children = (
@@ -1545,23 +1562,6 @@
 				046F7E411E306C8E00712A2B /* libx264_back.a */,
 			);
 			path = lib;
-			sourceTree = "<group>";
-		};
-		AE1DBC801F23AF8A0002101A /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				AE1DBC8D1F23AF8B0002101A /* ffmpegCode.app */,
-				AE1DBC8F1F23AF8B0002101A /* libswresample.a */,
-				AE1DBC911F23AF8B0002101A /* libavformat.a */,
-				AE1DBC931F23AF8B0002101A /* libavcodec.a */,
-				AE1DBC951F23AF8B0002101A /* libavdevice.a */,
-				AE1DBC971F23AF8B0002101A /* libavfilter.a */,
-				AE1DBC991F23AF8B0002101A /* libavresample.a */,
-				AE1DBC9B1F23AF8B0002101A /* libavutil.a */,
-				AE1DBC9D1F23AF8B0002101A /* libpostproc.a */,
-				AE1DBC9F1F23AF8B0002101A /* libswscale.a */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		AE70A4C51ECB4DFE0009E49A /* GJLiveEngine */ = {
@@ -1825,7 +1825,7 @@
 		C54FA89F1D21006000A0D3C3 = {
 			isa = PBXGroup;
 			children = (
-				AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */,
+				6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */,
 				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
 				6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */,
 				6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */,
@@ -2059,8 +2059,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = AE1DBC801F23AF8A0002101A /* Products */;
-					ProjectRef = AE1DBC7F1F23AF8A0002101A /* ffmpegCode.xcodeproj */;
+					ProductGroup = 6A96CD481F25873E000DC4FE /* Products */;
+					ProjectRef = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
 				},
 				{
 					ProductGroup = 0417FED81E5ECB8C00D5B5D9 /* Products */;
@@ -2201,74 +2201,74 @@
 			remoteRef = 6A40DFB71EE8DA4D0047E0F0 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE1DBC8D1F23AF8B0002101A /* ffmpegCode.app */ = {
+		6A96CD551F258740000DC4FE /* ffmpegCode.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
 			path = ffmpegCode.app;
-			remoteRef = AE1DBC8C1F23AF8B0002101A /* PBXContainerItemProxy */;
+			remoteRef = 6A96CD541F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE1DBC8F1F23AF8B0002101A /* libswresample.a */ = {
+		6A96CD571F258740000DC4FE /* libswresample.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libswresample.a;
-			remoteRef = AE1DBC8E1F23AF8B0002101A /* PBXContainerItemProxy */;
+			remoteRef = 6A96CD561F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE1DBC911F23AF8B0002101A /* libavformat.a */ = {
+		6A96CD591F258740000DC4FE /* libavformat.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavformat.a;
-			remoteRef = AE1DBC901F23AF8B0002101A /* PBXContainerItemProxy */;
+			remoteRef = 6A96CD581F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE1DBC931F23AF8B0002101A /* libavcodec.a */ = {
+		6A96CD5B1F258740000DC4FE /* libavcodec.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavcodec.a;
-			remoteRef = AE1DBC921F23AF8B0002101A /* PBXContainerItemProxy */;
+			remoteRef = 6A96CD5A1F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE1DBC951F23AF8B0002101A /* libavdevice.a */ = {
+		6A96CD5D1F258740000DC4FE /* libavdevice.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavdevice.a;
-			remoteRef = AE1DBC941F23AF8B0002101A /* PBXContainerItemProxy */;
+			remoteRef = 6A96CD5C1F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE1DBC971F23AF8B0002101A /* libavfilter.a */ = {
+		6A96CD5F1F258740000DC4FE /* libavfilter.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavfilter.a;
-			remoteRef = AE1DBC961F23AF8B0002101A /* PBXContainerItemProxy */;
+			remoteRef = 6A96CD5E1F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE1DBC991F23AF8B0002101A /* libavresample.a */ = {
+		6A96CD611F258740000DC4FE /* libavresample.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavresample.a;
-			remoteRef = AE1DBC981F23AF8B0002101A /* PBXContainerItemProxy */;
+			remoteRef = 6A96CD601F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE1DBC9B1F23AF8B0002101A /* libavutil.a */ = {
+		6A96CD631F258740000DC4FE /* libavutil.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libavutil.a;
-			remoteRef = AE1DBC9A1F23AF8B0002101A /* PBXContainerItemProxy */;
+			remoteRef = 6A96CD621F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE1DBC9D1F23AF8B0002101A /* libpostproc.a */ = {
+		6A96CD651F258740000DC4FE /* libpostproc.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libpostproc.a;
-			remoteRef = AE1DBC9C1F23AF8B0002101A /* PBXContainerItemProxy */;
+			remoteRef = 6A96CD641F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE1DBC9F1F23AF8B0002101A /* libswscale.a */ = {
+		6A96CD671F258740000DC4FE /* libswscale.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = libswscale.a;
-			remoteRef = AE1DBC9E1F23AF8B0002101A /* PBXContainerItemProxy */;
+			remoteRef = 6A96CD661F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -2321,7 +2321,7 @@
 				AE70A5201ECB4DFE0009E49A /* AACEncoderFromPCM.m in Sources */,
 				AE3A2C181F07F69800C24BAA /* AirTunesPlay.m in Sources */,
 				AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */,
-				AE1DBD2C1F2486BE0002101A /* GJFFmpegPull.c in Sources */,
+				6A96CD741F25D683000DC4FE /* GJFFmpegPull.c in Sources */,
 				6ABF2B211F0B413600721DB3 /* IOS_AudioProduce.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
 				6ABF2B251F0B413600721DB3 /* IOS_H264Encode.m in Sources */,

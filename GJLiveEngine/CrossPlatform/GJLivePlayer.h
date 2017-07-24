@@ -57,10 +57,11 @@ typedef struct _GJNetShakeInfo{
     GTime preMaxDownShake;
 }GJNetShakeInfo;
 typedef struct _SyncInfo{
-    GTime                 clock;
+    GTime                  clock;
     GTime                  cPTS;
-    GTime                 startTime;
+    GTime                  startTime;
     GTime                  startPts;
+    GLong                  inDtsSeries;
     GJTrafficStatus        trafficStatus;
 }SyncInfo;
 typedef struct SyncControl{
@@ -69,7 +70,7 @@ typedef struct SyncControl{
     GJCacheInfo             bufferInfo;
     TimeSYNCType            syncType;
     GJNetShakeInfo          netShake;
-    GFloat32                        speed;
+    GFloat32                speed;
     
 #ifdef NETWORK_DELAY
     GLong                   networkDelay;
@@ -83,9 +84,11 @@ typedef struct _GJLivePlayContext{
     GJSyncControl       syncControl;
     GJPlayControl       playControl;
     
-    GJPictureDisplayContext* videoPlayer;
-    GJAudioPlayContext*      audioPlayer;
-    GJAudioFormat           audioFormat;
+    GJPictureDisplayContext*    videoPlayer;
+    GJAudioPlayContext*         audioPlayer;
+    GJAudioFormat               audioFormat;
+    R_GJPixelFrame*              sortQueue[5];//用于排序,最大5个连续b帧
+    GInt32                      sortIndex;
 }GJLivePlayer;
 
 GBool  GJLivePlay_Create(GJLivePlayer** player,GJLivePlayCallback callback,GHandle userData);

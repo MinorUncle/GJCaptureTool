@@ -12,6 +12,7 @@
 @interface GJH264Decoder()
 {
     dispatch_queue_t _decodeQueue;//解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
+    
 }
 @property(nonatomic)VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
@@ -77,6 +78,7 @@ void decodeOutputCallback(
 
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
 
+//    printf("after decode pts:%lld ,dts:%ld\n",pts,dts);
     decoder.completeCallback(imageBuffer, pts,(GInt64)dts);
 }
 
@@ -102,7 +104,7 @@ void decodeOutputCallback(
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     
-    GJLOGFREQ("decode packet input pts:%lld",packet->pts);
+//    printf("before decode pts:%lld ,dts:%lld ,size:%d\n",packet->pts,packet->dts,packet->dataSize);
     OSStatus status;
     long blockLength = 0;
     CMSampleBufferRef sampleBuffer = NULL;

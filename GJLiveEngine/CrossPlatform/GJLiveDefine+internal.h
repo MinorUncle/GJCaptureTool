@@ -30,6 +30,7 @@ typedef struct GRational{
 #define GRationalValue(rational) (GFloat32)(rational).num*1.0/(rational).den
 typedef struct TrafficUnit{
     GLong ts;//ms
+//    GLong dts;//dts只能单调上升，否则重新开始计算
     GLong count;
     GLong byte;
 }GJTrafficUnit;

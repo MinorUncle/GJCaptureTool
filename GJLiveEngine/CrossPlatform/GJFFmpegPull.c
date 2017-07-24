@@ -54,6 +54,7 @@ static GHandle pullRunloop(GHandle parm){
     }
     av_format_inject_global_side_data(pull->formatContext);
     pull->formatContext->fps_probe_size = 0;
+//    pull->formatContext->max_analyze_duration = 0;
     result = avformat_find_stream_info(pull->formatContext, GNULL);
     if (result < 0) {
         GJLOG(GJ_LOGERROR, "avformat_find_stream_info");

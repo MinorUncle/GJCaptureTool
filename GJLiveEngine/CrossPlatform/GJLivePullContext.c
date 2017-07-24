@@ -137,7 +137,9 @@ static GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle par
 }
 static GVoid pullMessageCallback(GJStreamPull* pull, GJStreamPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm){
     GJLivePullContext* livePull = rtmpPullParm;
-    
+    if (livePull->videoPull != GNULL && pull != livePull->videoPull) {
+        return;
+    }
         switch (messageType) {
             case GJStreamPullMessageType_connectError:
             case GJStreamPullMessageType_urlPraseError:
@@ -179,7 +181,9 @@ static const GInt32 mpeg4audio_sample_rates[16] = {
 
 void pullDataCallback(GJStreamPull* pull,R_GJPacket* packet,void* parm){
     GJLivePullContext* livePull = parm;
-    
+    if (pull != livePull->videoPull) {
+        return;
+    }
     if (packet->type == GJMediaType_Video) {
 
     livePull->videoUnDecodeByte += packet->retain.size;
@@ -236,7 +240,6 @@ void pullDataCallback(GJStreamPull* pull,R_GJPacket* packet,void* parm){
                 GJLOG(GJ_LOGERROR,"音频没有adts");
                 return;
             }
-        
         }
         livePull->audioDecoder->decodePacket(livePull->audioDecoder,packet);
     }
