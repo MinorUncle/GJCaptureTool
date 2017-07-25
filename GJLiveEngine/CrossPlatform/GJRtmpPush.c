@@ -55,6 +55,11 @@ GVoid GJStreamPush_Release(GJStreamPush* sender);
 GBool RTMP_AllocAndPackAACSequenceHeader(GJStreamPush* push,GInt32 aactype, GInt32 sampleRate, GInt32 channels,GUInt64 dts,RTMPPacket* sendPacket);
 GBool RTMP_AllocAndPakcetAVCSequenceHeader(GJStreamPush* push,GUInt8* sps,GInt32 spsSize,GUInt8* pps,GInt32 ppsSize,GUInt64 dts,RTMPPacket* sendPacket);
 
+static GInt32 interruptCB(GVoid* opaque){
+    GJStreamPush* push = (GJStreamPush*)opaque;
+    return push->stopRequest;
+}
+
 static GHandle sendRunloop(GHandle parm){
     pthread_setname_np("Loop.GJStreamPush");
     GJStreamPush* push = (GJStreamPush*)parm;
@@ -258,7 +263,7 @@ static GHandle sendRunloop(GHandle parm){
                 retainBufferUnRetain(&packet->retain);
             }else{
                 retainBufferUnRetain(&packet->retain);
-                GJLOG(GJ_LOGFORBID, "error send video FRAME");
+                GJLOG(GJ_LOGERROR, "error send video FRAME");
                 errType = GJStreamPushMessageType_sendPacketError;
                 goto ERROR;
             }
@@ -355,6 +360,7 @@ GBool GJStreamPush_Create(GJStreamPush** sender,StreamPushMessageCallback callba
     memset(push, 0, sizeof(GJStreamPush));
     push->rtmp = RTMP_Alloc();
     RTMP_Init(push->rtmp);
+    RTMP_SetInterruptCB(push->rtmp, interruptCB, push);
     
     queueCreate(&push->sendBufferQueue, BUFFER_CACHE_SIZE, GTrue, GTrue);
     push->messageCallback = callback;
@@ -631,6 +637,8 @@ GBool  GJStreamPush_StartConnect(GJStreamPush* sender,const GChar* sendUrl){
         GJLOG(GJ_LOGWARNING,"等待push释放结束");
     }
     sender->stopRequest = GFalse;
+    queueEnablePush(sender->sendBufferQueue, GTrue);
+    queueEnablePop(sender->sendBufferQueue, GTrue);
     pthread_create(&sender->sendThread, GNULL, sendRunloop, sender);
     return GTrue;
 }
@@ -686,7 +694,9 @@ GVoid GJStreamPush_Close(GJStreamPush* sender){
         GJLOG(GJ_LOGINFO,"GJStreamPush_Close:%p",sender);
         sender->stopRequest = GTrue;
         queueEnablePush(sender->sendBufferQueue, GFalse);
+        queueEnablePop(sender->sendBufferQueue, GFalse);
         queueBroadcastPop(sender->sendBufferQueue);
+        queueBroadcastPush(sender->sendBufferQueue);
 
     }
 }

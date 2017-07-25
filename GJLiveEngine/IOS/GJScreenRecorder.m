@@ -212,7 +212,7 @@
         return NO;
     }
     
-    RecorderLOG(@"receive AudioPts fill:%f dt:%f",blockPts,blockDuring*1000);
+//    RecorderLOG(@"receive AudioPts fill:%f dt:%f",blockPts,blockDuring*1000);
     
     status = CMAudioSampleBufferCreateWithPacketDescriptions(kCFAllocatorDefault, blockbuffer, YES, NULL, NULL, _formatDesc, frames, CMTimeMake((int64_t)blockPts, 1000), NULL, sample);
     if (status != noErr) {

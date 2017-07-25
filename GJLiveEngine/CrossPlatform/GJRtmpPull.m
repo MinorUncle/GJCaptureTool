@@ -51,7 +51,10 @@ static GBool packetBufferRelease(GJRetainBuffer* buffer){
     GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer);
     return GTrue;
 }
-
+static GInt32 interruptCB(GVoid* opaque){
+    GJStreamPull* pull = (GJStreamPull*)opaque;
+    return pull->stopRequest;
+}
 static GHandle pullRunloop(GHandle parm){
     pthread_setname_np("Loop.GJStreamPull");
     GJStreamPull* pull = (GJStreamPull*)parm;
@@ -330,7 +333,8 @@ GBool GJStreamPull_Create(GJStreamPull** pullP,StreamPullMessageCallback callbac
     memset(pull, 0, sizeof(GJStreamPull));
     pull->rtmp = RTMP_Alloc();
     RTMP_Init(pull->rtmp);
-    
+    RTMP_SetInterruptCB(pull->rtmp, interruptCB, pull);
+
     pull->messageCallback = callback;
     pull->messageCallbackParm = rtmpPullParm;
     pull->stopRequest = GFalse;
