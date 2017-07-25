@@ -169,19 +169,19 @@ static GHandle sendRunloop(GHandle parm){
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        sendPacket->stream_index = packet->type;
         sendPacket->data = packet->retain.data + packet->dataOffset;
         sendPacket->size = packet->dataSize;
         
         GInt32 iRet = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
             if (packet->type == GJMediaType_Video) {
-//                printf("send video pts:%lld size:%d\n",packet->pts,packet->dataSize);
+                printf("send video pts:%lld dts:%lld size:%d\n",packet->pts,packet->dts,packet->dataSize);
 //                GJLOGFREQ("send video pts:%d size:%d",packet->pts,packet->dataSize);
                 push->videoStatus.leave.byte+=packet->dataSize;
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.ts = (GLong)packet->dts;
             }else{
+                printf("send audio pts:%lld dts:%lld size:%d\n",packet->pts,packet->dts,packet->dataSize);
                 GJLOGFREQ("send audio pts:%d size:%d",packet->pts,packet->dataSize);
                 push->audioStatus.leave.byte+=packet->dataSize;
                 push->audioStatus.leave.count++;
@@ -204,11 +204,14 @@ static GHandle sendRunloop(GHandle parm){
         GJLOG(GJ_LOGDEBUG, "av_write_trailer success");
 
     }
+
+END:
     result = avio_close(push->formatContext->pb);
     if (result < 0) {
         GJLOG(GJ_LOGERROR, "avio_close error:%d",result);
+    }else{
+        GJLOG(GJ_LOGDEBUG, "avio_close success");
     }
-END:
     
     if (push->messageCallback) {
         push->messageCallback(push->streamPushParm, errType,errParm);
@@ -282,6 +285,8 @@ GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl){
     }
     push->stopRequest = GFalse;
     
+    queueEnablePush(push->sendBufferQueue, GTrue);
+    queueEnablePop(push->sendBufferQueue, GTrue);
     
     GInt32 ret = avformat_alloc_output_context2(&push->formatContext, GNULL, "flv", sendUrl);
     if (ret < 0) {
@@ -399,7 +404,10 @@ GVoid GJStreamPush_Close(GJStreamPush* sender){
         GJLOG(GJ_LOGINFO,"GJRtmpPush_Close:%p",sender);
         sender->stopRequest = GTrue;
         queueEnablePush(sender->sendBufferQueue, GFalse);
+        queueEnablePop(sender->sendBufferQueue, GFalse);
+        queueBroadcastPush(sender->sendBufferQueue);
         queueBroadcastPop(sender->sendBufferQueue);
+        
         
     }
 }
@@ -410,8 +418,6 @@ GVoid GJStreamPush_CloseAndDealloc(GJStreamPush** push){
 
 }
 GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
-
-    printf("send index:%d type:%d, pts:%lld dts:%lld\n",queueGetLength(push->sendBufferQueue),packet->type,packet->pts,packet->dts);
 
     if(push == GNULL)return GFalse;
     retainBufferRetain(&packet->retain);

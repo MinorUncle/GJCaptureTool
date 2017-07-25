@@ -316,9 +316,15 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     pushPacket->type = GJMediaType_Video;
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
     CMTime dts = CMSampleBufferGetDecodeTimeStamp(sample);
-//    printf("encode pts:%lld dts:%lld data size:%zu\n",pts.value,dts.value,totalLength);
+    printf("encode pts:%lld dts:%lld data size:%zu\n",pts.value,dts.value,totalLength);
 
     pushPacket->pts = pts.value;
+//    if (encoder->_allowBFrame) {
+//        
+//    }else{
+//         pushPacket->dts = pushPacket->pts;
+//    }
+    
     if (encoder->_allowBFrame) {
         if (encoder->_fristPts > pushPacket->pts) {
             encoder->_fristPts = pushPacket->pts;
@@ -331,11 +337,15 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         }else{
             pushPacket->dts = pushPacket->pts;
         }
-        pushPacket->dts -= encoder->_dtsDelta*2;
+        pushPacket->dts -= encoder->_dtsDelta;
+        if (pushPacket->dts > pushPacket->pts) {
+            pushPacket->dts = pushPacket->pts;
+        }
 
     }else{
         pushPacket->dts = pts.value;
     }
+    //-----------
 //    if (CMTIME_IS_INVALID(dts)) {
 //        pushPacket->dts = pts.value;
 //    }else{
@@ -379,122 +389,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     retainBufferUnRetain(retainBuffer);
 }
 
-//
-////快降慢升
-//-(void)appendQualityWithStep:(GLong)step{
-//    GLong leftStep = step;
-//    GJEncodeQuality quality = GJEncodeQualityGood;
-//    int32_t bitrate = _currentBitRate;
-//    GJLOG(GJ_LOGINFO, "appendQualityWithStep：%d",step);
-//    if (leftStep > 0 && GRationalValue(_dropStep) > 0.5) {
-////        _dropStep += _allowDropStep-1+leftStep;
-//        GJAssert(_dropStep.den - _dropStep.num == 1, "管理错误1");
-//
-//        _dropStep.num -= leftStep;
-//        _dropStep.den -= leftStep;
-//        leftStep = 0;
-//        if (_dropStep.num < 1) {
-//            leftStep = 1 - _dropStep.num;
-//            _dropStep = GRationalMake(1,2);
-//        }else{
-//            bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
-//            bitrate += _allowMinBitRate/_destFormat.baseFormat.fps*I_P_RATE;
-//            quality = GJEncodeQualityTerrible;
-//            GJLOG(GJ_LOGINFO, "appendQuality by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
-//        }
-//    }
-//    if (leftStep > 0 && _dropStep.num != 0) {
-//        //        _dropStep += _allowDropStep-1+leftStep;
-//        GJAssert(_dropStep.num == 1, "管理错误2");
-//        _dropStep.num = 1;
-//        _dropStep.den += leftStep;
-//        leftStep = 0;
-//        if (_dropStep.den > DEFAULT_MAX_DROP_STEP) {
-//            leftStep = DEFAULT_MAX_DROP_STEP - _dropStep.den;
-//            _dropStep = GRationalMake(0,DEFAULT_MAX_DROP_STEP);
-//            bitrate = _allowMinBitRate;
-//        }else{
-//            bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
-//            bitrate += bitrate/_destFormat.baseFormat.fps*(1-GRationalValue(_dropStep))*I_P_RATE;
-//            quality = GJEncodeQualitybad;
-//            GJLOG(GJ_LOGINFO, "appendQuality by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
-//        }
-//    }
-//    if(leftStep > 0){
-//        if (bitrate < _destFormat.baseFormat.bitRate) {
-//            bitrate += (_destFormat.baseFormat.bitRate - _allowMinBitRate)*leftStep*DROP_BITRATE_RATE;
-//            bitrate = MIN(bitrate, _destFormat.baseFormat.bitRate);
-//            quality = GJEncodeQualityGood;
-//        }else{
-//            quality = GJEncodeQualityExcellent;
-//            bitrate = _destFormat.baseFormat.bitRate;
-//            GJLOG(GJ_LOGINFO, "appendQuality to full speed:%f",_currentBitRate/1024.0/8.0);
-//        }
-//    }
-//    if (_currentBitRate != bitrate) {
-//        self.currentBitRate = bitrate;
-//        if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-//            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityExcellent];
-//        }
-//    }
-// 
-//}
-//-(void)reduceQualityWithStep:(GLong)step{
-//    GLong leftStep = step;
-//    int currentBitRate = _currentBitRate;
-//    GJEncodeQuality quality = GJEncodeQualityGood;
-//    int32_t bitrate = _currentBitRate;
-//    
-//    GJLOG(GJ_LOGINFO, "reduceQualityWithStep：%d",step);
-//
-//    if (_currentBitRate > _allowMinBitRate) {
-//        bitrate -= (_destFormat.baseFormat.bitRate - _allowMinBitRate)*leftStep*DROP_BITRATE_RATE;
-//        leftStep = 0;
-//        if (bitrate < _allowMinBitRate) {
-//            leftStep = (currentBitRate - bitrate)/((_destFormat.baseFormat.bitRate - _allowMinBitRate)*DROP_BITRATE_RATE);
-//            bitrate = _allowMinBitRate;
-//        }
-//        quality = GJEncodeQualityGood;
-//    }
-//    if (leftStep > 0 && GRationalValue(_dropStep) <= 0.50001 && GRationalValue(_dropStep) < GRationalValue(_allowDropStep)){
-//        if(_dropStep.num == 0)_dropStep = GRationalMake(1, DEFAULT_MAX_DROP_STEP);
-//        _dropStep.num = 1;
-//        _dropStep.den -= leftStep;
-//        leftStep = 0;
-//        
-//        GRational tempR = GRationalMake(1, 2);
-//        if (GRationalValue(_allowDropStep) < 0.5) {
-//            tempR = _allowDropStep;
-//        }
-//        if (_dropStep.den < tempR.den) {
-//            leftStep = tempR.den - _dropStep.den;
-//            _dropStep.den = tempR.den;
-//        }else{
-//        
-//            bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
-//            bitrate += bitrate/_destFormat.baseFormat.fps*(1-GRationalValue(_dropStep))*I_P_RATE;
-//            quality = GJEncodeQualitybad;
-//            GJLOG(GJ_LOGINFO, "reduceQuality1 by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
-//
-//        }
-//    }
-//    if (leftStep > 0 && GRationalValue(_dropStep) < GRationalValue(_allowDropStep)){
-//        _dropStep.num += leftStep;
-//        _dropStep.den += leftStep;
-//        if(_dropStep.den > _allowDropStep.den){
-//            _dropStep.num -= _dropStep.den - _allowDropStep.den;
-//            _dropStep.den = _allowDropStep.den;
-//        }
-//        bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
-//        bitrate += bitrate/_destFormat.baseFormat.fps*(1-GRationalValue(_dropStep))*I_P_RATE;
-//        quality = GJEncodeQualityTerrible;
-//        GJLOG(GJ_LOGINFO, "reduceQuality2 by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
-//    }
-//    self.currentBitRate = bitrate;
-//    if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-//        [self.deleagte GJH264Encoder:self qualityQarning:quality];
-//    }
-//}
+
 -(void)flush{
     _stopRequest = YES;
     if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
