@@ -11,7 +11,7 @@
 #import "GJLiveDefine+internal.h"
 #import "GJBridegContext.h"
 
-#define SHOULD_BUFFER_IN_AUDIO_CLOCK
+#define SHOULD_BUFFER_VIDEO_IN_AUDIO_CLOCK
 typedef enum _GJPlayStatus{
     kPlayStatusStop,
     kPlayStatusRunning,
@@ -49,6 +49,7 @@ typedef struct PlayControl{
     pthread_t            playVideoThread;
     GJQueue*             imageQueue;
     GJQueue*             audioQueue;
+    GInt32               videoQueueWaitTime;//视频出队列等待时间，音频不等待
 }GJPlayControl;
 typedef struct _GJNetShakeInfo{
     GTime collectStartClock;

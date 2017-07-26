@@ -144,6 +144,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @property (strong, nonatomic) UIButton *earPlay;
 @property (strong, nonatomic) UIButton *mixStream;
 @property (strong, nonatomic) UIButton *changeCamera;
+@property (strong, nonatomic) UIButton *audioMute;
+@property (strong, nonatomic) UIButton *videoMute;
 
 @property (strong, nonatomic) UISlider *inputGain;
 @property (strong, nonatomic) UILabel *inputGainLab;
@@ -173,7 +175,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 - (void)viewDidLoad {
     [super viewDidLoad];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
-    GJ_LogSetLevel(GJ_LOGINFO);
+    GJ_LogSetLevel(GJ_LOGALL);
     RTMP_LogSetLevel(RTMP_LOGERROR);
     _livePush = [[GJLivePush alloc]init];
     GJPushConfig config = {0};
@@ -274,6 +276,23 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _changeCamera.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_changeCamera];
     
+    _videoMute = [[UIButton alloc]init];
+    _videoMute.backgroundColor = [UIColor clearColor];
+    [_videoMute setTitle:@"暂停视频" forState:UIControlStateNormal];
+    [_videoMute setTitle:@"开启视频" forState:UIControlStateSelected];
+    [_videoMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_videoMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _videoMute.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_videoMute];
+    
+    _audioMute = [[UIButton alloc]init];
+    _audioMute.backgroundColor = [UIColor clearColor];
+    [_audioMute setTitle:@"暂停音频" forState:UIControlStateNormal];
+    [_audioMute setTitle:@"开启音频" forState:UIControlStateSelected];
+    [_audioMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_audioMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _audioMute.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_audioMute];
     
     _inputGainLab = [[UILabel alloc]init];
     _inputGainLab.text = @"采集音量";
@@ -378,7 +397,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     rect.origin.y = CGRectGetMaxY(rect);
     _currentV.frame = rect;
  
-    int rightCount = 7;
+    int rightCount = 9;
     rect.origin = CGPointMake(self.view.bounds.size.width*0.5, 20);
     rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.topView.bounds.size.height-30) / rightCount);
     _audioMixBtn.frame = rect;
@@ -391,6 +410,12 @@ static char* url = "rtmp://10.0.1.142/live/room";
     
     rect.origin.y = CGRectGetMaxY(rect);
     _changeCamera.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _audioMute.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _videoMute.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     rect.size.width *= 0.4;
@@ -463,7 +488,11 @@ static char* url = "rtmp://10.0.1.142/live/room";
 }
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
-    if (btn == _pushButton) {
+    if (btn == _audioMute) {
+        _livePush.audioMute = btn.selected;
+    }else if (btn == _videoMute) {
+        _livePush.videoMute = btn.selected;
+    }else if (btn == _pushButton) {
         if (btn.selected) {
             
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];

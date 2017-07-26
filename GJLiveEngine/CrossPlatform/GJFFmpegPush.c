@@ -66,7 +66,7 @@ static GHandle sendRunloop(GHandle parm){
             if (push->stopRequest) {
                 goto END;
             }
-            printf("peek index:%d type:%d, pts:%lld\n",videoIndex,packet->type,packet->pts);
+            GJLOG(GJ_LOGINFO,"peek index:%d type:%d, pts:%lld\n",videoIndex,packet->type,packet->pts);
             if (packet->type == GJMediaType_Video) {
                 if((packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY){
                     GJLOG(GJ_LOGFORBID, "第一帧视频非关键帧");

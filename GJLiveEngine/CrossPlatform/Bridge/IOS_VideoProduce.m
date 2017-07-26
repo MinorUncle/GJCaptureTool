@@ -23,11 +23,13 @@ static GBool pixelReleaseCallBack(GJRetainBuffer *buffer){
     GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer);
     return GTrue;
 }
+
 BOOL getCaptureInfoWithSize(CGSize size,CGSize* captureSize,NSString** sessionPreset){
     *captureSize = CGSizeZero;
     *sessionPreset = nil;
     return YES;
 }
+
 CGSize getCaptureSizeWithSize(CGSize size){
     CGSize captureSize;
     if (size.width <= 352 && size.height <= 288) {
@@ -43,6 +45,7 @@ CGSize getCaptureSizeWithSize(CGSize size){
     }
     return captureSize;
 }
+
 NSString* getCapturePresetWithSize(CGSize size){
     NSString* capturePreset;
     if (size.width <= 353 && size.height <= 289) {
@@ -58,6 +61,7 @@ NSString* getCapturePresetWithSize(CGSize size){
     }
     return capturePreset;
 }
+
 NSString* getSessionPresetWithSizeType(GJCaptureSizeType sizeType){
     NSString* preset = nil;
     switch (sizeType) {
@@ -82,6 +86,7 @@ NSString* getSessionPresetWithSizeType(GJCaptureSizeType sizeType){
     }
     return preset;
 }
+
 AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPosition){
     AVCaptureDevicePosition position = AVCaptureDevicePositionUnspecified;
     switch (cameraPosition) {
@@ -97,6 +102,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     }
     return position;
 }
+
 @interface IOS_VideoProduce : NSObject
 @property(nonatomic,strong)GPUImageVideoCamera* camera;
 @property(nonatomic,strong)GJImageView* imageView;
@@ -119,10 +125,10 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     self = [super init];
     if (self) {
         
+        _frameRate = fps;
         _cameraPosition = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
         self.destSize = CGSizeMake((CGFloat)format.mWidth, (CGFloat)format.mHeight);
-        _frameRate = fps;
     }
     return self;
 }
@@ -132,8 +138,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     if (self) {
         _cameraPosition = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
-        self.destSize = CGSizeMake(480,640);
         _frameRate = 15;
+        self.destSize = CGSizeMake(480,640);
     }
     return self;
 }

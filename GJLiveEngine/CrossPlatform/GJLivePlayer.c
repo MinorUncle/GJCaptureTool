@@ -94,6 +94,7 @@ static GBool  GJLivePlay_StartBuffering(GJLivePlayer* player){
     if(player->playControl.status == kPlayStatusRunning){
         GJLOG(GJ_LOGDEBUG, "start buffing");
         player->playControl.status = kPlayStatusBuffering;
+        player->playControl.videoQueueWaitTime = GINT32_MAX;
         player->syncControl.bufferInfo.lastPauseFlag = GJ_Gettime() / 1000;
         player->audioPlayer->audioPause(player->audioPlayer);
         
@@ -282,14 +283,24 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer* player){
             GLong aCache = _syncControl->audioInfo.trafficStatus.enter.ts - _syncControl->audioInfo.trafficStatus.leave.ts;
             bufferInfo.cacheCount = _syncControl->audioInfo.trafficStatus.enter.count - _syncControl->audioInfo.trafficStatus.leave.count;
             cache = aCache;
-            if ((aCache == 0 && vCache >= _syncControl->bufferInfo.lowWaterFlag) || vCache >= _syncControl->bufferInfo.highWaterFlag-300) {
-                GJLOG(GJ_LOGWARNING, "音频缓冲过程中，音频为空视频足够、或者视频足够大于音频。切换到视频同步");
+            if ((aCache == 0 && vCache >= _syncControl->bufferInfo.lowWaterFlag) || //音频没有了，视频足够
+                vCache >= _syncControl->bufferInfo.highWaterFlag-300) {//音频缓冲了一部分后音频消失
+                GJLOG(GJ_LOGWARNING, "等待音频缓冲过程中，音频为空视频足够、或者视频足够大于音频。切换到视频同步");
+                player->playControl.videoQueueWaitTime = 0;
                 GJLivePlay_StopBuffering(player);
                 changeSyncType(_syncControl, kTimeSYNCVideo);
                 return;
             }
+#ifdef SHOULD_BUFFER_VIDEO_IN_AUDIO_CLOCK
+            //音频等待缓冲视频
+            else if((vCache == 0 && aCache >= _syncControl->bufferInfo.lowWaterFlag) || vCache >= _syncControl->bufferInfo.highWaterFlag-300){
+                GJLOG(GJ_LOGWARNING, "等待视频缓冲过程中，视频为空音频足够、或者音频足够大于音频。停止视频等待");
+                player->playControl.videoQueueWaitTime = GINT32_MAX;
+                GJLivePlay_StopBuffering(player);
+                return;
+            }
+#endif
         }else{
-            
             cache = _syncControl->videoInfo.trafficStatus.enter.ts - _syncControl->videoInfo.trafficStatus.leave.ts;
             bufferInfo.cacheCount = _syncControl->audioInfo.trafficStatus.enter.count - _syncControl->audioInfo.trafficStatus.leave.count;
         }
@@ -304,6 +315,7 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer* player){
             GJLOG(GJ_LOGDEBUG, "缓冲结束");
             player->callback(player->userDate,GJPlayMessage_BufferUpdate,&bufferInfo);
             player->callback(player->userDate,GJPlayMessage_BufferEnd,&bufferInfo);
+            player->playControl.videoQueueWaitTime = 0;
             GJLivePlay_StopBuffering(player);
         }
     }else if (_playControl->status == kPlayStatusRunning){
@@ -371,7 +383,7 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm){
     
     while ((_playControl->status != kPlayStatusStop)) {
         
-        if (queuePop(_playControl->imageQueue, (GHandle*)&cImageBuf,_playControl->status == kPlayStatusBuffering?GINT32_MAX:0)) {
+        if (queuePop(_playControl->imageQueue, (GHandle*)&cImageBuf,player->playControl.videoQueueWaitTime)) {
             
             if (_playControl->status == kPlayStatusStop){
                 retainBufferUnRetain(&cImageBuf->retain);
@@ -389,15 +401,17 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm){
                     GJLOG(GJ_LOGDEBUG, "video play queue empty when kTimeSYNCVideo,start buffer");
                     GJLivePlay_StartBuffering(player);
                 }else{
-#ifdef SHOULD_BUFFER_IN_AUDIO_CLOCK
-                    GJLOG(GJ_LOGDEBUG, "video play queue empty when kTimeSYNCAudio,start buffer");
-                    GJLivePlay_StartBuffering(player);
+#ifdef SHOULD_BUFFER_VIDEO_IN_AUDIO_CLOCK
+                    if (_playControl->videoQueueWaitTime < 10) {//_playControl->videoQueueWaitTime <= 10 表示不等待，但是没有数据了，所以需要缓冲
+                        GJLOG(GJ_LOGDEBUG, "video play queue empty when kTimeSYNCAudio,start buffer");
+                        GJLivePlay_StartBuffering(player);
+                    }
 #else
                     GJLOG(GJ_LOGWARNING, "video play queue empty when kTimeSYNCAudio,do not buffer");
+                    usleep(10*1000);
 #endif
                 }
             }
-            usleep(30*1000);
             continue;
         }
         
@@ -795,9 +809,11 @@ GBool  GJLivePlay_AddAudioData(GJLivePlayer* player,R_GJPCMFrame* audioFrame){
     
     if (_syncControl->syncType != kTimeSYNCAudio) {
         GJLOG(GJ_LOGWARNING, "加入音频，切换到音频同步");
-        if (_playControl->status == kPlayStatusBuffering) {
-            GJLivePlay_StopBuffering(player);
-        }
+        
+///<fix -2017. 7.26  //not stop buffer ,contion buffer to low water;
+//        if (_playControl->status == kPlayStatusBuffering) {
+//            GJLivePlay_StopBuffering(player);
+//        }
         changeSyncType(_syncControl, kTimeSYNCAudio);
         _syncControl->audioInfo.trafficStatus.leave.ts = (GLong)audioFrame->pts;///防止audioInfo.startPts不为从0开始时，audiocache过大，
     }
