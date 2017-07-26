@@ -895,7 +895,7 @@
 		A1D0DC711950378A004717F5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ENABLE_BITCODE = YES;
+				ENABLE_BITCODE = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -903,7 +903,7 @@
 		A1D0DC721950378A004717F5 /* Debug (Server Logs) */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ENABLE_BITCODE = YES;
+				ENABLE_BITCODE = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Debug (Server Logs)";
@@ -911,7 +911,7 @@
 		A1D0DC731950378A004717F5 /* Debug (Server Logs - ALAC Software) */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ENABLE_BITCODE = YES;
+				ENABLE_BITCODE = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Debug (Server Logs - ALAC Software)";
@@ -919,7 +919,8 @@
 		A1D0DC741950378A004717F5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ENABLE_BITCODE = YES;
+				ENABLE_BITCODE = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -927,7 +928,8 @@
 		A1D0DC751950378A004717F5 /* Release (Server Logs) */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ENABLE_BITCODE = YES;
+				ENABLE_BITCODE = NO;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Release (Server Logs)";
@@ -935,7 +937,7 @@
 		A1D0DC761950378A004717F5 /* App Store Distribution */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ENABLE_BITCODE = YES;
+				ENABLE_BITCODE = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "App Store Distribution";
@@ -943,7 +945,7 @@
 		A1D0DC771950378A004717F5 /* Ad Hoc Distribution */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ENABLE_BITCODE = YES;
+				ENABLE_BITCODE = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = "Ad Hoc Distribution";

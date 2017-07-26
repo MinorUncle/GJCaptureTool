@@ -224,7 +224,7 @@
                 }
             }
         }
-        UInt32 numPrepared = 0;
+//        UInt32 numPrepared = 0;
 //        OSStatus status = AudioQueuePrime(_audioQueue, 0, &numPrepared);
         OSStatus status = AudioQueueStart(_audioQueue, NULL);
         if (status != 0) {

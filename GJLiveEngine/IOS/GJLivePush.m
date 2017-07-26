@@ -22,6 +22,7 @@
     NSString* _pushUrl;;
 }
 @property(assign,nonatomic)float gaterFrequency;
+
 @end
 
 @implementation GJLivePush
@@ -71,6 +72,12 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
                 });
                 break;
             }
+            case GJLivePush_recodeComplete:
+            {
+                NSError* error = (__bridge NSError *)(param);
+                [livePush.delegate livePush:livePush UIRecodeFinish:error];
+                break;
+            }
             default:
                 break;
         }
@@ -109,6 +116,8 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
         GJLOG(GJ_LOGFORBID, "请先关闭上一个流");
         return NO;
     }else{
+        memset(&_videoInfo, 0, sizeof(_videoInfo));
+        memset(&_audioInfo, 0, sizeof(_audioInfo));
         _pushUrl = url;
         _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency target:self selector:@selector(updateGaterInfo:) userInfo:nil repeats:YES];
         return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
@@ -162,19 +171,20 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     GJTrafficStatus vInfo = GJLivePush_GetVideoTrafficStatus(_livePush);
     GJTrafficStatus aInfo = GJLivePush_GetAudioTrafficStatus(_livePush);
     
-    _pushSessionStatus.videoStatus.cacheTime = vInfo.enter.pts - vInfo.leave.pts;
+    _pushSessionStatus.videoStatus.cacheTime = vInfo.enter.ts - vInfo.leave.ts;
     _pushSessionStatus.videoStatus.frameRate = (vInfo.leave.count - _videoInfo.leave.count)/_gaterFrequency;
     _pushSessionStatus.videoStatus.bitrate = (vInfo.leave.byte - _videoInfo.leave.byte)/_gaterFrequency;
     _videoInfo = vInfo;
     
-    _pushSessionStatus.audioStatus.cacheTime = aInfo.enter.pts - aInfo.leave.pts;
+    _pushSessionStatus.audioStatus.cacheTime = aInfo.enter.ts - aInfo.leave.ts;
     _pushSessionStatus.audioStatus.frameRate = (aInfo.leave.count - _audioInfo.leave.count)*1024.0/_gaterFrequency;
     _pushSessionStatus.audioStatus.bitrate = (aInfo.leave.byte - _audioInfo.leave.byte)/_gaterFrequency;
     _audioInfo = aInfo;
     [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
-    if (vInfo.enter.pts - vInfo.leave.pts > MAX_SEND_DELAY) {//延迟过多重启
-        [self reStartStreamPush];
-    }
+//    if (vInfo.enter.ts - vInfo.leave.ts > MAX_SEND_DELAY) {//延迟过多重启
+//        GJLOG(GJ_LOGWARNING, "推流缓存过多，重新启动推流");
+//        [self reStartStreamPush];
+//    }
 }
 -(void)setCameraPosition:(GJCameraPosition)cameraPosition{
     _cameraPosition = cameraPosition;
@@ -184,54 +194,18 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     _outOrientation = outOrientation;
     GJLivePush_SetOutOrientation(_livePush, outOrientation);
 }
+
+- (BOOL)startUIRecodeWithRootView:(UIView*)view fps:(NSInteger)fps filePath:(NSURL*)file{
+    return GJLivePush_StartRecode(_livePush, (__bridge GView)(view), (GInt32)fps, file.path.UTF8String);
+}
+
+- (void)stopUIRecode{
+    GJLivePush_StopRecode(_livePush);
+}
 #pragma mark rtmp callback
 
 #pragma mark delegate
 
-
-
-//-(float)GJH264Encoder:(GJH264Encoder*)encoder encodeCompleteBuffer:(GJRetainBuffer*)buffer keyFrame:(BOOL)keyFrame pts:(int64_t)pts{
-////    printf("video Pts:%d\n",(int)pts.value*1000/pts.timescale);
-//}
-//-(void)GJH264Encoder:(GJH264Encoder *)encoder qualityQarning:(GJEncodeQuality)quality{
-//    _pushSessionStatus.netWorkQuarity = (GJNetworkQuality)quality;
-//}
-//-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder *)recoder pcmPacket:(R_GJPCMFrame *)packet{
-//    packet->pts = [[NSDate date]timeIntervalSinceDate:_fristFrameDate] * 1000;
-//    [_audioEncoder encodeWithPacket:packet];
-//}
-//-(void)AACEncoderFromPCM:(AACEncoderFromPCM *)encoder completeBuffer:(R_GJAACPacket *)packet{
-//#ifdef GJPUSHAUDIOQUEUEPLAY_TEST
-//    if (_audioTestPlayer == nil) {
-//        _audioTestPlayer = [[GJAudioQueuePlayer alloc]initWithFormat:recoder.format maxBufferSize:2000 macgicCookie:nil];
-//        [_audioTestPlayer start];
-//    }else{
-//        retainBufferMoveDataPoint(dataBuffer, 7);
-//        [_audioTestPlayer playData:dataBuffer packetDescriptions:packetDescriptions];
-//    }
-//    return;
-//#endif
-//    
-////    static int times;
-////    NSData* audio = [NSData dataWithBytes:packet->aacOffset+packet->retain.data length:packet->aacSize];
-////    NSData* adts = [NSData dataWithBytes:packet->adtsOffset+packet->retain.data length:packet->adtsSize];
-////    NSLog(@"pushaudio times:%d,audioSize:%d,adts%@,audio:%@",times++,packet->aacSize,adts,audio);
-//
-//#ifdef GJPCMDecodeFromAAC_TEST
-//    [_audioDecode decodePacket:packet];
-//    return;
-//#endif
-//    GJRtmpPush_SendAACData(_videoPush, packet);
-//
-//}
-
-//-(void)GJAudioQueueRecoder:(GJAudioQueueRecoder*) recoder streamPacket:(R_GJAACPacket *)packet{
-////    static int times =0;
-////    NSData* audio = [NSData dataWithBytes:packet->aac length:MIN(packet->aacSize,10)];
-////    NSData* adts = [NSData dataWithBytes:packet->adts length:packet->adtsSize];
-////    NSLog(@"pushaudio times:%d ,adts%@,audio:%@,audioSize:%d",times++,adts,audio,packet->aacSize);
-//
-//}
 -(void)dealloc{
     if (_livePush) {
         GJLivePush_Dealloc(&_livePush);

@@ -12,6 +12,7 @@
 @interface GJH264Decoder()
 {
     dispatch_queue_t _decodeQueue;//解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
+    
 }
 @property(nonatomic)VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
@@ -26,6 +27,7 @@
     if (self) {
         _decodeQueue = dispatch_queue_create("GJDecodeQueue", DISPATCH_QUEUE_SERIAL);
         _outPutImageFormat = kCVPixelFormatType_32BGRA;
+//        _outPutImageFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
     }
     return self;
 }
@@ -71,11 +73,13 @@ void decodeOutputCallback(
         return;
     }
     GInt64 pts = presentationTimeStamp.value*1000/presentationTimeStamp.timescale;
+    GLong dts = (GLong)sourceFrameRefCon;
     GJLOGFREQ("decode packet output pts:%lld",pts);
 
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
 
-    decoder.completeCallback(imageBuffer, pts);
+//    printf("after decode pts:%lld ,dts:%ld\n",pts,dts);
+    decoder.completeCallback(imageBuffer, pts,(GInt64)dts);
 }
 
 -(uint8_t*)startCodeIndex:(uint8_t*)sour size:(long)size codeSize:(uint8_t*)codeSize{
@@ -96,19 +100,34 @@ void decodeOutputCallback(
     return codeIndex;
 }
 
--(void)decodePacket:(R_GJH264Packet *)packet
+-(void)decodePacket:(R_GJPacket *)packet
 {
 //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
     
-    GJLOGFREQ("decode packet input pts:%lld",packet->pts);
+//    printf("before decode pts:%lld ,dts:%lld ,size:%d\n",packet->pts,packet->dts,packet->dataSize);
     OSStatus status;
     long blockLength = 0;
     CMSampleBufferRef sampleBuffer = NULL;
     CMBlockBufferRef blockBuffer = NULL;
     
-    if (packet->spsSize > 0) {
-        uint8_t*  parameterSetPointers[2] = {packet->spsOffset+packet->retain.data, packet->ppsOffset+packet->retain.data};
-        size_t parameterSetSizes[2] = {packet->spsSize, packet->ppsSize};
+    if (packet->flag == GJPacketFlag_KEY && _decompressionSession == nil) {
+        int32_t spsSize,ppsSize;
+        uint8_t* sps,*pps;
+        memcpy(&spsSize, packet->retain.data + packet->dataOffset, 4);
+        spsSize = ntohl(spsSize);
+        sps = packet->retain.data+4;
+        memcpy(&ppsSize, spsSize+sps, 4);
+        ppsSize = ntohl(ppsSize);
+        pps = sps+spsSize+4;
+        
+        
+        printf("source sps size:%d:",spsSize);
+        GJ_LogHexString(GJ_LOGERROR, sps, (GUInt32)spsSize);
+        printf("source pps size:%d:",ppsSize);
+        GJ_LogHexString(GJ_LOGERROR, pps, (GUInt32)ppsSize);
+        
+        uint8_t*  parameterSetPointers[2] = {sps, pps};
+        size_t parameterSetSizes[2] = {spsSize,ppsSize};
         
         CMVideoFormatDescriptionRef  desc;
         status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,
@@ -153,6 +172,8 @@ void decodeOutputCallback(
             GJLOG(GJ_LOGWARNING, "reCreate decoder ,format:%p",_formatDesc);
             [self createDecompSession];
         }
+        
+        return;
     }else{
         if (_decompressionSession == NULL) {
             GJLOG(GJ_LOGFORBID, "解码器为空，且缺少关键帧，丢帧");
@@ -161,15 +182,10 @@ void decodeOutputCallback(
 
     }
     
-    if (packet->ppSize>0) {
-        blockLength = (int)(packet->ppSize);
-        void* data = NULL;
-        if (packet->seiSize>0) {
-            data = packet->seiOffset+packet->retain.data;
-            blockLength = packet->seiSize + packet->ppSize;
-        }else{
-            data = packet->ppOffset+packet->retain.data;
-        }
+    if (packet->dataSize>0) {
+        blockLength = (int)(packet->dataSize);
+        void* data = packet->dataOffset+packet->retain.data;
+        
 //        uint32_t dataLength32 = htonl (blockLength - 4);
 //        memcpy (data, &dataLength32, sizeof (uint32_t));
         status = CMBlockBufferCreateWithMemoryBlock(NULL, data,
@@ -213,8 +229,8 @@ RETRY:
             //                assert(status == 0);
             VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
             VTDecodeInfoFlags flagOut;
-            
-            OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
+            GLong dts = packet->dts;
+            OSStatus status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,(GVoid*)dts, &flagOut);
             if (status < 0) {
                 if(kVTInvalidSessionErr == status){
                     VTDecompressionSessionInvalidate(_decompressionSession);

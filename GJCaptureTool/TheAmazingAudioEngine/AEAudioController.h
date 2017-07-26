@@ -535,7 +535,7 @@ typedef enum {
 /*!
  * 16-bit stereo audio description, interleaved
  *
- * @deprecated Use AEAudioStreamBasicDescriptionInterleaved16BitStereo instead.
+ * deprecated Use AEAudioStreamBasicDescriptionInterleaved16BitStereo instead.
  */
 + (AudioStreamBasicDescription)interleaved16BitStereoAudioDescription;
 // Soon:    __deprecated_msg("use AEAudioStreamBasicDescriptionInterleaved16BitStereo instead");
@@ -543,7 +543,7 @@ typedef enum {
 /*!
  * 16-bit stereo audio description, non-interleaved
  *
- * @deprecated Use AEAudioStreamBasicDescriptionNonInterleaved16BitStereo instead.
+ * deprecated Use AEAudioStreamBasicDescriptionNonInterleaved16BitStereo instead.
  */
 + (AudioStreamBasicDescription)nonInterleaved16BitStereoAudioDescription;
 // Soon:    __deprecated_msg("use AEAudioStreamBasicDescriptionNonInterleaved16BitStereo instead");
@@ -551,7 +551,7 @@ typedef enum {
 /*!
  * Floating-point stereo audio description, non-interleaved
  *
- * @deprecated Use AEAudioStreamBasicDescriptionNonInterleavedFloatStereo instead.
+ * deprecated Use AEAudioStreamBasicDescriptionNonInterleavedFloatStereo instead.
  */
 + (AudioStreamBasicDescription)nonInterleavedFloatStereoAudioDescription;
 // Soon:    __deprecated_msg("use AEAudioStreamBasicDescriptionNonInterleavedFloatStereo instead");
@@ -1294,7 +1294,7 @@ void AEAudioControllerSendAsynchronousMessageToMainThread(__unsafe_unretained AE
  *
  * @param averagePowers If not NULL, each element of the array on output will be set to the average power level of the most recent output audio for each channel up to count, in decibels
  * @param peakLevels If not NULL, each element of the array on output will be set to the peak level of the most recent output audio for each channel up to count, in decibels
- * @param channelCount specifies the number of channels to fill in the averagePowers and peakLevels array parameters
+ * @param count specifies the number of channels to fill in the averagePowers and peakLevels array parameters
  */
 - (void)outputAveragePowerLevels:(Float32*)averagePowers peakHoldLevels:(Float32*)peakLevels channelCount:(UInt32)count;
 
@@ -1331,7 +1331,7 @@ void AEAudioControllerSendAsynchronousMessageToMainThread(__unsafe_unretained AE
  *
  * @param averagePowers If not NULL, each element of the array on output will be set to the average power level of the most recent input audio for each channel up to count, in decibels
  * @param peakLevels If not NULL, each element of the array on output will be set to the peak level of the most recent input audio for each channel up to count, in decibels
- * @param channelCount specifies the number of channels to fill in the averagePowers and peakLevels array parameters
+ * @param count specifies the number of channels to fill in the averagePowers and peakLevels array parameters
  */
 - (void)inputAveragePowerLevels:(Float32*)averagePowers peakHoldLevels:(Float32*)peakLevels channelCount:(UInt32)count;
 

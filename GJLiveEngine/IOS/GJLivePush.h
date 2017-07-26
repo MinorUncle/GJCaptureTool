@@ -14,7 +14,6 @@
 #import <AVFoundation/AVFoundation.h>
 @class UIView;
 @class GJLivePush;
-
 @protocol GJLivePushDelegate <NSObject>
 @required
 
@@ -23,7 +22,7 @@
 -(void)livePush:(GJLivePush*)livePush closeConnent:(GJPushSessionInfo*)info resion:(GJConnentCloceReason)reason;
 -(void)livePush:(GJLivePush*)livePush connentSuccessWithElapsed:(GLong)elapsed;
 -(void)livePush:(GJLivePush*)livePush dynamicVideoUpdate:(VideoDynamicInfo*)elapsed;
-
+-(void)livePush:(GJLivePush*)livePush UIRecodeFinish:(NSError*)error;
 -(void)livePush:(GJLivePush*)livePush errorType:(GJLiveErrorType)type infoDesc:(NSString*)info;
 //-(void)livePush:(GJLivePush*)livePush pushPacket:(R_GJH264Packet*)packet;
 //-(void)livePush:(GJLivePush*)livePush pushImagebuffer:(CVImageBufferRef)packet pts:(CMTime)pts;
@@ -79,6 +78,11 @@
 - (void)setMixVolume:(float)volume;
 
 - (void)setMasterOutVolume:(float)volume;
+
+- (BOOL)startUIRecodeWithRootView:(UIView*)view fps:(NSInteger)fps filePath:(NSURL*)file;
+
+- (void)stopUIRecode;
+
 
 //- (void)videoRecodeWithPath:(NSString*)path;
 

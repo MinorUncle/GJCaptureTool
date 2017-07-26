@@ -85,7 +85,6 @@
 		17BB5B971BECD1D9007A2892 /* AEExpanderFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CA689C415447E3100AF8DDD /* AEExpanderFilter.m */; };
 		17BB5B9A1BECD1D9007A2892 /* AERecorder.h in Sources */ = {isa = PBXBuildFile; fileRef = 4C38DC501545840E009F4454 /* AERecorder.h */; };
 		17BB5B9B1BECD1D9007A2892 /* AERecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C38DC511545840E009F4454 /* AERecorder.m */; };
-		17BB5B9D1BECD25D007A2892 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 17BB5B9C1BECD25D007A2892 /* Foundation.framework */; };
 		17BB5B9F1BECD337007A2892 /* TheAmazingAudioEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CAD569315162822003CE861 /* TheAmazingAudioEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		17BB5BA11BECD337007A2892 /* AEAudioController+Audiobus.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C2886361556FC620074175A /* AEAudioController+Audiobus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		17BB5BA21BECD337007A2892 /* AEAudioFilePlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CAD56A915163488003CE861 /* AEAudioFilePlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -181,7 +180,6 @@
 		7A5687201B54617200243427 /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C25747215F0D8E000D232E8 /* TPCircularBuffer.c */; };
 		7A5687211B54617200243427 /* AEBlockScheduler.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C09450016FBD7460054608E /* AEBlockScheduler.m */; };
 		7A5687221B54618B00243427 /* TPCircularBuffer+AudioBufferList.c in Sources */ = {isa = PBXBuildFile; fileRef = 4C698CF9162B02EF008B159D /* TPCircularBuffer+AudioBufferList.c */; };
-		7A5687241B5461A000243427 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7A5687231B5461A000243427 /* Foundation.framework */; };
 		7A5687251B5461BE00243427 /* TheAmazingAudioEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CAD569315162822003CE861 /* TheAmazingAudioEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7A5687271B5461BE00243427 /* AEAudioController+Audiobus.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C2886361556FC620074175A /* AEAudioController+Audiobus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7A5687291B5461BE00243427 /* AEAudioFilePlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CAD56A915163488003CE861 /* AEAudioFilePlayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -215,7 +213,6 @@
 
 /* Begin PBXFileReference section */
 		17BB5B401BECD101007A2892 /* libTheAmazingAudioEngine tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		17BB5B9C1BECD25D007A2892 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS9.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		4C0944FF16FBD7460054608E /* AEBlockScheduler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEBlockScheduler.h; sourceTree = "<group>"; };
 		4C09450016FBD7460054608E /* AEBlockScheduler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEBlockScheduler.m; sourceTree = "<group>"; };
 		4C12CC98151D1EDA00562E2A /* AEUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEUtilities.h; sourceTree = "<group>"; };
@@ -312,7 +309,6 @@
 		6AB4F4471EF0D8C000FD4172 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
 		6AB4F4481EF0D8C000FD4172 /* GJAudioSessionCenter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioSessionCenter.m; sourceTree = "<group>"; };
 		7A5687101B54610900243427 /* libTheAmazingAudioEngine OS X.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine OS X.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		7A5687231B5461A000243427 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		B0EE36FC1AD4270400D7AB17 /* AESequencerBeat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AESequencerBeat.h; sourceTree = "<group>"; };
 		B0EE36FD1AD4270400D7AB17 /* AESequencerBeat.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AESequencerBeat.m; sourceTree = "<group>"; };
 		B0EE36FE1AD4270400D7AB17 /* AESequencerChannel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AESequencerChannel.h; sourceTree = "<group>"; };
@@ -328,7 +324,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				17BB5B9D1BECD25D007A2892 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -344,7 +339,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7A5687241B5461A000243427 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -354,8 +348,6 @@
 		4C215CED1523A7D500D36CAD /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				17BB5B9C1BECD25D007A2892 /* Foundation.framework */,
-				7A5687231B5461A000243427 /* Foundation.framework */,
 				4C23245915AC5FE800038EC0 /* QuartzCore.framework */,
 				4C23245515AC5FDA00038EC0 /* Accelerate.framework */,
 				4C23245615AC5FDA00038EC0 /* AudioToolbox.framework */,
@@ -919,6 +911,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = YES;
 				DSTROOT = /tmp/TheAmazingAudioEngine.dst;
+				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "TheAmazingAudioEngine/TheAmazingAudioEngine-Prefix.pch";
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
@@ -960,6 +953,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = YES;
 				DSTROOT = /tmp/TheAmazingAudioEngine.dst;
+				ENABLE_BITCODE = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "TheAmazingAudioEngine/TheAmazingAudioEngine-Prefix.pch";
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;

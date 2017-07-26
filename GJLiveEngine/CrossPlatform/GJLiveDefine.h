@@ -33,6 +33,8 @@ typedef struct GSize {
 //    
 //    GChar*    pushUrl;
 //}GJPushConfig;
+
+typedef GHandle GView;
 typedef enum _GJCaptureSizeType
 {
     kCaptureSize352_288,
@@ -167,6 +169,9 @@ typedef enum {
     GJAudioType_AAC,
     GJAudioType_PCM,
 }GJAudioType;
+typedef enum {
+    GJVideoType_H264,
+}GJVideoType;
 typedef struct _GJAudioFormat{
     GJAudioType         mType;
     GUInt32             mSampleRate;
@@ -175,18 +180,25 @@ typedef struct _GJAudioFormat{
     GUInt32             mFramePerPacket;
     GUInt32             mFormatFlags;
 }GJAudioFormat;
+typedef struct _GJAudioStreamFormat{
+    GJAudioFormat         format;
+    GInt32 bitrate;
+}GJAudioStreamFormat;
 typedef struct _GJPixelFormat{
     GJPixelType         mType;
     GUInt32             mHeight;
     GUInt32             mWidth;
 }GJPixelFormat;
 typedef struct _GJVideoFormat{
-    GJPixelType         mType;
+    GJVideoType         mType;
     GUInt32             mFps;
     GUInt32             mHeight;
     GUInt32             mWidth;
 }GJVideoFormat;
-
+typedef struct _GJVideoStreamFormat{
+    GJVideoFormat         format;
+    GInt32 bitrate;
+}GJVideoStreamFormat;
 typedef struct _GJPushConfig{
     GUInt32             mFps;
     GSize               mPushSize;

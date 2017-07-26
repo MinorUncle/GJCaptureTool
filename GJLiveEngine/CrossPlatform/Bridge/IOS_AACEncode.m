@@ -9,13 +9,13 @@
 #import "IOS_AACEncode.h"
 #import "AACEncoderFromPCM.h"
 #import "GJLog.h"
-GBool encodeSetup(struct _GJEncodeToAACContext* context,GJAudioFormat sourceFormat,GJAudioFormat destForamt,AACPacketOutCallback callback,GHandle userData){
+GBool encodeSetup(struct _GJEncodeToAACContext* context,GJAudioFormat sourceFormat,GJAudioStreamFormat destForamt,AACPacketOutCallback callback,GHandle userData){
     GJAssert(context->obaque == GNULL, "上一个音频解码器没有释放");
     if (sourceFormat.mType != GJAudioType_PCM) {
         GJLOG(GJ_LOGERROR, "编码音频源格式不支持");
         return GFalse;
     }
-    if (destForamt.mType != GJAudioType_AAC) {
+    if (destForamt.format.mType != GJAudioType_AAC) {
         GJLOG(GJ_LOGERROR, "编码目标音频格式不支持");
         return GFalse;
     }
@@ -25,10 +25,10 @@ GBool encodeSetup(struct _GJEncodeToAACContext* context,GJAudioFormat sourceForm
     }
     context->encodeCompleteCallback = callback;
     AudioStreamBasicDescription dest = {0};
-    dest.mFramesPerPacket = destForamt.mFramePerPacket;
-    dest.mSampleRate = destForamt.mSampleRate;
+    dest.mFramesPerPacket = destForamt.format.mFramePerPacket;
+    dest.mSampleRate = destForamt.format.mSampleRate;
     dest.mFormatID = kAudioFormatMPEG4AAC;
-    dest.mChannelsPerFrame = destForamt.mChannelsPerFrame;
+    dest.mChannelsPerFrame = destForamt.format.mChannelsPerFrame;
     
     AudioStreamBasicDescription source = dest;
     source.mChannelsPerFrame = sourceFormat.mChannelsPerFrame;
@@ -38,9 +38,9 @@ GBool encodeSetup(struct _GJEncodeToAACContext* context,GJAudioFormat sourceForm
     source.mBytesPerPacket = source.mBytesPerFrame =source.mChannelsPerFrame *  source.mBitsPerChannel;
     source.mFramesPerPacket = sourceFormat.mFramePerPacket;
     source.mFormatFlags = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
-    AACEncoderFromPCM* encoder = [[AACEncoderFromPCM alloc]initWithSourceForamt:&source DestDescription:&dest];
+    AACEncoderFromPCM* encoder = [[AACEncoderFromPCM alloc]initWithSourceForamt:&source DestDescription:&dest bitrate:destForamt.bitrate];
     [encoder start];
-    encoder.completeCallback = ^(R_GJAACPacket *packet) {
+    encoder.completeCallback = ^(R_GJPacket *packet) {
         callback(userData,packet);
     };
     context->obaque = (__bridge_retained GHandle)(encoder);
@@ -71,7 +71,7 @@ GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext** encodeContext){
     context->encodeSetup = encodeSetup;
     context->encodeUnSetup = encodeUnSetup;
     context->encodeFrame = encodeFrame;
-    context->encodeSetBitrate =  encodeSetBitrate;
+//    context->encodeSetBitrate =  encodeSetBitrate;
     context->encodeCompleteCallback = NULL;
 
 }

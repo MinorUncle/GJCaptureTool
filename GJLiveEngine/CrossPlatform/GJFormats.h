@@ -46,13 +46,13 @@ typedef enum EntropyMode{
 
 
 
-typedef struct GJPacket{
-    uint32_t timestamp;
-    uint32_t pts;
-    uint32_t dts;
-    uint8_t* data;
-    uint32_t dataSize;
-}GJPacket;
+//typedef struct GJPacket{
+//    uint32_t timestamp;
+//    uint32_t pts;
+//    uint32_t dts;
+//    uint8_t* data;
+//    uint32_t dataSize;
+//}GJPacket;
 
 
 

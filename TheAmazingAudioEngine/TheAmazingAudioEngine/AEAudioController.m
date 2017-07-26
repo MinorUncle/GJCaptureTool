@@ -343,6 +343,7 @@ static OSStatus channelAudioProducer(void *userInfo, AudioBufferList *audio, UIn
         AEChannelGroupRef group = (AEChannelGroupRef)channel->ptr;
         
         // Tell mixer/mixer's converter unit to render into audio
+        printf("frames count:%d",frames);
         status = AudioUnitRender(group->converterUnit ? group->converterUnit : group->mixerAudioUnit, arg->ioActionFlags, &arg->originalTimeStamp, 0, *frames, audio);
         if ( !AECheckOSStatus(status, "AudioUnitRender") ) return status;
         

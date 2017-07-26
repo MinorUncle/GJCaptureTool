@@ -9,7 +9,7 @@
 #ifndef GJLivePushContext_h
 #define GJLivePushContext_h
 #include "webserver.h"
-#define RAOP
+//#define RAOP
 
 #ifdef RAOP
 #include "raopserver.h"
@@ -19,11 +19,12 @@
 #endif
 #include <stdio.h>
 #include "GJPlatformHeader.h"
-#include "GJRtmpPush.h"
+#include "GJStreamPush.h"
 #include "GJBridegContext.h"
 typedef enum _GJLivePushMessageType{
     GJLivePush_messageInvalid,
     GJLivePush_connectSuccess,   //data，到start time的延时
+    GJLivePush_recodeComplete,
     GJLivePush_closeComplete,
     GJLivePush_dynamicVideoUpdate,
     GJLivePush_connectError,
@@ -33,48 +34,43 @@ typedef enum _GJLivePushMessageType{
 }GJLivePushMessageType;
 typedef GVoid (*GJLivePushCallback)(GHandle userDate,GJLivePushMessageType message,GHandle param);
 typedef struct _GJLivePushContext{
-    GJRtmpPush*             videoPush;
-//    GJPushSessionStatus     PushSessionStatus;
-    GJEncodeToH264eContext*    videoEncoder;
-    GJEncodeToAACContext*     audioEncoder;
+    GJStreamPush*               videoPush;
+    GJEncodeToH264eContext*     videoEncoder;
+    GJEncodeToAACContext*       audioEncoder;
     GJVideoProduceContext*      videoProducer;
     GJAudioProduceContext*      audioProducer;
+    GJRecodeContext*            recoder;
 
-    pthread_mutex_t         lock;
-    GTime                   startPushClock;
-    GTime                   stopPushClock;
 
-    GTime                   firstVideoEncodeClock;
-    GTime                   firstAudioEncodeClock;
-
-    GTime                   connentClock;
-    GTime                   disConnentClock;
+    pthread_mutex_t             lock;
     
-    GInt32                  operationCount;//用来避免使用线程锁
+    GTime                       startPushClock;
+    GTime                       stopPushClock;
+    GTime                       firstVideoEncodeClock;
+    GTime                       firstAudioEncodeClock;
+    GTime                       connentClock;
+    GTime                       disConnentClock;
+    GInt32                      operationCount;//用来避免使用线程锁
     
-//
-    GJLivePushCallback      callback;
-    GHandle                 userData;
+    GJLivePushCallback          callback;
+    GHandle                     userData;
     
-    GJPushConfig*            pushConfig;
-    
-    GJNetworkQuality        netQuality;
-    
-    GJTrafficStatus         preVideoTraffic;
+    GJPushConfig*               pushConfig;
+    GJNetworkQuality            netQuality;
+    GJTrafficStatus             preVideoTraffic;
     //     .den帧中丢.num帧或多发.num帧则出发敏感算法默认（4，8）,给了den帧数据，但是只发送了小于nun帧，则主动降低质量
-
-    GRational               dynamicAlgorithm;
-    GRational               videoDropStep;//每den帧丢num帧
+    GRational                   dynamicAlgorithm;
+    GRational                   videoDropStep;//每den帧丢num帧
     //     表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
-    GRational               videoMinDropStep;//
-    GInt32                  videoBitrate;  //当前码率
+    GRational                   videoMinDropStep;//
+    GInt32                      videoBitrate;  //当前码率
     //不丢帧情况下允许的最小码率。用于动态码率
-    GInt32                  videoMinBitrate;
-    GInt32                  captureVideoCount;
-    GInt32                  dropVideoCount;
+    GInt32                      videoMinBitrate;
+    GInt32                      captureVideoCount;
+    GInt32                      dropVideoCount;
     
-    GBool                   audioMute;
-    GBool                   videoMute;
+    GBool                       audioMute;
+    GBool                       videoMute;
 }GJLivePushContext;
 
 GBool GJLivePush_Create(GJLivePushContext** context,GJLivePushCallback callback,GHandle param);
@@ -91,7 +87,6 @@ GVoid GJLivePush_SetOutOrientation(GJLivePushContext* context,GJInterfaceOrienta
 GVoid GJLivePush_SetPreviewHMirror(GJLivePushContext* context,GBool preViewMirror);
 
 
-
 GVoid GJLivePush_Dealloc(GJLivePushContext** context);
 GJTrafficStatus GJLivePush_GetVideoTrafficStatus(GJLivePushContext* context);
 GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext* context);
@@ -104,5 +99,7 @@ GBool GJLivePush_SetMixVolume(GJLivePushContext* context,GFloat32 volume);
 GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext* context,GBool should);
 GBool GJLivePush_SetOutVolume(GJLivePushContext* context,GFloat32 volume);
 GBool GJLivePush_SetInputGain(GJLivePushContext* context,GFloat32 gain);
+GBool GJLivePush_StartRecode(GJLivePushContext* context,GView view, GInt32 fps,const GChar* fileUrl);
+GVoid GJLivePush_StopRecode(GJLivePushContext* context);
 
 #endif /* GJLivePushContext_h */

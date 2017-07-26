@@ -51,7 +51,7 @@ CFStringRef getCFStrByEntropyMode(EntropyMode model){
 
 
 #endif
-typedef void(^H264EncodeComplete)(R_GJH264Packet* packet);
+typedef void(^H264EncodeComplete)(R_GJPacket* packet);
 
 @interface GJH264Encoder : NSObject
 

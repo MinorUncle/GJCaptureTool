@@ -10,7 +10,7 @@
 #import <AudioToolbox/AudioToolbox.h>
 #import <CoreMedia/CoreMedia.h>
 #import "GJLiveDefine+internal.h"
-typedef void(^AACEncodeComplete)(R_GJAACPacket* packet);
+typedef void(^AACEncodeComplete)(R_GJPacket* packet);
 #define MAX_PCM_LENTH 2048+10
 //@class AACEncoderFromPCM;
 //@protocol AACEncoderFromPCMDelegate<NSObject>
@@ -32,7 +32,7 @@ typedef void(^AACEncodeComplete)(R_GJAACPacket* packet);
 -(BOOL)stop;
 -(void)encodeWithBuffer:(CMSampleBufferRef)sampleBuffer;
 -(void)encodeWithPacket:(R_GJPCMFrame*)packet;
-- (instancetype)initWithSourceForamt:(const AudioStreamBasicDescription*)sFormat DestDescription:(const AudioStreamBasicDescription*)dFormat;
+- (instancetype)initWithSourceForamt:(const AudioStreamBasicDescription*)sFormat DestDescription:(const AudioStreamBasicDescription*)dFormat bitrate:(int)bitrate;
 
 - (NSData *)fetchMagicCookie;
 

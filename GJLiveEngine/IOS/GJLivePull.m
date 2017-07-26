@@ -7,7 +7,6 @@
 //
 
 #import "GJLivePull.h"
-#import "GJRtmpPull.h"
 #import "GJH264Decoder.h"
 #import "GJLivePlayer.h"
 #import "GJLog.h"
@@ -106,11 +105,11 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
     GJTrafficStatus vCache = GJLivePull_GetVideoTrafficStatus(_pullContext);
     GJTrafficStatus aCache = GJLivePull_GetAudioTrafficStatus(_pullContext);
     _pullSessionStatus.videoStatus.cacheCount = vCache.enter.count - vCache.leave.count;
-    _pullSessionStatus.videoStatus.cacheTime = vCache.enter.pts - vCache.leave.pts;
+    _pullSessionStatus.videoStatus.cacheTime = vCache.enter.ts - vCache.leave.ts;
     _pullSessionStatus.videoStatus.bitrate = (vCache.enter.byte - _videoTraffic.enter.byte)*1.0 / _gaterFrequency;
     _pullSessionStatus.videoStatus.frameRate = (vCache.leave.count - _videoTraffic.leave.count)*1.0  / _gaterFrequency;
     _pullSessionStatus.audioStatus.cacheCount = aCache.enter.count - aCache.leave.count;
-    _pullSessionStatus.audioStatus.cacheTime = aCache.enter.pts - aCache.leave.pts;
+    _pullSessionStatus.audioStatus.cacheTime = aCache.enter.ts - aCache.leave.ts;
     _pullSessionStatus.audioStatus.bitrate =  (aCache.enter.byte - _audioTraffic.enter.byte)*1.0 / _gaterFrequency;
     _pullSessionStatus.audioStatus.frameRate = (aCache.leave.count - _audioTraffic.leave.count)*1.0  / _gaterFrequency;
     _videoTraffic = vCache;

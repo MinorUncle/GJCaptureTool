@@ -16,7 +16,10 @@
 
 static char* url = "rtmp://10.0.1.142/live/room";
 //static char* url = "rtmp://192.168.199.187/live/room";
+//static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
 
+//
+#define PULL_COUNT 2
 @interface PullShow : NSObject
 {
     
@@ -37,11 +40,24 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @end
 
 @implementation PullShow
-- (instancetype)initWithView:(UIView*)view
+-(void)fullTap:(UITapGestureRecognizer*)tap{
+    [UIView animateWithDuration:0.4 animations:^{
+        if(!CGRectEqualToRect(_view.frame, [UIScreen mainScreen].bounds)){
+            _view.frame = [UIScreen mainScreen].bounds;
+        }else{
+            _view.frame = _frame;
+        }
+        [_view.superview bringSubviewToFront:_view];
+    }];
+}
+- (instancetype)initWithPull:(GJLivePull*)pull
 {
     self = [super init];
     if (self) {
-        _view = view;
+        _view = [pull getPreviewView];
+        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+        [_view addGestureRecognizer:tap];
+        _pull = pull;
         _pullStateLab = [[UILabel alloc]init];
         _pullStateLab.numberOfLines = 0;
         _pullStateLab.text = @"未连接";
@@ -112,6 +128,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     rect.origin.y = CGRectGetMaxY(rect);
     _playerBufferLab.frame = rect;
 }
+
 @end
 @interface GJLivePushViewController ()<GJLivePushDelegate,GJLivePullDelegate>
 {
@@ -127,6 +144,10 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @property (strong, nonatomic) UIButton *earPlay;
 @property (strong, nonatomic) UIButton *mixStream;
 @property (strong, nonatomic) UIButton *changeCamera;
+@property (strong, nonatomic) UIButton *audioMute;
+@property (strong, nonatomic) UIButton *videoMute;
+@property (strong, nonatomic) UIButton *uiRecode;
+
 
 @property (strong, nonatomic) UISlider *inputGain;
 @property (strong, nonatomic) UILabel *inputGainLab;
@@ -156,13 +177,9 @@ static char* url = "rtmp://10.0.1.142/live/room";
 - (void)viewDidLoad {
     [super viewDidLoad];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
-    GJ_LogSetLevel(GJ_LOGINFO);
+    GJ_LogSetLevel(GJ_LOGALL);
     RTMP_LogSetLevel(RTMP_LOGERROR);
-    
     _livePush = [[GJLivePush alloc]init];
-//    _livePush.videoMute = YES;
-//    _livePush.audioMute = YES;
-    
     GJPushConfig config = {0};
     config.mAudioChannel = 2;
     config.mAudioSampleRate = 44100;
@@ -172,64 +189,61 @@ static char* url = "rtmp://10.0.1.142/live/room";
     config.mAudioBitrate = 40*1000;
     [_livePush setPushConfig:config];
     _livePush.delegate = self;
+    _livePush.cameraPosition = GJInterfaceOrientationPortrait;
+
+    [self buildUI];
+    [self updateFrame];
  
-    
-    CGRect rect = self.view.bounds;
-    rect.size.height *= 0.45;
-    self.topView = _livePush.previewView;//[[UIView alloc]initWithFrame:rect];
+    [_livePush startPreview];
+}
+-(void)buildUI{
+    self.topView = _livePush.previewView;//
+//    self.topView = [[UIView alloc]init];
     self.topView.contentMode = UIViewContentModeScaleAspectFit;
-    self.topView.frame = rect;
     self.topView.backgroundColor = [UIColor blackColor];
     [self.view addSubview:self.topView];
     
     
     
-    rect.origin = CGPointMake(0, 20);
-    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, 30);
-    _pushStateLab = [[UILabel alloc]initWithFrame:rect];
+    
+    _pushStateLab = [[UILabel alloc]init];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
     _pushStateLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_pushStateLab];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _fpsLab = [[UILabel alloc]initWithFrame:rect];
+    _fpsLab = [[UILabel alloc]init];
     _fpsLab.textColor = [UIColor redColor];
     _fpsLab.font = [UIFont systemFontOfSize:10];
     _fpsLab.text = @"FPS V:0,A:0";
     [self.view addSubview:_fpsLab];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _sendRateLab = [[UILabel alloc]initWithFrame:rect];
+    _sendRateLab = [[UILabel alloc]init];
     _sendRateLab.textColor = [UIColor redColor];
     _sendRateLab.text = @"bitrate V:0 KB/s A:0 KB/s";
     _sendRateLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_sendRateLab];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _delayVLab = [[UILabel alloc]initWithFrame:rect];
+    _delayVLab = [[UILabel alloc]init];
     _delayVLab.textColor = [UIColor redColor];
     _delayVLab.font = [UIFont systemFontOfSize:10];
     _delayVLab.text = @"cache V t:0 ms f:0";
     [self.view addSubview:_delayVLab];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _delayALab = [[UILabel alloc]initWithFrame:rect];
+    _delayALab = [[UILabel alloc]init];
     _delayALab.textColor = [UIColor redColor];
     _delayALab.font = [UIFont systemFontOfSize:10];
     _delayALab.text = @"cache A t:0 ms f:0";
     [self.view addSubview:_delayALab];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _currentV = [[UILabel alloc]initWithFrame:rect];
+    _currentV = [[UILabel alloc]init];
     _currentV.textColor = [UIColor redColor];
     _currentV.font = [UIFont systemFontOfSize:10];
     _currentV.text = @"CV rate:0 kB/s f:0";
     [self.view addSubview:_currentV];
     
-    rect.origin = CGPointMake(self.view.bounds.size.width*0.5, 20);
-    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, 30);
-    _audioMixBtn = [[UIButton alloc]initWithFrame:rect];
+    
+    _audioMixBtn = [[UIButton alloc]init];
     _audioMixBtn.backgroundColor = [UIColor clearColor];
     [_audioMixBtn setTitle:@"开始混音" forState:UIControlStateNormal];
     [_audioMixBtn setTitle:@"结束混音" forState:UIControlStateSelected];
@@ -237,9 +251,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
     [_audioMixBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     _audioMixBtn.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_audioMixBtn];
-
-    rect.origin.y = CGRectGetMaxY(rect);
-    _earPlay = [[UIButton alloc]initWithFrame:rect];
+    
+    _earPlay = [[UIButton alloc]init];
     _earPlay.backgroundColor = [UIColor clearColor];
     [_earPlay setTitle:@"开始耳返" forState:UIControlStateNormal];
     [_earPlay setTitle:@"结束耳返" forState:UIControlStateSelected];
@@ -248,8 +261,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _earPlay.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_earPlay];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _mixStream = [[UIButton alloc]initWithFrame:rect];
+    _mixStream = [[UIButton alloc]init];
     _mixStream.backgroundColor = [UIColor clearColor];
     [_mixStream setTitle:@"禁止混流" forState:UIControlStateNormal];
     [_mixStream setTitle:@"允许混流" forState:UIControlStateSelected];
@@ -257,9 +269,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
     [_mixStream addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     _mixStream.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_mixStream];
-
-    rect.origin.y = CGRectGetMaxY(rect);
-    _changeCamera = [[UIButton alloc]initWithFrame:rect];
+    
+    _changeCamera = [[UIButton alloc]init];
     _changeCamera.backgroundColor = [UIColor clearColor];
     [_changeCamera setTitle:@"切换相机" forState:UIControlStateNormal];
     [_changeCamera setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
@@ -267,15 +278,40 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _changeCamera.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_changeCamera];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    rect.size.width *= 0.4;
-    _inputGainLab = [[UILabel alloc]initWithFrame:rect];
+    _videoMute = [[UIButton alloc]init];
+    _videoMute.backgroundColor = [UIColor clearColor];
+    [_videoMute setTitle:@"暂停视频" forState:UIControlStateNormal];
+    [_videoMute setTitle:@"开启视频" forState:UIControlStateSelected];
+    [_videoMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_videoMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _videoMute.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_videoMute];
+    
+    _audioMute = [[UIButton alloc]init];
+    _audioMute.backgroundColor = [UIColor clearColor];
+    [_audioMute setTitle:@"暂停音频" forState:UIControlStateNormal];
+    [_audioMute setTitle:@"开启音频" forState:UIControlStateSelected];
+    [_audioMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_audioMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _audioMute.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_audioMute];
+    
+    _uiRecode = [[UIButton alloc]init];
+    _uiRecode.backgroundColor = [UIColor clearColor];
+    [_uiRecode setTitle:@"开始UI录制" forState:UIControlStateNormal];
+    [_uiRecode setTitle:@"结束UI录制" forState:UIControlStateSelected];
+    [_uiRecode setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_uiRecode addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _uiRecode.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_uiRecode];
+    
+    _inputGainLab = [[UILabel alloc]init];
     _inputGainLab.text = @"采集音量";
+    _inputGainLab.textColor = [UIColor whiteColor];
     _inputGainLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_inputGainLab];
-    rect.origin.x = CGRectGetMaxX(rect);
-    rect.size.width = self.view.bounds.size.width - rect.origin.x;
-    _inputGain = [[UISlider alloc]initWithFrame:rect];
+    
+    _inputGain = [[UISlider alloc]init];
     _inputGain.maximumValue = 1.0;
     _inputGain.minimumValue = 0.0;
     _inputGain.continuous = NO;
@@ -283,17 +319,13 @@ static char* url = "rtmp://10.0.1.142/live/room";
     [_inputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_inputGain];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    rect.size.width = _inputGainLab.bounds.size.width;
-    rect.origin.x = _inputGainLab.frame.origin.x;
-    
-    _mixGainLab = [[UILabel alloc]initWithFrame:rect];
+    _mixGainLab = [[UILabel alloc]init];
     _mixGainLab.text = @"混音音量";
+    _mixGainLab.textColor = [UIColor whiteColor];
     _mixGainLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_mixGainLab];
-    rect.origin.x = CGRectGetMaxX(rect);
-    rect.size.width = self.view.bounds.size.width - rect.origin.x;
-    _mixGain = [[UISlider alloc]initWithFrame:rect];
+    
+    _mixGain = [[UISlider alloc]init];
     _mixGain.maximumValue = 1.0;
     _mixGain.minimumValue = 0.0;
     _mixGain.value = 1.0;
@@ -301,18 +333,13 @@ static char* url = "rtmp://10.0.1.142/live/room";
     [_mixGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_mixGain];
     
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    rect.size.width = _mixGainLab.bounds.size.width;
-    rect.origin.x = _mixGainLab.frame.origin.x;
-    
-    _outputGainLab = [[UILabel alloc]initWithFrame:rect];
-    _outputGainLab.text = @"混音音量";
+    _outputGainLab = [[UILabel alloc]init];
+    _outputGainLab.textColor = [UIColor whiteColor];
+    _outputGainLab.text = @"总音量";
     _outputGainLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_outputGainLab];
-    rect.origin.x = CGRectGetMaxX(rect);
-    rect.size.width = self.view.bounds.size.width - rect.origin.x;
-    _outputGain = [[UISlider alloc]initWithFrame:rect];
+    
+    _outputGain = [[UISlider alloc]init];
     _outputGain.maximumValue = 1.0;
     _outputGain.minimumValue = 0.0;
     _outputGain.continuous = NO;
@@ -321,12 +348,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
     [self.view addSubview:_outputGain];
     
     
-    int count = 3;
-    rect.origin.y = CGRectGetMaxY(self.topView.frame);
-    rect.origin.x = 0;
-    rect.size.width = self.topView.frame.size.width * 1.0/count;
-    rect.size.height = self.view.bounds.size.height* 0.1;
-    _pushButton = [[UIButton alloc]initWithFrame:rect];
+    
+    _pushButton = [[UIButton alloc]init];
     [_pushButton setTitle:@"推流开始" forState:UIControlStateNormal];
     [_pushButton setTitle:@"推流结束" forState:UIControlStateSelected];
     [_pushButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
@@ -336,14 +359,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _pushButton.backgroundColor = [UIColor whiteColor];
     [self.view addSubview:_pushButton];
     
-    CGRect sRect;
-    sRect.origin.x = 0;
-    sRect.origin.y = CGRectGetMaxY(rect);
-    sRect.size.height = self.view.bounds.size.height - sRect.origin.y;
-    sRect.size.width = self.view.bounds.size.width/(count-1);
-    for (int i = 0; i<count -1; i++) {
-        rect.origin.x = CGRectGetMaxX(rect);
-        UIButton* pullButton = [[UIButton alloc]initWithFrame:rect];
+    for (int i = 0; i<PULL_COUNT; i++) {
+        UIButton* pullButton = [[UIButton alloc]init];
         [pullButton setTitle:@"拉流1开始" forState:UIControlStateNormal];
         [pullButton setTitle:@"拉流1结束" forState:UIControlStateSelected];
         [pullButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
@@ -353,24 +370,113 @@ static char* url = "rtmp://10.0.1.142/live/room";
         pullButton.backgroundColor = [UIColor whiteColor];
         [self.view addSubview:pullButton];
         
+        
         GJLivePull* livePull = [[GJLivePull alloc]init];
         livePull.delegate = self;
         
-        PullShow* show = [[PullShow alloc]initWithView:[livePull getPreviewView]];
+        PullShow* show = [[PullShow alloc]initWithPull:livePull];
         show.pullBtn = pullButton;
-        show.frame = sRect;
-        show.view.backgroundColor = [UIColor yellowColor];
+        
+        show.view.backgroundColor = [UIColor colorWithRed:(arc4random()%200 + 50)/255.0 green:(arc4random()%200 + 50)/255.0 blue:(arc4random()%200 + 50)/255.0 alpha:1.0];
+        show.pullBtn.backgroundColor = show.view.backgroundColor;
         show.view.contentMode = UIViewContentModeScaleAspectFit;
-        sRect.origin.x = CGRectGetMaxX(sRect);
-        show.pull = livePull;
         [_pulls addObject:show];
         [self.view addSubview:show.view];
     }
+}
+-(void)updateFrame{
+    CGRect rect = self.view.bounds;
+    rect.size.height *= 0.45;
+    self.topView.frame = rect;
+    int leftCount = 6;
+    rect.origin = CGPointMake(0, 20);
+    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.topView.bounds.size.height-30) / leftCount);
+    _pushStateLab.frame = rect;
     
-    _livePush.cameraPosition = GJInterfaceOrientationPortrait;
-    [_livePush startPreview];
+    rect.origin.y = CGRectGetMaxY(rect);
+    _fpsLab.frame = rect;
     
-       // Do any additional setup after loading the view.
+    rect.origin.y = CGRectGetMaxY(rect);
+    _sendRateLab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _delayVLab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _delayALab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _currentV.frame = rect;
+ 
+    int rightCount = 10;
+    rect.origin = CGPointMake(self.view.bounds.size.width*0.5, 20);
+    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.topView.bounds.size.height-30) / rightCount);
+    _audioMixBtn.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _earPlay.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _mixStream.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _changeCamera.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _audioMute.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _videoMute.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _uiRecode.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    rect.size.width *= 0.4;
+    _inputGainLab.frame = rect;
+    
+    rect.origin.x = CGRectGetMaxX(rect);
+    rect.size.width = self.view.bounds.size.width - rect.origin.x;
+    _inputGain.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    rect.size.width = _inputGainLab.bounds.size.width;
+    rect.origin.x = _inputGainLab.frame.origin.x;
+    _mixGainLab.frame = rect;
+    
+    rect.origin.x = CGRectGetMaxX(rect);
+    rect.size.width = self.view.bounds.size.width - rect.origin.x;
+    _mixGain.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    rect.size.width = _mixGainLab.bounds.size.width;
+    rect.origin.x = _mixGainLab.frame.origin.x;
+    _outputGainLab.frame = rect;
+    
+    rect.origin.x = CGRectGetMaxX(rect);
+    rect.size.width = self.view.bounds.size.width - rect.origin.x;
+    _outputGain.frame = rect;
+    
+    int count = PULL_COUNT + 1;
+    rect.origin.y = CGRectGetMaxY(self.topView.frame);
+    rect.origin.x = 0;
+    rect.size.width = self.topView.frame.size.width * 1.0/count;
+    rect.size.height = self.view.bounds.size.height* 0.1;
+    _pushButton.frame = rect;
+    
+    CGRect sRect;
+    sRect.origin.x = 0;
+    sRect.origin.y = CGRectGetMaxY(rect);
+    sRect.size.height = self.view.bounds.size.height - sRect.origin.y;
+    sRect.size.width = self.view.bounds.size.width/(count-1);
+    for (int i = 0; i<PULL_COUNT; i++) {
+        rect.origin.x = CGRectGetMaxX(rect);
+        
+        PullShow* show = _pulls[i];
+        show.pullBtn.frame = rect;
+        show.frame = sRect;
+        sRect.origin.x = CGRectGetMaxX(sRect);
+    }
 }
 -(void)valueChange:(UISlider*)slider{
     if (slider == _inputGain) {
@@ -385,15 +491,42 @@ static char* url = "rtmp://10.0.1.142/live/room";
         [_livePush setMasterOutVolume:slider.value];
     }
 }
+
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation{
+    [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+    [UIView animateWithDuration:0.4 animations:^{
+        [self updateFrame];
+    }];
+    NSLog(@"didRotateFromInterfaceOrientation");
+
+}
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
-    if (btn == _pushButton) {
+    if (btn == _uiRecode) {
+        if (btn.selected) {
+            NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
+            path = [path stringByAppendingPathComponent:@"test.mp4"];
+            if(![_livePush startUIRecodeWithRootView:self.view fps:15 filePath:[NSURL fileURLWithPath:path]]){
+                btn.selected = NO;
+            }
+        }else{
+            [_livePush stopUIRecode];
+            btn.enabled = NO;
+        }
+      
+    }else if (btn == _audioMute) {
+        _livePush.audioMute = btn.selected;
+    }else if (btn == _videoMute) {
+        _livePush.videoMute = btn.selected;
+    }else if (btn == _pushButton) {
         if (btn.selected) {
             
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
             path = [path stringByAppendingPathComponent:@"test.mp4"];
-//            [_livePush videoRecodeWithPath:path];
-            [_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]];
+            if(![_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]]){
+                [_livePush stopStreamPush];
+                btn.selected = NO;
+            }
         }else{
              [_livePush stopStreamPush];
         }
@@ -429,7 +562,9 @@ static char* url = "rtmp://10.0.1.142/live/room";
 //        }
         
         if (btn.selected) {
-            [pull startStreamPullWithUrl:url];
+            if(![pull startStreamPullWithUrl:url]){
+                btn.selected = NO;
+            };
         }else{
             [pull stopStreamPull];
         }
@@ -498,6 +633,14 @@ static char* url = "rtmp://10.0.1.142/live/room";
 //    }
 //
 //}
+-(void)livePush:(GJLivePush *)livePush UIRecodeFinish:(NSError *)error{
+    _uiRecode.enabled = YES;
+    if (error) {
+        NSLog(@"RECODE ERROR:%@",error);
+    }else{
+        NSLog(@"recode success");
+    }
+}
 
 -(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushSessionStatus *)status{
     
@@ -564,8 +707,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
     });
 }
 -(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
-    UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"提示" message:@"是否测试释放推拉流对象" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:@"取消", nil];
-    [alert show];
+//    UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"提示" message:@"是否测试释放推拉流对象" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:@"取消", nil];
+//    [alert show];
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{

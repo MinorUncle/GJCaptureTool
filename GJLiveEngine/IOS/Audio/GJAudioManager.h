@@ -13,11 +13,20 @@
 #import "AudioUnitCapture.h"
 #import "AEAudioController.h"
 #import "AEPlaythroughChannel.h"
-#import "AEAudioSender.h"
-#import "GJAudioMixer.h"
-#import "AEBlockChannel.h"
 
+//#define AUDIO_SEND_TEST
+#ifdef AUDIO_SEND_TEST
+#import "AEAudioSender.h"
+#else
+#import "GJAudioMixer.h"
+#endif
+
+#import "AEBlockChannel.h"
+#ifdef AUDIO_SEND_TEST
+@interface GJAudioManager : NSObject<AEAudioSenderDelegate>
+#else
 @interface GJAudioManager : NSObject<GJAudioMixerDelegate>
+#endif
 {
     GJRetainBufferPool* _bufferPool;
 }
@@ -25,7 +34,11 @@
 @property (nonatomic, retain)AEPlaythroughChannel* playthrough;
 @property (nonatomic, retain)AEAudioFilePlayer* mixfilePlay;
 @property (nonatomic, retain)AEAudioController *audioController;
+#ifdef AUDIO_SEND_TEST
+@property (nonatomic, retain)AEAudioSender* audioMixer;
+#else
 @property (nonatomic, retain)GJAudioMixer* audioMixer;
+#endif
 @property (nonatomic, retain)AEBlockChannel* blockPlay;
 
 @property (nonatomic, readonly) AEAudioReceiverCallback receiverCallback;

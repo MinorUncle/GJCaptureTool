@@ -40,7 +40,7 @@
 static GBool IOS_PictureDisplaySetup(GJPictureDisplayContext* context){
     if (context->obaque != GNULL) {
         GJLOG(GJ_LOGFORBID, "重复setup video play");
-        
+        return GFalse;
     }
     context->obaque = (__bridge_retained GHandle)([[IOS_PictureDisplay alloc]init]);
     return context->obaque != nil;

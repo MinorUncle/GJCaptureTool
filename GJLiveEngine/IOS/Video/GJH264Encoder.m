@@ -19,6 +19,8 @@
 @interface GJH264Encoder()
 {
     GRational _dropStep;//每den帧丢num帧
+    GInt64 _fristPts;
+    GInt32 _dtsDelta;
     
 }
 @property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
@@ -48,7 +50,8 @@
         
         _profileLevel = profileLevelMain;
         _entropyMode = EntropyMode_CABAC;
-        
+        _fristPts = GINT64_MAX;
+        _dtsDelta = 0;
         [self creatEnCodeSession];
         
     }
@@ -92,6 +95,7 @@
             properties = [[NSMutableDictionary alloc]init];
             [properties setObject:@YES forKey:(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame];
         }
+//        printf("encode pts:%lld\n",pts);
         OSStatus status = VTCompressionSessionEncodeFrame(
                                                           _enCodeSession,
                                                           imageBuffer,
@@ -230,14 +234,14 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         return;
     }
     GJH264Encoder* encoder = (__bridge GJH264Encoder *)(outputCallbackRefCon);
-    R_GJH264Packet* pushPacket = (R_GJH264Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJH264Packet));
+    R_GJPacket* pushPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
     GJRetainBuffer* retainBuffer = &pushPacket->retain;
-    memset(pushPacket, 0, sizeof(R_GJH264Packet));
+    memset(pushPacket, 0, sizeof(R_GJPacket));
 #define PUSH_H264_PACKET_PRE_SIZE 45
     
     CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sample);
     size_t length, totalLength;
-    size_t bufferOffset = 0;
+//    size_t bufferOffset = 0;
     uint8_t *inDataPointer;
     CMBlockBufferGetDataPointer(dataBuffer, 0, &length, &totalLength, (char**)&inDataPointer);
 
@@ -267,41 +271,83 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
             GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
             return;
         }
+        
         size_t spsppsSize = sparameterSetSize+pparameterSetSize;
         int needSize = (int)(spsppsSize+totalLength+PUSH_H264_PACKET_PRE_SIZE);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
-        if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
-            retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE,GFalse);
-        }
-        uint8_t* data = retainBuffer->data;
-        memcpy(&data[0], sparameterSet, sparameterSetSize);
-        encoder.sps = [NSData dataWithBytes:data length:sparameterSetSize];
-        pushPacket->spsOffset=data - retainBuffer->data;
-        pushPacket->spsSize=(int)sparameterSetSize;
         
-        memcpy(&data[sparameterSetSize], pparameterSet, pparameterSetSize);
+        if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
+            retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
+        }
+        pushPacket->flag = GJPacketFlag_KEY;
+        pushPacket->dataOffset = 0;
+        pushPacket->dataSize = (GInt32)(totalLength + spsppsSize + 8);
+        
+        uint8_t* data = retainBuffer->data;
+        memcpy(data, "\x00\x00\x00\x01", 4);
+        memcpy(data+4, sparameterSet, sparameterSetSize);
+        encoder.sps = [NSData dataWithBytes:data length:sparameterSetSize];
+
+        memcpy(data+4+sparameterSetSize, "\x00\x00\x00\x01", 4);
+        memcpy(data+ 8+ sparameterSetSize, pparameterSet, pparameterSetSize);
         encoder.pps = [NSData dataWithBytes:data + sparameterSetSize length:pparameterSetSize];
-        pushPacket->ppsOffset = sparameterSetSize;
-        pushPacket->ppsSize = (int)pparameterSetSize;
-//        拷贝keyframe;
-        memcpy(data+spsppsSize, inDataPointer, totalLength);
-        inDataPointer = data + spsppsSize;
+
+        memcpy(data+spsppsSize + 8, inDataPointer, totalLength);
+        inDataPointer = data + spsppsSize +8;
+        
+
     }else{
         int needSize = (int)(totalLength+PUSH_H264_PACKET_PRE_SIZE);
         retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
         if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
-            retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE,GFalse);
+            retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
         }
+        pushPacket->flag = 0;
+        pushPacket->dataOffset = 0;
+        pushPacket->dataSize = (GInt32)(totalLength);
+
+
 //拷贝
         uint8_t* rDate = retainBuffer->data;
         memcpy(rDate, inDataPointer, totalLength);
         inDataPointer = rDate;
     }
     
-    pushPacket->ppOffset = inDataPointer - retainBuffer->data;
-    pushPacket->ppSize = (GInt32)totalLength;
+    pushPacket->type = GJMediaType_Video;
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
+    CMTime dts = CMSampleBufferGetDecodeTimeStamp(sample);
+
     pushPacket->pts = pts.value;
+
+    if (encoder->_allowBFrame) {
+        if (encoder->_fristPts > pushPacket->pts) {
+            encoder->_fristPts = pushPacket->pts;
+            encoder->_dtsDelta = 0;
+        }else if(encoder->_dtsDelta <= 0){
+            encoder->_dtsDelta = (GInt32)(pushPacket->pts - encoder->_fristPts);
+        }
+        if (dts.value > 0) {
+            pushPacket->dts = dts.value;
+        }else{
+            pushPacket->dts = pushPacket->pts;
+        }
+        pushPacket->dts -= encoder->_dtsDelta;
+        if (pushPacket->dts > pushPacket->pts) {
+            pushPacket->dts = pushPacket->pts;
+        }
+
+    }else{
+        pushPacket->dts = pts.value;
+    }
+    //-----------
+//    if (CMTIME_IS_INVALID(dts)) {
+//        pushPacket->dts = pts.value;
+//    }else{
+//        pushPacket->dts = dts.value;
+//    }
+    
+//    printf("encode over pts:%lld dts:%lld data size:%zu\n",pts.value,pushPacket->dts,totalLength);
+    
     
 //    NSData* seid = [NSData dataWithBytes:pushPacket->ppOffset+pushPacket->retain.data length:30];
 //    NSData* spsd = [NSData dataWithBytes:pushPacket->spsOffset+pushPacket->retain.data  length:pushPacket->spsSize];
@@ -318,150 +364,26 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     GJLOG(GJ_LOGINFO,"encode dts:%f pts:%f\n",dts.value*1.0 / dts.timescale,pts.value*1.0/pts.timescale);
 #endif
     
+    int bufferOffset = 0;
+    
+    
+    static const uint32_t AVCCHeaderLength = 4;
+    while (bufferOffset < totalLength) {
+        // Read the NAL unit length
+        uint32_t NALUnitLength = 0;
+        memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
+        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
+
+        uint8_t* data = inDataPointer + bufferOffset;
+        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
+        bufferOffset += AVCCHeaderLength + NALUnitLength;
+    }
+    
     encoder.completeCallback(pushPacket);
     retainBufferUnRetain(retainBuffer);
-    
-//    int type;
-//    static const uint32_t AVCCHeaderLength = 4;
-//    while (bufferOffset < totalLength) {
-//        // Read the NAL unit length
-//        uint32_t NALUnitLength = 0;
-//        memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
-//        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
-//        type = inDataPointer[bufferOffset+AVCCHeaderLength] & 0x1F;
-//        if (type == 6) {//SEI
-//            
-//            pushPacket->seiOffset = inDataPointer+bufferOffset - retainBuffer->data;
-//            pushPacket->seiSize =(int)(NALUnitLength+4);
-//        }else if (type == 1 || type == 5){//pp
-//            pushPacket->ppOffset = inDataPointer+bufferOffset - retainBuffer->data;
-//            pushPacket->ppSize =(int)(NALUnitLength+4);
-//        }
-//        uint8_t* data = inDataPointer + bufferOffset;
-//        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
-//        bufferOffset += AVCCHeaderLength + NALUnitLength;
-//  
-//    }
-    
- 
 }
 
-//
-////快降慢升
-//-(void)appendQualityWithStep:(GLong)step{
-//    GLong leftStep = step;
-//    GJEncodeQuality quality = GJEncodeQualityGood;
-//    int32_t bitrate = _currentBitRate;
-//    GJLOG(GJ_LOGINFO, "appendQualityWithStep：%d",step);
-//    if (leftStep > 0 && GRationalValue(_dropStep) > 0.5) {
-////        _dropStep += _allowDropStep-1+leftStep;
-//        GJAssert(_dropStep.den - _dropStep.num == 1, "管理错误1");
-//
-//        _dropStep.num -= leftStep;
-//        _dropStep.den -= leftStep;
-//        leftStep = 0;
-//        if (_dropStep.num < 1) {
-//            leftStep = 1 - _dropStep.num;
-//            _dropStep = GRationalMake(1,2);
-//        }else{
-//            bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
-//            bitrate += _allowMinBitRate/_destFormat.baseFormat.fps*I_P_RATE;
-//            quality = GJEncodeQualityTerrible;
-//            GJLOG(GJ_LOGINFO, "appendQuality by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
-//        }
-//    }
-//    if (leftStep > 0 && _dropStep.num != 0) {
-//        //        _dropStep += _allowDropStep-1+leftStep;
-//        GJAssert(_dropStep.num == 1, "管理错误2");
-//        _dropStep.num = 1;
-//        _dropStep.den += leftStep;
-//        leftStep = 0;
-//        if (_dropStep.den > DEFAULT_MAX_DROP_STEP) {
-//            leftStep = DEFAULT_MAX_DROP_STEP - _dropStep.den;
-//            _dropStep = GRationalMake(0,DEFAULT_MAX_DROP_STEP);
-//            bitrate = _allowMinBitRate;
-//        }else{
-//            bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
-//            bitrate += bitrate/_destFormat.baseFormat.fps*(1-GRationalValue(_dropStep))*I_P_RATE;
-//            quality = GJEncodeQualitybad;
-//            GJLOG(GJ_LOGINFO, "appendQuality by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
-//        }
-//    }
-//    if(leftStep > 0){
-//        if (bitrate < _destFormat.baseFormat.bitRate) {
-//            bitrate += (_destFormat.baseFormat.bitRate - _allowMinBitRate)*leftStep*DROP_BITRATE_RATE;
-//            bitrate = MIN(bitrate, _destFormat.baseFormat.bitRate);
-//            quality = GJEncodeQualityGood;
-//        }else{
-//            quality = GJEncodeQualityExcellent;
-//            bitrate = _destFormat.baseFormat.bitRate;
-//            GJLOG(GJ_LOGINFO, "appendQuality to full speed:%f",_currentBitRate/1024.0/8.0);
-//        }
-//    }
-//    if (_currentBitRate != bitrate) {
-//        self.currentBitRate = bitrate;
-//        if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-//            [self.deleagte GJH264Encoder:self qualityQarning:GJEncodeQualityExcellent];
-//        }
-//    }
-// 
-//}
-//-(void)reduceQualityWithStep:(GLong)step{
-//    GLong leftStep = step;
-//    int currentBitRate = _currentBitRate;
-//    GJEncodeQuality quality = GJEncodeQualityGood;
-//    int32_t bitrate = _currentBitRate;
-//    
-//    GJLOG(GJ_LOGINFO, "reduceQualityWithStep：%d",step);
-//
-//    if (_currentBitRate > _allowMinBitRate) {
-//        bitrate -= (_destFormat.baseFormat.bitRate - _allowMinBitRate)*leftStep*DROP_BITRATE_RATE;
-//        leftStep = 0;
-//        if (bitrate < _allowMinBitRate) {
-//            leftStep = (currentBitRate - bitrate)/((_destFormat.baseFormat.bitRate - _allowMinBitRate)*DROP_BITRATE_RATE);
-//            bitrate = _allowMinBitRate;
-//        }
-//        quality = GJEncodeQualityGood;
-//    }
-//    if (leftStep > 0 && GRationalValue(_dropStep) <= 0.50001 && GRationalValue(_dropStep) < GRationalValue(_allowDropStep)){
-//        if(_dropStep.num == 0)_dropStep = GRationalMake(1, DEFAULT_MAX_DROP_STEP);
-//        _dropStep.num = 1;
-//        _dropStep.den -= leftStep;
-//        leftStep = 0;
-//        
-//        GRational tempR = GRationalMake(1, 2);
-//        if (GRationalValue(_allowDropStep) < 0.5) {
-//            tempR = _allowDropStep;
-//        }
-//        if (_dropStep.den < tempR.den) {
-//            leftStep = tempR.den - _dropStep.den;
-//            _dropStep.den = tempR.den;
-//        }else{
-//        
-//            bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
-//            bitrate += bitrate/_destFormat.baseFormat.fps*(1-GRationalValue(_dropStep))*I_P_RATE;
-//            quality = GJEncodeQualitybad;
-//            GJLOG(GJ_LOGINFO, "reduceQuality1 by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
-//
-//        }
-//    }
-//    if (leftStep > 0 && GRationalValue(_dropStep) < GRationalValue(_allowDropStep)){
-//        _dropStep.num += leftStep;
-//        _dropStep.den += leftStep;
-//        if(_dropStep.den > _allowDropStep.den){
-//            _dropStep.num -= _dropStep.den - _allowDropStep.den;
-//            _dropStep.den = _allowDropStep.den;
-//        }
-//        bitrate = _allowMinBitRate*(1-GRationalValue(_dropStep));
-//        bitrate += bitrate/_destFormat.baseFormat.fps*(1-GRationalValue(_dropStep))*I_P_RATE;
-//        quality = GJEncodeQualityTerrible;
-//        GJLOG(GJ_LOGINFO, "reduceQuality2 by reduce to drop frame:num %d,den %d",_dropStep.num,_dropStep.den);
-//    }
-//    self.currentBitRate = bitrate;
-//    if ([self.deleagte respondsToSelector:@selector(GJH264Encoder:qualityQarning:)]) {
-//        [self.deleagte GJH264Encoder:self qualityQarning:quality];
-//    }
-//}
+
 -(void)flush{
     _stopRequest = YES;
     if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);

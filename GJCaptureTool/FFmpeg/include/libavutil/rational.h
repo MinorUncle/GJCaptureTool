@@ -60,7 +60,7 @@ static inline AVRational av_make_q(int num, int den)
  * Compare two rationals.
  * @param a first rational
  * @param b second rational
- * @return 0 if a==b, 1 if a>b, -1 if a<b, and INT_MIN if one of the
+ * @return 0 if a==b, 1 if a>b, -1 if a < b, and INT_MIN if one of the
  * values is of the form 0/0
  */
 static inline int av_cmp_q(AVRational a, AVRational b){
