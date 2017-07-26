@@ -42,6 +42,7 @@ static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* fram
         context->operationCount--;
     }
 }
+
 static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame){
     GJLivePushContext* context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
@@ -54,11 +55,9 @@ static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame)
         context->operationCount--;
     }
 }
+
 static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
     GJLivePushContext* context = userData;
-//    packet->dts -= 1000 / context->pushConfig->mFps;
-    
-    
     GJStreamPush_SendVideoData(context->videoPush, packet);
     GJTrafficStatus bufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
     if (bufferStatus.enter.count % context->dynamicAlgorithm.den == 0) {
@@ -85,6 +84,7 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
         context->preVideoTraffic = bufferStatus;
     }
 }
+
 static GVoid aacPacketOutCallback(GHandle userData,R_GJPacket* packet){
     GJLivePushContext* context = userData;
     if (context->firstAudioEncodeClock == G_TIME_INVALID) {
@@ -96,8 +96,6 @@ static GVoid aacPacketOutCallback(GHandle userData,R_GJPacket* packet){
     }
     GJStreamPush_SendAudioData(context->videoPush, packet);
 }
-
-
 
 GVoid streamPushMessageCallback(GHandle userData, GJStreamPushMessageType messageType,GHandle messageParm){
     GJLivePushContext* context = userData;
@@ -203,6 +201,7 @@ static void _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong 
         context->callback(context->userData,GJLivePush_updateNetQuality,&quality);
     }
 }
+
 GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
     GLong leftStep = step;
     int currentBitRate = context->videoBitrate;
@@ -312,6 +311,7 @@ static void* thread_pthread_head(void* ctx) {
     pthread_exit(0);
     
 }
+
 GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callback,GHandle param){
     GBool result = GFalse;
     do{
@@ -338,6 +338,7 @@ GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callb
     }while (0);
     return result;
 }
+
 GVoid GJLivePush_SetConfig(GJLivePushContext* context,const GJPushConfig* config){
     pthread_mutex_lock(&context->lock);
     if (context->videoPush != GNULL) {
@@ -454,6 +455,7 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
     pthread_mutex_unlock(&context->lock);
     return result;
 }
+
 GVoid GJLivePush_StopPush(GJLivePushContext* context){
     pthread_mutex_lock(&context->lock);
     if (context->videoPush) {
@@ -485,20 +487,25 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context){
     }
     pthread_mutex_unlock(&context->lock);
 }
+
 GBool GJLivePush_StartPreview(GJLivePushContext* context){
     return context->videoProducer->startPreview(context->videoProducer);
 }
+
 GVoid GJLivePush_StopPreview(GJLivePushContext* context){
     return context->videoProducer->stopPreview(context->videoProducer);
 }
+
 GBool GJLivePush_SetAudioMute(GJLivePushContext* context,GBool mute){
     context->audioMute = mute;
     return GTrue;
 }
+
 GBool GJLivePush_SetVideoMute(GJLivePushContext* context,GBool mute){
     context->videoMute = mute;
     return GTrue;
 }
+
 GBool GJLivePush_StartMixFile(GJLivePushContext* context,const GChar* fileName){
     GBool result = context->audioProducer->setupMixAudioFile(context->audioProducer,fileName,GFalse);
     if (result == GFalse) {
@@ -507,19 +514,23 @@ GBool GJLivePush_StartMixFile(GJLivePushContext* context,const GChar* fileName){
     result = context->audioProducer->startMixAudioFileAtTime(context->audioProducer,0);
     return result;
 }
+
 GBool GJLivePush_SetMixVolume(GJLivePushContext* context,GFloat32 volume){
     return GJCheckBool(context->audioProducer->setMixVolume(context->audioProducer,volume),"setMixVolume");
 }
+
 GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext* context,GBool should){
     return GJCheckBool(context->audioProducer->setMixToStream(context->audioProducer,should),"setMixToStream");
-
 }
+
 GBool GJLivePush_SetOutVolume(GJLivePushContext* context,GFloat32 volume){
     return GJCheckBool(context->audioProducer->setOutVolume(context->audioProducer,volume),"setOutVolume");
 }
+
 GBool GJLivePush_SetInputGain(GJLivePushContext* context,GFloat32 gain){
     return GJCheckBool(context->audioProducer->setInputGain(context->audioProducer,gain),"setInputGain");
 }
+
 GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext* context,GBool enable){
     if (context->audioProducer->obaque == GNULL) {
         return GFalse;
@@ -566,12 +577,15 @@ GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
         *pushContext = GNULL;
     }
 }
+
 GJTrafficStatus GJLivePush_GetVideoTrafficStatus(GJLivePushContext* context){
     return GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
 }
+
 GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext* context){
     return GJStreamPush_GetAudioBufferCacheInfo(context->videoPush);
 }
+
 GHandle GJLivePush_GetDisplayView(GJLivePushContext* context){
     if (context->videoProducer->obaque == GNULL) {
         if (context->pushConfig != GNULL) {

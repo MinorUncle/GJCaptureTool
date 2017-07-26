@@ -175,14 +175,12 @@ static GHandle sendRunloop(GHandle parm){
         GInt32 iRet = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
             if (packet->type == GJMediaType_Video) {
-                printf("send video pts:%lld dts:%lld size:%d\n",packet->pts,packet->dts,packet->dataSize);
-//                GJLOGFREQ("send video pts:%d size:%d",packet->pts,packet->dataSize);
+                GJLOGFREQ("send video pts:%lld dts:%lld size:%d\n",packet->pts,packet->dts,packet->dataSize);
                 push->videoStatus.leave.byte+=packet->dataSize;
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.ts = (GLong)packet->dts;
             }else{
-                printf("send audio pts:%lld dts:%lld size:%d\n",packet->pts,packet->dts,packet->dataSize);
-                GJLOGFREQ("send audio pts:%d size:%d",packet->pts,packet->dataSize);
+                GJLOGFREQ("send audio pts:%lld dts:%lld size:%d\n",packet->pts,packet->dts,packet->dataSize);
                 push->audioStatus.leave.byte+=packet->dataSize;
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.ts = (GLong)packet->dts;

@@ -316,15 +316,9 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     pushPacket->type = GJMediaType_Video;
     CMTime pts = CMSampleBufferGetPresentationTimeStamp(sample);
     CMTime dts = CMSampleBufferGetDecodeTimeStamp(sample);
-    printf("encode pts:%lld dts:%lld data size:%zu\n",pts.value,dts.value,totalLength);
 
     pushPacket->pts = pts.value;
-//    if (encoder->_allowBFrame) {
-//        
-//    }else{
-//         pushPacket->dts = pushPacket->pts;
-//    }
-    
+
     if (encoder->_allowBFrame) {
         if (encoder->_fristPts > pushPacket->pts) {
             encoder->_fristPts = pushPacket->pts;

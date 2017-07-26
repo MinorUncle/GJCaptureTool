@@ -113,6 +113,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 @end
 @implementation IOS_VideoProduce
+
 - (instancetype)initWithFormat:(GJPixelFormat)format fps:(GInt32)fps
 {
     self = [super init];
@@ -120,21 +121,23 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         
         _cameraPosition = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
-        _destSize = CGSizeMake((CGFloat)format.mWidth, (CGFloat)format.mHeight);
+        self.destSize = CGSizeMake((CGFloat)format.mWidth, (CGFloat)format.mHeight);
         _frameRate = fps;
     }
     return self;
 }
+
 -(instancetype)init{
     self = [super init];
     if (self) {
         _cameraPosition = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
-        _destSize = CGSizeMake(480,640);
+        self.destSize = CGSizeMake(480,640);
         _frameRate = 15;
     }
     return self;
 }
+
 -(GPUImageVideoCamera *)camera{
     if (_camera == nil) {
         CGSize size = _destSize;
@@ -147,26 +150,33 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         NSString* preset = getCapturePresetWithSize(size);
         _camera = [[GPUImageVideoCamera alloc]initWithSessionPreset:preset cameraPosition:_cameraPosition];
         _camera.frameRate = _frameRate;
-        _camera.outputImageOrientation = UIInterfaceOrientationPortrait;
-        _cropFilter = [[GPUImageCropFilter alloc]init];
-        [self setDestSize:_destSize];
-        [self.beautifyFilter addTarget:_cropFilter];
+        _camera.outputImageOrientation = _outputOrientation;
+        [self.beautifyFilter addTarget:self.cropFilter];
         [_camera addTarget:_beautifyFilter];
     }
     return _camera;
 }
+
 -(GJImageView *)imageView{
     if (_imageView == nil) {
         _imageView = [[GJImageView alloc]init];
     }
     return _imageView;
 }
+
 -(GPUImageBeautifyFilter *)beautifyFilter{
     if (_beautifyFilter == nil) {
         _beautifyFilter = [[GPUImageBeautifyFilter alloc]init];
         
     }
     return _beautifyFilter;
+}
+
+-(GPUImageCropFilter *)cropFilter{
+    if (_cropFilter == nil) {
+        _cropFilter = [[GPUImageCropFilter alloc]init];
+    }
+    return _cropFilter;
 }
 
 CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceOrientation orientation){
@@ -205,22 +215,23 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
 
     return region;
 }
+
 -(BOOL)startProduce{
-    CGSize captureSize = getCaptureSizeWithSize(_destSize);
     __weak IOS_VideoProduce* wkSelf = self;
     self.cropFilter.frameProcessingCompletionBlock = ^(GPUImageOutput * imageOutput, CMTime time) {
         CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].pixelBuffer;
         CVPixelBufferRetain(pixel_buffer);
         R_GJPixelFrame* frame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
         retainBufferPack((GJRetainBuffer**)&frame, pixel_buffer, sizeof(CVPixelBufferRef), pixelReleaseCallBack, GNULL);
-        frame->height = (GInt32)captureSize.height;
-        frame->width = (GInt32)captureSize.width;
+        frame->height = (GInt32)wkSelf.destSize.height;
+        frame->width = (GInt32)wkSelf.destSize.width;
         wkSelf.callback(frame);
         retainBufferUnRetain((GJRetainBuffer*)frame);
     };
     [self.camera startCameraCapture];
     return YES;
 }
+
 -(void)stopProduce{
     if (![_cropFilter.targets containsObject:_imageView]) {
         [_camera stopCameraCapture];
@@ -229,12 +240,17 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
         _cropFilter.frameProcessingCompletionBlock = nil;
     });
 }
+
 -(void)setDestSize:(CGSize)destSize{
     if (CGSizeEqualToSize(destSize, _destSize)) {
         return;
     }
     _destSize = destSize;
-    CGSize size = destSize;
+    [self updateCropSize];
+}
+
+-(void)updateCropSize{
+    CGSize size = _destSize;
     if (_outputOrientation == UIInterfaceOrientationPortrait ||
         _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
         size.height += size.width;
@@ -246,36 +262,38 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
         self.camera.captureSessionPreset = preset;
     }
     
-    CGSize capture = getCaptureSizeWithSize(_destSize);
+    CGSize capture = getCaptureSizeWithSize(size);
     CGRect region = getCropRectWithSourceSize(capture, _destSize, self.outputOrientation);
-    _cropFilter.cropRegion = region;
+    self.cropFilter.cropRegion = region;
     [_cropFilter forceProcessingAtSize:_destSize];
-
 }
+
 -(void)setOutputOrientation:(UIInterfaceOrientation)outputOrientation{
     if (outputOrientation == _outputOrientation) {
         return;
     }
     _outputOrientation = outputOrientation;
-    CGSize capture = getCaptureSizeWithSize(_destSize);
-    CGRect region = getCropRectWithSourceSize(capture, _destSize, self.outputOrientation);
-    _cropFilter.cropRegion = region;
-    [_cropFilter forceProcessingAtSize:_destSize];
+    _camera.outputImageOrientation = outputOrientation;
+    [self updateCropSize];
 }
+
 -(void)setHorizontallyMirror:(BOOL)horizontallyMirror{
     _horizontallyMirror = horizontallyMirror;
     self.camera.horizontallyMirrorRearFacingCamera = self.camera.horizontallyMirrorFrontFacingCamera = _horizontallyMirror;
 }
+
 -(void)setFrameRate:(int)frameRate{
     _frameRate = frameRate;
-    self.camera.frameRate = frameRate;
+    _camera.frameRate = frameRate;
 }
+
 -(void)setCameraPosition:(AVCaptureDevicePosition)cameraPosition{
     _cameraPosition = cameraPosition;
-    if (self.camera.cameraPosition != _cameraPosition) {
-        [self.camera rotateCamera];
+    if (_camera.cameraPosition != _cameraPosition) {
+        [_camera rotateCamera];
     }
 }
+
 -(BOOL)startPreview{
     if (![self.camera isRunning]) {
         [self.camera startCameraCapture];
