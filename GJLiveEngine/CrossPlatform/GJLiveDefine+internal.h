@@ -93,13 +93,13 @@ typedef struct GJPacket{
     GJPacketFlag  flag;
 }R_GJPacket;
 
-typedef struct GJStreamFrame{
-    union{
-        R_GJPCMFrame* pcmFrame;
-        R_GJPixelFrame* pixelFrame;
-    }frame;
-    GJMediaType mediaType;
-}R_GJStreamFrame;
+//typedef struct GJStreamFrame{
+//    union{
+//        R_GJPCMFrame* pcmFrame;
+//        R_GJPixelFrame* pixelFrame;
+//    }frame;
+//    GJMediaType mediaType;
+//}R_GJStreamFrame;
 
 //typedef struct _GJStreamPacket{
 //    union{

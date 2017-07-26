@@ -22,17 +22,6 @@ typedef struct GSize {
 
 #define GSizeEqual(a,b) (((a).height - (b).height > -0.00001 && (a).height - (b).height < 0.000001 && (a).width - (b).width > -0.00001 && (a).width - (b).width < 0.000001))
 
-//typedef struct GJPushConfig {
-//    //    video 。videoFps;等于采集的fps,pushSize与capturesize不同时会保留最大裁剪缩放
-//    GSize      pushSize;
-//    GFloat32     videoBitRate;
-//    
-//    //  audio
-//    GInt32   channel;
-//    GInt32   audioSampleRate;
-//    
-//    GChar*    pushUrl;
-//}GJPushConfig;
 
 typedef GHandle GView;
 typedef enum _GJCaptureSizeType

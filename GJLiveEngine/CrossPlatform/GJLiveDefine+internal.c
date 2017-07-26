@@ -36,6 +36,6 @@ GJRetainBuffer* R_GJPixelFrameMalloc(GJRetainBufferPool* pool,GHandle userdata){
 //GJRetainBuffer* R_GJStreamPacketMalloc(GJRetainBufferPool* pool,GHandle userdata){
 //    return (GJRetainBuffer*)calloc(1,sizeof(R_GJStreamPacket));
 //}
-GJRetainBuffer* R_GJStreamFrameMalloc(GJRetainBufferPool* pool,GHandle userdata){
-    return (GJRetainBuffer*)calloc(1,sizeof(R_GJStreamFrame));
-}
+//GJRetainBuffer* R_GJStreamFrameMalloc(GJRetainBufferPool* pool,GHandle userdata){
+//    return (GJRetainBuffer*)calloc(1,sizeof(R_GJStreamFrame));
+//}
