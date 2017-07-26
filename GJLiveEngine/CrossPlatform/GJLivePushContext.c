@@ -28,6 +28,24 @@ static GBool                   requestDestoryServer;
 static GVoid _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong step);
 static GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step);
 
+static GVoid _recodeCompleteCallback(GHandle userData,const GChar* filePath, GHandle error){
+    GJLivePushContext* context = userData;
+    pthread_mutex_lock(&context->lock);
+    context->recoder->unSetup(context->recoder);
+    if (context->pushConfig == GNULL) {//表示已经释放了，需要自己释放
+        pthread_mutex_unlock(&context->lock);
+        
+        pthread_mutex_destroy(&context->lock);
+        free(context);
+        return;
+    }
+    context->callback(context->userData,GJLivePush_recodeComplete,error);
+    context->recoder = GNULL;
+    pthread_mutex_unlock(&context->lock);
+
+}
+
+
 static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* frame){
     GJLivePushContext* context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
@@ -51,6 +69,14 @@ static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame)
         if (!context->audioMute) {
             frame->pts = GJ_Gettime()/1000-context->connentClock;
             context->audioEncoder->encodeFrame(context->audioEncoder,frame);
+            if (context->recoder) {
+                pthread_mutex_lock(&context->lock);
+                if (context->recoder) {
+                    context->recoder->sendAudioSourcePacket(context->recoder,frame);
+                }
+                pthread_mutex_unlock(&context->lock);
+
+            }
         }
         context->operationCount--;
     }
@@ -340,6 +366,8 @@ GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callb
 }
 
 GVoid GJLivePush_SetConfig(GJLivePushContext* context,const GJPushConfig* config){
+    if (context == GNULL) {return;}
+    
     pthread_mutex_lock(&context->lock);
     if (context->videoPush != GNULL) {
         GJLOG(GJ_LOGERROR, "推流期间不能配置pushconfig");
@@ -369,6 +397,7 @@ GVoid GJLivePush_SetConfig(GJLivePushContext* context,const GJPushConfig* config
 }
 
 GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
+    
     GJLOG(GJ_LOGINFO, "GJLivePush_StartPush url:%s",url);
     GBool result = GTrue;
     pthread_mutex_lock(&context->lock);
@@ -460,13 +489,15 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context){
     pthread_mutex_lock(&context->lock);
     if (context->videoPush) {
         context->stopPushClock = GJ_Gettime()/1000;
+        context->audioProducer->audioProduceStop(context->audioProducer);
+        context->videoProducer->stopProduce(context->videoProducer);
+        
         while (context->operationCount) {
             GJLOG(GJ_LOGDEBUG, "GJLivePush_StopPush wait 10 us");
             usleep(10);
         }
         GJStreamPush_CloseAndDealloc(&context->videoPush);
-        context->audioProducer->audioProduceStop(context->audioProducer);
-        context->videoProducer->stopProduce(context->videoProducer);
+
         context->audioEncoder->encodeUnSetup(context->audioEncoder);
         context->videoEncoder->encodeUnSetup(context->videoEncoder);
         
@@ -538,18 +569,23 @@ GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext* context,GBool ena
         return context->audioProducer->enableAudioInEarMonitoring(context->audioProducer,enable);
     }
 }
+
 GVoid GJLivePush_StopAudioMix(GJLivePushContext* context){
     context->audioProducer->stopMixAudioFile(context->audioProducer);
 }
+
 GVoid GJLivePush_SetCameraPosition(GJLivePushContext* context,GJCameraPosition position){
     context->videoProducer->setCameraPosition(context->videoProducer,position);
 }
+
 GVoid GJLivePush_SetOutOrientation(GJLivePushContext* context,GJInterfaceOrientation orientation){
     context->videoProducer->setOrientation(context->videoProducer,orientation);
 }
+
 GVoid GJLivePush_SetPreviewHMirror(GJLivePushContext* context,GBool preViewMirror){
     context->videoProducer->setHorizontallyMirror(context->videoProducer,preViewMirror);
 }
+
 GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
     GJLivePushContext* context = *pushContext;
     if (context == GNULL) {
@@ -559,10 +595,7 @@ GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
         GJ_AACEncodeContextDealloc(&context->audioEncoder);
         GJ_VideoProduceContextDealloc(&context->videoProducer);
         GJ_AudioProduceContextDealloc(&context->audioProducer);
-        if (context->pushConfig) {
-            free(context->pushConfig);
-        }
-        pthread_mutex_destroy(&context->lock);
+        
         if (serverThread == GNULL) {
 #ifdef RAOP
             raop_server_destroy(server);
@@ -573,6 +606,19 @@ GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
         }else{
             requestDestoryServer = GTrue;
         }
+        
+        pthread_mutex_lock(&context->lock);
+        if (context->pushConfig) {
+            free(context->pushConfig);
+            context->pushConfig = GNULL;
+        }
+        if (context->recoder) {
+            pthread_mutex_unlock(&context->lock);
+            return;
+        }
+        pthread_mutex_unlock(&context->lock);
+        pthread_mutex_destroy(&context->lock);
+
         free(context);
         *pushContext = GNULL;
     }
@@ -599,4 +645,45 @@ GHandle GJLivePush_GetDisplayView(GJLivePushContext* context){
         }
     }
     return context->videoProducer->getRenderView(context->videoProducer);
+}
+
+GBool GJLivePush_StartRecode(GJLivePushContext* context,GView view, GInt32 fps,const GChar* fileUrl){
+    GBool result = GFalse;
+    
+    pthread_mutex_lock(&context->lock);
+    do{
+        if (context->recoder) {
+            GJLOG(GJ_LOGFORBID, "上一个录制还未完成");
+            result = GFalse;
+            break;
+        }else{
+            if (context->pushConfig == GNULL || context->pushConfig->mAudioSampleRate <= 0 || context->pushConfig->mAudioChannel <= 0) {
+                GJLOG(GJ_LOGFORBID, "请先配置正确pushConfig");
+                result = GFalse;
+                break;
+            }
+            GJAudioFormat format = {0};
+            format.mChannelsPerFrame = context->pushConfig->mAudioChannel;
+            format.mSampleRate = context->pushConfig->mAudioSampleRate;
+            format.mType = GJAudioType_PCM;
+            format.mBitsPerChannel = 16;
+            format.mFramePerPacket = 1;
+            GJ_RecodeContextCreate(&context->recoder);
+            context->recoder->setup(context->recoder,fileUrl,_recodeCompleteCallback,context);
+            context->recoder->addAudioSource(context->recoder,format);
+            result = context->recoder->startRecode(context->recoder,view,fps);
+        }
+    }while(0);
+    pthread_mutex_unlock(&context->lock);
+    
+    return result;
+}
+
+GVoid GJLivePush_StopRecode(GJLivePushContext* context){
+    pthread_mutex_lock(&context->lock);
+    if (context->recoder) {
+        context->recoder->stopRecode(context->recoder);
+    }
+    pthread_mutex_unlock(&context->lock);
+
 }

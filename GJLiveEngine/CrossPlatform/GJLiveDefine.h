@@ -33,6 +33,8 @@ typedef struct GSize {
 //    
 //    GChar*    pushUrl;
 //}GJPushConfig;
+
+typedef GHandle GView;
 typedef enum _GJCaptureSizeType
 {
     kCaptureSize352_288,

@@ -10,19 +10,7 @@
 #import <UIKit/UIView.h>
 #import <AVFoundation/AVFoundation.h>
 
-#define USE_REPLAYKIT 1
-#ifndef DEBUG
-#define RecorderLOG(format, ...) NSLog(format,##__VA_ARGS__)
-#else
-#define RecorderLOG(format, ...)
-#endif
-
-@class GJScreenRecorder;
-@protocol GJScreenRecorderDelegate <NSObject>
-@optional
--(void)screenRecorder:(GJScreenRecorder*)recorder recorderFile:(NSURL*)fileUrl FinishWithError:(NSError*) error;
-@end
-
+typedef void(^RecodeCompleteBlock)(NSURL* fileUrl,  NSError* error);
 
 typedef enum ScreenRecorderStatus{
     screenRecorderStopStatus,
@@ -36,8 +24,8 @@ typedef enum ScreenRecorderStatus{
 @property(assign,nonatomic,readonly)CGRect captureFrame;
 @property(strong,nonatomic,readonly)UIView* captureView;
 @property(strong,nonatomic)dispatch_queue_t captureQueue;
-@property(nonatomic,copy)NSURL* destFileUrl;
-@property(nonatomic,weak)id<GJScreenRecorderDelegate> delegate;
+@property(nonatomic,strong)NSURL* destFileUrl;
+@property(nonatomic,copy)RecodeCompleteBlock callback;
 
 - (instancetype)initWithDestUrl:(NSURL*)url;
 

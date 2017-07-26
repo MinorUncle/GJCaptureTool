@@ -146,6 +146,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @property (strong, nonatomic) UIButton *changeCamera;
 @property (strong, nonatomic) UIButton *audioMute;
 @property (strong, nonatomic) UIButton *videoMute;
+@property (strong, nonatomic) UIButton *uiRecode;
+
 
 @property (strong, nonatomic) UISlider *inputGain;
 @property (strong, nonatomic) UILabel *inputGainLab;
@@ -294,6 +296,15 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _audioMute.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_audioMute];
     
+    _uiRecode = [[UIButton alloc]init];
+    _uiRecode.backgroundColor = [UIColor clearColor];
+    [_uiRecode setTitle:@"开始UI录制" forState:UIControlStateNormal];
+    [_uiRecode setTitle:@"结束UI录制" forState:UIControlStateSelected];
+    [_uiRecode setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_uiRecode addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _uiRecode.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_uiRecode];
+    
     _inputGainLab = [[UILabel alloc]init];
     _inputGainLab.text = @"采集音量";
     _inputGainLab.textColor = [UIColor whiteColor];
@@ -397,7 +408,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     rect.origin.y = CGRectGetMaxY(rect);
     _currentV.frame = rect;
  
-    int rightCount = 9;
+    int rightCount = 10;
     rect.origin = CGPointMake(self.view.bounds.size.width*0.5, 20);
     rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.topView.bounds.size.height-30) / rightCount);
     _audioMixBtn.frame = rect;
@@ -416,6 +427,9 @@ static char* url = "rtmp://10.0.1.142/live/room";
     
     rect.origin.y = CGRectGetMaxY(rect);
     _videoMute.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _uiRecode.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     rect.size.width *= 0.4;
@@ -488,7 +502,19 @@ static char* url = "rtmp://10.0.1.142/live/room";
 }
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
-    if (btn == _audioMute) {
+    if (btn == _uiRecode) {
+        if (btn.selected) {
+            NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
+            path = [path stringByAppendingPathComponent:@"test.mp4"];
+            if(![_livePush startUIRecodeWithRootView:self.view fps:15 filePath:[NSURL fileURLWithPath:path]]){
+                btn.selected = NO;
+            }
+        }else{
+            [_livePush stopUIRecode];
+            btn.enabled = NO;
+        }
+      
+    }else if (btn == _audioMute) {
         _livePush.audioMute = btn.selected;
     }else if (btn == _videoMute) {
         _livePush.videoMute = btn.selected;
@@ -497,7 +523,6 @@ static char* url = "rtmp://10.0.1.142/live/room";
             
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
             path = [path stringByAppendingPathComponent:@"test.mp4"];
-//            [_livePush videoRecodeWithPath:path];
             if(![_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]]){
                 [_livePush stopStreamPush];
                 btn.selected = NO;
@@ -608,6 +633,14 @@ static char* url = "rtmp://10.0.1.142/live/room";
 //    }
 //
 //}
+-(void)livePush:(GJLivePush *)livePush UIRecodeFinish:(NSError *)error{
+    _uiRecode.enabled = YES;
+    if (error) {
+        NSLog(@"RECODE ERROR:%@",error);
+    }else{
+        NSLog(@"recode success");
+    }
+}
 
 -(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushSessionStatus *)status{
     
