@@ -93,6 +93,7 @@ GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext* context);
 GHandle GJLivePush_GetDisplayView(GJLivePushContext* context);
 
 GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext* context,GBool enable);
+GBool GJLivePush_EnableReverb(GJLivePushContext* context,GBool enable);
 GVoid GJLivePush_StopAudioMix(GJLivePushContext* context);
 GBool GJLivePush_StartMixFile(GJLivePushContext* context,const GChar* fileName);
 GBool GJLivePush_SetMixVolume(GJLivePushContext* context,GFloat32 volume);

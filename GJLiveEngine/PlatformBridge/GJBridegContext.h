@@ -70,6 +70,8 @@ typedef struct _GJAudioProduceContext{
     GBool   (*setOutVolume)           (struct _GJAudioProduceContext* context, GFloat32 volume);
     GVoid   (*stopMixAudioFile)       (struct _GJAudioProduceContext* context);
     GBool   (*setMixToStream)         (struct _GJAudioProduceContext* context, GBool should);
+    GBool   (*enableReverb)           (struct _GJAudioProduceContext* context, GBool enable);
+
 }GJAudioProduceContext;
 
 typedef struct _GJAudioPlayContext{

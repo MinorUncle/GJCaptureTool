@@ -570,6 +570,13 @@ GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext* context,GBool ena
     }
 }
 
+GBool GJLivePush_EnableReverb(GJLivePushContext* context,GBool enable){
+    if (context->audioProducer->obaque == GNULL) {
+        return GFalse;
+    }else{
+        return context->audioProducer->enableReverb(context->audioProducer,enable);
+    }
+}
 GVoid GJLivePush_StopAudioMix(GJLivePushContext* context){
     context->audioProducer->stopMixAudioFile(context->audioProducer);
 }

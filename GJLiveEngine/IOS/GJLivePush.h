@@ -69,6 +69,8 @@
 
 - (BOOL)enableAudioInEarMonitoring:(BOOL)enable;
 
+- (BOOL)enableReverb:(BOOL)enable;
+
 - (BOOL)startAudioMixWithFile:(NSURL*)fileUrl;
 
 - (void)stopAudioMix;

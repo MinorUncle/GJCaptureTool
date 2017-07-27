@@ -147,6 +147,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @property (strong, nonatomic) UIButton *audioMute;
 @property (strong, nonatomic) UIButton *videoMute;
 @property (strong, nonatomic) UIButton *uiRecode;
+@property (strong, nonatomic) UIButton *reverb;
 
 
 @property (strong, nonatomic) UISlider *inputGain;
@@ -177,7 +178,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 - (void)viewDidLoad {
     [super viewDidLoad];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
-    GJ_LogSetLevel(GJ_LOGALL);
+    GJ_LogSetLevel(GJ_LOGINFO);
     RTMP_LogSetLevel(RTMP_LOGERROR);
     _livePush = [[GJLivePush alloc]init];
     GJPushConfig config = {0};
@@ -186,7 +187,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     config.mPushSize = (GSize){360, 640};
     config.mVideoBitrate = 8*80*1024;
     config.mFps = 15;
-    config.mAudioBitrate = 40*1000;
+    config.mAudioBitrate = 0;
     [_livePush setPushConfig:config];
     _livePush.delegate = self;
     _livePush.cameraPosition = GJInterfaceOrientationPortrait;
@@ -305,6 +306,15 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _uiRecode.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_uiRecode];
     
+    _reverb = [[UIButton alloc]init];
+    _reverb.backgroundColor = [UIColor clearColor];
+    [_reverb setTitle:@"开启混响" forState:UIControlStateNormal];
+    [_reverb setTitle:@"关闭混响" forState:UIControlStateSelected];
+    [_reverb setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_reverb addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _reverb.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_reverb];
+    
     _inputGainLab = [[UILabel alloc]init];
     _inputGainLab.text = @"采集音量";
     _inputGainLab.textColor = [UIColor whiteColor];
@@ -408,7 +418,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     rect.origin.y = CGRectGetMaxY(rect);
     _currentV.frame = rect;
  
-    int rightCount = 10;
+    int rightCount = 11;
     rect.origin = CGPointMake(self.view.bounds.size.width*0.5, 20);
     rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.topView.bounds.size.height-30) / rightCount);
     _audioMixBtn.frame = rect;
@@ -430,6 +440,9 @@ static char* url = "rtmp://10.0.1.142/live/room";
     
     rect.origin.y = CGRectGetMaxY(rect);
     _uiRecode.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _reverb.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     rect.size.width *= 0.4;
@@ -502,7 +515,9 @@ static char* url = "rtmp://10.0.1.142/live/room";
 }
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
-    if (btn == _uiRecode) {
+    if (btn == _reverb) {
+        [_livePush enableReverb:btn.selected];
+    }else if (btn == _uiRecode) {
         if (btn.selected) {
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
             path = [path stringByAppendingPathComponent:@"test.mp4"];

@@ -139,12 +139,20 @@ inline static GVoid audioProduceStop(struct _GJAudioProduceContext* context){
 #endif
 }
 
+GBool enableReverb(struct _GJAudioProduceContext* context,GBool enable){
+#ifdef AMAZING_AUDIO_ENGINE
+    GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
+    return [manager enableReverb:enable];
+#endif
+    return  GFalse;
+}
+
 GBool enableAudioInEarMonitoring(struct _GJAudioProduceContext* context,GBool enable){
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
     return [manager enableAudioInEarMonitoring:enable];
 #endif
-    return  GTrue;
+    return  GFalse;
 }
 GBool setupMixAudioFile(struct _GJAudioProduceContext* context,const GChar* file,GBool loop){
 #ifdef AMAZING_AUDIO_ENGINE
@@ -220,6 +228,7 @@ GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext** recodeContext){
     context->setMixVolume = setMixVolume;
     context->setOutVolume = setOutVolume;
     context->setMixToStream = setMixToStream;
+    context->enableReverb = enableReverb;
 
 }
 GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext** context){

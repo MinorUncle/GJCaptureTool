@@ -202,7 +202,11 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     return YES;
 }
 -(void)setBitrate:(int)bitrate{
+    if (bitrate <= 100) {
+        return;
+    }
     _bitrate = bitrate;
+
     UInt32 propSize = 0;
     // set the bit rate depending on the samplerate chosen
 //    AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);

@@ -121,6 +121,21 @@ static GJAudioManager* _staticManager;
     }
     return GTrue;
 }
+
+-(BOOL)enableReverb:(BOOL)enable{
+    if (_reverb == nil) {
+        _reverb = [[AEReverbFilter alloc]init];
+        _reverb.dryWetMix = 80;
+    }
+    
+    if (enable) {
+        [_audioController addFilter:_reverb];
+    }{
+        [_audioController removeFilter:_reverb];
+    }
+    return NO;
+}
+
 -(void)setMixToSream:(BOOL)mixToSream{
     _mixToSream = mixToSream;
 #ifndef AUDIO_SEND_TEST

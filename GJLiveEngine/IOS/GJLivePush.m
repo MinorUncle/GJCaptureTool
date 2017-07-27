@@ -163,6 +163,11 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
 -(BOOL)enableAudioInEarMonitoring:(BOOL)enable{
     return GJLivePush_EnableAudioInEarMonitoring(_livePush, enable);
 }
+
+- (BOOL)enableReverb:(BOOL)enable{
+    return GJLivePush_EnableReverb(_livePush, enable);
+}
+
 -(void)setMixFileNeedToStream:(BOOL)mixFileNeedToStream{
     _mixFileNeedToStream = mixFileNeedToStream;
     GJLivePush_ShouldMixAudioToStream(_livePush, mixFileNeedToStream);

@@ -13,7 +13,7 @@
 #import "AudioUnitCapture.h"
 #import "AEAudioController.h"
 #import "AEPlaythroughChannel.h"
-
+#import "AEReverbFilter.h"
 //#define AUDIO_SEND_TEST
 #ifdef AUDIO_SEND_TEST
 #import "AEAudioSender.h"
@@ -34,6 +34,8 @@
 @property (nonatomic, retain)AEPlaythroughChannel* playthrough;
 @property (nonatomic, retain)AEAudioFilePlayer* mixfilePlay;
 @property (nonatomic, retain)AEAudioController *audioController;
+@property (nonatomic, retain)AEReverbFilter *reverb;
+
 #ifdef AUDIO_SEND_TEST
 @property (nonatomic, retain)AEAudioSender* audioMixer;
 #else
@@ -52,6 +54,7 @@
 -(BOOL)setMixFile:(NSURL*)file;
 -(void)setMixToSream:(BOOL)mixToSream;
 -(BOOL)enableAudioInEarMonitoring:(BOOL)enable;
+-(BOOL)enableReverb:(BOOL)enable;
 -(BOOL)startRecode:(NSError**)error;
 -(void)stopRecode;
 @end
