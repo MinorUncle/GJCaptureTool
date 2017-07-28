@@ -1,4 +1,4 @@
-//
+        //
 //  GJFFmpegPush.c
 //  GJCaptureTool
 //
@@ -297,30 +297,6 @@ GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl){
     memcpy(push->pushUrl, sendUrl, strlen(sendUrl)+1);
     AVCodec* audioCode = GNULL;
     AVCodec* videoCode = GNULL;
-    if (push->audioFormat) {
-        switch (push->audioFormat->format.mType) {
-            case GJAudioType_AAC:
-                audioCode = avcodec_find_encoder(AV_CODEC_ID_AAC);
-                break;
-            default:
-                break;
-        }
-        if(audioCode == GNULL){
-            GJLOG(GJ_LOGFORBID, "ffmpeg 找不到音频编码器");
-            return GFalse;
-        }
-        
-        AVStream* as = avformat_new_stream(push->formatContext, audioCode);
-        as->codecpar->channels = push->audioFormat->format.mChannelsPerFrame;
-        as->codecpar->bit_rate = push->audioFormat->bitrate;
-        as->codecpar->sample_rate = push->audioFormat->format.mSampleRate;
-        as->codecpar->format = AV_SAMPLE_FMT_S16;
-        as->codecpar->codec_type = AVMEDIA_TYPE_AUDIO;
-        as->codecpar->codec_id = AV_CODEC_ID_AAC;
-        as->time_base.num = 1;
-        as->time_base.den = 1000;
-        push->aStream = as;
-    }
     
     if (push->videoFormat) {
         switch (push->videoFormat->format.mType) {
@@ -347,6 +323,30 @@ GBool GJStreamPush_StartConnect(GJStreamPush* push,const char* sendUrl){
         push->vStream = vs;
     }
     
+    if (push->audioFormat) {
+        switch (push->audioFormat->format.mType) {
+            case GJAudioType_AAC:
+                audioCode = avcodec_find_encoder(AV_CODEC_ID_AAC);
+                break;
+            default:
+                break;
+        }
+        if(audioCode == GNULL){
+            GJLOG(GJ_LOGFORBID, "ffmpeg 找不到音频编码器");
+            return GFalse;
+        }
+        
+        AVStream* as = avformat_new_stream(push->formatContext, audioCode);
+        as->codecpar->channels = push->audioFormat->format.mChannelsPerFrame;
+        as->codecpar->bit_rate = push->audioFormat->bitrate;
+        as->codecpar->sample_rate = push->audioFormat->format.mSampleRate;
+        as->codecpar->format = AV_SAMPLE_FMT_S16;
+        as->codecpar->codec_type = AVMEDIA_TYPE_AUDIO;
+        as->codecpar->codec_id = AV_CODEC_ID_AAC;
+        as->time_base.num = 1;
+        as->time_base.den = 1000;
+        push->aStream = as;
+    }
     pthread_create(&push->sendThread, GNULL, sendRunloop, push);
     return GTrue;
 }

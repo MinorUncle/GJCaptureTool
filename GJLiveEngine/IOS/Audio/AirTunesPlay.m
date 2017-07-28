@@ -42,6 +42,8 @@ struct audio_output_t {
     bool mute;
     float speed;
     float volume;
+    
+    void* globalUserData;
 };
 
 void audio_output_stop(struct audio_output_t* ao);
@@ -90,7 +92,7 @@ void audio_output_stop(struct audio_output_t* ao);
 //    
 //}
 
-struct audio_output_t* audio_output_create(struct decoder_output_format_t decoder_output_format) {
+struct audio_output_t* audio_output_create(struct decoder_output_format_t decoder_output_format,void* globalUserData) {
     
     struct audio_output_t* ao = (struct audio_output_t*)malloc(sizeof(struct audio_output_t));
     bzero(ao, sizeof(struct audio_output_t));
@@ -98,6 +100,7 @@ struct audio_output_t* audio_output_create(struct decoder_output_format_t decode
     ao->speed = 1.0;
     ao->volume = 1.0;
     ao->mute = false;
+    ao->globalUserData = globalUserData;
     AEBlockChannel* blockChannel = [AEBlockChannel channelWithBlock:^(const AudioTimeStamp *time, UInt32 frames, AudioBufferList *audio) {
         ao->callback(ao, audio->mBuffers[0].mData, audio->mBuffers[0].mDataByteSize, hardware_host_time_to_seconds(time->mHostTime), ao->callback_ctx);
     }];

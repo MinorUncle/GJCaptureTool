@@ -49,7 +49,7 @@ typedef void(*raop_session_client_updated_artwork_callback)(raop_session_p raop_
 typedef void(*raop_session_client_updated_volume_callback)(raop_session_p raop_session, float volume, void* ctx);
 typedef void(*raop_session_ended_callback)(raop_session_p rs, void* ctx);
 
-struct raop_session_t* raop_session_create(raop_server_p server, web_server_connection_p connection, settings_p settings);
+struct raop_session_t* raop_session_create(raop_server_p server, web_server_connection_p connection, settings_p settings,void* globalUserData);
 void raop_session_destroy(raop_session_p rs);
 void raop_session_start(raop_session_p rs);
 void raop_session_stop(raop_session_p rs);

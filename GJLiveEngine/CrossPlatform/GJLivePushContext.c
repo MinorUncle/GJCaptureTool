@@ -114,7 +114,7 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
 static GVoid aacPacketOutCallback(GHandle userData,R_GJPacket* packet){
     GJLivePushContext* context = userData;
     if (context->firstAudioEncodeClock == G_TIME_INVALID) {
-        if (GJStreamPush_GetVideoBufferCacheInfo(context->videoPush).enter.ts > packet->dts) {
+        if (GJStreamPush_GetVideoBufferCacheInfo(context->videoPush).enter.ts < packet->dts) {
             return;
         }else{
             context->firstAudioEncodeClock = GJ_Gettime();
@@ -301,7 +301,7 @@ static void* thread_pthread_head(void* ctx) {
     setting.password = GNULL;
     setting.ignore_source_volume = GFalse;
     if (server == GNULL) {
-        server = raop_server_create(setting);
+        server = raop_server_create(setting,ctx);
     }
     
     if (!raop_server_is_running(server)) {
@@ -332,8 +332,8 @@ static void* thread_pthread_head(void* ctx) {
     if (requestStopServer) {
         rvop_server_stop(rvopserver);
     }
-    serverThread = GNULL;
 #endif
+    serverThread = GNULL;
     pthread_exit(0);
     
 }
@@ -357,6 +357,7 @@ GBool GJLivePush_Create(GJLivePushContext** pushContext,GJLivePushCallback callb
         GJ_AudioProduceContextCreate(&context->audioProducer);
         pthread_mutex_init(&context->lock, GNULL);
         
+
         requestStopServer = GFalse;
         if (serverThread == GNULL) {
             pthread_create(&serverThread, GNULL, thread_pthread_head, context);

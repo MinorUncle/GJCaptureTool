@@ -111,6 +111,7 @@ struct raop_session_t {
     
     unsigned int start_rtp_timestamp;
     double total_length;
+    void* globalUserData;
 };
 
 void recorder_updated_track_position_callback(rtp_recorder_p rr, unsigned int curr, void* ctx) {
@@ -684,7 +685,7 @@ void _raop_session_raop_closed_callback(web_server_connection_p connection, void
     
 }
 
-struct raop_session_t* raop_session_create(raop_server_p server, web_server_connection_p connection, settings_p settings) {
+struct raop_session_t* raop_session_create(raop_server_p server, web_server_connection_p connection, settings_p settings,void* globalUserData) {
     
     struct raop_session_t* rs = (struct raop_session_t*)malloc(sizeof(struct raop_session_t));
     bzero(rs, sizeof(struct raop_session_t));
@@ -693,7 +694,7 @@ struct raop_session_t* raop_session_create(raop_server_p server, web_server_conn
     rs->raop_connection = connection;
     rs->total_length = 0;
     rs->start_rtp_timestamp = 0;
-    
+    rs->globalUserData = globalUserData;
     const char* password = settings_get_password(settings);
     if (password != NULL && strlen(password) > 0) {
         rs->password = (char*)malloc(strlen(password) + 1);

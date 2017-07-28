@@ -55,7 +55,7 @@ typedef void (*audio_output_callback)(audio_output_p ao, void* buffer, size_t si
 
 double audio_output_get_host_time();
 
-audio_output_p audio_output_create(struct decoder_output_format_t decoder_output_format);
+audio_output_p audio_output_create(struct decoder_output_format_t decoder_output_format,void* globalUserData);
 void audio_output_destroy(audio_output_p ao);
 void audio_output_set_callback(audio_output_p ao, audio_output_callback callback, void* ctx);
 void audio_output_start(audio_output_p ao);
@@ -192,6 +192,8 @@ struct audio_queue_t {
     mutex_p mutex;
     condition_p condition;
     bool destroyed;
+    
+    void* globalUserData;
 };
 
 void _audio_queue_add_packet_to_tail(struct audio_queue_t* aq, struct audio_packet_t* packet);
@@ -502,7 +504,7 @@ void _audio_queue_output_render(audio_output_p ao, void* buffer, size_t size, do
     
 }
 
-struct audio_queue_t* audio_queue_create(decoder_p decoder) {
+struct audio_queue_t* audio_queue_create(decoder_p decoder,void* globalUserData) {
     
     struct audio_queue_t* aq = (struct audio_queue_t*)malloc(sizeof(struct audio_queue_t));
     bzero(aq, sizeof(struct audio_queue_t));
@@ -511,11 +513,12 @@ struct audio_queue_t* audio_queue_create(decoder_p decoder) {
     aq->output_format = decoder_get_output_format(decoder);
     aq->mutex = mutex_create();
     aq->condition = condition_create();
+    aq->globalUserData = globalUserData;
     
     aq->flush_last_seq_no = true;
     aq->synchronization_enabled = true;
   
-    aq->output = audio_output_create(aq->output_format);
+    aq->output = audio_output_create(aq->output_format,globalUserData);
     audio_output_set_callback(aq->output, _audio_queue_output_render, aq);
     
     return aq;

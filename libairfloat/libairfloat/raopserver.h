@@ -46,11 +46,19 @@ typedef struct raop_server_t *raop_server_p;
 typedef struct raop_session_t *raop_session_p;
 #define _rsp
 #endif
+typedef enum _SessionMessionType{
+    kSessionMessionType_Create,
+    kSessionMessionType_Setup,
+    kSessionMessionType_Close,
+}SessionMessionType;
 
 typedef void(*raop_server_new_session_callback)(raop_server_p server, raop_session_p new_session, void* ctx);
 typedef bool(*raop_server_accept_callback)(raop_server_p server, const char* connection_host, uint16_t connection_port, void* ctx);
 
-raop_server_p raop_server_create(struct raop_server_settings_t settings);
+typedef bool(*raop_server_session_callback)(raop_server_p server, SessionMessionType type,void* parm, void* ctx);
+typedef bool(*raop_server_session_Data_callback)(raop_server_p server, uint8_t* data,int size, void* ctx);
+
+raop_server_p raop_server_create(struct raop_server_settings_t settings,void* globalUserData);
 void raop_server_destroy(raop_server_p rs);
 bool raop_server_start(raop_server_p rs, uint16_t port);
 bool raop_server_is_running(raop_server_p rs);
