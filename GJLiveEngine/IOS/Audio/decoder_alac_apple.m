@@ -39,6 +39,7 @@
 #import "decoder.h"
 #import "alac_format.h"
 #import "GJAudioManager.h"
+#import "GJAudioSessionCenter.h"
 
 //#define MIN(x, y) (x < y ? x : y)
 #define ca_assert(error) assert((error) == noErr)
@@ -62,7 +63,8 @@ void* decoder_alac_create(const char* rtp_fmtp) {
     d->magic_cookie = alac_format_parse(rtp_fmtp);
     
     struct alac_specific_config_t config = d->magic_cookie.alac_specific_info.config;
-    
+    [[GJAudioSessionCenter shareSession] requestRecode:YES key:[NSString stringWithFormat:@"%p",d] error:nil];
+
     AudioStreamBasicDescription in_desc;
     bzero(&in_desc, sizeof(AudioStreamBasicDescription));
     
@@ -110,7 +112,8 @@ void decoder_alac_destroy(void* data) {
     struct decoder_alac_mac_t* d = (struct decoder_alac_mac_t*)data;
     
     ca_assert(AudioConverterDispose(d->converter_ref));
-    
+    [[GJAudioSessionCenter shareSession] requestRecode:NO key:[NSString stringWithFormat:@"%p",d] error:nil];
+
     free(d);
     
 }

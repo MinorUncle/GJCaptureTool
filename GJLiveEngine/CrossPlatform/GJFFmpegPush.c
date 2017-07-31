@@ -190,7 +190,7 @@ static GHandle sendRunloop(GHandle parm){
             }
             retainBufferUnRetain(&packet->retain);
         }else{
-            switch (ret) {
+            switch (iRet) {
                 case -22:
                     GJLOG(GJ_LOGERROR, "error send video FRAME,pts乱序");
                     break;

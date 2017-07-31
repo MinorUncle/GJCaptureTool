@@ -237,6 +237,7 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
         quality = GJNetworkQualityGood;
     }
     if (leftStep > 0 && GRationalValue(context->videoDropStep) <= 0.50001 && GRationalValue(context->videoDropStep) < GRationalValue(context->videoMinDropStep)){
+        
         if(context->videoDropStep.num == 0)context->videoDropStep = GRationalMake(1, DEFAULT_MAX_DROP_STEP);
         context->videoDropStep.num = 1;
         context->videoDropStep.den -= leftStep;
@@ -246,9 +247,12 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
         if (GRationalValue(context->videoMinDropStep) < 0.5) {
             tempR = context->videoMinDropStep;
         }
+        
         if (context->videoDropStep.den < tempR.den) {
+            
             leftStep = tempR.den - context->videoDropStep.den;
             context->videoDropStep.den = tempR.den;
+            
         }else{
 
             bitrate = context->videoMinBitrate*(1-GRationalValue(context->videoDropStep));
@@ -257,8 +261,10 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
             GJLOG(GJ_LOGINFO, "reduceQuality1 by reduce to drop frame:num %d,den %d",context->videoDropStep.num,context->videoDropStep.den);
 
         }
+        
     }
     if (leftStep > 0 && GRationalValue(context->videoDropStep) < GRationalValue(context->videoMinDropStep)){
+        
         context->videoDropStep.num += leftStep;
         context->videoDropStep.den += leftStep;
         if(context->videoDropStep.den > context->videoMinDropStep.den){
@@ -269,10 +275,13 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
         bitrate += bitrate/context->pushConfig->mFps*(1-GRationalValue(context->videoDropStep))*I_P_RATE;
         quality = GJNetworkQualityTerrible;
         GJLOG(GJ_LOGINFO, "reduceQuality2 by reduce to drop frame:num %d,den %d",context->videoDropStep.num,context->videoDropStep.den);
+        
     }
     
     if (context->videoBitrate != bitrate) {
+        
         if(context->videoEncoder->encodeSetBitrate(context->videoEncoder,bitrate)){
+            
             context->videoBitrate = bitrate;
             VideoDynamicInfo info ;
             info.sourceFPS = context->pushConfig->mFps;
@@ -280,8 +289,10 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
             info.currentFPS = info.sourceFPS - GRationalValue(context->videoDropStep);
             info.currentBitrate = bitrate;
             context->callback(context->userData,GJLivePush_dynamicVideoUpdate,&info);
+            
         }
         context->callback(context->userData,GJLivePush_updateNetQuality,&quality);
+        
     }
 }
 
@@ -292,19 +303,27 @@ static void* thread_pthread_head(void* ctx) {
     setting.name = GNULL;
     setting.password = GNULL;
     setting.ignore_source_volume = GFalse;
+    
     if (server == GNULL) {
+        
         server = raop_server_create(setting,ctx);
+        
     }
     
     if (!raop_server_is_running(server)) {
         
         uint16_t port = 5000;
         while (port < 5010 && !raop_server_start(server, port++));
+        
     }
+    
     if (requestStopServer) {
+        
         raop_server_stop(server);
+        
     }
     serverThread = GNULL;
+    
 #endif
     
 #ifdef RVOP
@@ -506,21 +525,6 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context){
             usleep(10);
         }
         GJStreamPush_CloseAndDealloc(&context->videoPush);
-
-
-        
-        if (serverThread == GNULL) {
-#ifdef RAOP
-            raop_server_stop(server);
-#endif
-            
-#ifdef RVOP
-            rvop_server_stop(rvopserver);
-
-#endif
-        }else{
-            requestStopServer = GTrue;
-        }
     }else{
         GJLOG(GJ_LOGWARNING, "重复停止推流流");
     }
@@ -625,12 +629,15 @@ GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
         
         if (serverThread == GNULL) {
 #ifdef RAOP
+            raop_server_stop(server);
             raop_server_destroy(server);
 #endif
 #ifdef RVOP
+            rvop_server_stop(rvopserver);
             rvop_server_destroy(rvopserver);
 #endif
         }else{
+            requestStopServer = GTrue;
             requestDestoryServer = GTrue;
         }
         

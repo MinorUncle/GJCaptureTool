@@ -26,7 +26,7 @@ static GBool   setup(struct _GJRecodeContext* context, const GChar* fileUrl, Rec
     context->obaque = (__bridge_retained GHandle)recoder;
     return context->obaque != nil;
 }
-static GVoid   unSetup                  (struct _GJRecodeContext* context){
+static GVoid unSetup(struct _GJRecodeContext* context){
     if (context->obaque) {
         GJScreenRecorder* recoder = (__bridge_transfer GJScreenRecorder *)(context->obaque);
         context->obaque = GNULL;
@@ -35,10 +35,13 @@ static GVoid   unSetup                  (struct _GJRecodeContext* context){
         GJLOG(GJ_LOGWARNING, "重复unSetup recoder");
     }
 }
-static GBool   addVideoSource           (struct _GJRecodeContext* context, GJPixelFormat format){
+static GBool addVideoSource(struct _GJRecodeContext* context, GJPixelFormat format){
+    
     return GTrue;
+    
 }
-static GBool   addAudioSource           (struct _GJRecodeContext* context, GJAudioFormat format){
+static GBool addAudioSource(struct _GJRecodeContext* context, GJAudioFormat format){
+    
     GJScreenRecorder* recoder = (__bridge GJScreenRecorder *)(context->obaque);
     AudioStreamBasicDescription audioFormat = {0};
     audioFormat.mSampleRate       = format.mSampleRate;               // 3
@@ -50,25 +53,33 @@ static GBool   addAudioSource           (struct _GJRecodeContext* context, GJAud
     audioFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
     audioFormat.mFormatID = kAudioFormatLinearPCM;
     return [recoder setExternalAudioSourceWithFormat:audioFormat];
+    
 }
-static GVoid   sendVideoSourcePacket    (struct _GJRecodeContext* context, R_GJPixelFrame* packet){
+static GVoid sendVideoSourcePacket(struct _GJRecodeContext* context, R_GJPixelFrame* packet){
 
 }
-static GVoid   sendAudioSourcePacket    (struct _GJRecodeContext* context, R_GJPCMFrame* packet){
+static GVoid sendAudioSourcePacket(struct _GJRecodeContext* context, R_GJPCMFrame* packet){
+    
     GJScreenRecorder* recoder = (__bridge GJScreenRecorder *)(context->obaque);
     [recoder addCurrentAudioSource:packet->retain.data size:packet->retain.size];
+    
 }
-static GBool   startRecode(struct _GJRecodeContext* context, GView view, GInt32 fps){
+static GBool startRecode(struct _GJRecodeContext* context, GView view, GInt32 fps){
+    
     GJScreenRecorder* recoder = (__bridge GJScreenRecorder *)(context->obaque);
     if (recoder.status != screenRecorderStopStatus) {
         GJLOG(GJ_LOGFORBID, "请先完成上一个录制");
         return GFalse;
     }
+    
     return [recoder startWithView:(__bridge UIView *)(view) fps:fps];
+    
 }
-static GVoid   stopRecode               (struct _GJRecodeContext* context){
+static GVoid stopRecode(struct _GJRecodeContext* context){
+    
     GJScreenRecorder* recoder = (__bridge GJScreenRecorder *)(context->obaque);
     [recoder stopRecord];
+    
 }
 
 GVoid GJ_RecodeContextCreate(GJRecodeContext** recodeContext){
@@ -76,6 +87,7 @@ GVoid GJ_RecodeContextCreate(GJRecodeContext** recodeContext){
     if (*recodeContext == NULL) {
         *recodeContext = (GJRecodeContext*)malloc(sizeof(GJRecodeContext));
     }
+    
     GJRecodeContext* context = *recodeContext;
     context->setup = setup;
     context->unSetup = unSetup;
@@ -88,10 +100,12 @@ GVoid GJ_RecodeContextCreate(GJRecodeContext** recodeContext){
 
 }
 GVoid GJ_RecodeContextDealloc(GJRecodeContext** context){
+    
     if ((*context)->obaque) {
         GJLOG(GJ_LOGWARNING, "videoProduceUnSetup 没有调用，自动调用");
         (*context)->unSetup(*context);
     }
     free(*context);
     *context = GNULL;
+    
 }

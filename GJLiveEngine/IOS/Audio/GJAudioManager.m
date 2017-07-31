@@ -76,7 +76,7 @@ static GJAudioManager* _staticManager;
 
     
 //    R_GJPCMFrame* pcmFrame = NULL;
-    printf("audio size:%d chchesize:%d pts:%lld\n",frame->mBuffers[0].mDataByteSize,_alignCacheFrame->retain.size,time);
+//    printf("audio size:%d chchesize:%d pts:%lld\n",frame->mBuffers[0].mDataByteSize,_alignCacheFrame->retain.size,time);
     int needSize = _sizePerPacket - _alignCacheFrame->retain.size;
     int leftSize = frame->mBuffers[0].mDataByteSize;
     while (leftSize >= needSize) {
@@ -89,7 +89,7 @@ static GJAudioManager* _staticManager;
         if (pre == 0) {
             pre = _alignCacheFrame->pts;
         }
-        printf("audio pts:%lld,size:%d dt:%lld\n",_alignCacheFrame->pts,_alignCacheFrame->retain.size,_alignCacheFrame->pts-pre);
+//        printf("audio pts:%lld,size:%d dt:%lld\n",_alignCacheFrame->pts,_alignCacheFrame->retain.size,_alignCacheFrame->pts-pre);
         pre = _alignCacheFrame->pts;
             
         self.audioCallback(_alignCacheFrame);

@@ -73,6 +73,7 @@ void _zeroconf_raop_ad_callback(CFNetServiceRef theService, CFStreamError* error
     else
         log_message(LOG_ERROR, "Could not start Zeroconf advertisement.");
     
+    
 }
 
 void _zeroconf_raop_ad_run_loop_ready(CFRunLoopTimerRef timer, void *info) {

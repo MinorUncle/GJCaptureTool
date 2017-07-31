@@ -105,23 +105,25 @@ static  GJAudioSessionCenter* _gjAudioSession;
     if (_speakerRequest.count>0) {
         options |= AVAudioSessionCategoryOptionDefaultToSpeaker;
     }
-    if (_recodeRequest > 0) {
+    if (_playeRequest > 0) {
+        
         if (_recodeRequest > 0) {
             category = AVAudioSessionCategoryPlayAndRecord;
         }else{
             category = AVAudioSessionCategoryPlayback;
         }
+        
     }else{
-        category = AVAudioSessionCategoryPlayback;
+        
+        category = AVAudioSessionCategoryRecord;
+        
     }
     
-    if (![_category isEqualToString:category] || options != _categoryOptions) {
+    if (![_category isEqualToString:[AVAudioSession sharedInstance].category] || options != [AVAudioSession sharedInstance].categoryOptions) {
         _category = category;
         _categoryOptions = options;
-        if ([AVAudioSession sharedInstance].categoryOptions != _categoryOptions) {
-            NSLog(@"set audiosession category:%@ optations:%d",_category,_categoryOptions);
-            return [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
-        }
+        NSLog(@"set audiosession category:%@ optations:%d",_category,_categoryOptions);
+        return [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
     }
     return YES;
 }

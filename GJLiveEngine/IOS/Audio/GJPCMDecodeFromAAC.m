@@ -193,6 +193,7 @@ static const int mpeg4audio_sample_rates[16] = {
         _destFormat.mBytesPerFrame   = _destFormat.mChannelsPerFrame * _destFormat.mBitsPerChannel/8;
         _destFormat.mFramesPerPacket = _destFormat.mBytesPerFrame * _destFormat.mFramesPerPacket ;
         _destFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
+        
     }
     
     UInt32 size = sizeof(AudioStreamBasicDescription);
