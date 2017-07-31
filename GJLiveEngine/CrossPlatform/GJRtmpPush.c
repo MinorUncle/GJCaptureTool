@@ -63,11 +63,11 @@ static GInt32 interruptCB(GVoid* opaque){
 static GHandle sendRunloop(GHandle parm){
     pthread_setname_np("Loop.GJStreamPush");
     GJStreamPush* push = (GJStreamPush*)parm;
-    GJStreamPushMessageType errType = GJStreamPushMessageType_connectError;
+    kStreamPushMessageType errType = kStreamPushMessageType_connectError;
     GHandle errParm = GNULL;
     GInt32 ret = RTMP_SetupURL(push->rtmp, push->pushUrl);
     if (!ret && push->messageCallback) {
-        errType = GJStreamPushMessageType_urlPraseError;
+        errType = kStreamPushMessageType_urlPraseError;
         goto ERROR;
     }
     GJLOG(GJ_LOGINFO, "Stream_SetupURL success");
@@ -78,7 +78,7 @@ static GHandle sendRunloop(GHandle parm){
     ret = RTMP_Connect(push->rtmp, GNULL);
     if (!ret) {
         GJLOG(GJ_LOGERROR, "Stream_Connect error");
-        errType = GJStreamPushMessageType_connectError;
+        errType = kStreamPushMessageType_connectError;
         goto ERROR;
     }
     GJLOG(GJ_LOGINFO, "服务器连接成功，开始连接流");
@@ -86,11 +86,11 @@ static GHandle sendRunloop(GHandle parm){
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret ) {
         GJLOG(GJ_LOGERROR, "Stream_ConnectStream error");
-        errType = GJStreamPushMessageType_connectError;
+        errType = kStreamPushMessageType_connectError;
         goto ERROR;
     }else{
         if(push->messageCallback){
-            push->messageCallback(push->rtmpPushParm, GJStreamPushMessageType_connectSuccess,GNULL);
+            push->messageCallback(push->rtmpPushParm, kStreamPushMessageType_connectSuccess,GNULL);
         }
     }
     GJLOG(GJ_LOGINFO, "Stream_ConnectStream success");
@@ -264,7 +264,7 @@ static GHandle sendRunloop(GHandle parm){
             }else{
                 retainBufferUnRetain(&packet->retain);
                 GJLOG(GJ_LOGERROR, "error send video FRAME");
-                errType = GJStreamPushMessageType_sendPacketError;
+                errType = kStreamPushMessageType_sendPacketError;
                 goto ERROR;
             }
         }else{
@@ -321,14 +321,14 @@ static GHandle sendRunloop(GHandle parm){
                 retainBufferUnRetain(&packet->retain);
             }else{
                 GJLOG(GJ_LOGFORBID, "error send packet FRAME");
-                errType = GJStreamPushMessageType_sendPacketError;
+                errType = kStreamPushMessageType_sendPacketError;
                 retainBufferUnRetain(&packet->retain);
                 goto ERROR;
             }
         }
     }
 
-    errType = GJStreamPushMessageType_closeComplete;
+    errType = kStreamPushMessageType_closeComplete;
 ERROR:
     
     if (push->messageCallback) {

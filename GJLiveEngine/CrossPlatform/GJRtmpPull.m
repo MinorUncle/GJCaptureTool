@@ -58,11 +58,11 @@ static GInt32 interruptCB(GVoid* opaque){
 static GHandle pullRunloop(GHandle parm){
     pthread_setname_np("Loop.GJStreamPull");
     GJStreamPull* pull = (GJStreamPull*)parm;
-    GJStreamPullMessageType errType = GJStreamPullMessageType_connectError;
+    kStreamPullMessageType errType = kStreamPullMessageType_connectError;
     GHandle errParm = NULL;
     GInt32 ret = RTMP_SetupURL(pull->rtmp, pull->pullUrl);
     if (!ret) {
-        errType = GJStreamPullMessageType_urlPraseError;
+        errType = kStreamPullMessageType_urlPraseError;
         GJLOG(GJ_LOGERROR, "RTMP_SetupURL error");
         goto ERROR;
     }
@@ -70,19 +70,19 @@ static GHandle pullRunloop(GHandle parm){
     
     ret = RTMP_Connect(pull->rtmp, NULL);
     if (!ret) {
-        errType = GJStreamPullMessageType_connectError;
+        errType = kStreamPullMessageType_connectError;
         GJLOG(GJ_LOGERROR, "RTMP_Connect error");
         goto ERROR;
     }
     ret = RTMP_ConnectStream(pull->rtmp, 0);
     if (!ret) {
-        errType = GJStreamPullMessageType_connectError;
+        errType = kStreamPullMessageType_connectError;
         GJLOG(GJ_LOGERROR, "RTMP_ConnectStream error");
         goto ERROR;
     }else{
         GJLOG(GJ_LOGDEBUG, "RTMP_Connect success");
         if(pull->messageCallback){
-            pull->messageCallback(pull, GJStreamPullMessageType_connectSuccess,pull->messageCallbackParm,NULL);
+            pull->messageCallback(pull, kStreamPullMessageType_connectSuccess,pull->messageCallbackParm,NULL);
         }
     }
 
@@ -233,7 +233,7 @@ static GHandle pullRunloop(GHandle parm){
                         }else  if (pbody[index] == 2){
                             GJLOG(GJ_LOGDEBUG,"直播结束\n");
                             RTMPPacket_Free(&packet);
-                            errType = GJStreamPullMessageType_closeComplete;
+                            errType = kStreamPullMessageType_closeComplete;
                             goto ERROR;
                             break;
                         }else{
@@ -299,12 +299,12 @@ static GHandle pullRunloop(GHandle parm){
 ////            GJAssert(0, "读取数据错误\n");
 //        }
         if (rResult == GFalse) {
-            errType = GJStreamPullMessageType_receivePacketError;
+            errType = kStreamPullMessageType_receivePacketError;
             GJLOG(GJ_LOGWARNING,"pull Read Packet Error");
             goto ERROR;
         }
     }
-    errType = GJStreamPullMessageType_closeComplete;
+    errType = kStreamPullMessageType_closeComplete;
 ERROR:
     RTMP_Close(pull->rtmp);
     if (pull->messageCallback) {

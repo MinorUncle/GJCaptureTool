@@ -30,8 +30,8 @@ typedef void(^AACEncodeComplete)(R_GJPacket* packet);
 
 -(BOOL)start;
 -(BOOL)stop;
--(void)encodeWithBuffer:(CMSampleBufferRef)sampleBuffer;
--(void)encodeWithPacket:(R_GJPCMFrame*)packet;
+-(BOOL)encodeWithBuffer:(CMSampleBufferRef)sampleBuffer;
+-(BOOL)encodeWithPacket:(R_GJPCMFrame*)packet;
 - (instancetype)initWithSourceForamt:(const AudioStreamBasicDescription*)sFormat DestDescription:(const AudioStreamBasicDescription*)dFormat bitrate:(int)bitrate;
 
 - (NSData *)fetchMagicCookie;

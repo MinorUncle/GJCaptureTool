@@ -113,20 +113,13 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
 
 static GVoid aacPacketOutCallback(GHandle userData,R_GJPacket* packet){
     GJLivePushContext* context = userData;
-    if (context->firstAudioEncodeClock == G_TIME_INVALID) {
-        if (GJStreamPush_GetVideoBufferCacheInfo(context->videoPush).enter.ts < packet->dts) {
-            return;
-        }else{
-            context->firstAudioEncodeClock = GJ_Gettime();
-        }
-    }
     GJStreamPush_SendAudioData(context->videoPush, packet);
 }
 
-GVoid streamPushMessageCallback(GHandle userData, GJStreamPushMessageType messageType,GHandle messageParm){
+GVoid streamPushMessageCallback(GHandle userData, kStreamPushMessageType messageType,GHandle messageParm){
     GJLivePushContext* context = userData;
     switch (messageType) {
-        case GJStreamPushMessageType_connectSuccess:
+        case kStreamPushMessageType_connectSuccess:
         {
             GJLOG(GJ_LOGINFO, "推流连接成功");
             context->connentClock = GJ_Gettime()/1000;
@@ -139,27 +132,26 @@ GVoid streamPushMessageCallback(GHandle userData, GJStreamPushMessageType messag
 
         }
             break;
-        case GJStreamPushMessageType_closeComplete:{
+        case kStreamPushMessageType_closeComplete:{
             GJPushSessionInfo info = {0};
             context->disConnentClock = GJ_Gettime()/1000;
             info.sessionDuring = (GLong)(context->disConnentClock - context->connentClock);
             context->callback(context->userData,GJLivePush_closeComplete,&info);
         }
             break;
-        case GJStreamPushMessageType_urlPraseError:
-        case GJStreamPushMessageType_connectError:
+        case kStreamPushMessageType_urlPraseError:
+        case kStreamPushMessageType_connectError:
             GJLOG(GJ_LOGINFO, "推流连接失败");
             context->callback(context->userData,GJLivePush_connectError,"rtmp连接失败");
             GJLivePush_StopPush(context);
             break;
-        case GJStreamPushMessageType_sendPacketError:
+        case kStreamPushMessageType_sendPacketError:
             context->callback(context->userData,GJLivePush_sendPacketError,"发送失败");
             GJLivePush_StopPush(context);
             break;
         default:
             break;
     }
-
 }
 
 //快降慢升

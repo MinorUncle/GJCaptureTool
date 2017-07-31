@@ -11,20 +11,20 @@
 
 #include "GJLiveDefine+internal.h"
 #include <stdlib.h>
-typedef enum _GJStreamPullMessageType{
-    GJStreamPullMessageType_connectSuccess,
-    GJStreamPullMessageType_closeComplete,
+typedef enum _kStreamPullMessageType{
+    kStreamPullMessageType_connectSuccess,
+    kStreamPullMessageType_closeComplete,
     
     
-    GJStreamPullMessageType_connectError,
-    GJStreamPullMessageType_urlPraseError,
-    GJStreamPullMessageType_receivePacketError
-}GJStreamPullMessageType;
+    kStreamPullMessageType_connectError,
+    kStreamPullMessageType_urlPraseError,
+    kStreamPullMessageType_receivePacketError
+}kStreamPullMessageType;
 
 
 typedef struct _GJStreamPull GJStreamPull;
 
-typedef GVoid(*StreamPullMessageCallback)(GJStreamPull* StreamPull, GJStreamPullMessageType messageType,GHandle StreamPullParm,GHandle messageParm);
+typedef GVoid(*StreamPullMessageCallback)(GJStreamPull* StreamPull, kStreamPullMessageType messageType,GHandle StreamPullParm,GHandle messageParm);
 typedef GVoid(*StreamPullDataCallback)(GJStreamPull* StreamPull,R_GJPacket* packet,GHandle StreamPullParm);
 
 

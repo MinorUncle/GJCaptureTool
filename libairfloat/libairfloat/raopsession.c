@@ -434,7 +434,7 @@ void _raop_session_raop_connection_request_callback(web_server_connection_p conn
                         
                         mutex_lock(rs->mutex);
                         
-                        audio_queue_p audio_queue = audio_queue_create(rs->decoder);
+                        audio_queue_p audio_queue = audio_queue_create(rs->decoder,rs->globalUserData);
                         
                         audio_queue_set_received_audio_callback(audio_queue, _raop_session_audio_queue_received_audio_callback, rs);
                         

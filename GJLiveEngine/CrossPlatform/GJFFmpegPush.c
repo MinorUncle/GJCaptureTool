@@ -41,7 +41,7 @@ GVoid GJStreamPush_Close(GJStreamPush* sender);
 static GHandle sendRunloop(GHandle parm){
     pthread_setname_np("Loop.GJStreamPush");
     GJStreamPush* push = (GJStreamPush*)parm;
-    GJStreamPushMessageType errType = GJStreamPushMessageType_connectError;
+    kStreamPushMessageType errType = kStreamPushMessageType_connectError;
     GHandle errParm = GNULL;
     AVDictionary *option = GNULL;
 //    av_dict_set_int(&option, "timeout", 8000, 0);
@@ -49,11 +49,11 @@ static GHandle sendRunloop(GHandle parm){
     av_dict_free(&option);
     if (ret < 0) {
         GJLOG(GJ_LOGERROR, "avio_open2 error:%d",ret);
-        errType = GJStreamPushMessageType_connectError;
+        errType = kStreamPushMessageType_connectError;
         goto END;
     }
     if(push->messageCallback){
-        push->messageCallback(push->streamPushParm, GJStreamPushMessageType_connectSuccess,GNULL);
+        push->messageCallback(push->streamPushParm, kStreamPushMessageType_connectSuccess,GNULL);
     }
     
     
@@ -61,16 +61,16 @@ static GHandle sendRunloop(GHandle parm){
     R_GJPacket* packet;
 
     if (push->videoFormat) {
-        GInt32 videoIndex = 0;
-        while (queuePeekWaitValue(push->sendBufferQueue, videoIndex, (GHandle)&packet, GINT32_MAX)) {
+        while (queuePeekWaitValue(push->sendBufferQueue, 0, (GHandle)&packet, GINT32_MAX)) {//过滤无效起始数据
             if (push->stopRequest) {
                 goto END;
             }
-            GJLOG(GJ_LOGINFO,"peek index:%d type:%d, pts:%lld\n",videoIndex,packet->type,packet->pts);
+            GJLOG(GJ_LOGINFO,"peek index:%d type:%d, pts:%lld\n",0,packet->type,packet->pts);
             if (packet->type == GJMediaType_Video) {
                 if((packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY){
-                    GJLOG(GJ_LOGFORBID, "第一帧视频非关键帧");
-                    videoIndex++;
+                    GJLOG(GJ_LOGFORBID, "第一帧视频非关键帧,丢帧");
+                    queuePop(push->sendBufferQueue, (GHandle)packet, 0);
+                    retainBufferUnRetain(&packet->retain);
                     continue;
                 }
                 GUInt8* start = packet->dataOffset + packet->retain.data;
@@ -110,12 +110,15 @@ static GHandle sendRunloop(GHandle parm){
                     memcpy(push->vStream->codecpar->extradata, sps, push->vStream->codecpar->extradata_size);
                     break;
                 }else{
-                    GJLOG(GJ_LOGERROR, "没有sps，pps，丢弃该帧");
-                    videoIndex++;
+                    GJLOG(GJ_LOGWARNING, "没有sps，pps，丢弃该帧");
+                    queuePop(push->sendBufferQueue, (GHandle)packet, 0);
+                    retainBufferUnRetain(&packet->retain);
                     continue;
                 }
             }else{
-                videoIndex++;
+                GJLOG(GJ_LOGWARNING, "非视频帧，丢弃该帧");
+                queuePop(push->sendBufferQueue, (GHandle)packet, 0);
+                retainBufferUnRetain(&packet->retain);
             }
         }
     }
@@ -144,11 +147,11 @@ static GHandle sendRunloop(GHandle parm){
     ret = avformat_write_header(push->formatContext, GNULL);
     if (ret < 0) {
         GJLOG(GJ_LOGERROR, "avformat_write_header error:%d",ret);
-        errType = GJStreamPushMessageType_connectError;
+        errType = kStreamPushMessageType_connectError;
         goto END;
     }
     AVPacket* sendPacket =  av_mallocz(sizeof(AVPacket));
-    errType = GJStreamPushMessageType_closeComplete;
+    errType = kStreamPushMessageType_closeComplete;
 
     while (queuePop(push->sendBufferQueue, (GHandle*)&packet, INT32_MAX)) {
         if (push->stopRequest) {
@@ -187,8 +190,19 @@ static GHandle sendRunloop(GHandle parm){
             }
             retainBufferUnRetain(&packet->retain);
         }else{
-            GJLOG(GJ_LOGFORBID, "error send video FRAME");
-            errType = GJStreamPushMessageType_sendPacketError;
+            switch (ret) {
+                case -22:
+                    GJLOG(GJ_LOGERROR, "error send video FRAME,pts乱序");
+                    break;
+                case -32:
+                    GJLOG(GJ_LOGERROR, "error send video FRAME,断网拉");
+                    break;
+                default:
+                    GJLOG(GJ_LOGFORBID, "error send video FRAME,未知错误");
+
+                    break;
+            }
+            errType = kStreamPushMessageType_sendPacketError;
             retainBufferUnRetain(&packet->retain);
             break;
         };

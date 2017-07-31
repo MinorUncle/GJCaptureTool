@@ -19,16 +19,16 @@
 #define PUSH_PACKET_PRE_SIZE 23
 
 
-typedef enum _GJStreamPushMessageType{
-    GJStreamPushMessageType_connectSuccess,
-    GJStreamPushMessageType_closeComplete,
+typedef enum _kStreamPushMessageType{
+    kStreamPushMessageType_connectSuccess,
+    kStreamPushMessageType_closeComplete,
     
     
-    GJStreamPushMessageType_connectError,
-    GJStreamPushMessageType_urlPraseError,
-    GJStreamPushMessageType_sendPacketError,//网络错误，发送失败
-}GJStreamPushMessageType;
-typedef GVoid(*StreamPushMessageCallback)(GHandle userData, GJStreamPushMessageType messageType,GHandle messageParm);
+    kStreamPushMessageType_connectError,
+    kStreamPushMessageType_urlPraseError,
+    kStreamPushMessageType_sendPacketError,//网络错误，发送失败
+}kStreamPushMessageType;
+typedef GVoid(*StreamPushMessageCallback)(GHandle userData, kStreamPushMessageType messageType,GHandle messageParm);
 
 
 typedef struct _GJStreamPush GJStreamPush;

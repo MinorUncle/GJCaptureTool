@@ -10,7 +10,7 @@
 #include "GJUtil.h"
 #include "GJLog.h"
 #include <string.h>
-static void pullMessageCallback(GJStreamPull* pull, GJStreamPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm);
+static void pullMessageCallback(GJStreamPull* pull, kStreamPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm);
 static GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle param);
 static void pullDataCallback(GJStreamPull* pull,R_GJPacket* packet,void* parm);
 
@@ -135,24 +135,24 @@ static GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle par
     }
     livePull->callback(livePull->userData,pullMessage,param);
 }
-static GVoid pullMessageCallback(GJStreamPull* pull, GJStreamPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm){
+static GVoid pullMessageCallback(GJStreamPull* pull, kStreamPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm){
     GJLivePullContext* livePull = rtmpPullParm;
     if (livePull->videoPull != GNULL && pull != livePull->videoPull) {
         return;
     }
         switch (messageType) {
-            case GJStreamPullMessageType_connectError:
-            case GJStreamPullMessageType_urlPraseError:
+            case kStreamPullMessageType_connectError:
+            case kStreamPullMessageType_urlPraseError:
                 GJLOG(GJ_LOGERROR, "pull connect error:%d",messageType);
                 livePull->callback(livePull->userData,GJLivePull_connectError,"连接错误");
                 GJLivePull_StopPull(livePull);
                 break;
-            case GJStreamPullMessageType_receivePacketError:
+            case kStreamPullMessageType_receivePacketError:
                 GJLOG(GJ_LOGERROR, "pull sendPacket error:%d",messageType);
                 livePull->callback(livePull->userData,GJLivePull_receivePacketError,"读取失败");
                 GJLivePull_StopPull(livePull);
                 break;
-            case GJStreamPullMessageType_connectSuccess:
+            case kStreamPullMessageType_connectSuccess:
             {
                 GJLOG(GJ_LOGINFO, "pull connectSuccess");
                 livePull->connentClock = GJ_Gettime()/1000.0;
@@ -160,7 +160,7 @@ static GVoid pullMessageCallback(GJStreamPull* pull, GJStreamPullMessageType mes
                 livePull->callback(livePull->userData,GJLivePull_connectSuccess,&connentDur);
             }
                 break;
-            case GJStreamPullMessageType_closeComplete:{
+            case kStreamPullMessageType_closeComplete:{
                 GJLOG(GJ_LOGINFO, "pull closeComplete");
 
                 GJPullSessionInfo info = {0};

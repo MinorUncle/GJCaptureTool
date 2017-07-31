@@ -46,12 +46,12 @@ static GBool packetBufferRelease(GJRetainBuffer* buffer){
 static GHandle pullRunloop(GHandle parm){
     pthread_setname_np("Loop.GJStreamPull");
     GJStreamPull* pull = parm;
-    GJStreamPullMessageType message = 0;
+    kStreamPullMessageType message = 0;
     
     GInt32 result = avformat_open_input(&pull->formatContext, pull->pullUrl, GNULL, GNULL);
     if (result < 0) {
         GJLOG(GJ_LOGERROR, "avformat_open_input error");
-        message = GJStreamPullMessageType_connectError;
+        message = kStreamPullMessageType_connectError;
         goto END;
     }
     av_format_inject_global_side_data(pull->formatContext);
@@ -60,12 +60,12 @@ static GHandle pullRunloop(GHandle parm){
     result = avformat_find_stream_info(pull->formatContext, GNULL);
     if (result < 0) {
         GJLOG(GJ_LOGERROR, "avformat_find_stream_info");
-        message = GJStreamPullMessageType_connectError;
+        message = kStreamPullMessageType_connectError;
         goto END;
     }
     
     if(pull->messageCallback){
-        pull->messageCallback(pull, GJStreamPullMessageType_connectSuccess,pull->messageCallbackParm,NULL);
+        pull->messageCallback(pull, kStreamPullMessageType_connectSuccess,pull->messageCallbackParm,NULL);
     }
     
     GInt32 vsIndex = av_find_best_stream(pull->formatContext, AVMEDIA_TYPE_VIDEO,-1, -1, NULL, 0);
@@ -152,7 +152,7 @@ static GHandle pullRunloop(GHandle parm){
     while (!pull->stopRequest) {
         GInt32 ret = av_read_frame(pull->formatContext, &pkt);
         if (ret < 0) {
-            message = GJStreamPullMessageType_receivePacketError;
+            message = kStreamPullMessageType_receivePacketError;
             goto END;
         }
         
