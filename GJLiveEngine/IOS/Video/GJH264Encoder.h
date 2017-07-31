@@ -86,13 +86,11 @@ typedef void(^H264EncodeComplete)(R_GJPacket* packet);
 /**
  表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
  */
-@property(assign,nonatomic) GRational allowDropStep;
 
 
 /**
  .den帧中丢.num帧或多发.num帧则出发敏感算法默认（4，8）,给了den帧数据，但是只发送了小于nun帧，则主动降低质量
  */
-@property(assign,nonatomic) GRational dynamicAlgorithm;
 
 /**
  自定义输出格式，如果直接走init()则配置默认格式.输出图像像素大小等于输入图像大小。

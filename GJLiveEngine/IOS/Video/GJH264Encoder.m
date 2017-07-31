@@ -18,20 +18,14 @@
 
 @interface GJH264Encoder()
 {
-    GRational _dropStep;//每den帧丢num帧
     GInt64 _fristPts;
     GInt32 _dtsDelta;
+    GBool _shouldRestart;
     
 }
 @property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
 @property(nonatomic,assign)GJBufferPool* bufferPool;
 //@property(nonatomic,assign)GInt32 currentBitRate;//当前码率
-@property(nonatomic,assign)GJTrafficStatus preBufferStatus;//上一次敏感检测状态
-
-@property(nonatomic,assign)BOOL shouldRestart;
-@property(nonatomic,assign)BOOL stopRequest;//防止下一帧满时一直等待
-
-
 
 @end
 
@@ -43,9 +37,6 @@
         _sourceSize = size;
         _bitrate = 600;;
 //        _allowMinBitRate = _currentBitRate;
-        _dropStep = GRationalMake(0, DEFAULT_MAX_DROP_STEP);
-        _allowDropStep = GRationalMake(1, 5);
-        _dynamicAlgorithm = GRationalMake(5, 10);
         _allowBFrame = YES;
         
         _profileLevel = profileLevelMain;
@@ -59,38 +50,21 @@
 }
 
 
--(void)setAllowDropStep:(GRational)allowDropStep{
-    if (allowDropStep.num > 1) {
-        if (allowDropStep.den == allowDropStep.num) {
-            _allowDropStep = allowDropStep;
-        }else{
-            GJLOG(GJ_LOGFORBID, "当num大于1时，den一定要等于num+1");
-        }
-    }else if(allowDropStep.num == 1){
-        if (allowDropStep.den > DEFAULT_MAX_DROP_STEP) {
-            GJLOG(GJ_LOGWARNING, "当num等于1时，den不能大于DEFAULT_MAX_DROP_STEP，自动修改");
-            allowDropStep.den =DEFAULT_MAX_DROP_STEP;
-            _allowDropStep = allowDropStep;
-        }else if (allowDropStep.den <= 0){
-            GJLOG(GJ_LOGFORBID, "den一定要等于1");
-        }
-    }else if(allowDropStep.num < 0){
-        GJLOG(GJ_LOGFORBID, "num一定要大于1");
-    }else{ //num == 0
-        _allowDropStep = allowDropStep;
-    }
-}
+
 //编码
 -(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts fourceKey:(BOOL)fourceKey
 {
-    if ((_frameCount++) % _dropStep.den < _dropStep.num) {
-        return NO;
-    }
+
 //RETRY:
     {
     //    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount*1000.0/_destFormat.baseFormat.fps, 1000);
        
         NSMutableDictionary * properties = NULL;
+        if (_enCodeSession == nil) {
+            [self creatEnCodeSession];
+            [self setAllParm];
+            fourceKey = YES;
+        }
         if (fourceKey) {
             properties = [[NSMutableDictionary alloc]init];
             [properties setObject:@YES forKey:(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame];
@@ -128,7 +102,6 @@
 
 -(void)creatEnCodeSession{
     if (_enCodeSession != nil) {
-        _stopRequest = YES;
         VTCompressionSessionInvalidate(_enCodeSession);
     }
     _shouldRestart = NO;
@@ -147,9 +120,7 @@
         NSLog(@"VTCompressionSessionCreate 失败------------------status:%d",(int)result);
         return;
     }
-    _stopRequest = NO;
     _sps = _pps = nil;
-    memset(&_preBufferStatus, 0, sizeof(_preBufferStatus));
     if (_bufferPool != NULL) {
         GJBufferPool* pool = _bufferPool;
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
@@ -385,16 +356,15 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
 
 -(void)flush{
-    _stopRequest = YES;
+    _sps = nil;
+    _pps = nil;
     if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
     _enCodeSession = nil;
-    _dropStep = GRationalMake(0, 1);
 }
 
 
 -(void)dealloc{
     GJLOG(GJ_LOGDEBUG, "GJH264Encoder：%p",self);
-    _stopRequest = YES;
     if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
     if (_bufferPool) {
         GJBufferPool* pool = _bufferPool;

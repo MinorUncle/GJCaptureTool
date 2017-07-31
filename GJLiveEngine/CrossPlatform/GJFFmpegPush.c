@@ -207,8 +207,7 @@ static GHandle sendRunloop(GHandle parm){
             break;
         };
     }
-    
-    av_freep(sendPacket);
+    av_free(sendPacket);
     GInt32 result =  av_write_trailer(push->formatContext);
     if (result < 0) {
         GJLOG(GJ_LOGERROR, "av_write_trailer error:%d",result);

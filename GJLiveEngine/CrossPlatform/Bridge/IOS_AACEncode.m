@@ -62,7 +62,9 @@ GBool encodeSetBitrate(struct _GJEncodeToAACContext* context,GInt32 bitrate){
     encode.bitrate = bitrate;
     return encode.bitrate == bitrate;
 }
-
+GVoid encodeFlush(struct _GJEncodeToAACContext* context){
+//    AACEncoderFromPCM* encode = (__bridge AACEncoderFromPCM *)(context->obaque);
+}
 GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext** encodeContext){
     if (*encodeContext == NULL) {
         *encodeContext = (GJEncodeToAACContext*)malloc(sizeof(GJEncodeToAACContext));
@@ -71,7 +73,7 @@ GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext** encodeContext){
     context->encodeSetup = encodeSetup;
     context->encodeUnSetup = encodeUnSetup;
     context->encodeFrame = encodeFrame;
-//    context->encodeSetBitrate =  encodeSetBitrate;
+    context->encodeFlush =  encodeFlush;
     context->encodeCompleteCallback = NULL;
 
 }

@@ -91,6 +91,7 @@ typedef struct _GJEncodeToAACContext{
     GHandle obaque;
     GBool   (*encodeSetup)            (struct _GJEncodeToAACContext* context, GJAudioFormat sourceFormat, GJAudioStreamFormat destForamt, AACPacketOutCallback callback,                GHandle userData);
     GVoid   (*encodeUnSetup)          (struct _GJEncodeToAACContext* context);
+    GVoid   (*encodeFlush)            (struct _GJEncodeToAACContext* context);
     GVoid   (*encodeFrame)            (struct _GJEncodeToAACContext* context, R_GJPCMFrame* frame);
     AACPacketOutCallback       encodeCompleteCallback;
 }GJEncodeToAACContext;
@@ -125,6 +126,7 @@ typedef struct _GJEncodeToH264eContext{
     GBool   (*encodeSetGop)           (struct _GJEncodeToH264eContext* context, GInt32 gop);
     GBool   (*encodeAllowBFrame)      (struct _GJEncodeToH264eContext* context, GBool allowBframe);
     GBool   (*encodeGetSPS_PPS)       (struct _GJEncodeToH264eContext* context, GUInt8* sps, GInt32* spsSize, GUInt8* pps, GInt32* ppsSize);
+    GVoid   (*encodeFlush)            (struct _GJEncodeToH264eContext* context);
 
     H264PacketOutCallback            encodeCompleteCallback;
 }GJEncodeToH264eContext;

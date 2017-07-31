@@ -368,7 +368,24 @@ GVoid GJLivePush_SetConfig(GJLivePushContext* context,const GJPushConfig* config
         if (context->pushConfig == GNULL) {
             context->pushConfig = (GJPushConfig*)malloc(sizeof(GJPushConfig));
         }else{
-
+            
+            if (config->mAudioChannel != context->pushConfig->mAudioChannel ||
+                config->mAudioSampleRate != context->pushConfig->mAudioSampleRate) {
+                if (context->audioEncoder) {
+                    context->audioEncoder->encodeUnSetup(context->audioEncoder);
+                }
+                if (context->audioProducer) {
+                    context->audioProducer->audioProduceUnSetup(context->audioProducer);
+                }
+            }
+            
+            if (config->mVideoBitrate != context->pushConfig->mVideoBitrate ||
+                !GSizeEqual(config->mPushSize, context->pushConfig->mPushSize)) {
+                if (context->audioEncoder) {
+                    context->videoEncoder->encodeUnSetup(context->videoEncoder);
+                }
+            }
+           
             if (context->videoProducer->obaque != GNULL) {
                 if (context->pushConfig->mFps != config->mFps) {
                     context->videoProducer->setFrameRate(context->videoProducer,config->mFps);
@@ -377,12 +394,7 @@ GVoid GJLivePush_SetConfig(GJLivePushContext* context,const GJPushConfig* config
                     context->videoProducer->setProduceSize(context->videoProducer,config->mPushSize);
                 }
             }
-            if (context->audioProducer->obaque != GNULL) {
-                if (context->pushConfig->mAudioChannel != config->mAudioChannel ||
-                    context->pushConfig->mAudioSampleRate != config->mAudioSampleRate) {
-                    context->audioProducer->audioProduceUnSetup(context->audioProducer);
-                }
-            }
+
         }
         *(context->pushConfig) = *config;
     }
@@ -438,15 +450,18 @@ GBool GJLivePush_StartPush(GJLivePushContext* context,const GChar* url){
             aDFormat.format= aFormat;
             aDFormat.format.mFramePerPacket = 1024;
             aDFormat.format.mType = GJAudioType_AAC;
-            context->audioEncoder->encodeSetup(context->audioEncoder,aFormat,aDFormat,aacPacketOutCallback,context);
-//            context->audioEncoder->encodeSetBitrate(context->audioEncoder,context->pushConfig->mAudioBitrate);
-
-            context->videoEncoder->encodeSetup(context->videoEncoder,vFormat,h264PacketOutCallback,context);
-            context->videoEncoder->encodeSetBitrate(context->videoEncoder,context->pushConfig->mVideoBitrate);
-            context->videoEncoder->encodeSetProfile(context->videoEncoder,profileLevelMain);
-            context->videoEncoder->encodeSetGop(context->videoEncoder,10);
-            context->videoEncoder->encodeAllowBFrame(context->videoEncoder,GTrue);
-            context->videoEncoder->encodeSetEntropy(context->videoEncoder,EntropyMode_CABAC);
+            if (context->audioEncoder->obaque == GNULL) {
+                context->audioEncoder->encodeSetup(context->audioEncoder,aFormat,aDFormat,aacPacketOutCallback,context);
+            }
+            
+            if (context->videoEncoder->obaque == GNULL) {
+                context->videoEncoder->encodeSetup(context->videoEncoder,vFormat,h264PacketOutCallback,context);
+                context->videoEncoder->encodeSetBitrate(context->videoEncoder,context->pushConfig->mVideoBitrate);
+                context->videoEncoder->encodeSetProfile(context->videoEncoder,profileLevelMain);
+                context->videoEncoder->encodeSetGop(context->videoEncoder,10);
+                context->videoEncoder->encodeAllowBFrame(context->videoEncoder,GTrue);
+                context->videoEncoder->encodeSetEntropy(context->videoEncoder,EntropyMode_CABAC);
+            }
             
             GJVideoStreamFormat vf ;
             vf.format.mFps = context->pushConfig->mFps;
@@ -484,15 +499,15 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context){
         context->stopPushClock = GJ_Gettime()/1000;
         context->audioProducer->audioProduceStop(context->audioProducer);
         context->videoProducer->stopProduce(context->videoProducer);
-        
+        context->videoEncoder->encodeFlush(context->videoEncoder);
+        context->audioEncoder->encodeFlush(context->audioEncoder);
         while (context->operationCount) {
             GJLOG(GJ_LOGDEBUG, "GJLivePush_StopPush wait 10 us");
             usleep(10);
         }
         GJStreamPush_CloseAndDealloc(&context->videoPush);
 
-        context->audioEncoder->encodeUnSetup(context->audioEncoder);
-        context->videoEncoder->encodeUnSetup(context->videoEncoder);
+
         
         if (serverThread == GNULL) {
 #ifdef RAOP
@@ -591,10 +606,22 @@ GVoid GJLivePush_Dealloc(GJLivePushContext** pushContext){
     if (context == GNULL) {
         GJLOG(GJ_LOGERROR, "非法释放");
     }else{
-        GJ_H264EncodeContextDealloc(&context->videoEncoder);
-        GJ_AACEncodeContextDealloc(&context->audioEncoder);
-        GJ_VideoProduceContextDealloc(&context->videoProducer);
-        GJ_AudioProduceContextDealloc(&context->audioProducer);
+        if (context->audioEncoder) {
+            context->audioEncoder->encodeUnSetup(context->audioEncoder);
+            GJ_AACEncodeContextDealloc(&context->audioEncoder);
+        }
+        if (context->videoEncoder) {
+            context->videoEncoder->encodeUnSetup(context->videoEncoder);
+            GJ_H264EncodeContextDealloc(&context->videoEncoder);
+        }
+        if (context->audioProducer) {
+            context->audioProducer->audioProduceUnSetup(context->audioProducer);
+            GJ_AudioProduceContextDealloc(&context->audioProducer);
+        }
+        if (context->videoProducer) {
+            context->videoProducer->videoProduceUnSetup(context->videoProducer);
+            GJ_VideoProduceContextDealloc(&context->videoProducer);
+        }
         
         if (serverThread == GNULL) {
 #ifdef RAOP

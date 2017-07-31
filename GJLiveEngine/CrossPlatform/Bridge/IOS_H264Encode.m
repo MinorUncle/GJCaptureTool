@@ -58,6 +58,10 @@ inline static GBool encodeAllowBFrame (GJEncodeToH264eContext* context,GBool all
     encode.allowBFrame = allowBframe;
     return encode.allowBFrame == allowBframe;
 }
+inline static GVoid encodeFlush (GJEncodeToH264eContext* context){
+    GJH264Encoder* encode = (__bridge GJH264Encoder *)(context->obaque);
+    [encode flush];
+}
 inline static GBool encodeGetSPS_PPS(struct _GJEncodeToH264eContext* context,GUInt8* sps,GInt32* spsSize,GUInt8* pps,GInt32* ppsSize){
     GJH264Encoder* encode = (__bridge GJH264Encoder *)(context->obaque);
     GBool result = GFalse;
@@ -99,6 +103,7 @@ GVoid GJ_H264EncodeContextCreate(GJEncodeToH264eContext** encodeContext){
     context->encodeSetGop = encodeSetGop;
     context->encodeAllowBFrame = encodeAllowBFrame;
     context->encodeGetSPS_PPS = encodeGetSPS_PPS;
+    context->encodeFlush = encodeFlush;
     context->encodeCompleteCallback = NULL;
 }
 GVoid GJ_H264EncodeContextDealloc(GJEncodeToH264eContext** context){

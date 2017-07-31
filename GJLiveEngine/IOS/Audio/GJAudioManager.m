@@ -91,10 +91,7 @@ static GJAudioManager* _staticManager;
         }
         printf("audio pts:%lld,size:%d dt:%lld\n",_alignCacheFrame->pts,_alignCacheFrame->retain.size,_alignCacheFrame->pts-pre);
         pre = _alignCacheFrame->pts;
-        
-
-        
-        
+            
         self.audioCallback(_alignCacheFrame);
         retainBufferUnRetain(&_alignCacheFrame->retain);
         time = time+ needSize/_durPerSize;
@@ -134,10 +131,10 @@ static GJAudioManager* _staticManager;
     [_audioController stop];
     NSError* configError;
     [[GJAudioSessionCenter shareSession] lockBeginConfig];
-    [[GJAudioSessionCenter shareSession]requestPlay:NO key:self.description error:nil];
-    [[GJAudioSessionCenter shareSession]requestRecode:NO key:self.description error:nil];
-    [[GJAudioSessionCenter shareSession]requestDefaultToSpeaker:NO key:self.description error:nil];
-    [[GJAudioSessionCenter shareSession]requestAllowAirPlay:NO key:self.description error:nil];
+    [[GJAudioSessionCenter shareSession] requestPlay:NO key:self.description error:nil];
+    [[GJAudioSessionCenter shareSession] requestRecode:NO key:self.description error:nil];
+    [[GJAudioSessionCenter shareSession] requestDefaultToSpeaker:NO key:self.description error:nil];
+    [[GJAudioSessionCenter shareSession] requestAllowAirPlay:NO key:self.description error:nil];
     [[GJAudioSessionCenter shareSession] unLockApplyConfig:&configError];
     if (configError) {
         GJLOG(GJ_LOGERROR, "Apply audio session Config error:%@",configError.description.UTF8String);
