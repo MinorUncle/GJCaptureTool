@@ -13,7 +13,7 @@
 #import "GJLog.h"
 #import "log.h"
 #import "GJBufferPool.h"
-
+#import "GJAudioManager.h"
 static char* url = "rtmp://10.0.1.142/live/room";
 //static char* url = "rtmp://192.168.199.187/live/room";
 //static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
@@ -148,6 +148,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
 @property (strong, nonatomic) UIButton *videoMute;
 @property (strong, nonatomic) UIButton *uiRecode;
 @property (strong, nonatomic) UIButton *reverb;
+@property (strong, nonatomic) UIButton *messureModel;
+
 
 
 @property (strong, nonatomic) UISlider *inputGain;
@@ -315,6 +317,15 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _reverb.backgroundColor = [UIColor grayColor];
     [self.view addSubview:_reverb];
     
+    _messureModel = [[UIButton alloc]init];
+    _messureModel.backgroundColor = [UIColor clearColor];
+    [_messureModel setTitle:@"开启度量模式" forState:UIControlStateNormal];
+    [_messureModel setTitle:@"关闭度量模式" forState:UIControlStateSelected];
+    [_messureModel setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_messureModel addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _messureModel.backgroundColor = [UIColor grayColor];
+    [self.view addSubview:_messureModel];
+    
     _inputGainLab = [[UILabel alloc]init];
     _inputGainLab.text = @"采集音量";
     _inputGainLab.textColor = [UIColor whiteColor];
@@ -418,7 +429,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     rect.origin.y = CGRectGetMaxY(rect);
     _currentV.frame = rect;
  
-    int rightCount = 11;
+    int rightCount = 12;
     rect.origin = CGPointMake(self.view.bounds.size.width*0.5, 20);
     rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.topView.bounds.size.height-30) / rightCount);
     _audioMixBtn.frame = rect;
@@ -443,6 +454,9 @@ static char* url = "rtmp://10.0.1.142/live/room";
     
     rect.origin.y = CGRectGetMaxY(rect);
     _reverb.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _messureModel.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     rect.size.width *= 0.4;
@@ -515,7 +529,9 @@ static char* url = "rtmp://10.0.1.142/live/room";
 }
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
-    if (btn == _reverb) {
+    if (btn == _messureModel) {
+        [GJAudioManager shareAudioManager].audioController.useMeasurementMode = btn.selected;
+    }else if (btn == _reverb) {
         [_livePush enableReverb:btn.selected];
     }else if (btn == _uiRecode) {
         if (btn.selected) {

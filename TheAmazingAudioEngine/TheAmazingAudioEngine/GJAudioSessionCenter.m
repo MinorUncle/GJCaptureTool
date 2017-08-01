@@ -87,6 +87,7 @@ static  GJAudioSessionCenter* _gjAudioSession;
 }
 
 -(BOOL)updateCategoryOptionsWithError:(NSError**)error{
+    
     if (_lock) {
         return YES;
     }
@@ -120,14 +121,19 @@ static  GJAudioSessionCenter* _gjAudioSession;
     }
     
     if (![_category isEqualToString:[AVAudioSession sharedInstance].category] || options != [AVAudioSession sharedInstance].categoryOptions) {
+        
         _category = category;
         _categoryOptions = options;
         NSLog(@"set audiosession category:%@ optations:%d",_category,_categoryOptions);
         return [[AVAudioSession sharedInstance] setCategory:_category withOptions:_categoryOptions error:error];
+        
     }
+    
     return YES;
+    
 }
 -(BOOL)requestPlay:(BOOL)play key:(NSString*)key error:(NSError**)error{
+    
     BOOL result = YES;
     if (play){
         if(![_playeRequest containsObject:key]){
@@ -143,9 +149,11 @@ static  GJAudioSessionCenter* _gjAudioSession;
         }
     }
     return result;
+    
 }
 
 -(BOOL)requestRecode:(BOOL)recode key:(NSString*)key error:(NSError**)error{
+    
     BOOL result = YES;
     if (recode) {
         if(![_recodeRequest containsObject:key]){
@@ -161,8 +169,10 @@ static  GJAudioSessionCenter* _gjAudioSession;
         }
     }
     return result;
+    
 }
 -(BOOL)requestMix:(BOOL)mix key:(NSString*)key error:(NSError**)error{
+    
     BOOL result = YES;
 
     if (mix) {
@@ -180,9 +190,11 @@ static  GJAudioSessionCenter* _gjAudioSession;
         }
     }
     return result;
+    
 }
 -(BOOL)requestAllowAirPlay:(BOOL)allowAirPlay key:(NSString*)key error:(NSError**)error
 {
+    
     BOOL result = YES;
     if (allowAirPlay) {
         if (![_airplayRequest containsObject:key]) {
@@ -199,8 +211,10 @@ static  GJAudioSessionCenter* _gjAudioSession;
     }
     
     return result;
+    
 }
 -(BOOL)requestDefaultToSpeaker:(BOOL)speaker key:(NSString*)key error:(NSError**)error{
+    
     BOOL result = YES;
     if (speaker) {
         if (![_speakerRequest containsObject:key]) {
@@ -217,8 +231,10 @@ static  GJAudioSessionCenter* _gjAudioSession;
     }
     
     return result;
+    
 }
 -(BOOL)requestBluetooth:(BOOL)bluetooth key:(NSString*)key error:(NSError**)error{
+    
     BOOL result = YES;
    
     if (bluetooth) {
@@ -236,17 +252,24 @@ static  GJAudioSessionCenter* _gjAudioSession;
     }
     
     return result;
+    
 }
 
 -(BOOL)setPrefferSampleRate:(double)sampleRate error:(NSError**)error{
+    
     return [[AVAudioSession sharedInstance]setPreferredSampleRate:sampleRate error:error];
 
 }
 -(void)lockBeginConfig{
+    
     _lock = YES;
+    
 }
+
 -(void)unLockApplyConfig:(NSError**)error{
+    
     _lock = NO;
     [self updateCategoryOptionsWithError:error];
+    
 }
 @end
