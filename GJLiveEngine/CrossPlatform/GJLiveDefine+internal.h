@@ -13,8 +13,8 @@
 #include "GJLiveDefine.h"
 #define DEFAULT_MAX_DROP_STEP 30
 #define MAX_SEND_DELAY 15000  //重启
-#define SEND_DELAY_TIME 1500
-#define SEND_DELAY_COUNT 25
+#define SEND_DELAY_TIME 1500 //宏观检测的延迟时间限额
+#define SEND_DELAY_COUNT 25 //宏观检测的延迟帧数限额
 
 #define SEND_TIMEOUT 3
 

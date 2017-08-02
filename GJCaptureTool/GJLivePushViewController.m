@@ -627,7 +627,10 @@ static char* url = "rtmp://10.0.1.142/live/room";
     return 0;
 }
 -(void)livePush:(GJLivePush *)livePush dynamicVideoUpdate:(VideoDynamicInfo *)elapsed{
-    _currentV.text = [NSString stringWithFormat:@"CV rate:%fkB/s f:%f",elapsed->currentBitrate,elapsed->sourceFPS];
+    if (elapsed->currentBitrate/1024.0/8 > 1000) {
+        NSLog(@"error");
+    }
+    _currentV.text = [NSString stringWithFormat:@"CV rate:%0.2fkB/s f:%0.2f",elapsed->currentBitrate/1024.0/8.0,elapsed->currentFPS];
 }
 -(void)livePush:(GJLivePush *)livePush errorType:(GJLiveErrorType)type infoDesc:(id)infoDesc{
     switch (type) {

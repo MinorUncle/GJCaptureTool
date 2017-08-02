@@ -62,7 +62,7 @@ typedef struct _GJLivePushContext{
     GRational                   dynamicAlgorithm;
     GRational                   videoDropStep;//每den帧丢num帧
     //     表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
-    GRational                   videoMinDropStep;//
+    GRational                   videoMaxDropRate;//
     GInt32                      videoBitrate;  //当前码率
     //不丢帧情况下允许的最小码率。用于动态码率
     GInt32                      videoMinBitrate;

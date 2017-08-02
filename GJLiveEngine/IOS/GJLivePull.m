@@ -124,11 +124,21 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
 }
 
 - (bool)startStreamPullWithUrl:(char*)url{
-    [_timer invalidate];
-    return GJLivePull_StartPull(_pullContext, url);
+    if (_timer != nil) {
+        GJLOG(GJ_LOGFORBID, "请先关闭上一个流");
+        return NO;
+    }else{
+        memset(&_videoTraffic, 0, sizeof(_videoTraffic));
+        memset(&_audioTraffic, 0, sizeof(_audioTraffic));
+        memset(&_pullSessionStatus, 0, sizeof(_pullSessionStatus));
+        return GJLivePull_StartPull(_pullContext, url);
+    }
+    
 }
 
 - (void)stopStreamPull{
+    [_timer invalidate];
+    _timer = nil;
     return GJLivePull_StopPull(_pullContext);
 }
 

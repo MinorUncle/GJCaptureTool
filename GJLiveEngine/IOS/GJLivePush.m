@@ -67,8 +67,9 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
                 break;
             case GJLivePush_dynamicVideoUpdate:
             {
+                VideoDynamicInfo info = *((VideoDynamicInfo*)param) ;
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [livePush.delegate livePush:livePush dynamicVideoUpdate:param];
+                    [livePush.delegate livePush:livePush dynamicVideoUpdate:(VideoDynamicInfo*)&info];
                 });
                 break;
             }
@@ -118,6 +119,7 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     }else{
         memset(&_videoInfo, 0, sizeof(_videoInfo));
         memset(&_audioInfo, 0, sizeof(_audioInfo));
+        memset(&_pushSessionStatus, 0, sizeof(_pushSessionStatus));
         _pushUrl = url;
         _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency target:self selector:@selector(updateGaterInfo:) userInfo:nil repeats:YES];
         return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
@@ -179,11 +181,13 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     _pushSessionStatus.videoStatus.cacheTime = vInfo.enter.ts - vInfo.leave.ts;
     _pushSessionStatus.videoStatus.frameRate = (vInfo.leave.count - _videoInfo.leave.count)/_gaterFrequency;
     _pushSessionStatus.videoStatus.bitrate = (vInfo.leave.byte - _videoInfo.leave.byte)/_gaterFrequency;
+    _pushSessionStatus.videoStatus.cacheCount = vInfo.enter.count - vInfo.leave.count;
     _videoInfo = vInfo;
     
     _pushSessionStatus.audioStatus.cacheTime = aInfo.enter.ts - aInfo.leave.ts;
     _pushSessionStatus.audioStatus.frameRate = (aInfo.leave.count - _audioInfo.leave.count)*1024.0/_gaterFrequency;
     _pushSessionStatus.audioStatus.bitrate = (aInfo.leave.byte - _audioInfo.leave.byte)/_gaterFrequency;
+    _pushSessionStatus.audioStatus.cacheCount = aInfo.enter.count - aInfo.leave.count;
     _audioInfo = aInfo;
     [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
 //    if (vInfo.enter.ts - vInfo.leave.ts > MAX_SEND_DELAY) {//延迟过多重启
