@@ -10,6 +10,7 @@
 #include "GJLiveDefine+internal.h"
 #include "GJLog.h"
 #include "GJBufferPool.h"
+#include "GJUtil.h"
 
 struct _GJStreamPush{
     AVFormatContext*        formatContext;
@@ -174,15 +175,16 @@ static GHandle sendRunloop(GHandle parm){
         }
         sendPacket->data = packet->retain.data + packet->dataOffset;
         sendPacket->size = packet->dataSize;
-        
         GInt32 iRet = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
             if (packet->type == GJMediaType_Video) {
+
                 GJLOGFREQ("send video pts:%lld dts:%lld size:%d\n",packet->pts,packet->dts,packet->dataSize);
                 push->videoStatus.leave.byte+=packet->dataSize;
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.ts = (GLong)packet->dts;
             }else{
+
                 GJLOGFREQ("send audio pts:%lld dts:%lld size:%d\n",packet->pts,packet->dts,packet->dataSize);
                 push->audioStatus.leave.byte+=packet->dataSize;
                 push->audioStatus.leave.count++;

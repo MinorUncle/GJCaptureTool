@@ -677,7 +677,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 }
 
 -(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushSessionStatus *)status{
-    
+    printf("cache V t:%ld ms f:%ld\n",status->videoStatus.cacheTime,status->videoStatus.cacheCount);
     _sendRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f KB/s A:%0.2f KB/s",status->videoStatus.bitrate/1024.0,status->audioStatus.bitrate/1024.0];
     _fpsLab.text = [NSString stringWithFormat:@"FPS V:%0.2f,A:%0.2f",status->videoStatus.frameRate,status->audioStatus.frameRate];
     _delayVLab.text = [NSString stringWithFormat:@"cache V t:%ld ms f:%ld",status->videoStatus.cacheTime,status->videoStatus.cacheCount];

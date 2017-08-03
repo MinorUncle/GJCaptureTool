@@ -59,13 +59,19 @@ typedef struct _GJLivePushContext{
     GJNetworkQuality            netQuality;
     GJTrafficStatus             preVideoTraffic;
     //     .den帧中丢.num帧或多发.num帧则出发敏感算法默认（4，8）,给了den帧数据，但是只发送了小于nun帧，则主动降低质量
-    GRational                   dynamicAlgorithm;
+    GInt32                      rateCheckStep;
+    GInt32                      dropStepPrecision;//发送速率大于DROP_STEP_PRECISION，则开始减速
+
     GRational                   videoDropStep;//每den帧丢num帧
     //     表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
     GRational                   videoMaxDropRate;//
     GInt32                      videoBitrate;  //当前码率
     //不丢帧情况下允许的最小码率。用于动态码率
     GInt32                      videoMinBitrate;
+    GInt32                      videoNetSpeed;//当前视频网络速度
+    GInt32                      netSpeedCheckInterval;//最大netSpeedCheckInterval次rateCheckStep后更新网速
+    GInt32*                     netSpeedUnit;
+    GInt32                      collectCount;//已经收集的个数
     GInt32                      captureVideoCount;
     GInt32                      dropVideoCount;
     
