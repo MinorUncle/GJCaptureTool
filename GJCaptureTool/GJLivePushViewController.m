@@ -242,7 +242,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     _currentV = [[UILabel alloc]init];
     _currentV.textColor = [UIColor redColor];
     _currentV.font = [UIFont systemFontOfSize:10];
-    _currentV.text = @"CV rate:0 kB/s f:0";
+    _currentV.text = @"dynamic V rate rate:0 kB/s f:0";
     [self.view addSubview:_currentV];
     
     
@@ -630,7 +630,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     if (elapsed->currentBitrate/1024.0/8 > 1000) {
         NSLog(@"error");
     }
-    _currentV.text = [NSString stringWithFormat:@"CV rate:%0.2fkB/s f:%0.2f",elapsed->currentBitrate/1024.0/8.0,elapsed->currentFPS];
+    _currentV.text = [NSString stringWithFormat:@"dynamic V rate:%0.2fkB/s f:%0.2f",elapsed->currentBitrate/1024.0/8.0,elapsed->currentFPS];
 }
 -(void)livePush:(GJLivePush *)livePush errorType:(GJLiveErrorType)type infoDesc:(id)infoDesc{
     switch (type) {

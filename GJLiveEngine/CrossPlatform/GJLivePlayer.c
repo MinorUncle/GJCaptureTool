@@ -26,10 +26,10 @@
 #define AUDIO_PTS_PRECISION   100
 
 
-#define UPDATE_SHAKE_TIME 6000
+#define UPDATE_SHAKE_TIME 10000
 #define MAX_CACHE_DUR 3000  //抖动最大缓存控制
 #define MIN_CACHE_DUR 200   //抖动最小缓存控制
-#define MAX_CACHE_RATIO 4
+#define MAX_CACHE_RATIO 5
 
 #define VIDEO_MAX_CACHE_COUNT 100 //初始化缓存空间
 #define AUDIO_MAX_CACHE_COUNT 200
@@ -133,27 +133,22 @@ static GVoid  GJLivePlay_StopBuffering(GJLivePlayer* player){
     
 }
 GVoid GJLivePlay_CheckNetShake(GJSyncControl* _syncControl,GTime pts){
-    //   typedef struct _GJNetShakeInfo{
-    //    GTime collectStartClock;
-    //    GTime preCollectClock;
-    //    GTime preCollectPts;
-    //    GTime preUpShake;
-    //    GTime preDownShake;
-    //    GTime upShake;
-    //    GTime downShake;
-    //    }GJNetShakeInfo;
+   
     GTime clock = GJ_Gettime()/1000;
     SyncInfo* syncInfo = &_syncControl->audioInfo;
     GJNetShakeInfo* netShake = &_syncControl->netShake;
     if (_syncControl->syncType == kTimeSYNCVideo) {
         syncInfo = &_syncControl->videoInfo;
     }
-    GTime shake =  -(pts - netShake->collectStartPts - clock + netShake->collectStartClock);
-//    GJLOG(GJ_LOGINFO, "shake:%d,max:%lld ,preMax:%d",shake,netShake->maxDownShake,netShake->preMaxDownShake);
+//    GTime shake =  -(pts - netShake->collectStartPts - clock + netShake->collectStartClock);
+    
+    GTime shake =  (clock - netShake->collectStartClock) - (pts - netShake->collectStartPts);//统计少发的抖动
+
+//    GJLOG(GJ_LOGINFO, "setLowshake:%lld,max:%lld ,preMax:%lld",shake,netShake->maxDownShake,netShake->preMaxDownShake);
     if (shake > netShake->maxDownShake) {
         netShake->maxDownShake = shake;
+//        GJLOG(GJ_LOGINFO, "setLowMaxDownShake:%lld",netShake->maxDownShake);
         if (shake > netShake->preMaxDownShake) {
-            shake *= 2;
             if ( shake > MAX_CACHE_DUR) {
                 shake = MAX_CACHE_DUR;
             }else if (shake < MIN_CACHE_DUR){
@@ -161,7 +156,7 @@ GVoid GJLivePlay_CheckNetShake(GJSyncControl* _syncControl,GTime pts){
             }
             _syncControl->bufferInfo.lowWaterFlag = shake;
             _syncControl->bufferInfo.highWaterFlag = _syncControl->bufferInfo.lowWaterFlag*MAX_CACHE_RATIO;
-            GJLOG(GJ_LOGINFO, "setLowWater:%d,hightWater:%d，max:%lld ,preMax:%d",_syncControl->bufferInfo.lowWaterFlag,_syncControl->bufferInfo.highWaterFlag,netShake->maxDownShake,netShake->preMaxDownShake);
+            GJLOG(GJ_LOGINFO, "setLowWater:%lld,hightWater:%d，max:%lld ,preMax:%lld",_syncControl->bufferInfo.lowWaterFlag,_syncControl->bufferInfo.highWaterFlag,netShake->maxDownShake,netShake->preMaxDownShake);
         }
     }
     if (clock - netShake->collectStartClock >= UPDATE_SHAKE_TIME) {

@@ -186,8 +186,6 @@ static GHandle pullRunloop(GHandle parm){
         }
         
             av_packet_unref(&pkt);
-        
-        
     };
 
 END:

@@ -100,7 +100,7 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
 //            GLong cacheInPts = bufferStatus.enter.ts - bufferStatus.leave.ts;
             GLong sendCount = bufferStatus.leave.count - context->preVideoTraffic.leave.count;
             
-            if(cacheInCount > 3 ){
+            if(cacheInCount > 2 ){
                 
                 if (sendCount < context->rateCheckStep) {
                     GJLOG(GJ_LOGINFO, "局部检测出降低视频质量");
@@ -246,13 +246,9 @@ static void _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong 
             }
             bitrate = maxBitRate;
             leftStep = 0;
-            if (context->videoDropStep.den > 10000) {
-                printf("error");
-            }
+        
         }
-        if (context->videoDropStep.den > 10000) {
-            printf("error");
-        }
+   
         
     }
     
@@ -280,15 +276,10 @@ static void _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong 
             }
             bitrate = maxBitRate;
             leftStep = 0;
-            
-            if (context->videoDropStep.den > 10000) {
-                printf("error");
-            }
+
         }
     }
-    if (context->videoDropStep.den > 10000) {
-        printf("error");
-    }
+
 
     if(leftStep > 0){
         
