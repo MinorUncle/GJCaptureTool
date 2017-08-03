@@ -102,7 +102,22 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
             
             if(cacheInCount > 2 ){
                 
-                if (sendCount < context->rateCheckStep) {
+                ///<<<考虑丢帧算法
+//                if (context->videoDropStep.den != 0 && context->videoDropStep.num !=0 ) {
+//                    GInt32 count = (GInt32)(context->rateCheckStep / (1-GRationalValue(context->videoDropStep)));
+//                    if (sendCount < count) {
+//                        GJLOG(GJ_LOGINFO, "局部检测出降低视频质量");
+//                        _GJLivePush_reduceQualityWithStep(context, (count - sendCount)/2);
+//                    }
+//                }else{
+//                    if (sendCount < context->rateCheckStep) {
+//                        GJLOG(GJ_LOGINFO, "局部检测出降低视频质量");
+//                        _GJLivePush_reduceQualityWithStep(context, (context->rateCheckStep - sendCount)/2);
+//                    }
+//                }
+
+//                <<不考虑丢帧算法
+                if (sendCount < context->rateCheckStep ) {
                     GJLOG(GJ_LOGINFO, "局部检测出降低视频质量");
                     _GJLivePush_reduceQualityWithStep(context, (context->rateCheckStep - sendCount)/2);
                 }
