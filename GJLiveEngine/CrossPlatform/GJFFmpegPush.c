@@ -71,6 +71,9 @@ static GHandle sendRunloop(GHandle parm){
                 if((packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY){
                     GJLOG(GJ_LOGFORBID, "第一帧视频非关键帧,丢帧");
                     queuePop(push->sendBufferQueue, (GHandle)packet, 0);
+                    push->videoStatus.leave.byte+=packet->dataSize;
+                    push->videoStatus.leave.count++;
+                    push->videoStatus.leave.ts = (GLong)packet->dts;
                     retainBufferUnRetain(&packet->retain);
                     continue;
                 }
@@ -113,12 +116,18 @@ static GHandle sendRunloop(GHandle parm){
                 }else{
                     GJLOG(GJ_LOGWARNING, "没有sps，pps，丢弃该帧");
                     queuePop(push->sendBufferQueue, (GHandle)packet, 0);
+                    push->videoStatus.leave.byte+=packet->dataSize;
+                    push->videoStatus.leave.count++;
+                    push->videoStatus.leave.ts = (GLong)packet->dts;
                     retainBufferUnRetain(&packet->retain);
                     continue;
                 }
             }else{
                 GJLOG(GJ_LOGWARNING, "非视频帧，丢弃该帧");
                 queuePop(push->sendBufferQueue, (GHandle)packet, 0);
+                push->audioStatus.leave.byte+=packet->dataSize;
+                push->audioStatus.leave.count++;
+                push->audioStatus.leave.ts = (GLong)packet->dts;
                 retainBufferUnRetain(&packet->retain);
             }
         }

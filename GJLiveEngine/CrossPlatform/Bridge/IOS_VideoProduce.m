@@ -157,8 +157,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _camera = [[GPUImageVideoCamera alloc]initWithSessionPreset:preset cameraPosition:_cameraPosition];
         _camera.frameRate = _frameRate;
         _camera.outputImageOrientation = _outputOrientation;
-        [self.beautifyFilter addTarget:self.cropFilter];
-        [_camera addTarget:_beautifyFilter];
+//        [self.beautifyFilter addTarget:self.cropFilter];
+        [_camera addTarget:self.cropFilter];
     }
     return _camera;
 }

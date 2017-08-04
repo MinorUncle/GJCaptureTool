@@ -81,8 +81,10 @@ static GHandle sendRunloop(GHandle parm){
         errType = kStreamPushMessageType_connectError;
         goto ERROR;
     }
-    GJLOG(GJ_LOGINFO, "服务器连接成功，开始连接流");
 
+    RTMP_DeleteStream(push->rtmp);
+
+    GJLOG(GJ_LOGINFO, "服务器连接成功，开始连接流");
     ret = RTMP_ConnectStream(push->rtmp, 0);
     if (!ret ) {
         GJLOG(GJ_LOGERROR, "Stream_ConnectStream error");
