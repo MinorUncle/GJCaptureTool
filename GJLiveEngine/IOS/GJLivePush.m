@@ -189,6 +189,7 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     _pushSessionStatus.audioStatus.bitrate = (aInfo.leave.byte - _audioInfo.leave.byte)/_gaterFrequency;
     _pushSessionStatus.audioStatus.cacheCount = aInfo.enter.count - aInfo.leave.count;
     _audioInfo = aInfo;
+    
     [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
 //    if (vInfo.enter.ts - vInfo.leave.ts > MAX_SEND_DELAY) {//延迟过多重启
 //        GJLOG(GJ_LOGWARNING, "推流缓存过多，重新启动推流");

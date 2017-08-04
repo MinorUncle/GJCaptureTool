@@ -435,7 +435,7 @@ GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
     if(push == GNULL)return GFalse;
     retainBufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-        push->videoStatus.enter.ts = (GLong)packet->pts;
+        push->videoStatus.enter.ts = (GLong)packet->dts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
         
@@ -451,7 +451,7 @@ GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
     
     retainBufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-        push->audioStatus.enter.ts = (GLong)packet->pts;
+        push->audioStatus.enter.ts = (GLong)packet->dts;
         push->audioStatus.enter.count++;
         push->audioStatus.enter.byte += packet->dataSize;
     }else{
@@ -470,6 +470,7 @@ GFloat32 GJStreamPush_GetBufferRate(GJStreamPush* push){
 }
 GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush* push){
     if (!push) return error_Status;
+
     return push->videoStatus;
 }
 GJTrafficStatus GJStreamPush_GetAudioBufferCacheInfo(GJStreamPush* push){

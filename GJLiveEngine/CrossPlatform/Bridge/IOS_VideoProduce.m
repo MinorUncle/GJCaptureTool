@@ -375,16 +375,16 @@ inline static GBool videoProduceSetOutputOrientation(struct _GJVideoProduceConte
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     UIInterfaceOrientation orientation = UIInterfaceOrientationUnknown;
     switch (outOrientation) {
-        case GJInterfaceOrientationPortrait:
+        case kGJInterfaceOrientationPortrait:
             orientation = UIInterfaceOrientationPortrait;
             break;
-        case GJInterfaceOrientationPortraitUpsideDown:
+        case kGJInterfaceOrientationPortraitUpsideDown:
             orientation = UIInterfaceOrientationPortraitUpsideDown;
             break;
-        case GJInterfaceOrientationLandscapeLeft:
+        case kGJInterfaceOrientationLandscapeLeft:
             orientation = UIInterfaceOrientationLandscapeLeft;
             break;
-        case GJInterfaceOrientationLandscapeRight:
+        case kGJInterfaceOrientationLandscapeRight:
             orientation = UIInterfaceOrientationLandscapeRight;
             break;
         default:

@@ -41,11 +41,11 @@ typedef enum _GJCaptureDevicePosition
 
 typedef enum _GJInterfaceOrientation
 {
-    GJInterfaceOrientationUnknown            ,
-    GJInterfaceOrientationPortrait           ,
-    GJInterfaceOrientationPortraitUpsideDown ,
-    GJInterfaceOrientationLandscapeLeft      ,
-    GJInterfaceOrientationLandscapeRight     ,
+    kGJInterfaceOrientationUnknown            ,
+    kGJInterfaceOrientationPortrait           ,
+    kGJInterfaceOrientationPortraitUpsideDown ,
+    kGJInterfaceOrientationLandscapeLeft      ,
+    kGJInterfaceOrientationLandscapeRight     ,
 } GJInterfaceOrientation;
 
 //视频流的翻转角度

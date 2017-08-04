@@ -192,7 +192,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
     config.mAudioBitrate = 0;
     [_livePush setPushConfig:config];
     _livePush.delegate = self;
-    _livePush.cameraPosition = GJInterfaceOrientationPortrait;
+    _livePush.cameraPosition = kGJInterfaceOrientationPortrait;
 
     [self buildUI];
     [self updateFrame];
@@ -521,8 +521,26 @@ static char* url = "rtmp://10.0.1.142/live/room";
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation{
     [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
+    GJInterfaceOrientation orientation = kGJInterfaceOrientationUnknown;
+    switch ([UIApplication sharedApplication].statusBarOrientation) {
+        case UIInterfaceOrientationPortrait:
+            orientation = kGJInterfaceOrientationPortrait;
+            break;
+        case UIInterfaceOrientationPortraitUpsideDown:
+            orientation = kGJInterfaceOrientationPortraitUpsideDown;
+            break;
+        case UIInterfaceOrientationLandscapeLeft:
+            orientation = kGJInterfaceOrientationLandscapeLeft;
+            break;
+        case UIInterfaceOrientationLandscapeRight:
+            orientation = kGJInterfaceOrientationLandscapeRight;
+            break;
+        default:
+            break;
+    }
     [UIView animateWithDuration:0.4 animations:^{
         [self updateFrame];
+        _livePush.outOrientation = orientation;
     }];
     NSLog(@"didRotateFromInterfaceOrientation");
 
@@ -677,7 +695,6 @@ static char* url = "rtmp://10.0.1.142/live/room";
 }
 
 -(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushSessionStatus *)status{
-    printf("cache V t:%ld ms f:%ld\n",status->videoStatus.cacheTime,status->videoStatus.cacheCount);
     _sendRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f KB/s A:%0.2f KB/s",status->videoStatus.bitrate/1024.0,status->audioStatus.bitrate/1024.0];
     _fpsLab.text = [NSString stringWithFormat:@"FPS V:%0.2f,A:%0.2f",status->videoStatus.frameRate,status->audioStatus.frameRate];
     _delayVLab.text = [NSString stringWithFormat:@"cache V t:%ld ms f:%ld",status->videoStatus.cacheTime,status->videoStatus.cacheCount];

@@ -33,7 +33,7 @@ GJQueue* _mp4VideoQueue;
 GJQueue* _mp4AudioQueue;
 BOOL _recodeState;
 
-@interface ViewController ()<GJCaptureToolDelegate,GJH264DecoderDelegate,GJH264EncoderDelegate,AACEncoderFromPCMDelegate,GJPCMDecodeFromAACDelegate,AudioStreamPraseDelegate,H264DecoderDelegate,H264EncoderDelegate,GJAudioQueueRecoderDelegate>
+@interface ViewController ()<GJCaptureToolDelegate,AudioStreamPraseDelegate,H264DecoderDelegate,H264EncoderDelegate>
 {
     GJAudioQueuePlayer* _audioPlayer;
     AudioPraseStream* _praseStream;
@@ -86,66 +86,53 @@ BOOL _recodeState;
 #define FPS 15
 
 -(void)buildUI{
-    CGRect rect = self.view.bounds;
-    rect.size.height *= 0.45;
+
     self.topView = [[UIView alloc]init];//[[UIView alloc]initWithFrame:rect];
     self.topView.contentMode = UIViewContentModeScaleAspectFill;
-    self.topView.frame = rect;
     self.topView.backgroundColor = [UIColor yellowColor];
     [self.view addSubview:self.topView];
     
     
     
-    rect.origin = CGPointMake(10, 20);
-    rect.size = CGSizeMake(200, 30);
-    _pushStateLab = [[UILabel alloc]initWithFrame:rect];
+
+    _pushStateLab = [[UILabel alloc]init];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
     [self.view addSubview:_pushStateLab];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _pullStateLab = [[UILabel alloc]initWithFrame:rect];
+    _pullStateLab = [[UILabel alloc]init];
     _pullStateLab.text = @"拉流未连接";
     _pullStateLab.textColor = [UIColor redColor];
     [self.view addSubview:_pullStateLab];
     
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _fpsLab = [[UILabel alloc]initWithFrame:rect];
+    _fpsLab = [[UILabel alloc]init];
     _fpsLab.textColor = [UIColor redColor];
     _fpsLab.text = @"发送帧率0";
     [self.view addSubview:_fpsLab];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _sendRateLab = [[UILabel alloc]initWithFrame:rect];
+    _sendRateLab = [[UILabel alloc]init];
     _sendRateLab.textColor = [UIColor redColor];
     _sendRateLab.text = @"发送码率:0.0 KB/s";
     [self.view addSubview:_sendRateLab];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _pullRateLab = [[UILabel alloc]initWithFrame:rect];
+    _pullRateLab = [[UILabel alloc]init];
     _pullRateLab.textColor = [UIColor redColor];
     _pullRateLab.text = @"接收码率:0.0 KB/s";
     [self.view addSubview:_pullRateLab];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _delayLab = [[UILabel alloc]initWithFrame:rect];
+    _delayLab = [[UILabel alloc]init];
     _delayLab.textColor = [UIColor redColor];
     _delayLab.text = @"发送阻塞延时0.0 ms";
     [self.view addSubview:_delayLab];
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _cacheLab = [[UILabel alloc]initWithFrame:rect];
+    _cacheLab = [[UILabel alloc]init];
     _cacheLab.textColor = [UIColor redColor];
     _cacheLab.text = @"播放缓存时长0.0 ms";
     [self.view addSubview:_cacheLab];
     
-    int count = 1;
-    rect.origin.y = CGRectGetMaxY(self.topView.frame);
-    rect.origin.x = 0;
-    rect.size.width = self.topView.frame.size.width * 1.0/count;
-    rect.size.height = self.view.bounds.size.height* 0.1;
-    _takeButton = [[UIButton alloc]initWithFrame:rect];
+   
+    _takeButton = [[UIButton alloc]init];
     [_takeButton setTitle:@"开始" forState:UIControlStateNormal];
     [_takeButton setTitle:@"结束" forState:UIControlStateSelected];
     [_takeButton setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
@@ -156,12 +143,7 @@ BOOL _recodeState;
     [self.view addSubview:_takeButton];
     
     
-    rect.origin.x = 0;
-    rect.origin.y = CGRectGetMaxY(rect);
-    rect.size.height = self.view.bounds.size.height * 0.45;
-    rect.size.width = self.view.bounds.size.width;
-    self.bottomView = [[GJImageView alloc]init];//[[UIImageView alloc]init];//[_livePull getPreviewView];
-    _bottomView.frame = rect;
+      self.bottomView = [[GJImageView alloc]init];//[[UIImageView alloc]init];//[_livePull getPreviewView];
     _bottomView.backgroundColor = [UIColor redColor];
     [self.view addSubview:_bottomView];
     
@@ -169,9 +151,62 @@ BOOL _recodeState;
 
 }
 
-//#define CAPTURE_ON
-#define AUDIOQUEUE_ON
+-(void)updateFrame{
+    CGRect rect = self.view.bounds;
+    rect.size.height *= 0.45;
+    self.topView.frame = rect;
+    
+    rect.origin = CGPointMake(10, 20);
+    rect.size = CGSizeMake(200, 30);
+    _pushStateLab.frame =rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _pullRateLab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _fpsLab.frame = rect;
+ 
+    rect.origin.y = CGRectGetMaxY(rect);
+    _sendRateLab.frame = rect;
 
+    rect.origin.y = CGRectGetMaxY(rect);
+    _pullRateLab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _delayLab.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _cacheLab.frame = rect;
+    
+    
+    int count = 1;
+    rect.origin.y = CGRectGetMaxY(self.topView.frame);
+    rect.origin.x = 0;
+    rect.size.width = self.topView.frame.size.width * 1.0/count;
+    rect.size.height = self.view.bounds.size.height* 0.1;
+    _takeButton.frame = rect;
+    
+    rect.origin.x = 0;
+    rect.origin.y = CGRectGetMaxY(rect);
+    rect.size.height = self.view.bounds.size.height * 0.45;
+    rect.size.width = self.view.bounds.size.width;
+    _bottomView.frame = rect;
+    
+    _imageView.frame = _bottomView.bounds;
+
+}
+
+#define CAPTURE_ON
+//#define AUDIOQUEUE_ON
+
+-(UIImageView *)imageView{
+    if (_imageView == nil) {
+        _imageView = [[UIImageView alloc]initWithFrame:_bottomView.bounds];
+        _imageView.contentMode = UIViewContentModeScaleAspectFit;
+        [self.bottomView addSubview:_imageView];
+    }
+    return _imageView;
+}
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;
@@ -201,6 +236,7 @@ BOOL _recodeState;
     [super viewDidLoad];
     
     [self buildUI];
+    [self updateFrame];
 #ifdef AUDIOQUEUE_ON
     [self audioqueueInit];
 #endif
@@ -213,21 +249,22 @@ BOOL _recodeState;
 -(void)captureInit{
     _captureTool = [[GJCaptureTool alloc]initWithType:GJCaptureType(GJCaptureTypeVideoStream) fps:FPS layer:_topView.layer];
     _captureTool.delegate = self;
+//    [_captureTool changeCapturePosition];
     [_captureTool startRunning];
 
     
-    _gjEncoder = [[GJH264Encoder alloc]init];
-    
-    _gjDecoder = [[GJH264Decoder alloc]init];
-    _audioEncoder = [[AACEncoderFromPCM alloc]init];
-    _audioEncoder.delegate = self;
-    
-    _gjDecoder.delegate = self;
-    _gjEncoder.deleagte = self;
+//    _gjEncoder = [[GJH264Encoder alloc]init];
+//    
+//    _gjDecoder = [[GJH264Decoder alloc]init];
+//    _audioEncoder = [[AACEncoderFromPCM alloc]init];
+//    _audioEncoder.delegate = self;
+//    
+//    _gjDecoder.delegate = self;
+//    _gjEncoder.deleagte = self;
 }
 -(void)audioqueueInit{
     
-    _audioUnitCapture = [[AudioUnitCapture alloc]initWithSamplerate:44100];
+//    _audioUnitCapture = [[AudioUnitCapture alloc]initWithSamplerate:44100];
     
 //    _audioRecoder = [[GJAudioQueueRecoder alloc]initWithStreamWithSampleRate:44100 channel:1 formatID:kAudioFormatMPEG4AAC];
 //    _audioRecoder.delegate = self;
@@ -283,6 +320,14 @@ BOOL _recodeState;
     [super viewWillDisappear:animated];
     [_captureTool stopRunning];
 }
+
+-(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation{
+    
+    [UIView animateWithDuration:0.3 animations:^{
+        [self updateFrame];
+    }];
+}
+
 - (IBAction)changeCap:(UIButton*)sender {
     [_captureTool changeCapturePosition];
 }
@@ -470,47 +515,47 @@ BOOL _recodeState;
 -(void)GJCaptureTool:(GJCaptureTool*)captureView recodeVideoYUVData:(CMSampleBufferRef)sampleBuffer{
     
     CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-//    CIImage* cimage = [CIImage imageWithCVPixelBuffer:imageBuffer];
-//    UIImage* image = [UIImage imageWithCIImage:cimage];
-//    // Update the display with the captured image for DEBUG purposes
-//    dispatch_async(dispatch_get_main_queue(), ^{
-//        
-//        self.imageView.image = image;
-//    });
-//
-////        CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
-//        CVPixelBufferLockBaseAddress(imageBuffer, 0);
-//        uint8_t* baseAdd = (uint8_t*)CVPixelBufferGetBaseAddress(imageBuffer);
-//        size_t w = CVPixelBufferGetWidth(imageBuffer);
-//        size_t h = CVPixelBufferGetHeight(imageBuffer);
-//        OSType p =CVPixelBufferGetPixelFormatType(imageBuffer);
-//        char* ty = (char*)&p;
-//        NSLog(@"ty:%c%c%c%c",ty[3],ty[2],ty[1],ty[0]);
-//        size_t q = CVPixelBufferGetDataSize(imageBuffer);
-//        size_t s = CVPixelBufferGetPlaneCount(imageBuffer);
-//        size_t sd = CVPixelBufferGetBytesPerRow(imageBuffer);
-//        size_t sds1 = CVPixelBufferGetWidthOfPlane(imageBuffer, 1);
-//        size_t ds1 = CVPixelBufferGetHeightOfPlane(imageBuffer, 1);
-//        void* planeAdd1 = CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 1);
-//        
-//        size_t sds0 = CVPixelBufferGetWidthOfPlane(imageBuffer, 0);
-//        size_t ds0 = CVPixelBufferGetHeightOfPlane(imageBuffer, 0);
-//        uint8_t* planeAdd0 = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 0);
-////        NSLog(@"sd:%ld,add:%ld",planeAdd1-planeAdd0,planeAdd0 - baseAdd);
-//        CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
-//        long d = planeAdd0 - baseAdd;
-//
-//        
-//        
-////         convert the image
-//
-//        
-//
-//        
+    CIImage* cimage = [CIImage imageWithCVPixelBuffer:imageBuffer];
+    UIImage* image = [UIImage imageWithCIImage:cimage];
+    // Update the display with the captured image for DEBUG purposes
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        self.imageView.image = image;
+    });
+
+//        CVImageBufferRef imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+        CVPixelBufferLockBaseAddress(imageBuffer, 0);
+        uint8_t* baseAdd = (uint8_t*)CVPixelBufferGetBaseAddress(imageBuffer);
+        size_t w = CVPixelBufferGetWidth(imageBuffer);
+        size_t h = CVPixelBufferGetHeight(imageBuffer);
+        OSType p =CVPixelBufferGetPixelFormatType(imageBuffer);
+        char* ty = (char*)&p;
+        NSLog(@"ty:%c%c%c%c  w:%zu  h:%zu",ty[3],ty[2],ty[1],ty[0],w,h);
+        size_t q = CVPixelBufferGetDataSize(imageBuffer);
+        size_t s = CVPixelBufferGetPlaneCount(imageBuffer);
+        size_t sd = CVPixelBufferGetBytesPerRow(imageBuffer);
+        size_t sds1 = CVPixelBufferGetWidthOfPlane(imageBuffer, 1);
+        size_t ds1 = CVPixelBufferGetHeightOfPlane(imageBuffer, 1);
+        void* planeAdd1 = CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 1);
+        
+        size_t sds0 = CVPixelBufferGetWidthOfPlane(imageBuffer, 0);
+        size_t ds0 = CVPixelBufferGetHeightOfPlane(imageBuffer, 0);
+        uint8_t* planeAdd0 = (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(imageBuffer, 0);
+//        NSLog(@"sd:%ld,add:%ld",planeAdd1-planeAdd0,planeAdd0 - baseAdd);
+        CVPixelBufferUnlockBaseAddress(imageBuffer, 0);
+        long d = planeAdd0 - baseAdd;
+
+        
+        
+//         convert the image
+
+        
+
+        
 //    [_playView displayYUV420pData:(void*)(baseAdd + d) width:(uint32_t)w height:(uint32_t)h];
 
   
-    [_gjEncoder encodeImageBuffer:imageBuffer pts:0 fourceKey:NO];
+//    [_gjEncoder encodeImageBuffer:imageBuffer pts:0 fourceKey:NO];
     
 //    if (_imageInput == nil) {
 //        OSType type = CVPixelBufferGetPixelFormatType(imageBuffer);
@@ -630,7 +675,7 @@ BOOL _recodeState;
 
 }
 
--(float)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJH264Packet *)packet
+-(float)GJH264Encoder:(GJH264Encoder *)encoder encodeCompletePacket:(R_GJPacket *)packet
 {
 
     
@@ -659,7 +704,7 @@ BOOL _recodeState;
 
     
     _totalCount ++;
-    _totalByte += packet->spsSize+packet->ppsSize+packet->ppSize;
+    _totalByte += packet->dataSize;
 //    if (!_rtmpSend->GetConnectedFlag()) {
 //        dispatch_async(dispatch_get_main_queue(), ^{
 //            _stateLab.text = @"连接中。。。";
@@ -912,6 +957,7 @@ static int aacIndex;
 //    NSLog(@"audioFileStream:%d",numberOfPackets);
     NSLog(@"audioFileStream count:%d  lenth:%d",numberOfPackets,numberOfBytes);
 }
+
 -(void)GJCaptureTool:(GJCaptureTool*)captureTool didRecodeFile:(NSURL*)fileUrl{
     NSFileManager* manager = [NSFileManager defaultManager];
     NSDictionary * dic = [manager attributesOfItemAtPath:[fileUrl path] error:nil];
