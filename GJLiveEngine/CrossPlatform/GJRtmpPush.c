@@ -65,6 +65,7 @@ static GHandle sendRunloop(GHandle parm){
     GJStreamPush* push = (GJStreamPush*)parm;
     kStreamPushMessageType errType = kStreamPushMessageType_connectError;
     GHandle errParm = GNULL;
+    
     GInt32 ret = RTMP_SetupURL(push->rtmp, push->pushUrl);
     if (!ret && push->messageCallback) {
         errType = kStreamPushMessageType_urlPraseError;
@@ -75,6 +76,7 @@ static GHandle sendRunloop(GHandle parm){
     
     push->rtmp->Link.timeout = SEND_TIMEOUT;
     GJLOG(GJ_LOGINFO, "开始连接服务器。。。");
+    
     ret = RTMP_Connect(push->rtmp, GNULL);
     if (!ret) {
         GJLOG(GJ_LOGERROR, "Stream_Connect error");
@@ -86,15 +88,21 @@ static GHandle sendRunloop(GHandle parm){
 
     GJLOG(GJ_LOGINFO, "服务器连接成功，开始连接流");
     ret = RTMP_ConnectStream(push->rtmp, 0);
+    
     if (!ret ) {
+        
         GJLOG(GJ_LOGERROR, "Stream_ConnectStream error");
         errType = kStreamPushMessageType_connectError;
         goto ERROR;
+        
     }else{
+        
         if(push->messageCallback){
             push->messageCallback(push->rtmpPushParm, kStreamPushMessageType_connectSuccess,GNULL);
         }
+        
     }
+    
     GJLOG(GJ_LOGINFO, "Stream_ConnectStream success");
     R_GJPacket* packet;
     
@@ -102,7 +110,9 @@ static GHandle sendRunloop(GHandle parm){
     GUInt32 startPts = (GUInt32)(GJ_Gettime()/1000);
 #endif
     RTMPPacket rtmpPacket;
+    
     while ( queuePop(push->sendBufferQueue, (GHandle*)&packet, INT32_MAX)) {
+        
         if (push->stopRequest) {
             retainBufferUnRetain(&packet->retain);
             break;
@@ -122,7 +132,7 @@ static GHandle sendRunloop(GHandle parm){
                 while (index < packet->dataSize) {
                     
                     if (packet->dataSize > index+4 && start[index] == 0x00 && start[index+1] == 0x00 && start[index+2] == 00 && start[index+3] == 01) {
-                       
+                        
                         if ((start[index+4] & 0x1f) == 7) {
                             sps = start+index+4;
                             index+=3;
@@ -141,25 +151,40 @@ static GHandle sendRunloop(GHandle parm){
                     GInt32 spsSize = (GInt32)(pps-sps-4),ppsSize =  (GInt32)(index-(pps-start));
                     
                     if (RTMP_AllocAndPakcetAVCSequenceHeader(push, sps, spsSize, pps,ppsSize, packet->pts, &avcPacket)) {
+                        
                         GInt32 iRet = RTMP_SendPacket(push->rtmp,&avcPacket,0);
                         RTMPPacket_Free(&avcPacket);
-                        if (iRet) {
-                            packet->dataOffset += index;
-                            packet->dataSize -= index;
-                            push->videoStatus.leave.byte =avcPacket.m_nBodySize;
-                            push->videoStatus.leave.count = 1;
-                            push->videoStatus.leave.ts = packet->pts;
-                        }else{
+                        
+                        if (iRet == GFalse) {
+                            GJLOG(GJ_LOGERROR, "error send video FRAME");
                             retainBufferUnRetain(&packet->retain);
+                            errType = kStreamPushMessageType_sendPacketError;
+                            goto ERROR;
+                        }
+                        
+                        packet->dataOffset += index;
+                        packet->dataSize -= index;
+                        if (packet->dataSize <= 0) {//没有数据
+                            push->videoStatus.leave.byte =packet->dataSize;
+                            push->videoStatus.leave.count = 1;
+                            push->videoStatus.leave.ts = (GLong)packet->pts;
                             continue;
                         }
 
                     }else{
                         retainBufferUnRetain(&packet->retain);
-                        continue;
+                        GJLOG(GJ_LOGERROR, "RTMP_AllocAndPakcetAVCSequenceHeader");
+                        errType = kStreamPushMessageType_sendPacketError;
+                        goto ERROR;
                     }
+                    
                 }else{
+                    
                     GJLOG(GJ_LOGERROR, "没有sps，pps，丢弃该帧");
+                    push->videoStatus.leave.byte =packet->dataSize;
+                    push->videoStatus.leave.count = 1;
+                    push->videoStatus.leave.ts = (GLong)packet->pts;
+
                     retainBufferUnRetain(&packet->retain);
                     continue;
                 }
@@ -168,10 +193,13 @@ static GHandle sendRunloop(GHandle parm){
             GInt32 ppPreSize = 5;//flv tag前置预留大小大小
             GUInt8 fristByte = 0x27;
             GUInt8* nal_start = GNULL;
+            
             if (packet->flag == GJPacketFlag_KEY) {
+                
                 GUInt8* start = packet->retain.data + packet->dataOffset;
                 GInt32 index = 0;
                 GUInt8* pre_nal_unit = GNULL;
+                
                 while (index < packet->dataSize) {
                     if (packet->dataSize > index+4 && start[index] == 0x00 && start[index+1] == 0x00 && start[index+2] == 0x00 && start[index+3] == 0x01) {
                         if ((start[index+4] & 0x1f) == 5 || (start[index+4] & 0x1f) == 1){//key = 5
@@ -258,40 +286,48 @@ static GHandle sendRunloop(GHandle parm){
 
             
             GInt32 iRet = RTMP_SendPacket(push->rtmp,&rtmpPacket,0);
-            if (iRet) {
-                push->videoStatus.leave.ts = rtmpPacket.m_nTimeStamp;
-                push->videoStatus.leave.count++;
-                push->videoStatus.leave.byte += rtmpPacket.m_nBodySize;
-                retainBufferUnRetain(&packet->retain);
-            }else{
-                retainBufferUnRetain(&packet->retain);
+            
+            push->videoStatus.leave.ts = rtmpPacket.m_nTimeStamp;
+            push->videoStatus.leave.count++;
+            push->videoStatus.leave.byte += rtmpPacket.m_nBodySize;
+            retainBufferUnRetain(&packet->retain);
+
+            if (iRet == GFalse) {
                 GJLOG(GJ_LOGERROR, "error send video FRAME");
                 errType = kStreamPushMessageType_sendPacketError;
                 goto ERROR;
             }
         }else{
+            
             if (push->audioStatus.leave.count == 0) {
                 RTMPPacket aacPacket;
                 if(RTMP_AllocAndPackAACSequenceHeader(push, 2, push->audioFormat->format.mSampleRate, push->audioFormat->format.mChannelsPerFrame, packet->pts, &aacPacket)){
+                    
                     GInt32 iRet = RTMP_SendPacket(push->rtmp,&aacPacket,0);
                     RTMPPacket_Free(&aacPacket);
-                    if (iRet) {
-                        push->audioStatus.leave.byte = aacPacket.m_nBodySize;
-                        push->audioStatus.leave.count = 1;
-                        push->audioStatus.leave.ts = packet->pts;
-                    }else{
-                        retainBufferUnRetain(&packet->retain);
-                        continue;
-                    }
-                }else{
+                    
+                    push->audioStatus.leave.byte = aacPacket.m_nBodySize;
+                    push->audioStatus.leave.count = 1;
+                    push->audioStatus.leave.ts = (GLong)packet->pts;
                     retainBufferUnRetain(&packet->retain);
+                    
+                    if (iRet == GFalse) {
+                        GJLOG(GJ_LOGERROR, "error send video FRAME");
+                        errType = kStreamPushMessageType_sendPacketError;
+                        goto ERROR;
+                    }
                     continue;
+                }else{
+                    
+                    GJLOG(GJ_LOGERROR, "RTMP_AllocAndPackAACSequenceHeader");
+                    errType = kStreamPushMessageType_sendPacketError;
+                    retainBufferUnRetain(&packet->retain);
+                    goto ERROR;
                 }
             }
             
             GUChar * body;
             GInt32 preSize = 2;
-            
             
             RTMPPacket_Reset(&rtmpPacket);
             if (packet->dataOffset+packet->retain.frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
@@ -316,15 +352,14 @@ static GHandle sendRunloop(GHandle parm){
             rtmpPacket.m_nInfoField2 = push->rtmp->m_stream_id;
             
             GInt32 iRet = RTMP_SendPacket(push->rtmp,&rtmpPacket,0);
-            if (iRet) {
-                push->audioStatus.leave.byte+=rtmpPacket.m_nBodySize;
-                push->audioStatus.leave.count++;
-                push->audioStatus.leave.ts = rtmpPacket.m_nTimeStamp;
-                retainBufferUnRetain(&packet->retain);
-            }else{
+            push->audioStatus.leave.byte+=rtmpPacket.m_nBodySize;
+            push->audioStatus.leave.count++;
+            push->audioStatus.leave.ts = rtmpPacket.m_nTimeStamp;
+            retainBufferUnRetain(&packet->retain);
+
+            if (iRet == GFalse) {
                 GJLOG(GJ_LOGFORBID, "error send packet FRAME");
                 errType = kStreamPushMessageType_sendPacketError;
-                retainBufferUnRetain(&packet->retain);
                 goto ERROR;
             }
         }
