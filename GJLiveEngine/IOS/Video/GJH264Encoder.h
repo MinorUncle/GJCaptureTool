@@ -107,7 +107,7 @@ typedef void(^H264EncodeComplete)(R_GJPacket* packet);
  @param fourceKey fourceKey description
  @return 是否失败。可能主动丢帧，也可能编码失败
  */
--(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts fourceKey:(BOOL)fourceKey;
+-(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts;
 
 /**
  刷新编码器，之前的编码不会回调。

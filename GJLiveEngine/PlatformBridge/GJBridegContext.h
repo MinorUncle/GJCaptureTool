@@ -119,7 +119,7 @@ typedef struct _GJEncodeToH264eContext{
     GHandle obaque;
     GBool   (*encodeSetup)            (struct _GJEncodeToH264eContext* context, GJPixelFormat format, H264PacketOutCallback callback, GHandle userData);
     GVoid   (*encodeUnSetup)          (struct _GJEncodeToH264eContext* context);
-    GBool   (*encodeFrame)            (struct _GJEncodeToH264eContext* context, R_GJPixelFrame* frame, GBool forceKey);
+    GBool   (*encodeFrame)            (struct _GJEncodeToH264eContext* context, R_GJPixelFrame* frame);
     GBool   (*encodeSetBitrate)       (struct _GJEncodeToH264eContext* context, GInt32 bitrate);
     GBool   (*encodeSetProfile)       (struct _GJEncodeToH264eContext* context, ProfileLevel profile);
     GBool   (*encodeSetEntropy)       (struct _GJEncodeToH264eContext* context, EntropyMode model);

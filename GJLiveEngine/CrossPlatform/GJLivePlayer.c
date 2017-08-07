@@ -574,6 +574,8 @@ GBool  GJLivePlay_Start(GJLivePlayer* player){
         changeSyncType(&player->syncControl, kTimeSYNCVideo);
         queueEnablePush(player->playControl.imageQueue, GTrue);
         queueEnablePush(player->playControl.audioQueue, GTrue);
+        
+
     }else{
         GJLOG(GJ_LOGWARNING, "GJLivePlayer 重复 start");
     }

@@ -52,7 +52,7 @@ static GVoid videoCaptureFrameOutCallback (GHandle userData,R_GJPixelFrame* fram
         context->operationCount ++;
         if (!context->videoMute && (context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
             frame->pts = GJ_Gettime()/1000-context->connentClock;
-            context->videoEncoder->encodeFrame(context->videoEncoder,frame,GFalse);
+            context->videoEncoder->encodeFrame(context->videoEncoder,frame);
         }else{
             GJLOG(GJ_LOGWARNING, "丢视频帧");
             context->dropVideoCount++;
@@ -85,7 +85,7 @@ static GVoid audioCaptureFrameOutCallback (GHandle userData,R_GJPCMFrame* frame)
 static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
     GJLivePushContext* context = userData;
     if (context->firstVideoEncodeClock == G_TIME_INVALID) {
-        
+        GJAssert(packet->flag && GJPacketFlag_KEY, "");
         context->firstVideoEncodeClock = GJ_Gettime()/1000;
         GJStreamPush_SendVideoData(context->videoPush, packet);
         context->preVideoTraffic = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
@@ -145,7 +145,7 @@ static GVoid h264PacketOutCallback(GHandle userData,R_GJPacket* packet){
                     _GJLivePush_AppendQualityWithStep(context, 100);
                 }else{
                     if (sendCount > context->rateCheckStep ) {
-                        GJLOG(GJ_LOGINFO, "局部检测出提高音频质量");
+                        GJLOG(GJ_LOGINFO, "宏观检测出提高视频质量");
                         _GJLivePush_AppendQualityWithStep(context, sendCount - context->rateCheckStep );
                     }
                 }

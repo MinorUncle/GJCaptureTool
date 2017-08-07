@@ -546,6 +546,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 
 }
 -(void)takeSelect:(UIButton*)btn{
+
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
     if (btn == _messureModel) {
         [GJAudioManager shareAudioManager].audioController.useMeasurementMode = btn.selected;
