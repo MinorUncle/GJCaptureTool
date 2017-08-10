@@ -36,7 +36,6 @@
     uint8_t* _slientData;
 }
 @property(strong,nonatomic)CADisplayLink* fpsTimer;
-@property(strong,nonatomic)NSRunLoop* captureRunLoop;
 
 @end
 
@@ -90,7 +89,7 @@
     }
     
     _captureView=targetView;
-    _captureFrame = [self _getRootFrameWithView:targetView];
+    _captureFrame = targetView.bounds;
     _status = screenRecorderRecorderingStatus;
     _fps = fps;
     queueEnablePop(_imageCache, true);
@@ -103,13 +102,12 @@
     }
     __weak GJScreenRecorder* wkSelf = self;
     if(fps>0){
-        dispatch_async(_captureQueue, ^{
+//        dispatch_async(_captureQueue, ^{
             wkSelf.fpsTimer = [CADisplayLink displayLinkWithTarget:self selector:@selector(_captureCurrentView)];
             wkSelf.fpsTimer.preferredFramesPerSecond = fps;
-            wkSelf.captureRunLoop = [NSRunLoop currentRunLoop];
-            [wkSelf.fpsTimer addToRunLoop:wkSelf.captureRunLoop forMode:NSDefaultRunLoopMode];
-            [[NSRunLoop currentRunLoop]run];
-        });
+            [wkSelf.fpsTimer addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+//            [[NSRunLoop currentRunLoop]run];
+//        });
 
     }else{
         return NO;
@@ -125,14 +123,13 @@
         return ;
     }
     _status = screenRecorderStopStatus;
+//    dispatch_async(_captureQueue, ^{
+        if (_fpsTimer) {
+            [_fpsTimer invalidate];
+            _fpsTimer=nil;
+        }
+//    });
 
-    [_fpsTimer removeFromRunLoop:_captureRunLoop forMode:NSDefaultRunLoopMode];
-    
-    if (_fpsTimer) {
-        [_fpsTimer invalidate];
-        _fpsTimer=nil;
-    }
-    _captureRunLoop = nil;
 
 }
 -(void)pause{
@@ -299,16 +296,7 @@
     }
 }
 
--(CGRect)_getRootFrameWithView:(UIView*)view{
-    CGRect rect = view.frame;
-    UIView* superView = view.superview;
-    while (superView) {
-        rect.origin.x += superView.frame.origin.x;
-        rect.origin.y += superView.frame.origin.y;
-        superView = superView.superview;
-    }
-    return rect;
-}
+
 
 
 -(NSURL *)destFileUrl{
@@ -603,7 +591,7 @@
 
 -(void)dealloc{
 
-    GJLOG(GJ_LOGDEBUG, "screenrecorder delloc:%@",self);
+    GJLOG(GJ_LOGDEBUG, "screenrecorder delloc:%p",self);
     free(_slientData);
 }
 @end
