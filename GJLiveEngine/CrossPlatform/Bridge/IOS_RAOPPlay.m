@@ -112,10 +112,10 @@ struct audio_output_t* audio_output_create(struct decoder_output_format_t decode
 
 void audio_output_destroy(struct audio_output_t* ao) {
     
-    audio_output_stop(ao);
 
     [[GJAudioManager shareAudioManager].audioController performSynchronousMessageExchangeWithBlock:^{
-        
+        audio_output_stop(ao);
+
         if (ao->_convert) {
             AudioConverterDispose(ao->_convert);
         }

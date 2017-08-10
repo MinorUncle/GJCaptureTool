@@ -21,6 +21,7 @@
     GInt64 _fristPts;
     GInt32 _dtsDelta;
     GBool _shouldRestart;
+    BOOL requestFlush;
     
 }
 @property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
@@ -52,7 +53,7 @@
 
 
 //编码
--(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts fourceKey:(BOOL)fourceKey
+-(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts
 {
 
 //RETRY:
@@ -63,11 +64,11 @@
         if (_enCodeSession == nil) {
             [self creatEnCodeSession];
             [self setAllParm];
-            fourceKey = YES;
         }
-        if (fourceKey) {
+        if (requestFlush) {
             properties = [[NSMutableDictionary alloc]init];
             [properties setObject:@YES forKey:(__bridge NSString *)kVTEncodeFrameOptionKey_ForceKeyFrame];
+            requestFlush = NO;
         }
 //        printf("encode pts:%lld\n",pts);
         OSStatus status = VTCompressionSessionEncodeFrame(
@@ -218,8 +219,12 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
     bool keyframe = !CFDictionaryContainsKey( (CFArrayGetValueAtIndex(CMSampleBufferGetSampleAttachmentsArray(sample, true), 0)), kCMSampleAttachmentKey_NotSync);
     
-    if (keyframe && encoder.sps == nil)
+    if ( encoder.sps == nil)
     {
+        if (!keyframe) {
+            GJBufferPoolSetBackData((GUInt8*)pushPacket);
+            return;
+        }
         CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sample);
         size_t sparameterSetSize, sparameterSetCount;
         int spHeadSize;
@@ -356,10 +361,9 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
 
 -(void)flush{
+    requestFlush = YES;
     _sps = nil;
     _pps = nil;
-    if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
-    _enCodeSession = nil;
 }
 
 

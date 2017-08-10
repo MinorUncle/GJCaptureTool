@@ -16,7 +16,9 @@
 #import "GJAudioManager.h"
 //static char* url = "rtmp://10.0.1.142/live/room";
 static char* url = "rtmp://192.168.199.187/live/room";
+//static char* url = "rtmp://192.168.199.187/live/room";
 //static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
+static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
 
 //
 #define PULL_COUNT 2
@@ -546,6 +548,7 @@ static char* url = "rtmp://192.168.199.187/live/room";
 
 }
 -(void)takeSelect:(UIButton*)btn{
+
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
     if (btn == _messureModel) {
         [GJAudioManager shareAudioManager].audioController.useMeasurementMode = btn.selected;

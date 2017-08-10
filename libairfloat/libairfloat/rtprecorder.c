@@ -458,7 +458,7 @@ bool rtp_recorder_start(struct rtp_recorder_t* rr) {
         
         complete = !condition_times_wait(rr->timer_cond, rr->timer_mutex, 5000);
         
-        if (!complete)
+        if (0)
             log_message(LOG_INFO, "Initial time synchronization incomplete");
         else {
             rr->synchronization_thread = thread_create_a(_rtp_recorder_synchronization_loop, rr);

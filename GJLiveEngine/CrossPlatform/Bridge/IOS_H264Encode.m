@@ -28,10 +28,10 @@ inline static GVoid encodeUnSetup (GJEncodeToH264eContext* context){
         encode = nil;
     }
 }
-inline static GBool encodeFrame (GJEncodeToH264eContext* context,R_GJPixelFrame* frame,GBool forceKey){
+inline static GBool encodeFrame (GJEncodeToH264eContext* context,R_GJPixelFrame* frame){
     GJH264Encoder* encode = (__bridge GJH264Encoder *)(context->obaque);
     CVImageBufferRef image = (CVImageBufferRef)frame->retain.data;
-    return [encode encodeImageBuffer:image pts:frame->pts fourceKey:forceKey];
+    return [encode encodeImageBuffer:image pts:frame->pts];
 }
 inline static GBool encodeSetBitrate (GJEncodeToH264eContext* context,GInt32 bitrate){
     GJH264Encoder* encode = (__bridge GJH264Encoder *)(context->obaque);

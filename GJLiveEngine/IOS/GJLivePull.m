@@ -71,12 +71,6 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
             {
                 GJLOG(GJ_LOGINFO, "pull connectSuccess");
                 [livePull.delegate livePull:livePull connentSuccessWithElapsed:*(GInt32*)parm];
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    livePull.timer = [NSTimer scheduledTimerWithTimeInterval:livePull.gaterFrequency target:livePull selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
-                    GJLOG(GJ_LOGINFO, "NSTimer START:%s",[NSString stringWithFormat:@"%@",livePull.timer].UTF8String);
-                });
-                
-
             }
                 break;
             case GJLivePull_closeComplete:{
@@ -128,6 +122,9 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
         GJLOG(GJ_LOGFORBID, "请先关闭上一个流");
         return NO;
     }else{
+        _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
+        GJLOG(GJ_LOGINFO, "NSTimer PULL START:%s",[NSString stringWithFormat:@"%@",_timer].UTF8String);
+
         memset(&_videoTraffic, 0, sizeof(_videoTraffic));
         memset(&_audioTraffic, 0, sizeof(_audioTraffic));
         memset(&_pullSessionStatus, 0, sizeof(_pullSessionStatus));
