@@ -13,5 +13,6 @@
 #import "GJImageBeautifyFilter.h"
 #import "GJImageView.h"
 #import "GJImageYUVDataInput.h"
+#import "GJImagePixelImageInput.h"
 
 #endif

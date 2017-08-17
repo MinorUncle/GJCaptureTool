@@ -13,16 +13,16 @@
 // The default type for input bytes is GPUPixelTypeUByte, unless specified with pixelType:
 
 typedef enum {
-    GJPixelFormatI420,
-    GJPixelFormatYV12,
-    GJPixelFormatNV12,
-    GJPixelFormatNV21,
+    GJPixelFormatI420,//yyyyyyyyuuvv
+    GJPixelFormatYV12,//yyyyyyyyvvuu
+    GJPixelFormatNV12,//yyyyyyyyuvuv
+    GJPixelFormatNV21,//yyyyyyyyvuvu
 } GJYUVPixelFormat;
 
 typedef enum {
-    GJPixelByteTypeUByte = GL_UNSIGNED_BYTE,
-    GJPixelByteTypeFloat = GL_FLOAT
-} GJPixelByteType;
+    GJPixelTypeUByte = GL_UNSIGNED_BYTE,
+    GJPixelTypeFloat = GL_FLOAT
+} GJPixelType;
 
 @interface GJImageYUVDataInput : GPUImageOutput
 {
@@ -41,7 +41,7 @@ typedef enum {
 @property (readwrite, nonatomic) GJPixelType   pixelType;
 
 // 420p
-- (void)updateDataWithImageSize:(CGSize)imageSize Y:(GLubyte *)Ybytes U:(GLubyte*)Ubytes V:(GLubyte*)Vbytes type:(GJPixelByteType)pixelType Timestamp:(CMTime)frameTime;
+- (void)updateDataWithImageSize:(CGSize)imageSize Y:(GLubyte *)Ybytes U:(GLubyte*)Ubytes V:(GLubyte*)Vbytes type:(GJPixelType)pixelType Timestamp:(CMTime)frameTime;
 // 420sp
 - (void)updateDataWithImageSize:(CGSize)imageSize Y:(GLubyte *)Ybytes CrBr:(GLubyte*)CrBrbytes type:(GJPixelType)pixelType Timestamp:(CMTime)frameTime;
 

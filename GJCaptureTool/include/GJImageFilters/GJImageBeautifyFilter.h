@@ -6,7 +6,7 @@
 //  Copyright © 2016年 guikz. All rights reserved.
 //
 
-#import "GJImageBeautifyFilter.h"
+#import <GPUImage/GPUImage.h>
 
 @class GPUImageCombinationFilter;
 

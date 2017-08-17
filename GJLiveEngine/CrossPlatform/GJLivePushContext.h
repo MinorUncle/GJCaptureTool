@@ -33,6 +33,7 @@ typedef enum _GJLivePushMessageType{
     GJLivePush_updateNetQuality,
 }GJLivePushMessageType;
 typedef GVoid (*GJLivePushCallback)(GHandle userDate,GJLivePushMessageType message,GHandle param);
+
 typedef struct _GJLivePushContext{
     GJStreamPush*               videoPush;
     GJEncodeToH264eContext*     videoEncoder;
@@ -108,5 +109,8 @@ GBool GJLivePush_SetOutVolume(GJLivePushContext* context,GFloat32 volume);
 GBool GJLivePush_SetInputGain(GJLivePushContext* context,GFloat32 gain);
 GBool GJLivePush_StartRecode(GJLivePushContext* context,GView view, GInt32 fps,const GChar* fileUrl);
 GVoid GJLivePush_StopRecode(GJLivePushContext* context);
+GBool GJLivePush_StartSticker(GJLivePushContext* context,const GVoid* images,GStickerParm parm,GInt32 fps,GJStickerUpdateCallback callback,const GVoid* userData);
+GVoid GJLivePush_StopSticker(GJLivePushContext* context);
+GSize GJLivePush_GetCaptureSize(GJLivePushContext* context);
 
 #endif /* GJLivePushContext_h */

@@ -19,7 +19,23 @@ typedef struct GSize {
     GFloat32 width;
     GFloat32 height;
 }GSize;
+typedef struct GPoint {
+    GFloat32 x;
+    GFloat32 y;
+}GPoint;
 
+typedef struct GCRect {
+    GPoint center;
+    GSize size;
+}GCRect;
+typedef struct GRect {
+    GPoint origin;
+    GSize size;
+}GRect;
+typedef struct GRational{
+    GInt32 num; ///< numerator
+    GInt32 den; ///< denominator
+} GRational;
 #define GSizeEqual(a,b) (((a).height - (b).height > -0.00001 && (a).height - (b).height < 0.000001 && (a).width - (b).width > -0.00001 && (a).width - (b).width < 0.000001))
 
 

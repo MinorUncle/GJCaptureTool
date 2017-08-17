@@ -25,6 +25,18 @@
 
 @end
 
+@implementation GJStickerAttribute
+
++(instancetype)stickerAttributWithFrame:(GCRect)frame rotate:(CGFloat)rotate{
+    GJStickerAttribute* attribute = [[GJStickerAttribute alloc]init];
+    attribute.frame = frame;
+    attribute.rotate = rotate;
+    return attribute;
+}
+
+@end
+
+
 @implementation GJLivePush
 @synthesize previewView = _previewView;
 static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType,GHandle param){
@@ -125,6 +137,7 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
         return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
     }
 }
+
 - (void)stopStreamPush{
     [_timer invalidate];
     _timer = nil;
@@ -140,16 +153,20 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     _audioMute = audioMute;
     GJLivePush_SetAudioMute(_livePush, audioMute);
 }
+
 -(void)setVideoMute:(BOOL)videoMute{
     _videoMute = videoMute;
     GJLivePush_SetVideoMute(_livePush, videoMute);
 }
+
 -(BOOL)startAudioMixWithFile:(NSURL*)fileUrl{
     return GJLivePush_StartMixFile(_livePush, fileUrl.path.UTF8String);
 }
+
 -(void)stopAudioMix{
     GJLivePush_StopAudioMix(_livePush);
 }
+
 - (void)setInputVolume:(float)volume{
     GJLivePush_SetInputGain(_livePush, volume);
 }
@@ -174,6 +191,7 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     _mixFileNeedToStream = mixFileNeedToStream;
     GJLivePush_ShouldMixAudioToStream(_livePush, mixFileNeedToStream);
 }
+
 -(void)updateGaterInfo:(NSTimer*)timer{
     GJTrafficStatus vInfo = GJLivePush_GetVideoTrafficStatus(_livePush);
     GJTrafficStatus aInfo = GJLivePush_GetAudioTrafficStatus(_livePush);
@@ -196,10 +214,12 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
 //        [self reStartStreamPush];
 //    }
 }
+
 -(void)setCameraPosition:(GJCameraPosition)cameraPosition{
     _cameraPosition = cameraPosition;
     GJLivePush_SetCameraPosition(_livePush, cameraPosition);
 }
+
 -(void)setOutOrientation:(GJInterfaceOrientation)outOrientation{
     _outOrientation = outOrientation;
     GJLivePush_SetOutOrientation(_livePush, outOrientation);
@@ -211,6 +231,36 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
 
 - (void)stopUIRecode{
     GJLivePush_StopRecode(_livePush);
+}
+
+static GStickerParm stickerUpdateCallback(const GHandle userDate,GLong index,GBool* ioFinsh){
+    
+    StickersUpdate block = (__bridge StickersUpdate)(userDate);
+    GJStickerAttribute* attr = block(index,(BOOL*)ioFinsh);
+    GStickerParm parm;
+    parm.frame = attr.frame;
+    parm.rotation = attr.rotate;
+    if (*ioFinsh) {
+        id tem = CFBridgingRelease(userDate);//释放
+        tem = nil;
+    }
+    return parm;
+}
+
+- (BOOL)startStickerWithImages:(NSArray<UIImage*>*)images attribure:(GJStickerAttribute*)attribure fps:(NSInteger)fps updateBlock:(StickersUpdate)updateBlock{
+    GStickerParm parm;
+    parm.frame = attribure.frame;
+    parm.rotation = attribure.rotate;
+    return GJLivePush_StartSticker(_livePush, CFBridgingRetain(images) , parm, (GInt32)fps, stickerUpdateCallback, CFBridgingRetain(updateBlock));
+}
+
+- (void)chanceSticker{
+    GJLivePush_StopSticker(_livePush);
+}
+
+- (CGSize)captureSize{
+    GSize size = GJLivePush_GetCaptureSize(_livePush);
+    return CGSizeMake(size.width, size.height);
 }
 #pragma mark rtmp callback
 

@@ -177,7 +177,7 @@
     self.bitrate = _bitrate;
 }
 -(void)setBitrate:(int)bitrate{
-    if (bitrate>0 && _enCodeSession) {
+    if (bitrate>=0 && _enCodeSession) {
         _bitrate = bitrate;
         CFNumberRef bitRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &(_bitrate));
         OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, bitRate);

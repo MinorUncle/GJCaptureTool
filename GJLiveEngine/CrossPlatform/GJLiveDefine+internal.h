@@ -22,12 +22,14 @@
 #define SEND_SEI
 //#define TEST
 
-typedef struct GRational{
-    GInt32 num; ///< numerator
-    GInt32 den; ///< denominator
-} GRational;
+
 #define GRationalMake(num,den) (GRational){(GInt32)(num),(GInt32)(den)}
 #define GRationalValue(rational) (GFloat32)(rational).num*1.0/(rational).den
+
+typedef struct GStickerParm{
+    GCRect frame;
+    GFloat32 rotation;
+} GStickerParm;
 typedef struct TrafficUnit{
     GLong ts;//ms
 //    GLong dts;//dts只能单调上升，否则重新开始计算

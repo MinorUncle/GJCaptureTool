@@ -860,5 +860,30 @@ GVoid GJLivePush_StopRecode(GJLivePushContext* context){
         context->recoder->stopRecode(context->recoder);
     }
     pthread_mutex_unlock(&context->lock);
+}
+GBool GJLivePush_StartSticker(GJLivePushContext* context,const GVoid* images,GStickerParm parm,GInt32 fps,GJStickerUpdateCallback callback,const GVoid* userData){
+    GBool result = GFalse;
+    pthread_mutex_lock(&context->lock);
+    if (context->videoProducer) {
+        result = context->videoProducer->addSticker(context->videoProducer,images,parm,fps,callback,userData);
+    }
+    pthread_mutex_unlock(&context->lock);
+    return result;
+}
+GVoid GJLivePush_StopSticker(GJLivePushContext* context){
+    pthread_mutex_lock(&context->lock);
+    if (context->videoProducer) {
+        context->videoProducer->chanceSticker(context->videoProducer);
+    }
+    pthread_mutex_unlock(&context->lock);
+}
 
+GSize GJLivePush_GetCaptureSize(GJLivePushContext* context){
+    GSize size = {0};
+
+    if (context->videoProducer) {
+       size = context->videoProducer->getCaptureSize(context->videoProducer);
+    }
+    
+    return size;
 }

@@ -14,7 +14,12 @@
 #import "GJLiveDefine.h"
 #import "GJBufferPool.h"
 #import "GJImageBeautifyFilter.h"
-
+#import "GJImagePictureOverlay.h"
+typedef enum {//filter深度
+    kFilterCamera = 0,
+    kFilterBeauty,
+    kFilterSticker,
+}GJFilterDeep;
 typedef void(^VideoRecodeCallback)(R_GJPixelFrame* frame);
 
 static GBool pixelReleaseCallBack(GJRetainBuffer *buffer){
@@ -115,6 +120,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property(nonatomic,assign)BOOL horizontallyMirror;
 @property(nonatomic,assign)CGSize captureSize;
 @property(nonatomic,assign)int frameRate;
+@property(nonatomic,strong)GJImagePictureOverlay* sticker;
+
 @property(nonatomic,copy)VideoRecodeCallback callback;
 
 @end
@@ -158,14 +165,17 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _camera.frameRate = _frameRate;
         _camera.outputImageOrientation = _outputOrientation;
 //        [self.beautifyFilter addTarget:self.cropFilter];
-        [_camera addTarget:self.cropFilter];
     }
     return _camera;
 }
 
 -(GJImageView *)imageView{
     if (_imageView == nil) {
-        _imageView = [[GJImageView alloc]init];
+        @synchronized (self) {
+            if (_imageView == nil) {
+                _imageView = [[GJImageView alloc]init];
+            }
+        }
     }
     return _imageView;
 }
@@ -178,6 +188,85 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return _beautifyFilter;
 }
 
+/**
+ 获取deep对应的filter，如果不存在则获取父filter,deepfang'h，直到获取到为止
+
+ @param deep deep放回获取到的层次
+ @return return value description
+ */
+-(GPUImageOutput*)getFilterWithDeep:(GJFilterDeep*)deep{
+    GPUImageOutput* outFiter = nil;
+    switch (*deep) {
+        case kFilterSticker:
+            if (_sticker) {
+                outFiter = _sticker;
+                *deep = kFilterSticker;
+                break;
+            }
+        case kFilterBeauty:
+            if (_beautifyFilter) {
+                outFiter = _beautifyFilter;
+                *deep = kFilterBeauty;
+                break;
+            }
+        case kFilterCamera:
+            outFiter = _camera;
+            *deep = kFilterCamera;
+            break;
+        default:
+            break;
+    }
+    return outFiter;
+}
+-(void)removeFilterWithdeep:(GJFilterDeep)deep{
+    GJFilterDeep oDeep = deep;
+    GPUImageOutput* deleteFilter = [self getFilterWithDeep:&oDeep];
+    if (deleteFilter && oDeep == deep) {
+        oDeep = deep - 1;
+        GPUImageOutput* parentFilter = [self getFilterWithDeep:&oDeep];
+        if (parentFilter) {
+            for (id<GPUImageInput> input in deleteFilter.targets) {
+                [parentFilter addTarget:input];
+            }
+            [parentFilter removeTarget:(id<GPUImageInput>)deleteFilter];
+            [deleteFilter removeAllTargets];
+        }
+    }
+}
+-(void)addFilter:(GPUImageFilter*)filter deep:(GJFilterDeep)deep{
+    [self removeFilterWithdeep:deep];
+    GPUImageOutput* parentFilter = [self getFilterWithDeep:&deep];
+    for (id<GPUImageInput> input in parentFilter.targets) {
+        [filter addTarget:input];
+    }
+    [parentFilter removeAllTargets];
+    [parentFilter addTarget:filter];
+}
+
+- (BOOL)startStickerWithImages:(NSArray<UIImage*>*)images attribure:(GJOverlayAttribute*)attribure fps:(NSInteger)fps updateBlock:(OverlaysUpdate)updateBlock{
+    runAsynchronouslyOnVideoProcessingQueue(^{
+        
+        GJImagePictureOverlay* newSticker = [[GJImagePictureOverlay alloc]init];
+        [self addFilter:newSticker deep:kFilterSticker];
+        self.sticker = newSticker;
+        if (updateBlock) {
+            [newSticker startOverlaysWithImages:images frame:attribure.frame fps:fps updateBlock:^GJOverlayAttribute *(NSInteger index, BOOL *ioFinish) {
+                return updateBlock(index,ioFinish);
+            }];
+        }else{
+            [newSticker startOverlaysWithImages:images frame:attribure.frame fps:fps updateBlock:nil];
+        }
+    });
+    return YES;
+}
+- (void)chanceSticker{
+    //使用同步线程，防止chance后还会有回调
+    runSynchronouslyOnVideoProcessingQueue(^{
+        if (self.sticker  == nil) {return ;}
+        [self removeFilterWithdeep:kFilterSticker];
+        self.sticker = nil;
+    });
+}
 -(GPUImageCropFilter *)cropFilter{
     if (_cropFilter == nil) {
         _cropFilter = [[GPUImageCropFilter alloc]init];
@@ -185,21 +274,9 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return _cropFilter;
 }
 
-CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceOrientation orientation){
+CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize){
     //裁剪，
     CGSize targetSize = sourceSize;
-    switch (orientation) {
-        case UIInterfaceOrientationPortrait:
-        case UIInterfaceOrientationPortraitUpsideDown:
-        {
-            targetSize.height += targetSize.width;
-            targetSize.width = targetSize.height- targetSize.width;
-            targetSize.height = targetSize.height - targetSize.width;
-        }
-            break;
-        default:
-            break;
-    }
     float scaleX =  targetSize.width / destSize.width;
     float scaleY =  targetSize.height / destSize.height;
     CGRect region =CGRectZero;
@@ -224,25 +301,35 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
 
 -(BOOL)startProduce{
     __weak IOS_VideoProduce* wkSelf = self;
-    self.cropFilter.frameProcessingCompletionBlock = ^(GPUImageOutput * imageOutput, CMTime time) {
-        CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].pixelBuffer;
-        CVPixelBufferRetain(pixel_buffer);
-        R_GJPixelFrame* frame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
-        retainBufferPack((GJRetainBuffer**)&frame, pixel_buffer, sizeof(CVPixelBufferRef), pixelReleaseCallBack, GNULL);
-        frame->height = (GInt32)wkSelf.destSize.height;
-        frame->width = (GInt32)wkSelf.destSize.width;
-        wkSelf.callback(frame);
-        retainBufferUnRetain((GJRetainBuffer*)frame);
-    };
-    [self.camera startCameraCapture];
+    runAsynchronouslyOnVideoProcessingQueue(^{
+        GJFilterDeep deep = kFilterSticker;
+        GPUImageOutput* parentFilter = [self getFilterWithDeep:&deep];
+        
+        [parentFilter addTarget:self.cropFilter];
+        self.cropFilter.frameProcessingCompletionBlock = ^(GPUImageOutput * imageOutput, CMTime time) {
+            CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].pixelBuffer;
+            CVPixelBufferRetain(pixel_buffer);
+            R_GJPixelFrame* frame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
+            retainBufferPack((GJRetainBuffer**)&frame, pixel_buffer, sizeof(CVPixelBufferRef), pixelReleaseCallBack, GNULL);
+            frame->height = (GInt32)wkSelf.destSize.height;
+            frame->width = (GInt32)wkSelf.destSize.width;
+            wkSelf.callback(frame);
+            retainBufferUnRetain((GJRetainBuffer*)frame);
+        };
+        [self.camera startCameraCapture];
+    });
     return YES;
 }
 
 -(void)stopProduce{
-    if (![_cropFilter.targets containsObject:_imageView]) {
-        [_camera stopCameraCapture];
-    }
-    runSynchronouslyOnVideoProcessingQueue(^{
+    runAsynchronouslyOnVideoProcessingQueue(^{
+        GJFilterDeep deep = kFilterSticker;
+        GPUImageOutput* parentFilter = [self getFilterWithDeep:&deep];
+        if (![parentFilter.targets containsObject:_imageView]) {
+            [_camera stopCameraCapture];
+        }
+        
+        [parentFilter removeTarget:_cropFilter];
         _cropFilter.frameProcessingCompletionBlock = nil;
     });
 }
@@ -269,7 +356,14 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
     }
     
     CGSize capture = getCaptureSizeWithSize(size);
-    CGRect region = getCropRectWithSourceSize(capture, _destSize, self.outputOrientation);
+    if (_outputOrientation == UIInterfaceOrientationPortrait ||
+        _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+        capture.height += capture.width;
+        capture.width   = capture.height - capture.width;
+        capture.height  = capture.height - capture.width;
+    }
+    _captureSize = capture;
+    CGRect region = getCropRectWithSourceSize(capture, _destSize);
     self.cropFilter.cropRegion = region;
     [_cropFilter forceProcessingAtSize:_destSize];
 }
@@ -304,14 +398,28 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize,UIInterfaceO
     if (![self.camera isRunning]) {
         [self.camera startCameraCapture];
     }
-    [self.cropFilter addTarget:self.imageView];
+    runAsynchronouslyOnVideoProcessingQueue(^{
+        GJFilterDeep deep = kFilterSticker;
+        GPUImageOutput* parentFilter = [self getFilterWithDeep:&deep];
+        [parentFilter addTarget:self.imageView];
+
+    });
     return YES;
 }
 -(void)stopPreview{
-    if (_cropFilter.frameProcessingCompletionBlock == nil && [_camera isRunning]) {
-        [_camera stopCameraCapture];
-    }
-    [_cropFilter removeTarget:_imageView];
+
+    runAsynchronouslyOnVideoProcessingQueue(^{
+        if (_cropFilter.frameProcessingCompletionBlock == nil && [_camera isRunning]) {
+            [_camera stopCameraCapture];
+        }
+        
+        GJFilterDeep deep = kFilterSticker;
+        GPUImageOutput* parentFilter = [self getFilterWithDeep:&deep];
+        
+        [parentFilter removeTarget:_imageView];
+        
+    });
+
 }
 
 -(UIView*)getPreviewView{
@@ -411,6 +519,31 @@ inline static GVoid videoProduceStopPreview(struct _GJVideoProduceContext* conte
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     [recode stopPreview];
 }
+inline static GBool addSticker(struct _GJVideoProduceContext* context, const GVoid* images, GStickerParm parm, GInt32 fps, GJStickerUpdateCallback callback,const GVoid* userData){
+    IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
+    CGRect rect = CGRectMake(parm.frame.center.x, parm.frame.center.y, parm.frame.size.width, parm.frame.size.height);
+    if (callback == GNULL) {
+        [recode startStickerWithImages:CFBridgingRelease(images) attribure:[GJOverlayAttribute overlayAttributeWithFrame:rect rotate:parm.rotation] fps:fps updateBlock:nil];
+    }else{
+        [recode startStickerWithImages:CFBridgingRelease(images) attribure:[GJOverlayAttribute overlayAttributeWithFrame:rect rotate:parm.rotation] fps:fps updateBlock:^GJOverlayAttribute *(NSInteger index, BOOL *ioFinish) {
+            GStickerParm rParm = callback((GHandle)userData,index,(GBool*)ioFinish);
+            CGRect rRect = CGRectMake(rParm.frame.center.x, rParm.frame.center.y, rParm.frame.size.width, rParm.frame.size.height);
+            return [GJOverlayAttribute overlayAttributeWithFrame:rRect rotate:rParm.rotation];
+        }];
+    }
+    return GTrue;
+}
+inline static GVoid chanceSticker(struct _GJVideoProduceContext* context){
+    IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
+    [recode chanceSticker];
+}
+inline static GSize getCaptureSize(struct _GJVideoProduceContext* context){
+    IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
+    GSize size;
+    size.width = recode.captureSize.width;
+    size.height = recode.captureSize.height;
+    return size;
+}
 GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext** produceContext){
     if (*produceContext == NULL) {
         *produceContext = (GJVideoProduceContext*)malloc(sizeof(GJVideoProduceContext));
@@ -427,7 +560,10 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext** produceContext){
     context->setOrientation = videoProduceSetOutputOrientation;
     context->setHorizontallyMirror = videoProduceSetHorizontallyMirror;
     context->getRenderView = videoProduceGetRenderView;
+    context->getCaptureSize = getCaptureSize;
     context->setFrameRate = videoProduceSetFrameRate;
+    context->addSticker = addSticker;
+    context->chanceSticker = chanceSticker;
 }
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext** context){
     if ((*context)->obaque) {

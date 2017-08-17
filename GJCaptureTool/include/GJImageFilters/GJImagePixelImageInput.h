@@ -8,6 +8,7 @@
 
 #import "GPUImageOutput.h"
 typedef enum {
+    GJPixelImageFormat_32RGBA                   = kCVPixelFormatType_32RGBA,
     GJPixelImageFormat_32BGRA                   = kCVPixelFormatType_32BGRA,
     GJPixelImageFormat_YpCbCr8Planar            = kCVPixelFormatType_420YpCbCr8Planar,                  //yyyyyyyyuuvv
     GJPixelImageFormat_YpCbCr8BiPlanar          = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,      //yyyyyyyyuvuv

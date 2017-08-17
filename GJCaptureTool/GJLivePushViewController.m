@@ -14,10 +14,10 @@
 #import "log.h"
 #import "GJBufferPool.h"
 #import "GJAudioManager.h"
-//static char* url = "rtmp://10.0.1.142/live/room";
+static char* url = "rtmp://10.0.1.142/live/room";
 //static char* url = "rtmp://192.168.199.187/live/room";
 //static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
-static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
+//static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
 
 //
 #define PULL_COUNT 2
@@ -150,6 +150,7 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
 @property (strong, nonatomic) UIButton *uiRecode;
 @property (strong, nonatomic) UIButton *reverb;
 @property (strong, nonatomic) UIButton *messureModel;
+@property (strong, nonatomic) UIButton *sticker;
 
 
 
@@ -253,7 +254,7 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     [_audioMixBtn setTitle:@"结束混音" forState:UIControlStateSelected];
     [_audioMixBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_audioMixBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _audioMixBtn.backgroundColor = [UIColor grayColor];
+    _audioMixBtn.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_audioMixBtn];
     
     _earPlay = [[UIButton alloc]init];
@@ -262,7 +263,7 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     [_earPlay setTitle:@"结束耳返" forState:UIControlStateSelected];
     [_earPlay setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_earPlay addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _earPlay.backgroundColor = [UIColor grayColor];
+    _earPlay.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_earPlay];
     
     _mixStream = [[UIButton alloc]init];
@@ -271,7 +272,7 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     [_mixStream setTitle:@"允许混流" forState:UIControlStateSelected];
     [_mixStream setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_mixStream addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _mixStream.backgroundColor = [UIColor grayColor];
+    _mixStream.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_mixStream];
     
     _changeCamera = [[UIButton alloc]init];
@@ -279,7 +280,7 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     [_changeCamera setTitle:@"切换相机" forState:UIControlStateNormal];
     [_changeCamera setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_changeCamera addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _changeCamera.backgroundColor = [UIColor grayColor];
+    _changeCamera.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_changeCamera];
     
     _videoMute = [[UIButton alloc]init];
@@ -288,7 +289,7 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     [_videoMute setTitle:@"开启视频" forState:UIControlStateSelected];
     [_videoMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_videoMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _videoMute.backgroundColor = [UIColor grayColor];
+    _videoMute.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_videoMute];
     
     _audioMute = [[UIButton alloc]init];
@@ -297,7 +298,7 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     [_audioMute setTitle:@"开启音频" forState:UIControlStateSelected];
     [_audioMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_audioMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _audioMute.backgroundColor = [UIColor grayColor];
+    _audioMute.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_audioMute];
     
     _uiRecode = [[UIButton alloc]init];
@@ -306,7 +307,7 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     [_uiRecode setTitle:@"结束UI录制" forState:UIControlStateSelected];
     [_uiRecode setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_uiRecode addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _uiRecode.backgroundColor = [UIColor grayColor];
+    _uiRecode.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_uiRecode];
     
     _reverb = [[UIButton alloc]init];
@@ -315,7 +316,7 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     [_reverb setTitle:@"关闭混响" forState:UIControlStateSelected];
     [_reverb setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_reverb addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _reverb.backgroundColor = [UIColor grayColor];
+    _reverb.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_reverb];
     
     _messureModel = [[UIButton alloc]init];
@@ -324,8 +325,17 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     [_messureModel setTitle:@"关闭度量模式" forState:UIControlStateSelected];
     [_messureModel setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_messureModel addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _messureModel.backgroundColor = [UIColor grayColor];
+    _messureModel.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_messureModel];
+    
+    _sticker = [[UIButton alloc]init];
+    _sticker.backgroundColor = [UIColor clearColor];
+    [_sticker setTitle:@"开始贴纸" forState:UIControlStateNormal];
+    [_sticker setTitle:@"结束贴纸" forState:UIControlStateSelected];
+    [_sticker setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_sticker addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _sticker.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:_sticker];
     
     _inputGainLab = [[UILabel alloc]init];
     _inputGainLab.text = @"采集音量";
@@ -430,7 +440,7 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     rect.origin.y = CGRectGetMaxY(rect);
     _currentV.frame = rect;
  
-    int rightCount = 12;
+    int rightCount = 13;
     rect.origin = CGPointMake(self.view.bounds.size.width*0.5, 20);
     rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.topView.bounds.size.height-30) / rightCount);
     _audioMixBtn.frame = rect;
@@ -458,6 +468,9 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
     
     rect.origin.y = CGRectGetMaxY(rect);
     _messureModel.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _sticker.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     rect.size.width *= 0.4;
@@ -549,7 +562,33 @@ static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
 -(void)takeSelect:(UIButton*)btn{
 
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
-    if (btn == _messureModel) {
+    if (btn == _sticker) {
+        if (btn.selected) {
+            NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
+            for (int i = 0; i< 6 ; i++) {
+                images[i] = [UIImage imageNamed:[NSString stringWithFormat:@"%d.png",i]];
+            }
+            CGSize size = _livePush.captureSize;
+            GCRect rect = {size.width*0.5,size.height*0.5,100.0,100.0};
+            GJStickerAttribute* attr = [GJStickerAttribute stickerAttributWithFrame:rect rotate:0];
+            [_livePush startStickerWithImages:images attribure:attr fps:3 updateBlock:^GJStickerAttribute *(NSInteger index, BOOL *ioFinish) {
+                GCRect re = rect;
+                re.size.width = images[index].size.width;
+                re.size.height = images[index].size.height;
+                *ioFinish = NO;
+                if (*ioFinish) {
+                    btn.selected = NO;
+                }
+                static CGFloat r;
+                r += 5;
+                return [GJStickerAttribute stickerAttributWithFrame:re rotate:r];
+            }];
+        }else{
+            [_livePush chanceSticker];
+        }
+
+        
+    }else if (btn == _messureModel) {
         [GJAudioManager shareAudioManager].audioController.useMeasurementMode = btn.selected;
     }else if (btn == _reverb) {
         [_livePush enableReverb:btn.selected];

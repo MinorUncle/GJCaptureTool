@@ -17,6 +17,7 @@ typedef GVoid (*VideoFrameOutCallback) (GHandle userData, R_GJPixelFrame* frame)
 typedef GVoid (*H264PacketOutCallback) (GHandle userData, R_GJPacket* packet);
 typedef GBool (*FillDataCallback)(GHandle userData, GVoid* data, GInt32* size);
 typedef GVoid (*RecodeCompleteCallback) (GHandle userData,const GChar* filePath, GHandle error);
+typedef GStickerParm (*GJStickerUpdateCallback)(GHandle userDate,GLong index,GBool* ioFinish);
 
 
 typedef struct _GJRecodeContext{
@@ -49,11 +50,16 @@ typedef struct _GJVideoProduceContext{
     GBool   (*startPreview)           (struct _GJVideoProduceContext* context);
     GVoid   (*stopPreview)            (struct _GJVideoProduceContext* context);
     GHandle (*getRenderView)          (struct _GJVideoProduceContext* context);
+    GSize   (*getCaptureSize)          (struct _GJVideoProduceContext* context);
     GBool   (*setProduceSize)         (struct _GJVideoProduceContext* context, GSize size);
     GBool   (*setCameraPosition)      (struct _GJVideoProduceContext* context, GJCameraPosition cameraPosition);
     GBool   (*setOrientation)         (struct _GJVideoProduceContext* context, GJInterfaceOrientation outOrientation);
     GBool   (*setHorizontallyMirror)  (struct _GJVideoProduceContext* context, GBool mirror);
     GBool   (*setFrameRate)           (struct _GJVideoProduceContext* context, GInt32 fps);
+    GBool   (*addSticker)             (struct _GJVideoProduceContext* context, const GVoid* images, GStickerParm parm, GInt32 fps, GJStickerUpdateCallback callback,const GVoid* userData);
+    GVoid   (*chanceSticker)          (struct _GJVideoProduceContext* context);
+
+
 }GJVideoProduceContext;
 
 typedef struct _GJAudioProduceContext{
