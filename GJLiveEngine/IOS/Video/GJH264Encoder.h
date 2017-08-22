@@ -104,7 +104,6 @@ typedef void(^H264EncodeComplete)(R_GJPacket* packet);
 
  @param imageBuffer imageBuffer description
  @param pts pts in ms
- @param fourceKey fourceKey description
  @return 是否失败。可能主动丢帧，也可能编码失败
  */
 -(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts;

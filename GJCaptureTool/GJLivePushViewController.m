@@ -567,13 +567,13 @@ static char* url = "rtmp://10.0.1.142/live/room";
     if (btn == _sticker) {
         if (btn.selected) {
             NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
-            for (int i = 0; i< 6 ; i++) {
+            for (int i = 0; i< 1 ; i++) {
                 images[i] = [UIImage imageNamed:[NSString stringWithFormat:@"%d.png",i]];
             }
             CGSize size = _livePush.captureSize;
             GCRect rect = {size.width*0.5,size.height*0.5,100.0,100.0};
             GJStickerAttribute* attr = [GJStickerAttribute stickerAttributWithFrame:rect rotate:0];
-            [_livePush startStickerWithImages:images attribure:attr fps:3 updateBlock:^GJStickerAttribute *(NSInteger index, BOOL *ioFinish) {
+            [_livePush startStickerWithImages:images attribure:attr fps:15 updateBlock:^GJStickerAttribute *(NSInteger index, BOOL *ioFinish) {
                 GCRect re = rect;
                 re.size.width = images[index].size.width;
                 re.size.height = images[index].size.height;

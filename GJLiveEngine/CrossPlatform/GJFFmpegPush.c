@@ -114,7 +114,7 @@ static GHandle sendRunloop(GHandle parm){
                     memcpy(push->vStream->codecpar->extradata, sps, push->vStream->codecpar->extradata_size);
                     break;
                 }else{
-                    GJLOG(GJ_LOGWARNING, "没有sps，pps，丢弃该帧");
+                    GJLOG(GJ_LOGFORBID, "没有sps，pps，丢弃该帧");
                     queuePop(push->sendBufferQueue, (GHandle)packet, 0);
                     push->videoStatus.leave.byte+=packet->dataSize;
                     push->videoStatus.leave.count++;
@@ -124,7 +124,7 @@ static GHandle sendRunloop(GHandle parm){
                 }
             }else{
                 GJLOG(GJ_LOGWARNING, "非视频帧，丢弃该帧");
-                queuePop(push->sendBufferQueue, (GHandle)packet, 0);
+                queuePop(push->sendBufferQueue, (GHandle)&packet, 0);
                 push->audioStatus.leave.byte+=packet->dataSize;
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.ts = (GLong)packet->dts;

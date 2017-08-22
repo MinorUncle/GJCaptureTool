@@ -249,7 +249,9 @@ static GHandle sendRunloop(GHandle parm){
             GInt32 preSize = ppPreSize+RTMP_MAX_HEADER_SIZE;
             if (nal_start-packet->retain.data + packet->retain.frontSize < preSize) {
                 //申请内存控制得当的话不会进入此条件、  先扩大，在查找。
-                
+#if MENORY_CHECK
+                GJAssert(0, "MENORY_CHECK 状态下不能扩大内存");
+#endif
                 GJLOG(GJ_LOGDEBUG, "预留位置过小,扩大");
                 GInt32 nal_offset = (GInt32)(nal_start - packet->retain.data);
                 retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+ppPreSize, GTrue);
@@ -331,6 +333,9 @@ static GHandle sendRunloop(GHandle parm){
             
             RTMPPacket_Reset(&rtmpPacket);
             if (packet->dataOffset+packet->retain.frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
+#if MENORY_CHECK
+                GJAssert(0, "MENORY_CHECK 状态下不移动内存");
+#endif
                 GJLOG(GJ_LOGWARNING, "产生内存移动");
                 retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+preSize, GTrue);
             }
