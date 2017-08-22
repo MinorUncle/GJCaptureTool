@@ -237,7 +237,7 @@ void pullDataCallback(GJStreamPull* pull,R_GJPacket* packet,void* parm){
                 pthread_mutex_unlock(&livePull->lock);
                 return;
             }else{
-                GJLOG(GJ_LOGERROR,"音频没有adts");
+                GJLOG(GJ_LOGFORBID,"音频没有adts");
                 return;
             }
         }

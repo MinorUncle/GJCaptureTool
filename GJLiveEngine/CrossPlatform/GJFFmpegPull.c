@@ -131,7 +131,7 @@ static GHandle pullRunloop(GHandle parm){
             
             int adtsLength = 7;
             aaccPacket->dataOffset = 0;
-            aaccPacket->dataSize = aaccPacket->retain.size;
+            aaccPacket->dataSize = adtsLength;
             GUInt8* adts = aaccPacket->retain.data;
             GInt32 fullLength = adtsLength + 0;
             adts[0] = (char)0xFF;	// 11111111  	= syncword

@@ -222,7 +222,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     if ( encoder.sps == nil)
     {
         if (!keyframe) {
-            GJBufferPoolSetData(encoder.bufferPool,(GUInt8*)pushPacket);
+            GJBufferPoolSetData(defauleBufferPool(),(GUInt8*)pushPacket);
             return;
         }
         CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sample);
