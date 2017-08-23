@@ -36,8 +36,11 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer * retain,GHandle userD
     return self;
 }
 -(void)dealloc{
-    GJRetainBufferPoolClean(_bufferPool, GTrue);
-    GJRetainBufferPoolFree(_bufferPool);
+    GJRetainBufferPool* temPool = _bufferPool;
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        GJRetainBufferPoolClean(temPool, GTrue);
+        GJRetainBufferPoolFree(temPool);
+    });
 }
 -(void) createDecompSession
 {

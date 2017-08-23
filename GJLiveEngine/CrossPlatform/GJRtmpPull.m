@@ -109,12 +109,14 @@ static GHandle pullRunloop(GHandle parm){
                 pull->audioPullInfo.ts = packet.m_nTimeStamp;
                 pull->audioPullInfo.count++;
                 pull->audioPullInfo.byte += packet.m_nBodySize;
-                GUInt8* body = (GUInt8*)packet.m_body;
 #if MENORY_CHECK
-                R_GJPacket* aacPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, packet.m_nBodySize);
+                R_GJPacket* aacPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, GMAX(7, packet.m_nBodySize) );
                 
                 memcpy(aacPacket->retain.data, packet.m_body, packet.m_nBodySize);
+                aacPacket->retain.size = packet.m_nBodySize;
                 GJRetainBuffer* retainBuffer = &aacPacket->retain;
+                GUInt8* body = (GUInt8*)retainBuffer->data;
+                RTMPPacket_Free(&packet);
 #else
                 
                 R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
@@ -125,7 +127,7 @@ static GHandle pullRunloop(GHandle parm){
                 aacPacket->pts = packet.m_nTimeStamp;
                 aacPacket->type = GJMediaType_Audio;
                 if (body[1] == GJ_flv_a_aac_package_type_aac_raw) {
-                    aacPacket->dataOffset = RTMP_MAX_HEADER_SIZE+2;
+                    aacPacket->dataOffset = 2;
                     aacPacket->dataSize = (GInt32)(packet.m_nBodySize - 2);
                     aacPacket->flag = 0;
                 }else if (body[1] == GJ_flv_a_aac_package_type_aac_sequence_header){
@@ -133,7 +135,7 @@ static GHandle pullRunloop(GHandle parm){
                     GUInt8 freqIdx = ((body[2] & 0x07) << 1) |(body[3] >> 7);
                     GUInt8 chanCfg = (body[3] >> 3) & 0x0f;
                     int adtsLength = 7;
-                    GUInt8* adts = body - RTMP_MAX_HEADER_SIZE;
+                    GUInt8* adts = aacPacket->retain.data;;
                     GInt32 fullLength = adtsLength + 0;
                     adts[0] = (char)0xFF;	// 11111111  	= syncword
                     adts[1] = (char)0xF1;	   // 1111 0 00 1 = syncword+id(MPEG-4) + Layer + absent
@@ -146,6 +148,7 @@ static GHandle pullRunloop(GHandle parm){
                     aacPacket->dataOffset = 0;
                     aacPacket->dataSize = adtsLength;
                     aacPacket->flag = GJPacketFlag_KEY;
+                    
                 }else{
                     GJLOG(GJ_LOGFORBID,"音频流格式错误");
                     packet.m_body=NULL;
@@ -153,7 +156,6 @@ static GHandle pullRunloop(GHandle parm){
                     break;
                 }
                
-                packet.m_body=NULL;
                 pthread_mutex_lock(&pull->mutex);
                 if (!pull->releaseRequest) {
                     pull->dataCallback(pull,aacPacket,pull->dataCallbackParm);
@@ -161,6 +163,11 @@ static GHandle pullRunloop(GHandle parm){
                 pthread_mutex_unlock(&pull->mutex);
                 retainBufferUnRetain(retainBuffer);
                 
+#if MENORY_CHECK
+                RTMPPacket_Free(&packet);
+                packet.m_body=NULL;
+
+#endif
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
                 GJLOGFREQ("receive video pts:%d",packet.m_nTimeStamp);
 //                GJLOG(GJ_LOGDEBUG,"receive video pts:%d",packet.m_nTimeStamp);

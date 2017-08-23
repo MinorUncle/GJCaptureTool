@@ -15,13 +15,14 @@
 #import "GJBufferPool.h"
 #import "GJAudioManager.h"
 static char* url = "rtmp://10.0.23.70/live/room";
+
 //static char* url = "rtmp://10.0.1.142/live/room";
 //static char* url = "rtmp://192.168.199.187/live/room";
 //static char* url = "rtmp://192.168.199.187/live/room";
 //static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
 //static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
-
 //
+
 #define PULL_COUNT 2
 @interface PullShow : NSObject
 {
@@ -153,6 +154,7 @@ static char* url = "rtmp://10.0.23.70/live/room";
 @property (strong, nonatomic) UIButton *reverb;
 @property (strong, nonatomic) UIButton *messureModel;
 @property (strong, nonatomic) UIButton *sticker;
+@property (strong, nonatomic) UIButton *exitBtn;
 
 
 
@@ -173,7 +175,6 @@ static char* url = "rtmp://10.0.23.70/live/room";
 @property (strong, nonatomic) UILabel *delayVLab;
 @property (strong, nonatomic) UILabel *delayALab;
 @property (strong, nonatomic) UILabel *currentV;
-
 
 @property(strong,nonatomic)NSMutableArray<PullShow*>* pulls;
 
@@ -417,6 +418,15 @@ static char* url = "rtmp://10.0.23.70/live/room";
         [_pulls addObject:show];
         [self.view addSubview:show.view];
     }
+    
+    _exitBtn = [[UIButton alloc]init];
+    [_exitBtn setTitle:@"退出" forState:UIControlStateNormal];
+    [_exitBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    [_exitBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    _exitBtn.backgroundColor = [UIColor whiteColor];
+    [_exitBtn setShowsTouchWhenHighlighted:YES];
+    [self.view addSubview:_exitBtn];
+
 }
 -(void)updateFrame{
     CGRect rect = self.view.bounds;
@@ -500,7 +510,7 @@ static char* url = "rtmp://10.0.23.70/live/room";
     rect.size.width = self.view.bounds.size.width - rect.origin.x;
     _outputGain.frame = rect;
     
-    int count = PULL_COUNT + 1;
+    int count = PULL_COUNT + 2;
     rect.origin.y = CGRectGetMaxY(self.topView.frame);
     rect.origin.x = 0;
     rect.size.width = self.topView.frame.size.width * 1.0/count;
@@ -511,15 +521,18 @@ static char* url = "rtmp://10.0.23.70/live/room";
     sRect.origin.x = 0;
     sRect.origin.y = CGRectGetMaxY(rect);
     sRect.size.height = self.view.bounds.size.height - sRect.origin.y;
-    sRect.size.width = self.view.bounds.size.width/(count-1);
+    sRect.size.width = self.view.bounds.size.width/(count-2);
     for (int i = 0; i<PULL_COUNT; i++) {
         rect.origin.x = CGRectGetMaxX(rect);
-        
         PullShow* show = _pulls[i];
         show.pullBtn.frame = rect;
         show.frame = sRect;
         sRect.origin.x = CGRectGetMaxX(sRect);
     }
+    
+    rect.origin.x = CGRectGetMaxX(rect);
+    _exitBtn.frame = rect;
+    
 }
 -(void)valueChange:(UISlider*)slider{
     if (slider == _inputGain) {
@@ -564,7 +577,15 @@ static char* url = "rtmp://10.0.23.70/live/room";
 -(void)takeSelect:(UIButton*)btn{
 
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
-    if (btn == _sticker) {
+    if (btn == _exitBtn){
+        for (PullShow* pull in _pulls) {
+            [pull.pull stopStreamPull];
+        }
+        [_pulls removeAllObjects];
+        [_livePush stopStreamPush];
+        GJBufferPoolClean(defauleBufferPool(),GTrue);
+        [self dismissViewControllerAnimated:YES completion:nil];
+    }else if (btn == _sticker) {
         if (btn.selected) {
             NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
             for (int i = 0; i< 1 ; i++) {
@@ -812,6 +833,10 @@ static char* url = "rtmp://10.0.23.70/live/room";
         NSLog(@"释放完成");
         GJBufferPoolClean(defauleBufferPool(),false);
     }
+}
+-(void)dealloc{
+
+    NSLog(@"dealloc:%@",self);
 }
 /*
 #pragma mark - Navigation

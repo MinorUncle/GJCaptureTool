@@ -231,10 +231,7 @@ void pullDataCallback(GJStreamPull* pull,R_GJPacket* packet,void* parm){
                 if(livePull->videoPull){
                     livePull->audioDecoder->decodeSetup(livePull->audioDecoder,sourceformat,destformat,aacDecodeCompleteCallback,livePull);
                     GJLivePlay_SetAudioFormat(livePull->player, destformat);
-                    //            livePull.audioDecoder = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&destformat SourceDescription:&sourceformat];
-                    //            livePull.audioDecoder.delegate = livePull;
-                    //            [livePull.audioDecoder start];
-                    //            livePull.player.audioFormat = destformat;
+
                 }
 
                 pthread_mutex_unlock(&livePull->lock);

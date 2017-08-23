@@ -152,8 +152,12 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return self;
 }
 -(void)dealloc{
-    GJRetainBufferPoolClean(_bufferPool, GTrue);
-    GJRetainBufferPoolFree(_bufferPool);
+    GJRetainBufferPool* temPool = _bufferPool;
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        GJRetainBufferPoolClean(temPool, GTrue);
+        GJRetainBufferPoolFree(temPool);
+    });
+
 }
 -(GPUImageVideoCamera *)camera{
     if (_camera == nil) {
@@ -305,7 +309,7 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize){
 
 -(BOOL)startProduce{
     __weak IOS_VideoProduce* wkSelf = self;
-    runAsynchronouslyOnVideoProcessingQueue(^{
+    runSynchronouslyOnVideoProcessingQueue(^{
         GJFilterDeep deep = kFilterSticker;
         GPUImageOutput* parentFilter = [self getFilterWithDeep:&deep];
         
@@ -326,7 +330,7 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize){
 }
 
 -(void)stopProduce{
-    runAsynchronouslyOnVideoProcessingQueue(^{
+    runSynchronouslyOnVideoProcessingQueue(^{
         GJFilterDeep deep = kFilterSticker;
         GPUImageOutput* parentFilter = [self getFilterWithDeep:&deep];
         if (![parentFilter.targets containsObject:_imageView]) {

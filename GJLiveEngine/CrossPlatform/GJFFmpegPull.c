@@ -177,6 +177,7 @@ static GHandle pullRunloop(GHandle parm){
 #if MENORY_CHECK
             R_GJPacket* aacPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
             memcpy(aacPacket->retain.data, pkt.buf, pkt.size);
+            aacPacket->retain.size = pkt.size;
 #else
             R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
@@ -239,7 +240,7 @@ GBool GJStreamPull_Create(GJStreamPull** pullP,StreamPullMessageCallback callbac
     pull->messageCallbackParm = streamPullParm;
     pull->stopRequest = GFalse;
 #if MENORY_CHECK
-    GJRetainBufferPoolCreate(&pull->memoryCachePool, 1, GTrue, R_GJPacketMalloc, GNULL);
+    GJRetainBufferPoolCreate(&pull->memoryCachePool, 1, GTrue, R_GJPacketMalloc, GNULL,GNULL,GNULL);
 #endif
     pthread_mutex_init(&pull->mutex, NULL);
     *pullP = pull;
