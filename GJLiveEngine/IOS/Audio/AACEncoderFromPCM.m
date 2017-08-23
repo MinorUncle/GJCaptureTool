@@ -244,7 +244,6 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     outCacheBufferList.mBuffers[0].mData = audioBuffer->data+7;
     outCacheBufferList.mBuffers[0].mDataByteSize = _destMaxOutSize-7;
-
     OSStatus status = AudioConverterFillComplexBuffer(_encodeConvert, encodeInputDataProc, (__bridge void*)self, &outputDataPacketSize, &outCacheBufferList, &packetDesc);
 
     if (status != noErr ) {

@@ -14,8 +14,9 @@
 struct _GJStreamPull{
     AVFormatContext*                   formatContext;
     char                    pullUrl[MAX_URL_LENGTH];
-    
+#if MENORY_CHECK
     GJRetainBufferPool*      memoryCachePool;
+#endif
     pthread_t               pullThread;
     pthread_mutex_t          mutex;
     
@@ -36,9 +37,12 @@ struct _GJStreamPull{
 GVoid GJStreamPull_Delloc(GJStreamPull* pull);
 
 static GBool packetBufferRelease(GJRetainBuffer* buffer){
-    
-    AVBufferRef* avbuf = buffer->parm;
-    av_buffer_unref(&avbuf);
+    if(buffer->parm){
+        AVBufferRef* avbuf = buffer->parm;
+        av_buffer_unref(&avbuf);
+    }else{
+        retainBufferFreeData(buffer);
+    }
     GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer);
     return GTrue;
 }
@@ -105,10 +109,6 @@ static GHandle pullRunloop(GHandle parm){
                 }
             }
         }
-       
-
-        
-        
     }
     
     GInt32 asIndex = av_find_best_stream(pull->formatContext, AVMEDIA_TYPE_AUDIO,-1, -1, NULL, 0);
@@ -123,7 +123,6 @@ static GHandle pullRunloop(GHandle parm){
             retainBufferAlloc((GJRetainBuffer**)&aaccPacket, 7, packetBufferRelease, GNULL);
             aaccPacket->type = GJMediaType_Audio;
             aaccPacket->flag = GJPacketFlag_KEY;
-            
             
             GUInt8 profile = (aacc[0] & 0xF8)>>3;
             GUInt8 freqIdx = ((aacc[0] & 0x07) << 1) |(aacc[1] >> 7);
@@ -144,9 +143,7 @@ static GHandle pullRunloop(GHandle parm){
 
             pull->dataCallback(pull,aaccPacket,pull->dataCallbackParm);
             retainBufferUnRetain(&aaccPacket->retain);
-
         }
-
     }
     AVPacket pkt;
     while (!pull->stopRequest) {
@@ -157,9 +154,15 @@ static GHandle pullRunloop(GHandle parm){
         }
         
         if (pkt.stream_index == vsIndex) {
+#if MENORY_CHECK
+            R_GJPacket* h264Packet = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
+            memcpy(h264Packet->retain.data, pkt.buf, pkt.size);
+#else
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
             R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             retainBufferPack((GJRetainBuffer**)&h264Packet, pkt.data, pkt.size, packetBufferRelease, buffer);
+#endif
+           
             h264Packet->dataOffset = 0;
             h264Packet->dataSize = pkt.size;
             h264Packet->pts = pkt.pts;
@@ -171,10 +174,14 @@ static GHandle pullRunloop(GHandle parm){
 
         }else if (pkt.stream_index == asIndex){
 //            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
-
+#if MENORY_CHECK
+            R_GJPacket* aacPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
+            memcpy(aacPacket->retain.data, pkt.buf, pkt.size);
+#else
             R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
             retainBufferPack((GJRetainBuffer**)&aacPacket, pkt.data, pkt.size, packetBufferRelease, buffer);
+#endif
             aacPacket->dataOffset = 0;
             aacPacket->dataSize = pkt.size;
             aacPacket->pts = pkt.pts;
@@ -231,12 +238,19 @@ GBool GJStreamPull_Create(GJStreamPull** pullP,StreamPullMessageCallback callbac
     pull->messageCallback = callback;
     pull->messageCallbackParm = streamPullParm;
     pull->stopRequest = GFalse;
+#if MENORY_CHECK
+    GJRetainBufferPoolCreate(&pull->memoryCachePool, 1, GTrue, R_GJPacketMalloc, GNULL);
+#endif
     pthread_mutex_init(&pull->mutex, NULL);
     *pullP = pull;
     return GTrue;
 }
 GVoid GJStreamPull_Delloc(GJStreamPull* pull){
     if (pull) {
+#if MENORY_CHECK
+        GJRetainBufferPoolClean(pull->memoryCachePool, GTrue);
+        GJRetainBufferPoolFree(pull->memoryCachePool);
+#endif
         avformat_free_context(pull->formatContext);
         free(pull);
         GJLOG(GJ_LOGDEBUG, "GJStreamPull_Delloc:%p",pull);

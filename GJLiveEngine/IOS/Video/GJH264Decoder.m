@@ -28,8 +28,13 @@
         _decodeQueue = dispatch_queue_create("GJDecodeQueue", DISPATCH_QUEUE_SERIAL);
         _outPutImageFormat = kCVPixelFormatType_32BGRA;
 //        _outPutImageFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
+        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVPixelBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL);
     }
     return self;
+}
+-(void)dealloc{
+    GJRetainBufferPoolClean(_bufferPool, GTrue);
+    GJRetainBufferPoolFree(_bufferPool);
 }
 -(void) createDecompSession
 {

@@ -120,6 +120,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property(nonatomic,assign)BOOL horizontallyMirror;
 @property(nonatomic,assign)CGSize captureSize;
 @property(nonatomic,assign)int frameRate;
+@property(nonatomic,assign)GJRetainBufferPool* bufferPool;
 @property(nonatomic,strong)GJImagePictureOverlay* sticker;
 
 @property(nonatomic,copy)VideoRecodeCallback callback;
@@ -136,6 +137,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _cameraPosition = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
         self.destSize = CGSizeMake((CGFloat)format.mWidth, (CGFloat)format.mHeight);
+        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL);
     }
     return self;
 }
@@ -147,10 +149,14 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _outputOrientation = UIInterfaceOrientationPortrait;
         _frameRate = 15;
         self.destSize = CGSizeMake(480,640);
+        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL);
     }
     return self;
 }
-
+-(void)dealloc{
+    GJRetainBufferPoolClean(_bufferPool, GTrue);
+    GJRetainBufferPoolFree(_bufferPool);
+}
 -(GPUImageVideoCamera *)camera{
     if (_camera == nil) {
         CGSize size = _destSize;
@@ -309,8 +315,8 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize){
         self.cropFilter.frameProcessingCompletionBlock = ^(GPUImageOutput * imageOutput, CMTime time) {
             CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].pixelBuffer;
             CVPixelBufferRetain(pixel_buffer);
-            R_GJPixelFrame* frame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
-            retainBufferPack((GJRetainBuffer**)&frame, pixel_buffer, sizeof(CVPixelBufferRef), pixelReleaseCallBack, GNULL);
+            R_GJPixelFrame* frame = (R_GJPixelFrame*)GJRetainBufferPoolGetData(wkSelf.bufferPool);
+            ((CVPixelBufferRef*)frame->retain.data)[0] = pixel_buffer;
             frame->height = (GInt32)wkSelf.destSize.height;
             frame->width = (GInt32)wkSelf.destSize.width;
             wkSelf.callback(frame);
@@ -438,6 +444,7 @@ inline static GBool videoProduceSetup(struct _GJVideoProduceContext* context,GJP
     return GTrue;
 
 }
+
 inline static GVoid videoProduceUnSetup(struct _GJVideoProduceContext* context){
     if(context->obaque){
         IOS_VideoProduce* recode = (__bridge_transfer IOS_VideoProduce *)(context->obaque);
@@ -445,24 +452,29 @@ inline static GVoid videoProduceUnSetup(struct _GJVideoProduceContext* context){
         context->obaque = GNULL;
     }
 }
+
 inline static GBool videoProduceStart(struct _GJVideoProduceContext* context){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     return [recode startProduce];
 }
+
 inline static GVoid videoProduceStop(struct _GJVideoProduceContext* context){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     return [recode stopProduce];
 }
+
 inline static GHandle videoProduceGetRenderView(struct _GJVideoProduceContext* context){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     return (__bridge GHandle)([recode getPreviewView]);
 
 }
+
 inline static GBool videoProduceSetProduceSize(struct _GJVideoProduceContext* context,GSize size){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     [recode setDestSize:CGSizeMake(size.width, size.height)];
     return GTrue;
 }
+
 inline static GBool videoProduceSetCameraPosition(struct _GJVideoProduceContext* context,GJCameraPosition cameraPosition){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     AVCaptureDevicePosition position = AVCaptureDevicePositionUnspecified;
@@ -479,6 +491,7 @@ inline static GBool videoProduceSetCameraPosition(struct _GJVideoProduceContext*
     [recode setCameraPosition:position];
     return GTrue;
 }
+
 inline static GBool videoProduceSetOutputOrientation(struct _GJVideoProduceContext* context,GJInterfaceOrientation outOrientation){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     UIInterfaceOrientation orientation = UIInterfaceOrientationUnknown;
@@ -501,24 +514,29 @@ inline static GBool videoProduceSetOutputOrientation(struct _GJVideoProduceConte
     [recode setOutputOrientation:orientation];
     return GTrue;
 }
+
 inline static GBool videoProduceSetHorizontallyMirror(struct _GJVideoProduceContext* context,GBool mirror){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     [recode setHorizontallyMirror:mirror];
     return GTrue;
 }
+
 inline static GBool videoProduceSetFrameRate(struct _GJVideoProduceContext* context,GInt32 fps){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     [recode setFrameRate:fps];
     return recode.frameRate = fps;
 }
+
 inline static GBool videoProduceStartPreview(struct _GJVideoProduceContext* context){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     return [recode startPreview];
 }
+
 inline static GVoid videoProduceStopPreview(struct _GJVideoProduceContext* context){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     [recode stopPreview];
 }
+
 inline static GBool addSticker(struct _GJVideoProduceContext* context, const GVoid* images, GStickerParm parm, GInt32 fps, GJStickerUpdateCallback callback,const GVoid* userData){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     CGRect rect = CGRectMake(parm.frame.center.x, parm.frame.center.y, parm.frame.size.width, parm.frame.size.height);
@@ -533,10 +551,12 @@ inline static GBool addSticker(struct _GJVideoProduceContext* context, const GVo
     }
     return GTrue;
 }
+
 inline static GVoid chanceSticker(struct _GJVideoProduceContext* context){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     [recode chanceSticker];
 }
+
 inline static GSize getCaptureSize(struct _GJVideoProduceContext* context){
     IOS_VideoProduce* recode = (__bridge IOS_VideoProduce *)(context->obaque);
     GSize size;
@@ -544,6 +564,7 @@ inline static GSize getCaptureSize(struct _GJVideoProduceContext* context){
     size.height = recode.captureSize.height;
     return size;
 }
+
 GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext** produceContext){
     if (*produceContext == NULL) {
         *produceContext = (GJVideoProduceContext*)malloc(sizeof(GJVideoProduceContext));
@@ -565,6 +586,7 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext** produceContext){
     context->addSticker = addSticker;
     context->chanceSticker = chanceSticker;
 }
+
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext** context){
     if ((*context)->obaque) {
         GJLOG(GJ_LOGWARNING, "videoProduceUnSetup 没有调用，自动调用");

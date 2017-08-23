@@ -73,7 +73,7 @@ static GJAudioManager* _staticManager;
 }
 
 -(void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time{
-
+    return;
     
 //    R_GJPCMFrame* pcmFrame = NULL;
 //    printf("audio size:%d chchesize:%d pts:%lld\n",frame->mBuffers[0].mDataByteSize,_alignCacheFrame->retain.size,time);

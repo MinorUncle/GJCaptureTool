@@ -7,7 +7,7 @@
 //
 
 #import "GJH264Encoder.h"
-#import "GJBufferPool.h"
+#import "GJRetainBufferPool.h"
 #import "GJLiveDefine+internal.h"
 #import "GJLog.h"
 //#define DEFAULT_DELAY  10
@@ -25,7 +25,7 @@
     
 }
 @property(nonatomic,assign)VTCompressionSessionRef enCodeSession;
-@property(nonatomic,assign)GJBufferPool* bufferPool;
+@property(nonatomic,assign)GJRetainBufferPool* bufferPool;
 //@property(nonatomic,assign)GInt32 currentBitRate;//当前码率
 
 @end
@@ -123,14 +123,15 @@
     }
     _sps = _pps = nil;
     if (_bufferPool != NULL) {
-        GJBufferPool* pool = _bufferPool;
+        GJRetainBufferPool* pool = _bufferPool;
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            GJBufferPoolClean(pool,true);
-            GJBufferPoolFree(pool);
+            
+            GJRetainBufferPoolClean(pool, true);
+            GJRetainBufferPoolFree(pool);
         });
         _bufferPool = NULL;
     }
-    GJBufferPoolCreate(&_bufferPool,1, true);
+    GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPacketMalloc, GNULL);
     VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
  
 }
@@ -190,12 +191,12 @@
     }
 }
 
-static GBool retainBufferRelease(GJRetainBuffer* buffer){
-    GJBufferPool* pool = buffer->parm;
-    GJBufferPoolSetData(pool, buffer->data-buffer->frontSize);
-    GJBufferPoolSetData(defauleBufferPool(), (void*)buffer);
-    return GTrue;
-}
+//static GBool retainBufferRelease(GJRetainBuffer* buffer){
+//    GJBufferPool* pool = buffer->parm;
+//    GJBufferPoolSetData(pool, buffer->data-buffer->frontSize);
+//    GJBufferPoolSetData(defauleBufferPool(), (void*)buffer);
+//    return GTrue;
+//}
 
 void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon,OSStatus statu,VTEncodeInfoFlags infoFlags,
                           CMSampleBufferRef sample ){
@@ -206,9 +207,8 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         return;
     }
     GJH264Encoder* encoder = (__bridge GJH264Encoder *)(outputCallbackRefCon);
-    R_GJPacket* pushPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
-    GJRetainBuffer* retainBuffer = &pushPacket->retain;
-    memset(pushPacket, 0, sizeof(R_GJPacket));
+    GJRetainBuffer* retainBuffer = NULL;
+    R_GJPacket* pushPacket = NULL;
 #define PUSH_H264_PACKET_PRE_SIZE 45
     
     CMBlockBufferRef dataBuffer = CMSampleBufferGetDataBuffer(sample);
@@ -222,7 +222,6 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     if ( encoder.sps == nil)
     {
         if (!keyframe) {
-            GJBufferPoolSetData(defauleBufferPool(),(GUInt8*)pushPacket);
             return;
         }
         CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sample);
@@ -233,7 +232,6 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         if (statusCode != noErr)
         {
             GJLOG(GJ_LOGFORBID,"CMVideoFormatDescriptionGetH264ParameterSetAt sps error:%d",statusCode);
-            GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
             return;
         }
         
@@ -244,14 +242,13 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         if ((statusCode != noErr))
         {
             GJLOG(GJ_LOGFORBID,"CMVideoFormatDescriptionGetH264ParameterSetAt pps error:%d",statusCode);
-            GJBufferPoolSetData(defauleBufferPool(), (void*)pushPacket);
             return;
         }
         
         size_t spsppsSize = sparameterSetSize+pparameterSetSize;
-        int needSize = (int)(spsppsSize+totalLength+PUSH_H264_PACKET_PRE_SIZE);
-        retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
-        
+        int needSize = (int)(8 + spsppsSize+totalLength+PUSH_H264_PACKET_PRE_SIZE);
+        pushPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
+        retainBuffer = &pushPacket->retain;
         if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
             retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
         }
@@ -274,7 +271,9 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
     }else{
         int needSize = (int)(totalLength+PUSH_H264_PACKET_PRE_SIZE);
-        retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
+//        retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
+        pushPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
+        retainBuffer = &pushPacket->retain;
         if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
             retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
         }
@@ -371,10 +370,10 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     GJLOG(GJ_LOGDEBUG, "GJH264Encoder：%p",self);
     if(_enCodeSession)VTCompressionSessionInvalidate(_enCodeSession);
     if (_bufferPool) {
-        GJBufferPool* pool = _bufferPool;
+        GJRetainBufferPool* pool = _bufferPool;
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            GJBufferPoolClean(pool,true);
-            GJBufferPoolFree(pool);
+            GJRetainBufferPoolClean(pool, true);
+            GJRetainBufferPoolFree(pool);
         });
     }
     

@@ -10,7 +10,7 @@
 #import <VideoToolbox/VideoToolbox.h>
 #import "GJFormats.h"
 #import "GJQueue.h"
-#import "GJRetainBuffer.h"
+#import "GJRetainBufferPool.h"
 #import "GJLiveDefine+internal.h"
 typedef void(^H264DecodeComplete)(CVImageBufferRef image,int64_t pts,int64_t dts);
 
@@ -19,10 +19,12 @@ typedef void(^H264DecodeComplete)(CVImageBufferRef image,int64_t pts,int64_t dts
 //@end
 
 @interface GJH264Decoder : NSObject
-
+{
+}
 //default kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
 @property(nonatomic,assign)OSType outPutImageFormat;
 @property(nonatomic,copy)H264DecodeComplete completeCallback;
+@property(nonatomic,assign)GJRetainBufferPool* bufferPool;
 
 -(void)decodePacket:(R_GJPacket *)packet;
 @end
