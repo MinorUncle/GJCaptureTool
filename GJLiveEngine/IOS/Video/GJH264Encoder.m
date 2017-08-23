@@ -131,7 +131,7 @@
         });
         _bufferPool = NULL;
     }
-    GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPacketMalloc, GNULL);
+    GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPacketMalloc, GNULL,GNULL,GNULL);
     VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
  
 }

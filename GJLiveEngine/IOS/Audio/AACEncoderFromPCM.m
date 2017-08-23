@@ -156,7 +156,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         });
         _bufferPool = NULL;
     }
-    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJPacketMalloc,GNULL);
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJPacketMalloc,GNULL,GNULL,GNULL);
     GJLOG(GJ_LOGDEBUG, "AudioConverterNewSpecific success:%p",_encodeConvert);
     return YES;
 }

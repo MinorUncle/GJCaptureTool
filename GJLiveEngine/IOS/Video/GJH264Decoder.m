@@ -20,7 +20,10 @@
 
 @end
 @implementation GJH264Decoder
-
+inline static GVoid cvImagereleaseCallBack(GJRetainBuffer * retain,GHandle userData){
+    CVImageBufferRef image = ((CVImageBufferRef*)retain->data)[0];
+    CVPixelBufferRelease(image);
+}
 - (instancetype)init
 {
     self = [super init];
@@ -28,7 +31,7 @@
         _decodeQueue = dispatch_queue_create("GJDecodeQueue", DISPATCH_QUEUE_SERIAL);
         _outPutImageFormat = kCVPixelFormatType_32BGRA;
 //        _outPutImageFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
-        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVPixelBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVPixelBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL,cvImagereleaseCallBack,GNULL);
     }
     return self;
 }
@@ -83,8 +86,18 @@ void decodeOutputCallback(
 
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
 
+    R_GJPixelFrame* frame = (R_GJPixelFrame*)GJRetainBufferPoolGetData(decoder.bufferPool);
+    frame->height = (GInt32)CVPixelBufferGetHeight(imageBuffer);
+    frame->width = (GInt32)CVPixelBufferGetWidth(imageBuffer);
+    frame->pts = pts;
+    frame->dts = (GInt64)dts;
+    frame->type = CVPixelBufferGetPixelFormatType(imageBuffer);
+    CVPixelBufferRetain(imageBuffer);
+    ((CVImageBufferRef*)frame->retain.data)[0] = imageBuffer;
+    
 //    printf("after decode pts:%lld ,dts:%ld\n",pts,dts);
-    decoder.completeCallback(imageBuffer, pts,(GInt64)dts);
+    decoder.completeCallback(frame);
+    retainBufferUnRetain(&frame->retain);
 }
 
 -(uint8_t*)startCodeIndex:(uint8_t*)sour size:(long)size codeSize:(uint8_t*)codeSize{

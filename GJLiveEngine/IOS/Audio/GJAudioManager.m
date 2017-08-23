@@ -46,7 +46,7 @@ static GJAudioManager* _staticManager;
         _audioController.useMeasurementMode = YES;
 //        [_audioController setPreferredBufferDuration:0.023];
         
-        GJRetainBufferPoolCreate(&_bufferPool, 0, GTrue, R_GJPCMFrameMalloc, GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, 0, GTrue, R_GJPCMFrameMalloc, GNULL,GNULL,GNULL);
         _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket);
         _alignCacheFrame->retain.size = 0;
         _durPerSize = 1000.0/_audioController.audioDescription.mSampleRate/_audioController.audioDescription.mBytesPerFrame;

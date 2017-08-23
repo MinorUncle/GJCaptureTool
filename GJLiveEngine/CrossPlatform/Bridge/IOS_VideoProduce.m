@@ -22,11 +22,9 @@ typedef enum {//filter深度
 }GJFilterDeep;
 typedef void(^VideoRecodeCallback)(R_GJPixelFrame* frame);
 
-static GBool pixelReleaseCallBack(GJRetainBuffer *buffer){
-    CVPixelBufferRef image = (CVPixelBufferRef)buffer->data;
+static GVoid pixelReleaseCallBack(GJRetainBuffer *buffer,GHandle userData){
+    CVPixelBufferRef image = ((CVPixelBufferRef*)buffer->data)[0];
     CVPixelBufferRelease(image);
-    GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer);
-    return GTrue;
 }
 
 BOOL getCaptureInfoWithSize(CGSize size,CGSize* captureSize,NSString** sessionPreset){
@@ -137,7 +135,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _cameraPosition = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
         self.destSize = CGSizeMake((CGFloat)format.mWidth, (CGFloat)format.mHeight);
-        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL,pixelReleaseCallBack,GNULL);
     }
     return self;
 }
@@ -149,7 +147,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _outputOrientation = UIInterfaceOrientationPortrait;
         _frameRate = 15;
         self.destSize = CGSizeMake(480,640);
-        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL,pixelReleaseCallBack,GNULL);
     }
     return self;
 }

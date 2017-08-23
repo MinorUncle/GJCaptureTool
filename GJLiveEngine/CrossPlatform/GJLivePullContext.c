@@ -228,12 +228,15 @@ void pullDataCallback(GJStreamPull* pull,R_GJPacket* packet,void* parm){
                 //            destformat.mFramesPerPacket = destformat.mBytesPerFrame * destformat.mFramesPerPacket ;
                 //            destformat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
                 pthread_mutex_lock(&livePull->lock);
-                livePull->audioDecoder->decodeSetup(livePull->audioDecoder,sourceformat,destformat,aacDecodeCompleteCallback,livePull);
-                GJLivePlay_SetAudioFormat(livePull->player, destformat);
-                //            livePull.audioDecoder = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&destformat SourceDescription:&sourceformat];
-                //            livePull.audioDecoder.delegate = livePull;
-                //            [livePull.audioDecoder start];
-                //            livePull.player.audioFormat = destformat;
+                if(livePull->videoPull){
+                    livePull->audioDecoder->decodeSetup(livePull->audioDecoder,sourceformat,destformat,aacDecodeCompleteCallback,livePull);
+                    GJLivePlay_SetAudioFormat(livePull->player, destformat);
+                    //            livePull.audioDecoder = [[GJPCMDecodeFromAAC alloc]initWithDestDescription:&destformat SourceDescription:&sourceformat];
+                    //            livePull.audioDecoder.delegate = livePull;
+                    //            [livePull.audioDecoder start];
+                    //            livePull.player.audioFormat = destformat;
+                }
+
                 pthread_mutex_unlock(&livePull->lock);
                 return;
             }else{

@@ -362,7 +362,7 @@ GBool GJStreamPull_Create(GJStreamPull** pullP,StreamPullMessageCallback callbac
     pull->stopRequest = GFalse;
     
 #if MENORY_CHECK
-    GJRetainBufferPoolCreate(&pull->memoryCachePool, 1, GTrue, R_GJPacketMalloc, GNULL);
+    GJRetainBufferPoolCreate(&pull->memoryCachePool, 1, GTrue, R_GJPacketMalloc, GNULL,GNULL,GNULL);
 #endif
     pthread_mutex_init(&pull->mutex, NULL);
     *pullP = pull;

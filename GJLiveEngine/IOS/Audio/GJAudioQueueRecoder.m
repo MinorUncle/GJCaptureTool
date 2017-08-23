@@ -257,7 +257,7 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
     if (format.mFormatID == kAudioFormatLinearPCM) {
 //        maxPacketSize = _format.mBytesPerFrame * _format.mSampleRate * _callbackDelay;//
         maxPacketSize = _format.mBytesPerFrame * 1024;
-        GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize, true,R_GJPCMFrameMalloc,GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize, true,R_GJPCMFrameMalloc,GNULL,GNULL,GNULL);
 
     }else{
         UInt32 parmSize = sizeof(maxPacketSize);
@@ -267,7 +267,7 @@ static void aacHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
         }else{
             maxPacketSize = maxPacketSize*1.0/_format.mFramesPerPacket*_format.mSampleRate*0.5+7;
         }
-        GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize, true,R_GJPacketMalloc,GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, maxPacketSize, true,R_GJPacketMalloc,GNULL,GNULL,GNULL);
     }
     _maxOutSize = maxPacketSize;
     _status = kRecoderStopStatus;

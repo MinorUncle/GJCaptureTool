@@ -216,7 +216,7 @@ static const int mpeg4audio_sample_rates[16] = {
         });
         _bufferPool = NULL;
     }
-    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJPCMFrameMalloc,GNULL);
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJPCMFrameMalloc,GNULL,GNULL,GNULL);
     
     AudioConverterGetProperty(_decodeConvert, kAudioConverterCurrentInputStreamDescription, &size, &_sourceFormat);
     

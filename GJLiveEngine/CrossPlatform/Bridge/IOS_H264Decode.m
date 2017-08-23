@@ -11,30 +11,15 @@
 #import "GJBufferPool.h"
 #import "GJLog.h"
 #import <stdlib.h>
-inline static GBool cvImagereleaseCallBack(GJRetainBuffer * retain){
-    CVImageBufferRef image = (CVImageBufferRef)retain->data;
-    CVPixelBufferRelease(image);
-    GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)retain);
-    return GTrue;
-}
+
 inline static GBool decodeSetup (struct _GJH264DecodeContext* context,GJPixelType format,VideoFrameOutCallback callback,GHandle userData)
 {
     GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
     GJLOG(GJ_LOGINFO, "GJH264Decoder setup");
 
     GJH264Decoder* decode = [[GJH264Decoder alloc]init];
-    __weak GJH264Decoder* wd = decode;
-    decode.completeCallback = ^(CVImageBufferRef image, int64_t pts,int64_t dts){
-        R_GJPixelFrame* frame = (R_GJPixelFrame*)GJRetainBufferPoolGetData(wd.bufferPool);
-        frame->height = (GInt32)CVPixelBufferGetHeight(image);
-        frame->width = (GInt32)CVPixelBufferGetWidth(image);
-        frame->pts = pts;
-        frame->dts = dts;
-        frame->type = CVPixelBufferGetPixelFormatType(image);
-        CVPixelBufferRetain(image);
-        ((CVImageBufferRef*)frame->retain.data)[0] = image;
+    decode.completeCallback = ^(R_GJPixelFrame* frame){
         callback(userData,frame);
-        retainBufferUnRetain(&frame->retain);
     };
     context->obaque = (__bridge_retained GHandle)decode;
     return GTrue;
