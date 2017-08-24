@@ -22,43 +22,22 @@ GBool R_RetainBufferRelease(GJRetainBuffer* buffer){
 //GJRetainBuffer* R_GJH264PacketMalloc(GJRetainBufferPool* pool,GHandle userdata){
 //    return (GJRetainBuffer*)calloc(1,sizeof(R_GJH264Packet));
 //}
-GJRetainBuffer* R_GJPacketMalloc(GJRetainBufferPool* pool,GHandle userdata){
+GInt32 R_GJPacketMalloc(GJRetainBufferPool* pool,GJRetainBuffer** buffer,GHandle userdata){
     
-    GJRetainBuffer * buffer;
-#if MENORY_CHECK
-    GLong* data = (GLong*)calloc(1,sizeof(R_GJPacket)+sizeof(GJRetainBufferPool));
-    data[0] = (GLong)pool;
-    buffer =  (GJRetainBuffer*)(data+1);
-#else
-    buffer = (GJRetainBuffer*)calloc(1,sizeof(R_GJPacket));
-#endif
-    return buffer;
+    *buffer = (GJRetainBuffer*)calloc(1,sizeof(R_GJPacket));
+    return sizeof(R_GJPacket);
 }
 
-GJRetainBuffer* R_GJPCMFrameMalloc(GJRetainBufferPool* pool,GHandle userdata){
+GInt32 R_GJPCMFrameMalloc(GJRetainBufferPool* pool,GJRetainBuffer** buffer,GHandle userdata){
     
-    GJRetainBuffer * buffer;
-#if MENORY_CHECK
-    GLong* data = (GLong*)calloc(1,sizeof(R_GJPCMFrame)+sizeof(GJRetainBufferPool));
-    data[0] = (GLong)pool;
-    buffer =  (GJRetainBuffer*)(data+1);
-#else
-    buffer = (GJRetainBuffer*)calloc(1,sizeof(R_GJPCMFrame));
-#endif
-    return buffer;
+    *buffer = (GJRetainBuffer*)calloc(1,sizeof(R_GJPCMFrame));
+    return sizeof(R_GJPCMFrame);
     
 }
-GJRetainBuffer* R_GJPixelFrameMalloc(GJRetainBufferPool* pool,GHandle userdata){
+GInt32 R_GJPixelFrameMalloc(GJRetainBufferPool* pool,GJRetainBuffer** buffer,GHandle userdata){
     
-    GJRetainBuffer * buffer;
-#if MENORY_CHECK
-    GLong* data = (GLong*)calloc(1,sizeof(R_GJPixelFrame)+sizeof(GJRetainBufferPool));
-    data[0] = (GLong)pool;
-    buffer =  (GJRetainBuffer*)(data+1);
-#else
-    buffer = (GJRetainBuffer*)calloc(1,sizeof(R_GJPixelFrame));
-#endif
-    return buffer;
+    *buffer = (GJRetainBuffer*)calloc(1,sizeof(R_GJPixelFrame));
+    return sizeof(R_GJPixelFrame);
     
 }
 

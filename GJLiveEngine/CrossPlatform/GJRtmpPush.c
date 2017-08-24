@@ -744,10 +744,11 @@ GVoid GJStreamPush_Close(GJStreamPush* sender){
 
 
 GFloat32 GJStreamPush_GetBufferRate(GJStreamPush* sender){
-    GLong length = queueGetLength(sender->sendBufferQueue);
-    GFloat32 size = sender->sendBufferQueue->allocSize * 1.0;
-//    GJPrintf("BufferRate length:%ld ,size:%f   rate:%f\n",length,size,length/size);
-    return length / size;
+    return queueGetCacheRate(sender->sendBufferQueue);
+//    GLong length = queueGetLength(sender->sendBufferQueue);
+//    GFloat32 size = sender->sendBufferQueue->allocSize * 1.0;
+////    GJPrintf("BufferRate length:%ld ,size:%f   rate:%f\n",length,size,length/size);
+//    return length / size;
 };
 GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush* push){
     if (push == GNULL) {

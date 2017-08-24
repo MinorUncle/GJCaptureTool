@@ -114,13 +114,12 @@ typedef struct GJPacket{
 //GJRetainBuffer* R_GJAACPacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
 //GJRetainBuffer* R_GJH264PacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
 
-GJRetainBuffer* R_GJPacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
+GInt32 R_GJPacketMalloc(GJRetainBufferPool* pool,GJRetainBuffer** buffer,GHandle userdata);
 
-GJRetainBuffer* R_GJPCMFrameMalloc(GJRetainBufferPool* pool,GHandle userdata);
-GJRetainBuffer* R_GJPixelFrameMalloc(GJRetainBufferPool* pool,GHandle userdata);
+GInt32 R_GJPCMFrameMalloc(GJRetainBufferPool* pool,GJRetainBuffer** buffer,GHandle userdata);
+GInt32 R_GJPixelFrameMalloc(GJRetainBufferPool* pool,GJRetainBuffer** buffer,GHandle userdata);
 
-//GJRetainBuffer* R_GJStreamPacketMalloc(GJRetainBufferPool* pool,GHandle userdata);
-GJRetainBuffer* R_GJStreamFrameMalloc(GJRetainBufferPool* pool,GHandle userdata);
+GInt32 R_GJStreamFrameMalloc(GJRetainBufferPool* pool,GJRetainBuffer** buffer,GHandle userdata);
 
 
 GBool R_RetainBufferRelease(GJRetainBuffer* buffer);
