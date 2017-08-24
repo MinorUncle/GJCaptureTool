@@ -237,7 +237,6 @@ static GHandle sendRunloop(GHandle parm){
                     index++;
                 }
 
-
             }else{
                 
                 nal_start = packet->dataOffset+packet->retain.data;
@@ -300,7 +299,8 @@ static GHandle sendRunloop(GHandle parm){
                 goto ERROR;
             }
         }else{
-            
+//            printf("send packet pts:%lld size:%d  last data:%d\n",packet->pts,packet->dataSize,(packet->retain.data + packet->dataOffset + packet->dataSize -1)[0]);
+
             if (push->audioStatus.leave.count == 0) {
                 RTMPPacket aacPacket;
                 if(RTMP_AllocAndPackAACSequenceHeader(push, 2, push->audioFormat->format.mSampleRate, push->audioFormat->format.mChannelsPerFrame, packet->pts, &aacPacket)){
@@ -652,7 +652,6 @@ GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
 }
 GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
     if(push == GNULL)return GFalse;
-    
     retainBufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         push->audioStatus.enter.ts = (GLong)packet->pts;

@@ -156,14 +156,14 @@ static GHandle pullRunloop(GHandle parm){
         if (pkt.stream_index == vsIndex) {
 #if MENORY_CHECK
             R_GJPacket* h264Packet = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
-            memcpy(h264Packet->retain.data, pkt.buf, pkt.size);
+            h264Packet->dataOffset = 0;
+            memcpy(h264Packet->retain.data, pkt.data, pkt.size);
 #else
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
             R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             retainBufferPack((GJRetainBuffer**)&h264Packet, pkt.data, pkt.size, packetBufferRelease, buffer);
 #endif
            
-            h264Packet->dataOffset = 0;
             h264Packet->dataSize = pkt.size;
             h264Packet->pts = pkt.pts;
             h264Packet->dts = pkt.dts;
@@ -176,19 +176,21 @@ static GHandle pullRunloop(GHandle parm){
 //            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
 #if MENORY_CHECK
             R_GJPacket* aacPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
-            memcpy(aacPacket->retain.data, pkt.buf, pkt.size);
+            aacPacket->dataOffset = 0;
+            memcpy(aacPacket->retain.data+aacPacket->dataOffset, pkt.data, pkt.size);
             aacPacket->retain.size = pkt.size;
 #else
             R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
             retainBufferPack((GJRetainBuffer**)&aacPacket, pkt.data, pkt.size, packetBufferRelease, buffer);
 #endif
-            aacPacket->dataOffset = 0;
             aacPacket->dataSize = pkt.size;
             aacPacket->pts = pkt.pts;
             aacPacket->dts = pkt.dts;
             aacPacket->type = GJMediaType_Audio;
 //            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
+//            printf("receive packet pts:%lld size:%d  last data:%d\n",aacPacket->pts,aacPacket->dataSize,(aacPacket->retain.data + aacPacket->dataOffset + aacPacket->dataSize -1)[0]);
+
             pull->dataCallback(pull,aacPacket,pull->dataCallbackParm);
             retainBufferUnRetain(&aacPacket->retain);
         }
