@@ -49,7 +49,6 @@ UIBackgroundTaskIdentifier backgroundTask = 0;
 UIBackgroundTaskIdentifier helperBackgroundTask = 0;
 static int backgroundTaskTimeLimit = 0;
 static const int MAXIMUM_BACKGROUND_TASKS = 2;
-static BOOL clientIsStreaming = false;
 
 dispatch_block_t helperBackgroundTaskBlock = ^{
     [[NSThread currentThread] setName:@"helperBackgroundTaskBlock.init"];

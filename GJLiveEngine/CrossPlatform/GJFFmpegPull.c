@@ -162,6 +162,7 @@ static GHandle pullRunloop(GHandle parm){
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
             R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             retainBufferPack((GJRetainBuffer**)&h264Packet, pkt.data, pkt.size, packetBufferRelease, buffer);
+            h264Packet->dataOffset = 0;
 #endif
            
             h264Packet->dataSize = pkt.size;
@@ -183,6 +184,7 @@ static GHandle pullRunloop(GHandle parm){
             R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
             retainBufferPack((GJRetainBuffer**)&aacPacket, pkt.data, pkt.size, packetBufferRelease, buffer);
+            aacPacket->dataOffset = 0;
 #endif
             aacPacket->dataSize = pkt.size;
             aacPacket->pts = pkt.pts;
