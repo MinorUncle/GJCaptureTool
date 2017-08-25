@@ -20,8 +20,8 @@
 
 @end
 @implementation GJH264Decoder
-inline static GVoid cvImagereleaseCallBack(GJRetainBuffer * retain,GHandle userData){
-    CVImageBufferRef image = ((CVImageBufferRef*)retain->data)[0];
+inline static GVoid cvImagereleaseCallBack(GJRetainBuffer * buffer,GHandle userData){
+    CVImageBufferRef image = ((CVImageBufferRef*)retainBufferStart(buffer))[0];
     CVPixelBufferRelease(image);
 }
 - (instancetype)init
@@ -31,7 +31,7 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer * retain,GHandle userD
         _decodeQueue = dispatch_queue_create("GJDecodeQueue", DISPATCH_QUEUE_SERIAL);
         _outPutImageFormat = kCVPixelFormatType_32BGRA;
 //        _outPutImageFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
-        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVPixelBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL,cvImagereleaseCallBack,GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVPixelBufferRef), GTrue, R_GJPixelFrameMalloc,cvImagereleaseCallBack,GNULL);
     }
     return self;
 }
@@ -96,7 +96,7 @@ void decodeOutputCallback(
     frame->dts = (GInt64)dts;
     frame->type = CVPixelBufferGetPixelFormatType(imageBuffer);
     CVPixelBufferRetain(imageBuffer);
-    ((CVImageBufferRef*)frame->retain.data)[0] = imageBuffer;
+    ((CVImageBufferRef*)retainBufferStart(&frame->retain))[0] = imageBuffer;
     
 //    printf("after decode pts:%lld ,dts:%ld\n",pts,dts);
     decoder.completeCallback(frame);
@@ -134,9 +134,9 @@ void decodeOutputCallback(
     if (packet->flag == GJPacketFlag_KEY && _decompressionSession == nil) {
         int32_t spsSize,ppsSize;
         uint8_t* sps,*pps;
-        memcpy(&spsSize, packet->retain.data + packet->dataOffset, 4);
+        memcpy(&spsSize, retainBufferStart(&packet->retain) + packet->dataOffset, 4);
         spsSize = ntohl(spsSize);
-        sps = packet->retain.data+4;
+        sps = retainBufferStart(&packet->retain)+4;
         memcpy(&ppsSize, spsSize+sps, 4);
         ppsSize = ntohl(ppsSize);
         pps = sps+spsSize+4;
@@ -205,7 +205,7 @@ void decodeOutputCallback(
     
     if (packet->dataSize>0) {
         blockLength = (int)(packet->dataSize);
-        void* data = packet->dataOffset+packet->retain.data;
+        void* data = packet->dataOffset+retainBufferStart(&packet->retain);
         
 //        uint32_t dataLength32 = htonl (blockLength - 4);
 //        memcpy (data, &dataLength32, sizeof (uint32_t));

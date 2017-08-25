@@ -45,6 +45,7 @@ static int backgroundTaskCount = 0;
 - (void)resetBackgroundTaskCount {
     backgroundTaskCount = 0;
 }
+
 UIBackgroundTaskIdentifier backgroundTask = 0;
 UIBackgroundTaskIdentifier helperBackgroundTask = 0;
 static int backgroundTaskTimeLimit = 0;

@@ -37,8 +37,8 @@ struct _GJStreamPull{
 GVoid GJStreamPull_Delloc(GJStreamPull* pull);
 
 static GBool packetBufferRelease(GJRetainBuffer* buffer){
-    if(buffer->parm){
-        AVBufferRef* avbuf = buffer->parm;
+    if(retainBufferUserData(buffer)){
+        AVBufferRef* avbuf = retainBufferUserData(buffer);
         av_buffer_unref(&avbuf);
     }else{
         retainBufferFreeData(buffer);
@@ -95,8 +95,8 @@ static GHandle pullRunloop(GHandle parm){
                     avccPacket->flag = GJPacketFlag_KEY;
                     
                     avccPacket->dataOffset = 0;
-                    avccPacket->dataSize = avccPacket->retain.size;
-                    GUInt8* packetData = avccPacket->retain.data + avccPacket->dataOffset;
+                    avccPacket->dataSize = retainBufferSize(&avccPacket->retain);
+                    GUInt8* packetData = retainBufferStart(&avccPacket->retain) + avccPacket->dataOffset;
                     GInt32 spsNsize = htonl(spsSize);
                     GInt32 ppsNsize = htonl(ppsSize);
                     memcpy(packetData, &spsNsize, 4);
@@ -131,7 +131,7 @@ static GHandle pullRunloop(GHandle parm){
             int adtsLength = 7;
             aaccPacket->dataOffset = 0;
             aaccPacket->dataSize = adtsLength;
-            GUInt8* adts = aaccPacket->retain.data;
+            GUInt8* adts = retainBufferStart(&aaccPacket->retain);
             GInt32 fullLength = adtsLength + 0;
             adts[0] = (char)0xFF;	// 11111111  	= syncword
             adts[1] = (char)0xF1;	   // 1111 0 00 1 = syncword+id(MPEG-4) + Layer + absent
@@ -157,7 +157,7 @@ static GHandle pullRunloop(GHandle parm){
 #if MENORY_CHECK
             R_GJPacket* h264Packet = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
             h264Packet->dataOffset = 0;
-            memcpy(h264Packet->retain.data, pkt.data, pkt.size);
+            retainBufferWrite(&h264Packet->retain, pkt.data, pkt.size);
 #else
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
             R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
@@ -178,8 +178,8 @@ static GHandle pullRunloop(GHandle parm){
 #if MENORY_CHECK
             R_GJPacket* aacPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
             aacPacket->dataOffset = 0;
-            memcpy(aacPacket->retain.data+aacPacket->dataOffset, pkt.data, pkt.size);
-            aacPacket->retain.size = pkt.size;
+            retainBufferWrite(&aacPacket->retain, pkt.data, pkt.size);
+
 #else
             R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
@@ -244,7 +244,7 @@ GBool GJStreamPull_Create(GJStreamPull** pullP,StreamPullMessageCallback callbac
     pull->messageCallbackParm = streamPullParm;
     pull->stopRequest = GFalse;
 #if MENORY_CHECK
-    GJRetainBufferPoolCreate(&pull->memoryCachePool, 1, GTrue, R_GJPacketMalloc, GNULL,GNULL,GNULL);
+    GJRetainBufferPoolCreate(&pull->memoryCachePool, 1, GTrue, R_GJPacketMalloc,GNULL,GNULL);
 #endif
     pthread_mutex_init(&pull->mutex, NULL);
     *pullP = pull;

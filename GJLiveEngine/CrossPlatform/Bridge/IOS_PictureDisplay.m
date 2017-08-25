@@ -59,7 +59,7 @@ static GVoid displayUnSetup(GJPictureDisplayContext* context){
 }
 static GVoid IOS_PictureDisplayImage(GJPictureDisplayContext* context,GJRetainBuffer* image){
     IOS_PictureDisplay* display = (__bridge IOS_PictureDisplay *)(context->obaque);
-    [display displayImage:((CVImageBufferRef*)image->data)[0]];
+    [display displayImage:((CVImageBufferRef*)retainBufferStart(image))[0]];
 }
 static GHandle IOS_PictureDisplayGetView(GJPictureDisplayContext* context){
     IOS_PictureDisplay* display = (__bridge IOS_PictureDisplay *)(context->obaque);

@@ -342,8 +342,9 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
 	GJAudioQueuePlayer *player = (__bridge GJAudioQueuePlayer *)inClientData;
     GJRetainBuffer* bufferData;
     if(queuePop(player->_reusableQueue, (void**)&bufferData, 0) && player.status == kPlayARunningStatus){
-         memcpy(inBuffer->mAudioData, bufferData->data, bufferData->size);
-        inBuffer->mAudioDataByteSize = bufferData->size;
+        
+         memcpy(inBuffer->mAudioData, retainBufferStart(bufferData), retainBufferSize(bufferData));
+        inBuffer->mAudioDataByteSize = retainBufferSize(bufferData);
         retainBufferUnRetain(bufferData);
         NSLog(@"AudioQueueEnqueueBuffer SIZE:%D",(int)inBuffer->mAudioDataByteSize);
 
@@ -367,8 +368,8 @@ static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
     GJAudioQueuePlayer *player = (__bridge GJAudioQueuePlayer *)inClientData;
     GJRetainBuffer* buffer;
     if(queuePop(player->_reusableQueue, (void**)&buffer, 0) && player.status == kPlayARunningStatus){
-        memcpy(inBuffer->mAudioData, buffer->data, buffer->size);
-        inBuffer->mAudioDataByteSize = buffer->size;
+        memcpy(inBuffer->mAudioData, retainBufferStart(buffer),retainBufferSize(buffer));
+        inBuffer->mAudioDataByteSize = retainBufferSize(buffer);
         retainBufferUnRetain(buffer);
     }else{
         

@@ -125,7 +125,7 @@ static GHandle sendRunloop(GHandle parm){
         if (packet->type == GJMediaType_Video) {
             
             if (push->videoStatus.leave.count == 0) {
-                GUInt8* start = packet->dataOffset + packet->retain.data;
+                GUInt8* start = packet->dataOffset + retainBufferStart(&packet->retain);
                 
                 GInt32 index = 0;
                 GUInt8* sps = GNULL,*pps = GNULL;
@@ -196,7 +196,7 @@ static GHandle sendRunloop(GHandle parm){
             
             if (packet->flag == GJPacketFlag_KEY) {
                 
-                GUInt8* start = packet->retain.data + packet->dataOffset;
+                GUInt8* start = retainBufferStart(&packet->retain) + packet->dataOffset;
                 GInt32 index = 0;
                 GUInt8* pre_nal_unit = GNULL;
                 
@@ -239,24 +239,24 @@ static GHandle sendRunloop(GHandle parm){
 
             }else{
                 
-                nal_start = packet->dataOffset+packet->retain.data;
+                nal_start = packet->dataOffset+retainBufferStart(&packet->retain);
                 GInt32 nal_size = packet->dataSize-4;
                 nal_size = htonl(nal_size);
                 memcpy(nal_start, &nal_size, 4);
             }
             
             GInt32 preSize = ppPreSize+RTMP_MAX_HEADER_SIZE;
-            if (nal_start-packet->retain.data + packet->retain.frontSize < preSize) {
+            if (nal_start-retainBufferStart(&packet->retain) + retainBufferFrontSize(&packet->retain) < preSize) {
                 //申请内存控制得当的话不会进入此条件、  先扩大，在查找。
 #if MENORY_CHECK
                 GJAssert(0, "MENORY_CHECK 状态下不能扩大内存");
 #endif
                 GJLOG(GJ_LOGDEBUG, "预留位置过小,扩大");
-                GInt32 nal_offset = (GInt32)(nal_start - packet->retain.data);
+                GInt32 nal_offset = (GInt32)(nal_start - retainBufferStart(&packet->retain));
                 retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+ppPreSize, GTrue);
                 
                 if (packet->dataSize > 0) {
-                    nal_start = nal_offset+packet->retain.data;
+                    nal_start = nal_offset+retainBufferStart(&packet->retain);
                 }
             }
             
@@ -267,7 +267,7 @@ static GHandle sendRunloop(GHandle parm){
             RTMPPacket_Reset(&rtmpPacket);
             //    使用pp做参考点，防止sei不发送的情况，导致pp移动，产生消耗
             rtmpPacket.m_body = (GChar*)nal_start - ppPreSize;
-            rtmpPacket.m_nBodySize = (GUInt32)(packet->retain.data+packet->dataOffset+packet->dataSize-nal_start + ppPreSize);
+            rtmpPacket.m_nBodySize = (GUInt32)(retainBufferStart(&packet->retain)+packet->dataOffset+packet->dataSize-nal_start + ppPreSize);
             body = (GUChar *)rtmpPacket.m_body;
             rtmpPacket.m_packetType = RTMP_PACKET_TYPE_VIDEO;
             rtmpPacket.m_nChannel = 0x04;
@@ -332,7 +332,7 @@ static GHandle sendRunloop(GHandle parm){
             GInt32 preSize = 2;
             
             RTMPPacket_Reset(&rtmpPacket);
-            if (packet->dataOffset+packet->retain.frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
+            if (packet->dataOffset+retainBufferFrontSize(&packet->retain) < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
 #if MENORY_CHECK
                 GJAssert(0, "MENORY_CHECK 状态下不移动内存");
 #endif
@@ -340,7 +340,7 @@ static GHandle sendRunloop(GHandle parm){
                 retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+preSize, GTrue);
             }
             
-            rtmpPacket.m_body = (GChar*)(packet->dataOffset +packet->retain.data - preSize);
+            rtmpPacket.m_body = (GChar*)(packet->dataOffset +retainBufferStart(&packet->retain) - preSize);
             rtmpPacket.m_nBodySize = packet->dataSize+preSize;
             
             body = (GUChar *)rtmpPacket.m_body;

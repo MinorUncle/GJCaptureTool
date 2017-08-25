@@ -186,16 +186,16 @@ void pullDataCallback(GJStreamPull* pull,R_GJPacket* packet,void* parm){
     }
     if (packet->type == GJMediaType_Video) {
 
-    livePull->videoUnDecodeByte += packet->retain.size;
+    livePull->videoUnDecodeByte += retainBufferSize(&packet->retain);
     livePull->videoDecoder->decodePacket(livePull->videoDecoder,packet);
     }else{
     
         GJLivePullContext* livePull = parm;
-        livePull->audioUnDecodeByte += packet->retain.size;
+        livePull->audioUnDecodeByte += retainBufferSize(&packet->retain);
         if (livePull->fristAudioPullClock == G_TIME_INVALID) {
             if (packet->dataSize >0 && packet->flag == GJPacketFlag_KEY) {
                 livePull->fristAudioPullClock = GJ_Gettime()/1000.0;
-                uint8_t* adts = packet->dataOffset+packet->retain.data;
+                uint8_t* adts = packet->dataOffset+retainBufferStart(&packet->retain);
                 uint8_t sampleIndex = adts[2] << 2;
                 sampleIndex = sampleIndex>>4;
                 int sampleRate = mpeg4audio_sample_rates[sampleIndex];

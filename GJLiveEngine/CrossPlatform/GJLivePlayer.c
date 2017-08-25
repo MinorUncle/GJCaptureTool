@@ -338,8 +338,8 @@ GBool GJAudioDrivePlayerCallback(GHandle player,void *data ,GInt32* outSize){
     R_GJPCMFrame* audioBuffer;
     if (_playControl->status == kPlayStatusRunning && queuePop(_playControl->audioQueue, (GHandle*)&audioBuffer, 0)) {
         
-        *outSize = audioBuffer->retain.size;
-        memcpy(data, audioBuffer->retain.data, *outSize);
+        *outSize = retainBufferSize(&audioBuffer->retain);
+        memcpy(data, retainBufferStart(&audioBuffer->retain), *outSize);
         _syncControl->audioInfo.trafficStatus.leave.ts = (GLong)audioBuffer->pts;
         _syncControl->audioInfo.trafficStatus.leave.count++;
         _syncControl->audioInfo.cPTS = (GLong)audioBuffer->pts;
@@ -770,7 +770,7 @@ GBool  GJLivePlay_AddAudioData(GJLivePlayer* player,R_GJPCMFrame* audioFrame){
     GJPlayControl* _playControl = &(player->playControl);
     GJSyncControl* _syncControl = &(player->syncControl);
     GBool result = GTrue;
-    GJAssert(audioFrame->retain.size, "size 不能为0");
+    GJAssert(retainBufferSize(&audioFrame->retain), "size 不能为0");
 
     if (audioFrame->dts < _syncControl->audioInfo.inDtsSeries) {
         
@@ -785,7 +785,7 @@ GBool  GJLivePlay_AddAudioData(GJLivePlayer* player,R_GJPCMFrame* audioFrame){
             queueClean(_playControl->audioQueue, (GVoid**)audioBuffer, &qLength);//用clean，防止播放断同时也在读
             for (GUInt32 i = 0; i<qLength; i++) {
                 _syncControl->audioInfo.trafficStatus.leave.count++;
-                _syncControl->audioInfo.trafficStatus.leave.byte += audioBuffer[i]->retain.size;
+                _syncControl->audioInfo.trafficStatus.leave.byte += retainBufferSize(&audioFrame->retain);
                 retainBufferUnRetain(&audioBuffer[i]->retain);
             }
             free(audioBuffer);
@@ -841,7 +841,7 @@ RETRY:
         _syncControl->audioInfo.inDtsSeries = (GLong)audioFrame->dts;
         _syncControl->audioInfo.trafficStatus.enter.ts = (GLong)audioFrame->pts;
         _syncControl->audioInfo.trafficStatus.enter.count++;
-        _syncControl->audioInfo.trafficStatus.enter.byte += audioFrame->retain.size;
+        _syncControl->audioInfo.trafficStatus.enter.byte += retainBufferSize(&audioFrame->retain);
         
 #ifdef NETWORK_DELAY
         GUInt32 date = [[NSDate date]timeIntervalSince1970]*1000;

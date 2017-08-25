@@ -123,7 +123,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     R_GJPacket* packet;    
     if (decode.running && queuePop(param,(void**)&packet,INT_MAX)) {
         retainBuffer = &packet->retain;
-        ioData->mBuffers[0].mData = packet->retain.data + packet->dataOffset;
+        ioData->mBuffers[0].mData = retainBufferStart(&packet->retain) + packet->dataOffset;
         ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
         ioData->mBuffers[0].mDataByteSize = packet->dataSize;
         *ioNumberDataPackets = 1;
@@ -168,7 +168,7 @@ static const int mpeg4audio_sample_rates[16] = {
     // get audio format
         R_GJPacket* packet;
         if (queuePeekWaitValue(_resumeQueue, 0,(void**)&packet, INT_MAX) && packet->flag == GJPacketFlag_KEY && _running) {
-            uint8_t* adts = packet->dataOffset+packet->retain.data;
+            uint8_t* adts = packet->dataOffset+retainBufferStart(&packet->retain);
             uint8_t sampleIndex = adts[2] << 2;
             sampleIndex = sampleIndex>>4;
             int sampleRate = mpeg4audio_sample_rates[sampleIndex];
@@ -216,7 +216,7 @@ static const int mpeg4audio_sample_rates[16] = {
         });
         _bufferPool = NULL;
     }
-    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJPCMFrameMalloc,GNULL,GNULL,GNULL);
+    GJRetainBufferPoolCreate(&_bufferPool, _destMaxOutSize,true,R_GJPCMFrameMalloc,GNULL,GNULL);
     
     AudioConverterGetProperty(_decodeConvert, kAudioConverterCurrentInputStreamDescription, &size, &_sourceFormat);
     
@@ -242,7 +242,7 @@ static const int mpeg4audio_sample_rates[16] = {
         R_GJPCMFrame* frame = (R_GJPCMFrame*)GJRetainBufferPoolGetData(_bufferPool);
         outCacheBufferList.mNumberBuffers = 1;
         outCacheBufferList.mBuffers[0].mNumberChannels = 1;
-        outCacheBufferList.mBuffers[0].mData = frame->retain.data;
+        outCacheBufferList.mBuffers[0].mData = retainBufferStart(&frame->retain);
         outCacheBufferList.mBuffers[0].mDataByteSize = AAC_FRAME_PER_PACKET * _destFormat.mBytesPerPacket;
         UInt32 numPackets = AAC_FRAME_PER_PACKET;
 
@@ -260,7 +260,7 @@ static const int mpeg4audio_sample_rates[16] = {
             break;
         }
         
-        frame->retain.size = _destFormat.mBytesPerPacket*numPackets;
+        retainBufferSetSize(&frame->retain, _destFormat.mBytesPerPacket*numPackets);
         frame->pts = _currentPts;
         frame->dts = _currentPts;
         _currentPts = -1;

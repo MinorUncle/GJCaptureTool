@@ -23,7 +23,7 @@ typedef enum {//filter深度
 typedef void(^VideoRecodeCallback)(R_GJPixelFrame* frame);
 
 static GVoid pixelReleaseCallBack(GJRetainBuffer *buffer,GHandle userData){
-    CVPixelBufferRef image = ((CVPixelBufferRef*)buffer->data)[0];
+    CVPixelBufferRef image = ((CVPixelBufferRef*)retainBufferStart(buffer))[0];
     CVPixelBufferRelease(image);
 }
 
@@ -135,7 +135,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _cameraPosition = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
         self.destSize = CGSizeMake((CGFloat)format.mWidth, (CGFloat)format.mHeight);
-        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL,pixelReleaseCallBack,GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc,pixelReleaseCallBack,GNULL);
     }
     return self;
 }
@@ -147,7 +147,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _outputOrientation = UIInterfaceOrientationPortrait;
         _frameRate = 15;
         self.destSize = CGSizeMake(480,640);
-        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, GNULL,pixelReleaseCallBack,GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc,pixelReleaseCallBack,GNULL);
     }
     return self;
 }
@@ -318,7 +318,7 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize){
             CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].pixelBuffer;
             CVPixelBufferRetain(pixel_buffer);
             R_GJPixelFrame* frame = (R_GJPixelFrame*)GJRetainBufferPoolGetData(wkSelf.bufferPool);
-            ((CVPixelBufferRef*)frame->retain.data)[0] = pixel_buffer;
+            ((CVPixelBufferRef*)retainBufferStart(&frame->retain))[0] = pixel_buffer;
             frame->height = (GInt32)wkSelf.destSize.height;
             frame->width = (GInt32)wkSelf.destSize.width;
             wkSelf.callback(frame);

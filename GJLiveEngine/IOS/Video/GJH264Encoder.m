@@ -131,7 +131,7 @@
         });
         _bufferPool = NULL;
     }
-    GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPacketMalloc, GNULL,GNULL,GNULL);
+    GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPacketMalloc,GNULL,GNULL);
     VTCompressionSessionPrepareToEncodeFrames(_enCodeSession);
  
 }
@@ -249,14 +249,14 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         int needSize = (int)(8 + spsppsSize+totalLength+PUSH_H264_PACKET_PRE_SIZE);
         pushPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
         retainBuffer = &pushPacket->retain;
-        if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
+        if (retainBufferFrontSize(retainBuffer) < PUSH_H264_PACKET_PRE_SIZE) {
             retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
         }
         pushPacket->flag = GJPacketFlag_KEY;
         pushPacket->dataOffset = 0;
         pushPacket->dataSize = (GInt32)(totalLength + spsppsSize + 8);
         
-        uint8_t* data = retainBuffer->data;
+        uint8_t* data = retainBufferStart(retainBuffer);
         memcpy(data, "\x00\x00\x00\x01", 4);
         memcpy(data+4, sparameterSet, sparameterSetSize);
         encoder.sps = [NSData dataWithBytes:data length:sparameterSetSize];
@@ -274,7 +274,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 //        retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
         pushPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
         retainBuffer = &pushPacket->retain;
-        if (retainBuffer->frontSize < PUSH_H264_PACKET_PRE_SIZE) {
+        if (retainBufferFrontSize(retainBuffer) < PUSH_H264_PACKET_PRE_SIZE) {
             retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
         }
         pushPacket->flag = 0;
@@ -283,7 +283,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
 
 //拷贝
-        uint8_t* rDate = retainBuffer->data;
+        uint8_t* rDate = retainBufferStart(retainBuffer);
         memcpy(rDate, inDataPointer, totalLength);
         inDataPointer = rDate;
     }

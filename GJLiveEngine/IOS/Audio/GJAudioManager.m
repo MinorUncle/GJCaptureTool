@@ -46,9 +46,8 @@ static GJAudioManager* _staticManager;
         _audioController.useMeasurementMode = YES;
 //        [_audioController setPreferredBufferDuration:0.023];
         
-        GJRetainBufferPoolCreate(&_bufferPool, 0, GTrue, R_GJPCMFrameMalloc, GNULL,GNULL,GNULL);
+        GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc,GNULL,GNULL);
         _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket);
-        _alignCacheFrame->retain.size = 0;
         _durPerSize = 1000.0/_audioController.audioDescription.mSampleRate/_audioController.audioDescription.mBytesPerFrame;
 #ifdef AUDIO_SEND_TEST
         _audioMixer = [[AEAudioSender alloc]init];
@@ -73,16 +72,15 @@ static GJAudioManager* _staticManager;
 }
 
 -(void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time{
-    
 //    R_GJPCMFrame* pcmFrame = NULL;
 //    printf("audio size:%d chchesize:%d pts:%lld\n",frame->mBuffers[0].mDataByteSize,_alignCacheFrame->retain.size,time);
-    int needSize = _sizePerPacket - _alignCacheFrame->retain.size;
+    int needSize = _sizePerPacket - retainBufferSize(&_alignCacheFrame->retain);
     int leftSize = frame->mBuffers[0].mDataByteSize;
     while (leftSize >= needSize) {
-        memcpy(_alignCacheFrame->retain.data + _alignCacheFrame->retain.size,  frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, needSize);
+        retainBufferWriteAppend(&_alignCacheFrame->retain, frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, needSize);
+//        memcpy(_alignCacheFrame->retain.data + _alignCacheFrame->retain.size,  frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, needSize);
         _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
-        _alignCacheFrame->pts = time-(GInt64)(_alignCacheFrame->retain.size*_durPerSize);
-        _alignCacheFrame->retain.size = _sizePerPacket;
+        _alignCacheFrame->pts = time-(GInt64)(retainBufferSize(&_alignCacheFrame->retain)*_durPerSize);
         
         static int64_t pre ;
         if (pre == 0) {
@@ -90,24 +88,17 @@ static GJAudioManager* _staticManager;
         }
 //        printf("audio pts:%lld,size:%d dt:%lld\n",_alignCacheFrame->pts,_alignCacheFrame->retain.size,_alignCacheFrame->pts-pre);
         pre = _alignCacheFrame->pts;
-            
         self.audioCallback(_alignCacheFrame);
         retainBufferUnRetain(&_alignCacheFrame->retain);
         time = time+ needSize/_durPerSize;
         _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket);
-        _alignCacheFrame->retain.size = 0;
         leftSize = leftSize - needSize;
         needSize = _sizePerPacket;
     }
     if (leftSize > 0) {
         _alignCacheFrame->pts = (GInt64)time;
-        memcpy(_alignCacheFrame->retain.data + _alignCacheFrame->retain.size, frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, leftSize);
-        _alignCacheFrame->retain.size = leftSize;
+        retainBufferWriteAppend(&_alignCacheFrame->retain, frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, leftSize);
     }
-
-    
-  
-
 }
 
 -(BOOL)startRecode:(NSError**)error{

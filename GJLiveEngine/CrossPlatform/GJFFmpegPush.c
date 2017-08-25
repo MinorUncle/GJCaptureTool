@@ -77,7 +77,7 @@ static GHandle sendRunloop(GHandle parm){
                     retainBufferUnRetain(&packet->retain);
                     continue;
                 }
-                GUInt8* start = packet->dataOffset + packet->retain.data;
+                GUInt8* start = packet->dataOffset + retainBufferStart(&packet->retain);
                 
                 GInt32 index = 0;
                 GUInt8* sps = GNULL,*pps = GNULL;
@@ -182,7 +182,7 @@ static GHandle sendRunloop(GHandle parm){
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        sendPacket->data = packet->retain.data + packet->dataOffset;
+        sendPacket->data = retainBufferStart(&packet->retain) + packet->dataOffset;
         sendPacket->size = packet->dataSize;
         GInt32 iRet = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
