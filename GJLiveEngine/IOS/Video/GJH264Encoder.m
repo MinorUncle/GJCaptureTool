@@ -191,7 +191,7 @@
     }
 }
 
-//static GBool retainBufferRelease(GJRetainBuffer* buffer){
+//static GBool R_BufferRelease(GJRetainBuffer* buffer){
 //    GJBufferPool* pool = buffer->parm;
 //    GJBufferPoolSetData(pool, buffer->data-buffer->frontSize);
 //    GJBufferPoolSetData(defauleBufferPool(), (void*)buffer);
@@ -207,7 +207,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         return;
     }
     GJH264Encoder* encoder = (__bridge GJH264Encoder *)(outputCallbackRefCon);
-    GJRetainBuffer* retainBuffer = NULL;
+    GJRetainBuffer*buffer = NULL;
     R_GJPacket* pushPacket = NULL;
 #define PUSH_H264_PACKET_PRE_SIZE 45
     
@@ -248,15 +248,15 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         size_t spsppsSize = sparameterSetSize+pparameterSetSize;
         int needSize = (int)(8 + spsppsSize+totalLength+PUSH_H264_PACKET_PRE_SIZE);
         pushPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
-        retainBuffer = &pushPacket->retain;
-        if (retainBufferFrontSize(retainBuffer) < PUSH_H264_PACKET_PRE_SIZE) {
-            retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
+       buffer = &pushPacket->retain;
+        if (R_BufferFrontSize(buffer) < PUSH_H264_PACKET_PRE_SIZE) {
+           R_BufferMoveDataToPoint(buffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
         }
         pushPacket->flag = GJPacketFlag_KEY;
         pushPacket->dataOffset = 0;
         pushPacket->dataSize = (GInt32)(totalLength + spsppsSize + 8);
         
-        uint8_t* data = retainBufferStart(retainBuffer);
+        uint8_t* data = R_BufferStart(buffer);
         memcpy(data, "\x00\x00\x00\x01", 4);
         memcpy(data+4, sparameterSet, sparameterSetSize);
         encoder.sps = [NSData dataWithBytes:data length:sparameterSetSize];
@@ -271,11 +271,11 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
     }else{
         int needSize = (int)(totalLength+PUSH_H264_PACKET_PRE_SIZE);
-//        retainBufferPack(&retainBuffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, retainBufferRelease, encoder.bufferPool);
+//       R_BufferPack(&buffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, R_BufferRelease, encoder.bufferPool);
         pushPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
-        retainBuffer = &pushPacket->retain;
-        if (retainBufferFrontSize(retainBuffer) < PUSH_H264_PACKET_PRE_SIZE) {
-            retainBufferMoveDataToPoint(retainBuffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
+       buffer = &pushPacket->retain;
+        if (R_BufferFrontSize(buffer) < PUSH_H264_PACKET_PRE_SIZE) {
+           R_BufferMoveDataToPoint(buffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
         }
         pushPacket->flag = 0;
         pushPacket->dataOffset = 0;
@@ -283,7 +283,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
 
 
 //拷贝
-        uint8_t* rDate = retainBufferStart(retainBuffer);
+        uint8_t* rDate = R_BufferStart(buffer);
         memcpy(rDate, inDataPointer, totalLength);
         inDataPointer = rDate;
     }
@@ -355,7 +355,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     }
     
     encoder.completeCallback(pushPacket);
-    retainBufferUnRetain(retainBuffer);
+   R_BufferUnRetain(buffer);
 }
 
 

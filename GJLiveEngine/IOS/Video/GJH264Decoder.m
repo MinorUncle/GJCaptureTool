@@ -21,7 +21,7 @@
 @end
 @implementation GJH264Decoder
 inline static GVoid cvImagereleaseCallBack(GJRetainBuffer * buffer,GHandle userData){
-    CVImageBufferRef image = ((CVImageBufferRef*)retainBufferStart(buffer))[0];
+    CVImageBufferRef image = ((CVImageBufferRef*)R_BufferStart(buffer))[0];
     CVPixelBufferRelease(image);
 }
 - (instancetype)init
@@ -96,11 +96,11 @@ void decodeOutputCallback(
     frame->dts = (GInt64)dts;
     frame->type = CVPixelBufferGetPixelFormatType(imageBuffer);
     CVPixelBufferRetain(imageBuffer);
-    ((CVImageBufferRef*)retainBufferStart(&frame->retain))[0] = imageBuffer;
+    ((CVImageBufferRef*)R_BufferStart(&frame->retain))[0] = imageBuffer;
     
 //    printf("after decode pts:%lld ,dts:%ld\n",pts,dts);
     decoder.completeCallback(frame);
-    retainBufferUnRetain(&frame->retain);
+   R_BufferUnRetain(&frame->retain);
 }
 
 -(uint8_t*)startCodeIndex:(uint8_t*)sour size:(long)size codeSize:(uint8_t*)codeSize{
@@ -134,9 +134,9 @@ void decodeOutputCallback(
     if (packet->flag == GJPacketFlag_KEY && _decompressionSession == nil) {
         int32_t spsSize,ppsSize;
         uint8_t* sps,*pps;
-        memcpy(&spsSize, retainBufferStart(&packet->retain) + packet->dataOffset, 4);
+        memcpy(&spsSize, R_BufferStart(&packet->retain) + packet->dataOffset, 4);
         spsSize = ntohl(spsSize);
-        sps = retainBufferStart(&packet->retain)+4;
+        sps = R_BufferStart(&packet->retain)+4;
         memcpy(&ppsSize, spsSize+sps, 4);
         ppsSize = ntohl(ppsSize);
         pps = sps+spsSize+4;
@@ -205,7 +205,7 @@ void decodeOutputCallback(
     
     if (packet->dataSize>0) {
         blockLength = (int)(packet->dataSize);
-        void* data = packet->dataOffset+retainBufferStart(&packet->retain);
+        void* data = packet->dataOffset + R_BufferStart(&packet->retain);
         
 //        uint32_t dataLength32 = htonl (blockLength - 4);
 //        memcpy (data, &dataLength32, sizeof (uint32_t));

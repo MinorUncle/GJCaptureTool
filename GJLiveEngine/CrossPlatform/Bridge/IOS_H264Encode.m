@@ -30,7 +30,7 @@ inline static GVoid encodeUnSetup (GJEncodeToH264eContext* context){
 }
 inline static GBool encodeFrame (GJEncodeToH264eContext* context,R_GJPixelFrame* frame){
     GJH264Encoder* encode = (__bridge GJH264Encoder *)(context->obaque);
-    CVPixelBufferRef image = ((CVPixelBufferRef*)retainBufferStart(&frame->retain))[0];
+    CVPixelBufferRef image = ((CVPixelBufferRef*)R_BufferStart(&frame->retain))[0];
     return [encode encodeImageBuffer:image pts:frame->pts];
 }
 inline static GBool encodeSetBitrate (GJEncodeToH264eContext* context,GInt32 bitrate){

@@ -23,7 +23,7 @@ typedef enum {//filter深度
 typedef void(^VideoRecodeCallback)(R_GJPixelFrame* frame);
 
 static GVoid pixelReleaseCallBack(GJRetainBuffer *buffer,GHandle userData){
-    CVPixelBufferRef image = ((CVPixelBufferRef*)retainBufferStart(buffer))[0];
+    CVPixelBufferRef image = ((CVPixelBufferRef*)R_BufferStart(buffer))[0];
     CVPixelBufferRelease(image);
 }
 
@@ -318,11 +318,11 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize){
             CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].pixelBuffer;
             CVPixelBufferRetain(pixel_buffer);
             R_GJPixelFrame* frame = (R_GJPixelFrame*)GJRetainBufferPoolGetData(wkSelf.bufferPool);
-            ((CVPixelBufferRef*)retainBufferStart(&frame->retain))[0] = pixel_buffer;
+            ((CVPixelBufferRef*)R_BufferStart(&frame->retain))[0] = pixel_buffer;
             frame->height = (GInt32)wkSelf.destSize.height;
             frame->width = (GInt32)wkSelf.destSize.width;
             wkSelf.callback(frame);
-            retainBufferUnRetain((GJRetainBuffer*)frame);
+           R_BufferUnRetain((GJRetainBuffer*)frame);
         };
         [self.camera startCameraCapture];
     });

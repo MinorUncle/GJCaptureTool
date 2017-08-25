@@ -268,7 +268,7 @@ static const int MCAudioQueueBufferCount = 3;
     }
     GJRetainBuffer* buffer = NULL;
     while (queuePop(_reusableQueue, (void*)&buffer, 0)) {
-        retainBufferUnRetain(buffer);
+       R_BufferUnRetain(buffer);
     }
     return YES;
 }
@@ -282,9 +282,9 @@ static const int MCAudioQueueBufferCount = 3;
         return NO;
     }
     
-    retainBufferRetain(bufferData);
+   R_BufferRetain(bufferData);
     if (!queuePush(_reusableQueue, bufferData, 1000)) {
-        retainBufferUnRetain(bufferData);
+       R_BufferUnRetain(bufferData);
     }
     
     return YES;
@@ -343,9 +343,9 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
     GJRetainBuffer* bufferData;
     if(queuePop(player->_reusableQueue, (void**)&bufferData, 0) && player.status == kPlayARunningStatus){
         
-         memcpy(inBuffer->mAudioData, retainBufferStart(bufferData), retainBufferSize(bufferData));
-        inBuffer->mAudioDataByteSize = retainBufferSize(bufferData);
-        retainBufferUnRetain(bufferData);
+         memcpy(inBuffer->mAudioData, R_BufferStart(bufferData), R_BufferSize(bufferData));
+        inBuffer->mAudioDataByteSize = R_BufferSize(bufferData);
+       R_BufferUnRetain(bufferData);
         NSLog(@"AudioQueueEnqueueBuffer SIZE:%D",(int)inBuffer->mAudioDataByteSize);
 
     }else{
@@ -368,9 +368,9 @@ static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
     GJAudioQueuePlayer *player = (__bridge GJAudioQueuePlayer *)inClientData;
     GJRetainBuffer* buffer;
     if(queuePop(player->_reusableQueue, (void**)&buffer, 0) && player.status == kPlayARunningStatus){
-        memcpy(inBuffer->mAudioData, retainBufferStart(buffer),retainBufferSize(buffer));
-        inBuffer->mAudioDataByteSize = retainBufferSize(buffer);
-        retainBufferUnRetain(buffer);
+        memcpy(inBuffer->mAudioData, R_BufferStart(buffer),R_BufferSize(buffer));
+        inBuffer->mAudioDataByteSize = R_BufferSize(buffer);
+       R_BufferUnRetain(buffer);
     }else{
         
         if (player.status == kPlayAStopStatus) {

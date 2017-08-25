@@ -74,13 +74,13 @@ static GJAudioManager* _staticManager;
 -(void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time{
 //    R_GJPCMFrame* pcmFrame = NULL;
 //    printf("audio size:%d chchesize:%d pts:%lld\n",frame->mBuffers[0].mDataByteSize,_alignCacheFrame->retain.size,time);
-    int needSize = _sizePerPacket - retainBufferSize(&_alignCacheFrame->retain);
+    int needSize = _sizePerPacket - R_BufferSize(&_alignCacheFrame->retain);
     int leftSize = frame->mBuffers[0].mDataByteSize;
     while (leftSize >= needSize) {
-        retainBufferWriteAppend(&_alignCacheFrame->retain, frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, needSize);
+       R_BufferWriteAppend(&_alignCacheFrame->retain, frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, needSize);
 //        memcpy(_alignCacheFrame->retain.data + _alignCacheFrame->retain.size,  frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, needSize);
         _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
-        _alignCacheFrame->pts = time-(GInt64)(retainBufferSize(&_alignCacheFrame->retain)*_durPerSize);
+        _alignCacheFrame->pts = time-(GInt64)(R_BufferSize(&_alignCacheFrame->retain)*_durPerSize);
         
         static int64_t pre ;
         if (pre == 0) {
@@ -89,7 +89,7 @@ static GJAudioManager* _staticManager;
 //        printf("audio pts:%lld,size:%d dt:%lld\n",_alignCacheFrame->pts,_alignCacheFrame->retain.size,_alignCacheFrame->pts-pre);
         pre = _alignCacheFrame->pts;
         self.audioCallback(_alignCacheFrame);
-        retainBufferUnRetain(&_alignCacheFrame->retain);
+       R_BufferUnRetain(&_alignCacheFrame->retain);
         time = time+ needSize/_durPerSize;
         _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket);
         leftSize = leftSize - needSize;
@@ -97,7 +97,7 @@ static GJAudioManager* _staticManager;
     }
     if (leftSize > 0) {
         _alignCacheFrame->pts = (GInt64)time;
-        retainBufferWriteAppend(&_alignCacheFrame->retain, frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, leftSize);
+       R_BufferWriteAppend(&_alignCacheFrame->retain, frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, leftSize);
     }
 }
 

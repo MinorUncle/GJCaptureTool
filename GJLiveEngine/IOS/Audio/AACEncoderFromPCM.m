@@ -66,11 +66,11 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     R_GJPCMFrame* buffer = encoder->_sourceFrame;
     AudioStreamBasicDescription* baseDescription = &(encoder->_sourceFormat);
 
-    UInt32 sourcePackets = retainBufferSize(&buffer->retain) / baseDescription->mBytesPerPacket;
+    UInt32 sourcePackets = R_BufferSize(&buffer->retain) / baseDescription->mBytesPerPacket;
     if (sourcePackets == *ioNumberDataPackets) {
-        ioData->mBuffers[0].mData = retainBufferStart(&buffer->retain);
+        ioData->mBuffers[0].mData = R_BufferStart(&buffer->retain);
         ioData->mBuffers[0].mNumberChannels =encoder->_sourceFormat.mChannelsPerFrame;
-        ioData->mBuffers[0].mDataByteSize = (UInt32)retainBufferSize(&buffer->retain);
+        ioData->mBuffers[0].mDataByteSize = (UInt32)R_BufferSize(&buffer->retain);
         *ioNumberDataPackets = sourcePackets;
         return noErr;
     }else{
@@ -106,9 +106,9 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 }
     
 //-(void)encodeWithPacket:(R_GJPCMFrame*)packet{
-//    retainBufferRetain(&packet->retain);
+//   R_BufferRetain(&packet->retain);
 //    if (!_isRunning || !queuePush(_resumeQueue, packet, 0)) {
-//        retainBufferUnRetain(&packet->retain);
+//       R_BufferUnRetain(&packet->retain);
 //    }
 //}
 -(BOOL)start{
@@ -239,21 +239,21 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
    
     R_GJPacket* packet = (R_GJPacket*)GJRetainBufferPoolGetData(_bufferPool);
     GJRetainBuffer* audioBuffer = &packet->retain;
-    if(retainBufferFrontSize(&packet->retain)<PUSH_AAC_PACKET_PRE_SIZE){
-        retainBufferMoveDataPoint(audioBuffer, PUSH_AAC_PACKET_PRE_SIZE,GFalse);
+    if(R_BufferFrontSize(&packet->retain)<PUSH_AAC_PACKET_PRE_SIZE){
+       R_BufferMoveDataPoint(audioBuffer, PUSH_AAC_PACKET_PRE_SIZE,GFalse);
     }
-    outCacheBufferList.mBuffers[0].mData = retainBufferStart(&packet->retain)+7;
+    outCacheBufferList.mBuffers[0].mData = R_BufferStart(&packet->retain)+7;
     outCacheBufferList.mBuffers[0].mDataByteSize = _destMaxOutSize-7;
     OSStatus status = AudioConverterFillComplexBuffer(_encodeConvert, encodeInputDataProc, (__bridge void*)self, &outputDataPacketSize, &outCacheBufferList, &packetDesc);
 
     if (status != noErr ) {
-        retainBufferUnRetain(audioBuffer);
+       R_BufferUnRetain(audioBuffer);
         GJLOG(GJ_LOGERROR, "running状态编码错误 times:%d",_errorTimes++);
         return NO;
     }
-    retainBufferSetSize(audioBuffer, outCacheBufferList.mBuffers[0].mDataByteSize+7);
+   R_BufferSetSize(audioBuffer, outCacheBufferList.mBuffers[0].mDataByteSize+7);
 //    audioBuffer->size = outCacheBufferList.mBuffers[0].mDataByteSize+7;
-    adtsDataForPacketLength(outCacheBufferList.mBuffers[0].mDataByteSize, retainBufferStart(&packet->retain), _destFormat.mSampleRate, _destFormat.mChannelsPerFrame);
+    adtsDataForPacketLength(outCacheBufferList.mBuffers[0].mDataByteSize, R_BufferStart(&packet->retain), _destFormat.mSampleRate, _destFormat.mChannelsPerFrame);
 
     packet->type = GJMediaType_Audio;
     packet->dataOffset = 7;
@@ -261,7 +261,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     packet->pts = frame->pts;
     packet->dts = frame->pts;
     self.completeCallback(packet);
-    retainBufferUnRetain(audioBuffer);
+   R_BufferUnRetain(audioBuffer);
     return YES;
 }
 #pragma -mark =======ADTS=======

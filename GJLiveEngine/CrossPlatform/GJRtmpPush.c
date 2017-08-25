@@ -42,7 +42,7 @@ struct _GJStreamPush{
 
 //typedef struct _GJStream_Packet {
 //    RTMPPacket packet;
-//    GJRetainBuffer* retainBuffer;
+//    GJRetainBuffer*buffer;
 //}GJStream_Packet;
 
 
@@ -114,7 +114,7 @@ static GHandle sendRunloop(GHandle parm){
     while ( queuePop(push->sendBufferQueue, (GHandle*)&packet, INT32_MAX)) {
         
         if (push->stopRequest) {
-            retainBufferUnRetain(&packet->retain);
+           R_BufferUnRetain(&packet->retain);
             break;
         }
 #ifdef NETWORK_DELAY
@@ -125,7 +125,7 @@ static GHandle sendRunloop(GHandle parm){
         if (packet->type == GJMediaType_Video) {
             
             if (push->videoStatus.leave.count == 0) {
-                GUInt8* start = packet->dataOffset + retainBufferStart(&packet->retain);
+                GUInt8* start = packet->dataOffset + R_BufferStart(&packet->retain);
                 
                 GInt32 index = 0;
                 GUInt8* sps = GNULL,*pps = GNULL;
@@ -157,7 +157,7 @@ static GHandle sendRunloop(GHandle parm){
                         
                         if (iRet == GFalse) {
                             GJLOG(GJ_LOGERROR, "error send video FRAME");
-                            retainBufferUnRetain(&packet->retain);
+                           R_BufferUnRetain(&packet->retain);
                             errType = kStreamPushMessageType_sendPacketError;
                             goto ERROR;
                         }
@@ -172,7 +172,7 @@ static GHandle sendRunloop(GHandle parm){
                         }
 
                     }else{
-                        retainBufferUnRetain(&packet->retain);
+                       R_BufferUnRetain(&packet->retain);
                         GJLOG(GJ_LOGERROR, "RTMP_AllocAndPakcetAVCSequenceHeader");
                         errType = kStreamPushMessageType_sendPacketError;
                         goto ERROR;
@@ -185,7 +185,7 @@ static GHandle sendRunloop(GHandle parm){
                     push->videoStatus.leave.count = 1;
                     push->videoStatus.leave.ts = (GLong)packet->pts;
 
-                    retainBufferUnRetain(&packet->retain);
+                   R_BufferUnRetain(&packet->retain);
                     continue;
                 }
             }
@@ -196,7 +196,7 @@ static GHandle sendRunloop(GHandle parm){
             
             if (packet->flag == GJPacketFlag_KEY) {
                 
-                GUInt8* start = retainBufferStart(&packet->retain) + packet->dataOffset;
+                GUInt8* start = R_BufferStart(&packet->retain) + packet->dataOffset;
                 GInt32 index = 0;
                 GUInt8* pre_nal_unit = GNULL;
                 
@@ -239,24 +239,24 @@ static GHandle sendRunloop(GHandle parm){
 
             }else{
                 
-                nal_start = packet->dataOffset+retainBufferStart(&packet->retain);
+                nal_start = packet->dataOffset+R_BufferStart(&packet->retain);
                 GInt32 nal_size = packet->dataSize-4;
                 nal_size = htonl(nal_size);
                 memcpy(nal_start, &nal_size, 4);
             }
             
             GInt32 preSize = ppPreSize+RTMP_MAX_HEADER_SIZE;
-            if (nal_start-retainBufferStart(&packet->retain) + retainBufferFrontSize(&packet->retain) < preSize) {
+            if (nal_start - R_BufferStart(&packet->retain) + R_BufferFrontSize(&packet->retain) < preSize) {
                 //申请内存控制得当的话不会进入此条件、  先扩大，在查找。
 #if MENORY_CHECK
                 GJAssert(0, "MENORY_CHECK 状态下不能扩大内存");
 #endif
                 GJLOG(GJ_LOGDEBUG, "预留位置过小,扩大");
-                GInt32 nal_offset = (GInt32)(nal_start - retainBufferStart(&packet->retain));
-                retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+ppPreSize, GTrue);
+                GInt32 nal_offset = (GInt32)(nal_start - R_BufferStart(&packet->retain));
+                R_BufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+ppPreSize, GTrue);
                 
                 if (packet->dataSize > 0) {
-                    nal_start = nal_offset+retainBufferStart(&packet->retain);
+                    nal_start = nal_offset+R_BufferStart(&packet->retain);
                 }
             }
             
@@ -267,7 +267,7 @@ static GHandle sendRunloop(GHandle parm){
             RTMPPacket_Reset(&rtmpPacket);
             //    使用pp做参考点，防止sei不发送的情况，导致pp移动，产生消耗
             rtmpPacket.m_body = (GChar*)nal_start - ppPreSize;
-            rtmpPacket.m_nBodySize = (GUInt32)(retainBufferStart(&packet->retain)+packet->dataOffset+packet->dataSize-nal_start + ppPreSize);
+            rtmpPacket.m_nBodySize = (GUInt32)(R_BufferStart(&packet->retain)+packet->dataOffset+packet->dataSize-nal_start + ppPreSize);
             body = (GUChar *)rtmpPacket.m_body;
             rtmpPacket.m_packetType = RTMP_PACKET_TYPE_VIDEO;
             rtmpPacket.m_nChannel = 0x04;
@@ -291,7 +291,7 @@ static GHandle sendRunloop(GHandle parm){
             push->videoStatus.leave.ts = rtmpPacket.m_nTimeStamp;
             push->videoStatus.leave.count++;
             push->videoStatus.leave.byte += rtmpPacket.m_nBodySize;
-            retainBufferUnRetain(&packet->retain);
+           R_BufferUnRetain(&packet->retain);
 
             if (iRet == GFalse) {
                 GJLOG(GJ_LOGERROR, "error send video FRAME");
@@ -311,7 +311,7 @@ static GHandle sendRunloop(GHandle parm){
                     push->audioStatus.leave.byte = aacPacket.m_nBodySize;
                     push->audioStatus.leave.count = 1;
                     push->audioStatus.leave.ts = (GLong)packet->pts;
-                    retainBufferUnRetain(&packet->retain);
+                   R_BufferUnRetain(&packet->retain);
                     
                     if (iRet == GFalse) {
                         GJLOG(GJ_LOGERROR, "error send video FRAME");
@@ -323,7 +323,7 @@ static GHandle sendRunloop(GHandle parm){
                     
                     GJLOG(GJ_LOGERROR, "RTMP_AllocAndPackAACSequenceHeader");
                     errType = kStreamPushMessageType_sendPacketError;
-                    retainBufferUnRetain(&packet->retain);
+                   R_BufferUnRetain(&packet->retain);
                     goto ERROR;
                 }
             }
@@ -332,15 +332,15 @@ static GHandle sendRunloop(GHandle parm){
             GInt32 preSize = 2;
             
             RTMPPacket_Reset(&rtmpPacket);
-            if (packet->dataOffset+retainBufferFrontSize(&packet->retain) < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
+            if (packet->dataOffset + R_BufferFrontSize(&packet->retain) < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
 #if MENORY_CHECK
                 GJAssert(0, "MENORY_CHECK 状态下不移动内存");
 #endif
                 GJLOG(GJ_LOGWARNING, "产生内存移动");
-                retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+preSize, GTrue);
+               R_BufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+preSize, GTrue);
             }
             
-            rtmpPacket.m_body = (GChar*)(packet->dataOffset +retainBufferStart(&packet->retain) - preSize);
+            rtmpPacket.m_body = (GChar*)(packet->dataOffset +R_BufferStart(&packet->retain) - preSize);
             rtmpPacket.m_nBodySize = packet->dataSize+preSize;
             
             body = (GUChar *)rtmpPacket.m_body;
@@ -360,7 +360,7 @@ static GHandle sendRunloop(GHandle parm){
             push->audioStatus.leave.byte+=rtmpPacket.m_nBodySize;
             push->audioStatus.leave.count++;
             push->audioStatus.leave.ts = rtmpPacket.m_nTimeStamp;
-            retainBufferUnRetain(&packet->retain);
+           R_BufferUnRetain(&packet->retain);
 
             if (iRet == GFalse) {
                 GJLOG(GJ_LOGFORBID, "error send packet FRAME");
@@ -500,7 +500,7 @@ GBool RTMP_AllocAndPakcetAVCSequenceHeader(GJStreamPush* push,GUInt8* sps,GInt32
 //    GInt32 preSize = ppPreSize+RTMP_MAX_HEADER_SIZE;
 //    if (pp-packet->retain.data + packet->retain.frontSize < preSize) {//申请内存控制得当的话不会进入此条件、  先扩大，在查找。
 //        GJLOG(GJ_LOGDEBUG, "预留位置过小,扩大");
-//        retainBufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+ppPreSize, GTrue);
+//       R_BufferMoveDataToPoint(&packet->retain, RTMP_MAX_HEADER_SIZE+ppPreSize, GTrue);
 //
 //        if (packet->dataSize > 0) {
 //            pp = packet->dataOffset+packet->retain.data;
@@ -509,8 +509,8 @@ GBool RTMP_AllocAndPakcetAVCSequenceHeader(GJStreamPush* push,GUInt8* sps,GInt32
 //    
 //    GJStream_Packet* pushPacket = (GJStream_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJStream_Packet));
 //    memset(pushPacket, 0, sizeof(GJStream_Packet));
-//    GJRetainBuffer*retainBuffer = (GJRetainBuffer*)packet;
-//    pushPacket->retainBuffer = retainBuffer;
+//    GJRetainBuffer*buffer = (GJRetainBuffer*)packet;
+//    pushPacket->buffer =buffer;
 //    RTMPPacket* sendPacket = &pushPacket->packet;
 //
 //    GUChar * body=GNULL;
@@ -536,7 +536,7 @@ GBool RTMP_AllocAndPakcetAVCSequenceHeader(GJStreamPush* push,GUInt8* sps,GInt32
 //        body[iIndex++] = 0x00;
 //    }
 //
-//    retainBufferRetain(retainBuffer);
+//   R_BufferRetain(buffer);
 //    if (queuePush(sender->sendBufferQueue, pushPacket, 0)) {
 //        sender->videoStatus.enter.ts = pushPacket->packet.m_nTimeStamp;
 //        sender->videoStatus.enter.count++;
@@ -544,7 +544,7 @@ GBool RTMP_AllocAndPakcetAVCSequenceHeader(GJStreamPush* push,GUInt8* sps,GInt32
 //        return GTrue;
 //    }else{
 //        GJLOG(GJ_LOGFORBID, "不可能出现的错误");
-//        retainBufferUnRetain(retainBuffer);
+//       R_BufferUnRetain(buffer);
 //        GJBufferPoolSetData(defauleBufferPool(), (GHandle)pushPacket);
 //        return GFalse;
 //    }
@@ -595,14 +595,14 @@ GBool RTMP_AllocAndPackAACSequenceHeader(GJStreamPush* push,GInt32 aactype, GInt
 //    GInt32 preSize = 2;
 //    GJStream_Packet* pushPacket = (GJStream_Packet*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(GJStream_Packet));
 //
-//    GJRetainBuffer* retainBuffer = &buffer->retain;
-//    pushPacket->retainBuffer = retainBuffer;
+//    GJRetainBuffer*buffer = &buffer->retain;
+//    pushPacket->buffer =buffer;
 //    
 //    RTMPPacket* sendPacket = &pushPacket->packet;
 //    RTMPPacket_Reset(sendPacket);
 //    if (buffer->dataOffset+buffer->retain.frontSize < preSize+RTMP_MAX_HEADER_SIZE) {//申请内存控制得当的话不会进入此条件、
 //        GJLOG(GJ_LOGWARNING, "产生内存移动");
-//        retainBufferMoveDataToPoint(&buffer->retain, RTMP_MAX_HEADER_SIZE+preSize, GTrue);
+//       R_BufferMoveDataToPoint(&buffer->retain, RTMP_MAX_HEADER_SIZE+preSize, GTrue);
 //    }
 //
 //    sendPacket->m_body = (GChar*)(buffer->dataOffset +buffer->retain.data - preSize);
@@ -620,7 +620,7 @@ GBool RTMP_AllocAndPackAACSequenceHeader(GJStreamPush* push,GInt32 aactype, GInt
 //    sendPacket->m_hasAbsTimestamp = 0;
 //    sendPacket->m_headerType = RTMP_PACKET_SIZE_LARGE;
 //    sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
-//    retainBufferRetain(retainBuffer);
+//   R_BufferRetain(buffer);
 //    
 //    if (queuePush(sender->sendBufferQueue, pushPacket, 0)) {
 //        sender->audioStatus.enter.ts = pushPacket->packet.m_nTimeStamp;
@@ -629,7 +629,7 @@ GBool RTMP_AllocAndPackAACSequenceHeader(GJStreamPush* push,GInt32 aactype, GInt
 //        return GTrue;
 //    }else{
 //        GJLOG(GJ_LOGFORBID, "不可能出现的错误");
-//        retainBufferUnRetain(retainBuffer);
+//       R_BufferUnRetain(buffer);
 //        GJBufferPoolSetData(defauleBufferPool(), (GHandle)pushPacket);
 //        return GFalse;
 //    }
@@ -637,14 +637,14 @@ GBool RTMP_AllocAndPackAACSequenceHeader(GJStreamPush* push,GInt32 aactype, GInt
 GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
     
     if(push == GNULL)return GFalse;
-    retainBufferRetain(&packet->retain);
+   R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         push->videoStatus.enter.ts = (GLong)packet->pts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
         
     }else{
-        retainBufferUnRetain(&packet->retain);
+       R_BufferUnRetain(&packet->retain);
         
     }
     
@@ -652,13 +652,13 @@ GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
 }
 GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
     if(push == GNULL)return GFalse;
-    retainBufferRetain(&packet->retain);
+   R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         push->audioStatus.enter.ts = (GLong)packet->pts;
         push->audioStatus.enter.count++;
         push->audioStatus.enter.byte += packet->dataSize;
     }else{
-        retainBufferUnRetain(&packet->retain);
+       R_BufferUnRetain(&packet->retain);
     }
     return GTrue;
 }
@@ -692,7 +692,7 @@ GVoid GJStreamPush_Delloc(GJStreamPush* push){
         //queuepop已经关闭
         if (queueClean(push->sendBufferQueue, (GHandle*)packet, &length)) {
             for (GInt32 i = 0; i<length; i++) {
-                retainBufferUnRetain(&packet[i]->retain);
+               R_BufferUnRetain(&packet[i]->retain);
             }
             
         }

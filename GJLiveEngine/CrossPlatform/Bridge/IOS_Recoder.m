@@ -61,7 +61,7 @@ static GVoid sendVideoSourcePacket(struct _GJRecodeContext* context, R_GJPixelFr
 static GVoid sendAudioSourcePacket(struct _GJRecodeContext* context, R_GJPCMFrame* packet){
     
     GJScreenRecorder* recoder = (__bridge GJScreenRecorder *)(context->obaque);
-    [recoder addCurrentAudioSource:retainBufferStart(&packet->retain) size:retainBufferSize(&packet->retain)];
+    [recoder addCurrentAudioSource: R_BufferStart(&packet->retain) size: R_BufferSize(&packet->retain)];
     
 }
 static GBool startRecode(struct _GJRecodeContext* context, GView view, GInt32 fps){

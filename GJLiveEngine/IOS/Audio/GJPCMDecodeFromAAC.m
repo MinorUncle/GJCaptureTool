@@ -100,13 +100,13 @@
         queueClean(_resumeQueue, (GHandle *)packets, &length);
         for (int i = 0; i<length ; i++) {
             packet = packets[i];
-            retainBufferUnRetain(&packet->retain);
+           R_BufferUnRetain(&packet->retain);
         }
         free(packets);
     }
 
     if (_prePacket) {
-        retainBufferUnRetain(&_prePacket->retain);
+       R_BufferUnRetain(&_prePacket->retain);
         _prePacket = NULL;
     }
 }
@@ -115,15 +115,15 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 {
     GJPCMDecodeFromAAC* decode =(__bridge GJPCMDecodeFromAAC*)inUserData;
     if (decode->_prePacket) {
-        retainBufferUnRetain(&decode->_prePacket->retain);
+       R_BufferUnRetain(&decode->_prePacket->retain);
         decode->_prePacket = NULL;
     }
     GJQueue* param =   decode->_resumeQueue;
-    GJRetainBuffer* retainBuffer;
+    GJRetainBuffer*buffer;
     R_GJPacket* packet;    
     if (decode.running && queuePop(param,(void**)&packet,INT_MAX)) {
-        retainBuffer = &packet->retain;
-        ioData->mBuffers[0].mData = retainBufferStart(&packet->retain) + packet->dataOffset;
+       buffer = &packet->retain;
+        ioData->mBuffers[0].mData = R_BufferStart(&packet->retain) + packet->dataOffset;
         ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
         ioData->mBuffers[0].mDataByteSize = packet->dataSize;
         *ioNumberDataPackets = 1;
@@ -146,9 +146,9 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 }
 
 -(void)decodePacket:(R_GJPacket*)packet{
-    retainBufferRetain(&packet->retain);
+   R_BufferRetain(&packet->retain);
     if(!_running || !queuePush(_resumeQueue, packet,0)) {
-        retainBufferUnRetain(&packet->retain);
+       R_BufferUnRetain(&packet->retain);
         GJLOG(GJ_LOGWARNING,"aac decode to pcm queuePush faile");
     }
 }
@@ -168,7 +168,7 @@ static const int mpeg4audio_sample_rates[16] = {
     // get audio format
         R_GJPacket* packet;
         if (queuePeekWaitValue(_resumeQueue, 0,(void**)&packet, INT_MAX) && packet->flag == GJPacketFlag_KEY && _running) {
-            uint8_t* adts = packet->dataOffset+retainBufferStart(&packet->retain);
+            uint8_t* adts = packet->dataOffset+R_BufferStart(&packet->retain);
             uint8_t sampleIndex = adts[2] << 2;
             sampleIndex = sampleIndex>>4;
             int sampleRate = mpeg4audio_sample_rates[sampleIndex];
@@ -242,13 +242,13 @@ static const int mpeg4audio_sample_rates[16] = {
         R_GJPCMFrame* frame = (R_GJPCMFrame*)GJRetainBufferPoolGetData(_bufferPool);
         outCacheBufferList.mNumberBuffers = 1;
         outCacheBufferList.mBuffers[0].mNumberChannels = 1;
-        outCacheBufferList.mBuffers[0].mData = retainBufferStart(&frame->retain);
+        outCacheBufferList.mBuffers[0].mData = R_BufferStart(&frame->retain);
         outCacheBufferList.mBuffers[0].mDataByteSize = AAC_FRAME_PER_PACKET * _destFormat.mBytesPerPacket;
         UInt32 numPackets = AAC_FRAME_PER_PACKET;
 
         OSStatus status = AudioConverterFillComplexBuffer(_decodeConvert, decodeInputDataProc, (__bridge void*)self, &numPackets, &outCacheBufferList, &packetDesc);
         if (status != noErr && numPackets == 0) {
-            retainBufferUnRetain(&frame->retain);
+           R_BufferUnRetain(&frame->retain);
             queueEnablePop(_resumeQueue, GTrue);
             char* codeChar = (char*)&status;
             if (_running && status != -1) {
@@ -260,19 +260,19 @@ static const int mpeg4audio_sample_rates[16] = {
             break;
         }
         
-        retainBufferSetSize(&frame->retain, _destFormat.mBytesPerPacket*numPackets);
+       R_BufferSetSize(&frame->retain, _destFormat.mBytesPerPacket*numPackets);
         frame->pts = _currentPts;
         frame->dts = _currentPts;
         _currentPts = -1;
         self.decodeCallback(frame);
-        retainBufferUnRetain(&frame->retain);
+       R_BufferUnRetain(&frame->retain);
     }
 }
 
 -(void)dealloc{
     AudioConverterDispose(_decodeConvert);
     if (_prePacket) {
-        retainBufferUnRetain(&_prePacket->retain);
+       R_BufferUnRetain(&_prePacket->retain);
     }
     if (_bufferPool) {
         GJRetainBufferPool* pool = _bufferPool;

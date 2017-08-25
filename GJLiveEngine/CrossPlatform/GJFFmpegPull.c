@@ -37,11 +37,11 @@ struct _GJStreamPull{
 GVoid GJStreamPull_Delloc(GJStreamPull* pull);
 
 static GBool packetBufferRelease(GJRetainBuffer* buffer){
-    if(retainBufferUserData(buffer)){
-        AVBufferRef* avbuf = retainBufferUserData(buffer);
+    if(R_BufferUserData(buffer)){
+        AVBufferRef* avbuf = R_BufferUserData(buffer);
         av_buffer_unref(&avbuf);
     }else{
-        retainBufferFreeData(buffer);
+       R_BufferFreeData(buffer);
     }
     GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer);
     return GTrue;
@@ -90,13 +90,13 @@ static GHandle pullRunloop(GHandle parm){
 
                 if (avccSize >= 8+spsSize+3 + ppsSize) {
                     R_GJPacket* avccPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
-                    retainBufferAlloc((GJRetainBuffer**)&avccPacket, 8+spsSize+ppsSize, packetBufferRelease, GNULL);
+                   R_BufferAlloc((GJRetainBuffer**)&avccPacket, 8+spsSize+ppsSize, packetBufferRelease, GNULL);
                     avccPacket->type = GJMediaType_Video;
                     avccPacket->flag = GJPacketFlag_KEY;
                     
                     avccPacket->dataOffset = 0;
-                    avccPacket->dataSize = retainBufferSize(&avccPacket->retain);
-                    GUInt8* packetData = retainBufferStart(&avccPacket->retain) + avccPacket->dataOffset;
+                    avccPacket->dataSize = R_BufferSize(&avccPacket->retain);
+                    GUInt8* packetData = R_BufferStart(&avccPacket->retain) + avccPacket->dataOffset;
                     GInt32 spsNsize = htonl(spsSize);
                     GInt32 ppsNsize = htonl(ppsSize);
                     memcpy(packetData, &spsNsize, 4);
@@ -104,7 +104,7 @@ static GHandle pullRunloop(GHandle parm){
                     memcpy(packetData+4+spsSize, &ppsNsize, 4);
                     memcpy(packetData+8+spsSize, pps, ppsSize);
                     pull->dataCallback(pull,avccPacket,pull->dataCallbackParm);
-                    retainBufferUnRetain(&avccPacket->retain);
+                   R_BufferUnRetain(&avccPacket->retain);
 
                 }
             }
@@ -120,7 +120,7 @@ static GHandle pullRunloop(GHandle parm){
         GInt32 aaccSize = aStream->codecpar->extradata_size;
         if (aaccSize >= 2) {
             R_GJPacket* aaccPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
-            retainBufferAlloc((GJRetainBuffer**)&aaccPacket, 7, packetBufferRelease, GNULL);
+           R_BufferAlloc((GJRetainBuffer**)&aaccPacket, 7, packetBufferRelease, GNULL);
             aaccPacket->type = GJMediaType_Audio;
             aaccPacket->flag = GJPacketFlag_KEY;
             
@@ -131,7 +131,7 @@ static GHandle pullRunloop(GHandle parm){
             int adtsLength = 7;
             aaccPacket->dataOffset = 0;
             aaccPacket->dataSize = adtsLength;
-            GUInt8* adts = retainBufferStart(&aaccPacket->retain);
+            GUInt8* adts = R_BufferStart(&aaccPacket->retain);
             GInt32 fullLength = adtsLength + 0;
             adts[0] = (char)0xFF;	// 11111111  	= syncword
             adts[1] = (char)0xF1;	   // 1111 0 00 1 = syncword+id(MPEG-4) + Layer + absent
@@ -142,7 +142,7 @@ static GHandle pullRunloop(GHandle parm){
             adts[6] = (char)0xFC;
 
             pull->dataCallback(pull,aaccPacket,pull->dataCallbackParm);
-            retainBufferUnRetain(&aaccPacket->retain);
+           R_BufferUnRetain(&aaccPacket->retain);
         }
     }
     AVPacket pkt;
@@ -157,11 +157,11 @@ static GHandle pullRunloop(GHandle parm){
 #if MENORY_CHECK
             R_GJPacket* h264Packet = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
             h264Packet->dataOffset = 0;
-            retainBufferWrite(&h264Packet->retain, pkt.data, pkt.size);
+           R_BufferWrite(&h264Packet->retain, pkt.data, pkt.size);
 #else
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
             R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
-            retainBufferPack((GJRetainBuffer**)&h264Packet, pkt.data, pkt.size, packetBufferRelease, buffer);
+           R_BufferPack((GJRetainBuffer**)&h264Packet, pkt.data, pkt.size, packetBufferRelease, buffer);
             h264Packet->dataOffset = 0;
 #endif
            
@@ -171,19 +171,19 @@ static GHandle pullRunloop(GHandle parm){
             h264Packet->type = GJMediaType_Video;
 //            printf("video pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
             pull->dataCallback(pull,h264Packet,pull->dataCallbackParm);
-            retainBufferUnRetain(&h264Packet->retain);
+           R_BufferUnRetain(&h264Packet->retain);
 
         }else if (pkt.stream_index == asIndex){
 //            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
 #if MENORY_CHECK
             R_GJPacket* aacPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
             aacPacket->dataOffset = 0;
-            retainBufferWrite(&aacPacket->retain, pkt.data, pkt.size);
+           R_BufferWrite(&aacPacket->retain, pkt.data, pkt.size);
 
 #else
             R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
-            retainBufferPack((GJRetainBuffer**)&aacPacket, pkt.data, pkt.size, packetBufferRelease, buffer);
+           R_BufferPack((GJRetainBuffer**)&aacPacket, pkt.data, pkt.size, packetBufferRelease, buffer);
             aacPacket->dataOffset = 0;
 #endif
             aacPacket->dataSize = pkt.size;
@@ -194,7 +194,7 @@ static GHandle pullRunloop(GHandle parm){
 //            printf("receive packet pts:%lld size:%d  last data:%d\n",aacPacket->pts,aacPacket->dataSize,(aacPacket->retain.data + aacPacket->dataOffset + aacPacket->dataSize -1)[0]);
 
             pull->dataCallback(pull,aacPacket,pull->dataCallbackParm);
-            retainBufferUnRetain(&aacPacket->retain);
+           R_BufferUnRetain(&aacPacket->retain);
         }
         
             av_packet_unref(&pkt);

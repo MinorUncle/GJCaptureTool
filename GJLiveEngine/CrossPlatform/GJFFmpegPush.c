@@ -74,10 +74,10 @@ static GHandle sendRunloop(GHandle parm){
                     push->videoStatus.leave.byte+=packet->dataSize;
                     push->videoStatus.leave.count++;
                     push->videoStatus.leave.ts = (GLong)packet->dts;
-                    retainBufferUnRetain(&packet->retain);
+                   R_BufferUnRetain(&packet->retain);
                     continue;
                 }
-                GUInt8* start = packet->dataOffset + retainBufferStart(&packet->retain);
+                GUInt8* start = packet->dataOffset + R_BufferStart(&packet->retain);
                 
                 GInt32 index = 0;
                 GUInt8* sps = GNULL,*pps = GNULL;
@@ -119,7 +119,7 @@ static GHandle sendRunloop(GHandle parm){
                     push->videoStatus.leave.byte+=packet->dataSize;
                     push->videoStatus.leave.count++;
                     push->videoStatus.leave.ts = (GLong)packet->dts;
-                    retainBufferUnRetain(&packet->retain);
+                   R_BufferUnRetain(&packet->retain);
                     continue;
                 }
             }else{
@@ -128,7 +128,7 @@ static GHandle sendRunloop(GHandle parm){
                 push->audioStatus.leave.byte+=packet->dataSize;
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.ts = (GLong)packet->dts;
-                retainBufferUnRetain(&packet->retain);
+               R_BufferUnRetain(&packet->retain);
             }
         }
     }
@@ -165,7 +165,7 @@ static GHandle sendRunloop(GHandle parm){
 
     while (queuePop(push->sendBufferQueue, (GHandle*)&packet, INT32_MAX)) {
         if (push->stopRequest) {
-            retainBufferUnRetain(&packet->retain);
+           R_BufferUnRetain(&packet->retain);
             break;
         }
 #ifdef NETWORK_DELAY
@@ -182,7 +182,7 @@ static GHandle sendRunloop(GHandle parm){
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        sendPacket->data = retainBufferStart(&packet->retain) + packet->dataOffset;
+        sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
         sendPacket->size = packet->dataSize;
         GInt32 iRet = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
@@ -199,7 +199,7 @@ static GHandle sendRunloop(GHandle parm){
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.ts = (GLong)packet->dts;
             }
-            retainBufferUnRetain(&packet->retain);
+           R_BufferUnRetain(&packet->retain);
         }else{
             switch (iRet) {
                 case -22:
@@ -214,7 +214,7 @@ static GHandle sendRunloop(GHandle parm){
                     break;
             }
             errType = kStreamPushMessageType_sendPacketError;
-            retainBufferUnRetain(&packet->retain);
+           R_BufferUnRetain(&packet->retain);
             break;
         };
     }
@@ -384,7 +384,7 @@ GVoid GJStreamPush_Delloc(GJStreamPush* push){
         //queuepop已经关闭
         if (queueClean(push->sendBufferQueue, (GHandle*)packet, &length)) {
             for (GInt32 i = 0; i<length; i++) {
-                retainBufferUnRetain(&packet[i]->retain);
+               R_BufferUnRetain(&packet[i]->retain);
             }
             
         }
@@ -442,14 +442,14 @@ GVoid GJStreamPush_CloseAndDealloc(GJStreamPush** push){
 GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
 
     if(push == GNULL)return GFalse;
-    retainBufferRetain(&packet->retain);
+   R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         push->videoStatus.enter.ts = (GLong)packet->dts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
         
     }else{
-        retainBufferUnRetain(&packet->retain);
+       R_BufferUnRetain(&packet->retain);
 
     }
     
@@ -458,13 +458,13 @@ GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
 GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
     if(push == GNULL)return GFalse;
     
-    retainBufferRetain(&packet->retain);
+   R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         push->audioStatus.enter.ts = (GLong)packet->dts;
         push->audioStatus.enter.count++;
         push->audioStatus.enter.byte += packet->dataSize;
     }else{
-        retainBufferUnRetain(&packet->retain);
+       R_BufferUnRetain(&packet->retain);
     }
     return GTrue;
 }
