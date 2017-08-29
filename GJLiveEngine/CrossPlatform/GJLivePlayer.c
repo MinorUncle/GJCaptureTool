@@ -474,6 +474,10 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm){
         if (delay > 20) {
             GJLOGFREQ("play wait:%d, video pts:%ld",delay,_syncControl->videoInfo.cPTS);
             usleep((GUInt32)delay * 1000);
+            if (_playControl->status == kPlayStatusStop) {
+                //减少退出时的时间。
+                goto DROP;
+            }
         }
         
         if (_syncControl->speed > 1.0) {

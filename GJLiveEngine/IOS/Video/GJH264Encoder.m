@@ -203,6 +203,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     if (statu != 0) return;
     if (!CMSampleBufferDataIsReady(sample))
     {
+        
         GJLOG(GJ_LOGWARNING,"didCompressH264 data is not ready ");
         return;
     }
@@ -247,7 +248,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
         
         size_t spsppsSize = sparameterSetSize+pparameterSetSize;
         int needSize = (int)(8 + spsppsSize+totalLength+PUSH_H264_PACKET_PRE_SIZE);
-        pushPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
+        pushPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize,DEFAULT_TRACKER);
        buffer = &pushPacket->retain;
         if (R_BufferFrontSize(buffer) < PUSH_H264_PACKET_PRE_SIZE) {
            R_BufferMoveDataToPoint(buffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
@@ -272,7 +273,7 @@ void encodeOutputCallback(void *  outputCallbackRefCon,void *  sourceFrameRefCon
     }else{
         int needSize = (int)(totalLength+PUSH_H264_PACKET_PRE_SIZE);
 //       R_BufferPack(&buffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, R_BufferRelease, encoder.bufferPool);
-        pushPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
+        pushPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize,DEFAULT_TRACKER);
        buffer = &pushPacket->retain;
         if (R_BufferFrontSize(buffer) < PUSH_H264_PACKET_PRE_SIZE) {
            R_BufferMoveDataToPoint(buffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);

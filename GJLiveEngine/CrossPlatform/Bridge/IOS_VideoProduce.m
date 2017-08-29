@@ -317,7 +317,7 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize ,CGSize destSize){
         self.cropFilter.frameProcessingCompletionBlock = ^(GPUImageOutput * imageOutput, CMTime time) {
             CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].pixelBuffer;
             CVPixelBufferRetain(pixel_buffer);
-            R_GJPixelFrame* frame = (R_GJPixelFrame*)GJRetainBufferPoolGetData(wkSelf.bufferPool);
+            R_GJPixelFrame* frame = (R_GJPixelFrame*)GJRetainBufferPoolGetData(wkSelf.bufferPool,DEFAULT_TRACKER);
             ((CVPixelBufferRef*)R_BufferStart(&frame->retain))[0] = pixel_buffer;
             frame->height = (GInt32)wkSelf.destSize.height;
             frame->width = (GInt32)wkSelf.destSize.width;

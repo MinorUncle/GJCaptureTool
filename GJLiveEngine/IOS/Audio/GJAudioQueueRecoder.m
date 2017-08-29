@@ -130,7 +130,7 @@ static void pcmHandleInputBuffer (void *aqData, AudioQueueRef inAQ,AudioQueueBuf
     GJAudioQueueRecoder* tempSelf = (__bridge GJAudioQueueRecoder*)aqData;
    
     if (tempSelf.status == kRecoderRunningStatus){
-        R_GJPCMFrame* buffer = (R_GJPCMFrame*)GJRetainBufferPoolGetData(tempSelf.bufferPool);
+        R_GJPCMFrame* buffer = (R_GJPCMFrame*)GJRetainBufferPoolGetData(tempSelf.bufferPool, DEFAULT_TRACKER);
        R_BufferWrite(&buffer->retain, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
 //        memcpy(buffer->retain.data, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
 //        buffer->retain.size = inBuffer->mAudioDataByteSize;

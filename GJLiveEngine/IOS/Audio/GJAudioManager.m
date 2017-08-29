@@ -46,8 +46,7 @@ static GJAudioManager* _staticManager;
         _audioController.useMeasurementMode = YES;
 //        [_audioController setPreferredBufferDuration:0.023];
         
-        GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc,GNULL,GNULL);
-        _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket);
+       
         _durPerSize = 1000.0/_audioController.audioDescription.mSampleRate/_audioController.audioDescription.mBytesPerFrame;
 #ifdef AUDIO_SEND_TEST
         _audioMixer = [[AEAudioSender alloc]init];
@@ -78,7 +77,6 @@ static GJAudioManager* _staticManager;
     int leftSize = frame->mBuffers[0].mDataByteSize;
     while (leftSize >= needSize) {
        R_BufferWriteAppend(&_alignCacheFrame->retain, frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, needSize);
-//        memcpy(_alignCacheFrame->retain.data + _alignCacheFrame->retain.size,  frame->mBuffers[0].mData+frame->mBuffers[0].mDataByteSize - leftSize, needSize);
         _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
         _alignCacheFrame->pts = time-(GInt64)(R_BufferSize(&_alignCacheFrame->retain)*_durPerSize);
         
@@ -91,7 +89,7 @@ static GJAudioManager* _staticManager;
         self.audioCallback(_alignCacheFrame);
        R_BufferUnRetain(&_alignCacheFrame->retain);
         time = time+ needSize/_durPerSize;
-        _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket);
+        _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket,DEFAULT_TRACKER);
         leftSize = leftSize - needSize;
         needSize = _sizePerPacket;
     }
@@ -102,6 +100,10 @@ static GJAudioManager* _staticManager;
 }
 
 -(BOOL)startRecode:(NSError**)error{
+    GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc,GNULL,GNULL);
+    _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket,DEFAULT_TRACKER);
+    
+    
     NSError* configError;
     [[GJAudioSessionCenter shareSession] lockBeginConfig];
     [[GJAudioSessionCenter shareSession]requestPlay:YES key:self.description error:&configError];
@@ -115,9 +117,13 @@ static GJAudioManager* _staticManager;
     if (![_audioController start:error]) {
         GJLOG(GJ_LOGERROR, "AEAudioController start error:%@",(*error).description.UTF8String);
     }
+    
+
+    
     return *error == nil;
 }
 -(void)stopRecode{
+    
     [_audioController stop];
     NSError* configError;
     [[GJAudioSessionCenter shareSession] lockBeginConfig];
@@ -129,7 +135,22 @@ static GJAudioManager* _staticManager;
     if (configError) {
         GJLOG(GJ_LOGERROR, "Apply audio session Config error:%@",configError.description.UTF8String);
     }
+    
+    if (_alignCacheFrame) {
+        R_BufferUnRetain(&_alignCacheFrame->retain);
+        _alignCacheFrame = GNULL;
+    }
+    if(_bufferPool){
+        GJRetainBufferPool* pool = _bufferPool;
+        _bufferPool = GNULL;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJRetainBufferPoolClean(pool, GTrue);
+            GJRetainBufferPoolFree(pool);
+        });
+    }
+
 }
+
 -(AEPlaythroughChannel *)playthrough{
     if (_playthrough == nil) {
         _playthrough = [[AEPlaythroughChannel alloc]init];
@@ -227,6 +248,5 @@ static GJAudioManager* _staticManager;
     }
     [_audioController removeChannels:play];
     
- 
 }
 @end
