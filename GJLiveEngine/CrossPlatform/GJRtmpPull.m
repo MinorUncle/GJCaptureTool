@@ -122,7 +122,9 @@ static GHandle pullRunloop(GHandle parm){
                 R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
                 memset(aacPacket, 0, sizeof(R_GJPacket));
                 GJRetainBuffer*buffer = &aacPacket->retain;
-               R_BufferPack(&buffer, body - RTMP_MAX_HEADER_SIZE, RTMP_MAX_HEADER_SIZE+packet.m_nBodySize, packetBufferRelease, NULL);
+                GUInt8* body = (GUInt8*)packet.m_body;
+                R_BufferPack(&buffer, body - RTMP_MAX_HEADER_SIZE, RTMP_MAX_HEADER_SIZE+packet.m_nBodySize, packetBufferRelease, NULL);
+                buffer->size = RTMP_MAX_HEADER_SIZE+packet.m_nBodySize;
 #endif
                 aacPacket->pts = packet.m_nTimeStamp;
                 aacPacket->type = GJMediaType_Audio;
@@ -280,8 +282,8 @@ static GHandle pullRunloop(GHandle parm){
                 R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
                 memset(h264Packet, 0, sizeof(R_GJPacket));
                 GJRetainBuffer*buffer = &h264Packet->retain;
-               buffer->size = packet.m_nBodySize;
-               R_BufferPack(&buffer, packet.m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet.m_nBodySize,packetBufferRelease, NULL);
+                R_BufferPack(&buffer, packet.m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet.m_nBodySize,packetBufferRelease, NULL);
+                buffer->size = packet.m_nBodySize;
 #endif
               
                
