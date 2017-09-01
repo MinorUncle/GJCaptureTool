@@ -47,7 +47,7 @@ struct decoder_t {
     void* data;
 };
 
-struct decoder_t* decoder_create(const char* type, const char* rtp_fmtp) {
+struct decoder_t* decoder_create(const char* type, const char* rtp_fmtp,void* globalUserData) {
     
     assert(type);
 
@@ -59,7 +59,7 @@ struct decoder_t* decoder_create(const char* type, const char* rtp_fmtp) {
     if (strcmp(type, "AppleLossless") == 0) {
         
         d->type = decoder_type_alac;
-        d->data = decoder_alac_create(rtp_fmtp);
+        d->data = decoder_alac_create(rtp_fmtp,globalUserData);
         
     }
     

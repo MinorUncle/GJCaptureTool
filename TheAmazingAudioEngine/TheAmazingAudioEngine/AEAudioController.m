@@ -986,6 +986,7 @@ static OSStatus ioUnitRenderNotifyCallback(void *inRefCon, AudioUnitRenderAction
 }
 
 - (void)dealloc {
+    
     __AEAllocated = NO;
     
 #if TARGET_OS_IPHONE

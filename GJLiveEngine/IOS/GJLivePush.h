@@ -64,6 +64,8 @@ typedef GJStickerAttribute*(^StickersUpdate)(NSInteger index,BOOL* ioFinish);
 
 @property(nonatomic,assign)BOOL videoMute;
 @property(nonatomic,assign)BOOL audioMute;
+@property(nonatomic,assign)BOOL measurementMode;
+
 
 //- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
 

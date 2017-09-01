@@ -110,7 +110,7 @@ static GHandle pullRunloop(GHandle parm){
                 pull->audioPullInfo.count++;
                 pull->audioPullInfo.byte += packet.m_nBodySize;
 #if MENORY_CHECK
-                R_GJPacket* aacPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, GMAX(7, packet.m_nBodySize), DEFAULT_TRACKER);
+                R_GJPacket* aacPacket = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, GMAX(7, packet.m_nBodySize) );
                R_BufferWrite(&aacPacket->retain, (GUInt8*)packet.m_body, packet.m_nBodySize);
 //                memcpy(aacPacket->retain.data, packet.m_body, packet.m_nBodySize);
 //                aacPacket->retain.size = packet.m_nBodySize;
@@ -194,10 +194,10 @@ static GHandle pullRunloop(GHandle parm){
                             if (pbody+4>body+packet.m_nBodySize) {
                                 GJLOG(GJ_LOGINFO,"only spspps\n");
                             }
-                            R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket), DEFAULT_TRACKER);
+                            R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket) );
                             memset(h264Packet, 0, sizeof(R_GJPacket));
                             GJRetainBuffer*buffer = &h264Packet->retain;
-                           R_BufferAlloc(&buffer, spsSize + ppsSize + 8, packetBufferRelease, defauleBufferPool());
+                            R_BufferAlloc(&buffer, spsSize + ppsSize + 8, packetBufferRelease, defauleBufferPool());
                             h264Packet->dataOffset = 0;
                             h264Packet->dataSize = 8+spsSize+ppsSize;
                             GInt32 spsNsize = htonl(spsSize);
@@ -215,7 +215,7 @@ static GHandle pullRunloop(GHandle parm){
                                 pull->dataCallback(pull,h264Packet,pull->dataCallbackParm);
                             }
                             pthread_mutex_unlock(&pull->mutex);
-                           R_BufferUnRetain(buffer);
+                            R_BufferUnRetain(buffer);
                             
                         }else if (pbody[index] == 1) {
                             index ++;
@@ -271,7 +271,7 @@ static GHandle pullRunloop(GHandle parm){
                     continue;
                 }
 #if MENORY_CHECK
-                R_GJPacket* h264Packet = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, packet.m_nBodySize, DEFAULT_TRACKER);
+                R_GJPacket* h264Packet = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, packet.m_nBodySize );
                R_BufferWrite(&h264Packet->retain, (GUInt8*)packet.m_body, packet.m_nBodySize);
 //                memcpy(h264Packet->retain.data, packet.m_body, packet.m_nBodySize);
                 GJRetainBuffer*buffer = &h264Packet->retain;

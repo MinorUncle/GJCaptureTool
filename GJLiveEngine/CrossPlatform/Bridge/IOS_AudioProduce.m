@@ -147,6 +147,15 @@ GBool enableReverb(struct _GJAudioProduceContext* context,GBool enable){
     return  GFalse;
 }
 
+GBool enableMeasurementMode(struct _GJAudioProduceContext* context,GBool enable){
+#ifdef AMAZING_AUDIO_ENGINE
+    GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
+    [manager.audioController setUseMeasurementMode:YES];
+    return manager.audioController.useMeasurementMode == enable;
+#endif
+    return  GFalse;
+}
+
 GBool enableAudioInEarMonitoring(struct _GJAudioProduceContext* context,GBool enable){
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager* manager = (__bridge GJAudioManager *)(context->obaque);
@@ -229,6 +238,7 @@ GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext** recodeContext){
     context->setOutVolume = setOutVolume;
     context->setMixToStream = setMixToStream;
     context->enableReverb = enableReverb;
+    context->enableMeasurementMode = enableMeasurementMode;
 
 }
 GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext** context){

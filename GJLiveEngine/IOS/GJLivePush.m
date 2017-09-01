@@ -187,6 +187,17 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     return GJLivePush_EnableReverb(_livePush, enable);
 }
 
+-(void)setMeasurementMode:(BOOL)measurementMode{
+    GBool ret = GJLivePush_SetMeasurementMode(_livePush, measurementMode);
+    if (ret) {
+        _measurementMode = measurementMode;
+    }
+}
+
+
+
+
+
 -(void)setMixFileNeedToStream:(BOOL)mixFileNeedToStream{
     _mixFileNeedToStream = mixFileNeedToStream;
     GJLivePush_ShouldMixAudioToStream(_livePush, mixFileNeedToStream);

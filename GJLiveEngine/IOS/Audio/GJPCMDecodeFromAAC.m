@@ -239,7 +239,7 @@ static const int mpeg4audio_sample_rates[16] = {
         memset(&packetDesc, 0, sizeof(packetDesc));
         memset(&outCacheBufferList, 0, sizeof(AudioBufferList));
         
-        R_GJPCMFrame* frame = (R_GJPCMFrame*)GJRetainBufferPoolGetData(_bufferPool, DEFAULT_TRACKER);
+        R_GJPCMFrame* frame = (R_GJPCMFrame*)GJRetainBufferPoolGetData(_bufferPool );
         outCacheBufferList.mNumberBuffers = 1;
         outCacheBufferList.mBuffers[0].mNumberChannels = 1;
         outCacheBufferList.mBuffers[0].mData = R_BufferStart(&frame->retain);

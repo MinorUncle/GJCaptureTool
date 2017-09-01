@@ -376,7 +376,7 @@ void _raop_session_raop_connection_request_callback(web_server_connection_p conn
                         rtp_fmtp++;
                         
                         mutex_lock(rs->mutex);
-                        rs->decoder = decoder_create(codec, rtp_fmtp);
+                        rs->decoder = decoder_create(codec, rtp_fmtp,rs->globalUserData);
                         mutex_unlock(rs->mutex);
                         
                         const char* aes_key_base64_encrypted;

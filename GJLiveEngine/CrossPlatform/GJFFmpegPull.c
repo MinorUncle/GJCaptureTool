@@ -89,7 +89,7 @@ static GHandle pullRunloop(GHandle parm){
                 ppsSize |= avcc[8+spsSize+2];
 
                 if (avccSize >= 8+spsSize+3 + ppsSize) {
-                    R_GJPacket* avccPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket), DEFAULT_TRACKER);
+                    R_GJPacket* avccPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket) );
                     R_BufferAlloc((GJRetainBuffer**)&avccPacket, 8+spsSize+ppsSize, packetBufferRelease, GNULL);
                     avccPacket->type = GJMediaType_Video;
                     avccPacket->flag = GJPacketFlag_KEY;
@@ -119,7 +119,7 @@ static GHandle pullRunloop(GHandle parm){
         GUInt8* aacc = aStream->codecpar->extradata;
         GInt32 aaccSize = aStream->codecpar->extradata_size;
         if (aaccSize >= 2) {
-            R_GJPacket* aaccPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket), DEFAULT_TRACKER);
+            R_GJPacket* aaccPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket) );
            R_BufferAlloc((GJRetainBuffer**)&aaccPacket, 7, packetBufferRelease, GNULL);
             aaccPacket->type = GJMediaType_Audio;
             aaccPacket->flag = GJPacketFlag_KEY;
@@ -160,7 +160,7 @@ static GHandle pullRunloop(GHandle parm){
            R_BufferWrite(&h264Packet->retain, pkt.data, pkt.size);
 #else
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
-            R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket), DEFAULT_TRACKER);
+            R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket) );
            R_BufferPack((GJRetainBuffer**)&h264Packet, pkt.data, pkt.size, packetBufferRelease, buffer);
             h264Packet->dataOffset = 0;
 #endif
@@ -181,7 +181,7 @@ static GHandle pullRunloop(GHandle parm){
            R_BufferWrite(&aacPacket->retain, pkt.data, pkt.size);
 
 #else
-            R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket), DEFAULT_TRACKER);
+            R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket) );
             AVBufferRef* buffer = av_buffer_ref(pkt.buf);
            R_BufferPack((GJRetainBuffer**)&aacPacket, pkt.data, pkt.size, packetBufferRelease, buffer);
             aacPacket->dataOffset = 0;

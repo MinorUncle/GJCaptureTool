@@ -11,7 +11,7 @@
 
 #define PCM_FRAME_COUNT 1024
 
-static GJAudioManager* _staticManager;
+//static GJAudioManager* _staticManager;
 @interface GJAudioManager ()
 {
     R_GJPCMFrame*   _alignCacheFrame;
@@ -21,9 +21,9 @@ static GJAudioManager* _staticManager;
 @end
 
 @implementation GJAudioManager
-+(GJAudioManager*)shareAudioManager{
-    return _staticManager;
-};
+//+(GJAudioManager*)shareAudioManager{
+//    return nil;
+//};
 
 -(instancetype)initWithFormat:(AudioStreamBasicDescription )audioFormat{
     self = [super init];
@@ -56,7 +56,7 @@ static GJAudioManager* _staticManager;
 #endif
         _audioMixer.delegate = self;
         [_audioController addInputReceiver:_audioMixer];
-        _staticManager = self;
+//        _staticManager = self;
         self.mixToSream = YES;
         
         //        _blockPlay = [AEBlockChannel channelWithBlock:^(const AudioTimeStamp *time, UInt32 frames, AudioBufferList *audio) {
@@ -89,7 +89,7 @@ static GJAudioManager* _staticManager;
         self.audioCallback(_alignCacheFrame);
        R_BufferUnRetain(&_alignCacheFrame->retain);
         time = time+ needSize/_durPerSize;
-        _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket,DEFAULT_TRACKER);
+        _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket );
         leftSize = leftSize - needSize;
         needSize = _sizePerPacket;
     }
@@ -101,7 +101,7 @@ static GJAudioManager* _staticManager;
 
 -(BOOL)startRecode:(NSError**)error{
     GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc,GNULL,GNULL);
-    _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket,DEFAULT_TRACKER);
+    _alignCacheFrame = (R_GJPCMFrame*)GJRetainBufferPoolGetSizeData(_bufferPool,_sizePerPacket );
     
     
     NSError* configError;

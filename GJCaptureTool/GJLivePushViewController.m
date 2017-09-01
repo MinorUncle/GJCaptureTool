@@ -582,7 +582,13 @@ static char* url = "rtmp://10.0.1.142/live/room";
         }
         [_pulls removeAllObjects];
         [_livePush stopStreamPush];
-        GJBufferPoolClean(defauleBufferPool(),GTrue);
+        
+//        GJBufferPoolClean(defauleBufferPool(),GTrue);
+
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJBufferPoolClean(defauleBufferPool(),GTrue);
+            NSLog(@"clean over");
+        });
         [self dismissViewControllerAnimated:YES completion:nil];
     }else if (btn == _sticker) {
         if (btn.selected) {
@@ -611,7 +617,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 
         
     }else if (btn == _messureModel) {
-        [GJAudioManager shareAudioManager].audioController.useMeasurementMode = btn.selected;
+        _livePush.measurementMode = btn.selected;
     }else if (btn == _reverb) {
         [_livePush enableReverb:btn.selected];
     }else if (btn == _uiRecode) {

@@ -11,6 +11,7 @@
 #include "audiooutput.h"
 #import "GJAudioManager.h"
 #import "GJLog.h"
+#import "GJLivePushContext.h"
 extern double hardware_host_time_to_seconds(double host_time);
 
 @implementation IOS_RAOPPlay
@@ -24,6 +25,7 @@ struct audio_output_t {
     struct decoder_output_format_t format;
     bool has_speed_control;
     void* blockChannel;
+    void* audioManager;
     AudioConverterRef _convert;
     AudioBufferList convertOutBuffer;
     AudioBufferList* convertInBuffer;
@@ -57,7 +59,10 @@ struct audio_output_t* audio_output_create(struct decoder_output_format_t decode
     ao->volume = 1.0;
     ao->mute = false;
     ao->globalUserData = globalUserData;
-    GJAudioManager* manager = [GJAudioManager shareAudioManager];
+
+    GJLivePushContext* context = ao->globalUserData;
+    GJAudioManager* manager = (__bridge GJAudioManager *)(context->audioProducer->obaque);
+    ao->audioManager = (__bridge_retained void*) manager;
     
     AudioStreamBasicDescription destFormat = manager.audioController.audioDescription;
     
@@ -112,8 +117,9 @@ struct audio_output_t* audio_output_create(struct decoder_output_format_t decode
 
 void audio_output_destroy(struct audio_output_t* ao) {
     
+    GJAudioManager* manager = (__bridge_transfer GJAudioManager *)(ao->audioManager);
 
-    [[GJAudioManager shareAudioManager].audioController performSynchronousMessageExchangeWithBlock:^{
+    [manager.audioController performSynchronousMessageExchangeWithBlock:^{
         audio_output_stop(ao);
 
         if (ao->_convert) {
@@ -153,13 +159,19 @@ void audio_output_start(struct audio_output_t* ao) {
 
     AEBlockChannel* channel = (__bridge AEBlockChannel*)ao->blockChannel;
     
-    [[GJAudioManager shareAudioManager].audioController addChannels:@[channel]];
+    GJAudioManager* manager = (__bridge GJAudioManager *)(ao->audioManager);
+
+    
+    [manager.audioController addChannels:@[channel]];
     
 }
 
 
 void audio_output_stop(struct audio_output_t* ao) {
-    [[GJAudioManager shareAudioManager].audioController removeChannels:@[(__bridge AEBlockChannel*)ao->blockChannel]];    
+
+    GJAudioManager* manager = (__bridge GJAudioManager *)(ao->audioManager);
+    
+    [manager.audioController removeChannels:@[(__bridge AEBlockChannel*)ao->blockChannel]];
 }
 
 void audio_output_flush(struct audio_output_t* ao) {

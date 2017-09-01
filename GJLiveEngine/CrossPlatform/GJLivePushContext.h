@@ -113,4 +113,6 @@ GBool GJLivePush_StartSticker(GJLivePushContext* context,const GVoid* images,GSt
 GVoid GJLivePush_StopSticker(GJLivePushContext* context);
 GSize GJLivePush_GetCaptureSize(GJLivePushContext* context);
 
+GBool GJLivePush_SetMeasurementMode(GJLivePushContext* context,GBool measurementMode);
+
 #endif /* GJLivePushContext_h */

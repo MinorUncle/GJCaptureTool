@@ -288,6 +288,7 @@ void audio_output_start(struct audio_output_t* ao) {
 }
 
 void audio_output_stop(struct audio_output_t* ao) {
+
     [[GJAudioManager shareAudioManager].audioController removeChannels:@[(__bridge AEBlockChannel*)ao->blockChannel]];
 //    ca_assert(AUGraphStop(ao->graph));
 //    

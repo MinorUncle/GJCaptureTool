@@ -237,7 +237,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     outCacheBufferList.mNumberBuffers = 1;
     outCacheBufferList.mBuffers[0].mNumberChannels = _sourceFormat.mChannelsPerFrame;
    
-    R_GJPacket* packet = (R_GJPacket*)GJRetainBufferPoolGetData(_bufferPool, DEFAULT_TRACKER);
+    R_GJPacket* packet = (R_GJPacket*)GJRetainBufferPoolGetData(_bufferPool );
     GJRetainBuffer* audioBuffer = &packet->retain;
     if(R_BufferFrontSize(&packet->retain)<PUSH_AAC_PACKET_PRE_SIZE){
        R_BufferMoveDataPoint(audioBuffer, PUSH_AAC_PACKET_PRE_SIZE,GFalse);

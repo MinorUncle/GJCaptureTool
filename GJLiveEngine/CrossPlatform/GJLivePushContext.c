@@ -887,3 +887,13 @@ GSize GJLivePush_GetCaptureSize(GJLivePushContext* context){
     
     return size;
 }
+
+GBool GJLivePush_SetMeasurementMode(GJLivePushContext* context,GBool measurementMode){
+    GBool ret = GFalse;
+    pthread_mutex_lock(&context->lock);
+    if (context->audioProducer) {
+        ret = context->audioProducer->enableMeasurementMode(context->audioProducer,measurementMode);
+    }
+    pthread_mutex_unlock(&context->lock);
+    return ret;
+}

@@ -47,7 +47,7 @@
 
 @property (nonatomic, copy)void(^audioCallback)(R_GJPCMFrame* frame);
 
-+(GJAudioManager*)shareAudioManager;
+//+(GJAudioManager*)shareAudioManager;
 -(instancetype)initWithFormat:(AudioStreamBasicDescription )audioFormat;
 -(void)stopMix;
 -(BOOL)mixFilePlayAtTime:(uint64_t)time;

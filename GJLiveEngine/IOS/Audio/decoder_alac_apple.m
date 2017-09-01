@@ -38,8 +38,9 @@
 #import "endian.h"
 #import "decoder.h"
 #import "alac_format.h"
-#import "GJAudioManager.h"
+#import "GJLivePushContext.h"
 #import "GJAudioSessionCenter.h"
+#import "GJAudioManager.h"
 
 //#define MIN(x, y) (x < y ? x : y)
 #define ca_assert(error) assert((error) == noErr)
@@ -55,7 +56,7 @@ struct decoder_alac_mac_t {
     size_t buffer_size;
 };
 
-void* decoder_alac_create(const char* rtp_fmtp) {
+void* decoder_alac_create(const char* rtp_fmtp,void* globalUserData) {
     
     struct decoder_alac_mac_t* d = (struct decoder_alac_mac_t*)malloc(sizeof(struct decoder_alac_mac_t));
     bzero(d, sizeof(struct decoder_alac_mac_t));
@@ -73,7 +74,9 @@ void* decoder_alac_create(const char* rtp_fmtp) {
     in_desc.mFramesPerPacket = d->output_format.frames_per_packet = btml(config.frame_length);
     in_desc.mChannelsPerFrame = config.num_channels;
     
-    AudioStreamBasicDescription out_desc = [GJAudioManager shareAudioManager].audioController.audioDescription;
+    GJLivePushContext* context = globalUserData;
+    GJAudioManager* manager = (__bridge GJAudioManager *)(context->audioProducer->obaque);
+    AudioStreamBasicDescription out_desc = manager.audioController.audioDescription;
     d->out_desc.mFormatID = kAudioFormatLinearPCM;
     d->out_desc.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
     

@@ -43,7 +43,7 @@ struct decoder_output_format_t {
 
 typedef struct decoder_t *decoder_p;
 
-decoder_p decoder_create(const char* type, const char* rtp_fmtp);
+decoder_p decoder_create(const char* type, const char* rtp_fmtp,void* globalUserData);
 void decoder_destroy(decoder_p d);
 struct decoder_output_format_t decoder_get_output_format(decoder_p d);
 size_t decoder_decode(decoder_p d, void* in_audio_data, size_t in_audio_data_size, void* out_audio_data, size_t out_audio_data_size);

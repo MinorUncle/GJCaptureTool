@@ -77,6 +77,7 @@
 		6ABAA98F1F0628AE000AA764 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
 		6ABF2B8A1F0B7E1D00721DB3 /* rvopserver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rvopserver.c; sourceTree = "<group>"; };
 		6ABF2B8B1F0B7E1D00721DB3 /* rvopserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rvopserver.h; sourceTree = "<group>"; };
+		6ACF1E301F56ACCA002735F2 /* GJLivePushContext.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GJLivePushContext.h; path = ../../GJLiveEngine/CrossPlatform/GJLivePushContext.h; sourceTree = "<group>"; };
 		A12364261B7C111100E1605D /* hex.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hex.c; sourceTree = "<group>"; };
 		A12364271B7C111100E1605D /* hex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hex.h; sourceTree = "<group>"; };
 		A14583A916DAE42900911FE6 /* thread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = thread.h; sourceTree = "<group>"; };
@@ -202,6 +203,7 @@
 			isa = PBXGroup;
 			children = (
 				6ABAA98F1F0628AE000AA764 /* GJAudioSessionCenter.h */,
+				6ACF1E301F56ACCA002735F2 /* GJLivePushContext.h */,
 				A1D0DCA519503E8D004717F5 /* Tools */,
 				A19E4ADE16CA955C00E5D60F /* Audio */,
 				A19E4ADF16CA956400E5D60F /* Server */,

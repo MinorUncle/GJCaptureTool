@@ -61,6 +61,7 @@ static GInt32 interruptCB(GVoid* opaque){
 }
 
 static GHandle sendRunloop(GHandle parm){
+    
     pthread_setname_np("Loop.GJStreamPush");
     GJStreamPush* push = (GJStreamPush*)parm;
     kStreamPushMessageType errType = kStreamPushMessageType_connectError;
@@ -120,7 +121,6 @@ static GHandle sendRunloop(GHandle parm){
 #ifdef NETWORK_DELAY
         packet->packet.m_nTimeStamp -= startPts;
 #endif
-        
         
         if (packet->type == GJMediaType_Video) {
             
@@ -637,7 +637,8 @@ GBool RTMP_AllocAndPackAACSequenceHeader(GJStreamPush* push,GInt32 aactype, GInt
 GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
     
     if(push == GNULL)return GFalse;
-   R_BufferRetain(&packet->retain);
+    
+    R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         push->videoStatus.enter.ts = (GLong)packet->pts;
         push->videoStatus.enter.count++;
@@ -651,8 +652,10 @@ GBool GJStreamPush_SendVideoData(GJStreamPush* push,R_GJPacket* packet){
     return GTrue;
 }
 GBool GJStreamPush_SendAudioData(GJStreamPush* push,R_GJPacket* packet){
+    
     if(push == GNULL)return GFalse;
-   R_BufferRetain(&packet->retain);
+    
+    R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         push->audioStatus.enter.ts = (GLong)packet->pts;
         push->audioStatus.enter.count++;

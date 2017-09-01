@@ -89,7 +89,7 @@ void decodeOutputCallback(
 
     GJH264Decoder* decoder = (__bridge GJH264Decoder *)(decompressionOutputRefCon);
 
-    R_GJPixelFrame* frame = (R_GJPixelFrame*)GJRetainBufferPoolGetData(decoder.bufferPool,DEFAULT_TRACKER);
+    R_GJPixelFrame* frame = (R_GJPixelFrame*)GJRetainBufferPoolGetData(decoder.bufferPool );
     frame->height = (GInt32)CVPixelBufferGetHeight(imageBuffer);
     frame->width = (GInt32)CVPixelBufferGetWidth(imageBuffer);
     frame->pts = pts;
