@@ -46,11 +46,9 @@ struct _GJStreamPull{
 GVoid GJStreamPull_Delloc(GJStreamPull* pull);
 
 static GBool packetBufferRelease(GJRetainBuffer* buffer){
-    if(R_BufferUserData(buffer)){
+    if(R_BufferUserData(buffer) == GNULL){
         //sps pps
        R_BufferFreeData(buffer);
-    }else{
-       R_BufferOrigin(buffer);
     }
     GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer);
     return GTrue;
@@ -125,6 +123,8 @@ static GHandle pullRunloop(GHandle parm){
                 GUInt8* body = (GUInt8*)packet.m_body;
                 R_BufferPack(&buffer, body - RTMP_MAX_HEADER_SIZE, RTMP_MAX_HEADER_SIZE+packet.m_nBodySize, packetBufferRelease, NULL);
                 buffer->size = RTMP_MAX_HEADER_SIZE+packet.m_nBodySize;
+                R_BufferMoveDataToPoint(buffer, RTMP_MAX_HEADER_SIZE, GFalse);
+                packet.m_body=NULL;
 #endif
                 aacPacket->pts = packet.m_nTimeStamp;
                 aacPacket->type = GJMediaType_Audio;
@@ -153,8 +153,7 @@ static GHandle pullRunloop(GHandle parm){
                     
                 }else{
                     GJLOG(GJ_LOGFORBID,"音频流格式错误");
-                    packet.m_body=NULL;
-                   R_BufferUnRetain(buffer);
+                    R_BufferUnRetain(buffer);
                     break;
                 }
                
@@ -165,11 +164,6 @@ static GHandle pullRunloop(GHandle parm){
                 pthread_mutex_unlock(&pull->mutex);
                R_BufferUnRetain(buffer);
                 
-#if MENORY_CHECK
-                RTMPPacket_Free(&packet);
-                packet.m_body=NULL;
-
-#endif
             }else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO){
                 GJLOGFREQ("receive video pts:%d",packet.m_nTimeStamp);
 //                GJLOG(GJ_LOGDEBUG,"receive video pts:%d",packet.m_nTimeStamp);
@@ -199,7 +193,7 @@ static GHandle pullRunloop(GHandle parm){
                             R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket) );
                             memset(h264Packet, 0, sizeof(R_GJPacket));
                             GJRetainBuffer*buffer = &h264Packet->retain;
-                            R_BufferAlloc(&buffer, spsSize + ppsSize + 8, packetBufferRelease, defauleBufferPool());
+                            R_BufferAlloc(&buffer, spsSize + ppsSize + 8, packetBufferRelease, GNULL);
                             h264Packet->dataOffset = 0;
                             h264Packet->dataSize = 8+spsSize+ppsSize;
                             GInt32 spsNsize = htonl(spsSize);
@@ -274,32 +268,34 @@ static GHandle pullRunloop(GHandle parm){
                 }
 #if MENORY_CHECK
                 R_GJPacket* h264Packet = (R_GJPacket*)GJRetainBufferPoolGetSizeData(pull->memoryCachePool, packet.m_nBodySize );
-               R_BufferWrite(&h264Packet->retain, (GUInt8*)packet.m_body, packet.m_nBodySize);
+                R_BufferWrite(&h264Packet->retain, (GUInt8*)packet.m_body, packet.m_nBodySize);
 //                memcpy(h264Packet->retain.data, packet.m_body, packet.m_nBodySize);
                 GJRetainBuffer*buffer = &h264Packet->retain;
 //               buffer->size = packet.m_nBodySize;
+                RTMPPacket_Free(&packet);
+
 #else
                 R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
                 memset(h264Packet, 0, sizeof(R_GJPacket));
                 GJRetainBuffer*buffer = &h264Packet->retain;
                 R_BufferPack(&buffer, packet.m_body-RTMP_MAX_HEADER_SIZE,RTMP_MAX_HEADER_SIZE+packet.m_nBodySize,packetBufferRelease, NULL);
                 buffer->size = packet.m_nBodySize;
+                R_BufferMoveDataToPoint(buffer, RTMP_MAX_HEADER_SIZE, GFalse);
+                packet.m_body=NULL;
 #endif
-              
-               
                 
                 h264Packet->dts = packet.m_nTimeStamp;
                 h264Packet->pts = h264Packet->dts + ct;
                 h264Packet->type = GJMediaType_Video;
                 if (sei) {
-                    h264Packet->dataOffset = sei - (GUInt8*)packet.m_body;
+                    h264Packet->dataOffset = sei - (GUInt8*)R_BufferStart(&h264Packet->retain);
                     if (pp) {
                         h264Packet->dataSize = seiSize+ppSize;
                     }else{
                         h264Packet->dataSize = seiSize;
                     }
                 }else{
-                    h264Packet->dataOffset = pp - (GUInt8*)packet.m_body;
+                    h264Packet->dataOffset = pp - (GUInt8*)R_BufferStart(&h264Packet->retain);
                     h264Packet->dataSize = ppSize;
                 }
                 
@@ -315,11 +311,7 @@ static GHandle pullRunloop(GHandle parm){
                 }
                 pthread_mutex_unlock(&pull->mutex);
                R_BufferUnRetain(buffer);
-#if MENORY_CHECK
-                RTMPPacket_Free(&packet);
-#endif
 
-                packet.m_body=NULL;
             }else{
                 GJLOG(GJ_LOGWARNING,"not media Packet:%p type:%d",packet,packet.m_packetType);
                 RTMPPacket_Free(&packet);
