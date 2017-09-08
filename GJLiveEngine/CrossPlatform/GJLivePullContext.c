@@ -45,7 +45,7 @@ GBool GJLivePull_Create(GJLivePullContext** pullContext,GJLivePullCallback callb
     }while (0);
     return result;
 }
-GBool GJLivePull_StartPull(GJLivePullContext* context,GChar* url){
+GBool GJLivePull_StartPull(GJLivePullContext* context,const GChar* url){
     GBool result = GTrue;
     do{
         pthread_mutex_lock(&context->lock);
@@ -137,42 +137,40 @@ static GVoid livePlayCallback(GHandle userDate,GJPlayMessage message,GHandle par
 }
 static GVoid pullMessageCallback(GJStreamPull* pull, kStreamPullMessageType messageType,GHandle rtmpPullParm,GHandle messageParm){
     GJLivePullContext* livePull = rtmpPullParm;
-    if (livePull->videoPull != GNULL && pull != livePull->videoPull) {
+    if (pull != livePull->videoPull) {
         return;
     }
-        switch (messageType) {
-            case kStreamPullMessageType_connectError:
-            case kStreamPullMessageType_urlPraseError:
-                GJLOG(GJ_LOGERROR, "pull connect error:%d",messageType);
-                livePull->callback(livePull->userData,GJLivePull_connectError,"连接错误");
-                GJLivePull_StopPull(livePull);
-                break;
-            case kStreamPullMessageType_receivePacketError:
-                GJLOG(GJ_LOGERROR, "pull sendPacket error:%d",messageType);
-                livePull->callback(livePull->userData,GJLivePull_receivePacketError,"读取失败");
-                GJLivePull_StopPull(livePull);
-                break;
-            case kStreamPullMessageType_connectSuccess:
-            {
-                GJLOG(GJ_LOGINFO, "pull connectSuccess");
-                livePull->connentClock = GJ_Gettime()/1000.0;
-                GTime connentDur = livePull->connentClock - livePull->startPullClock;
-                livePull->callback(livePull->userData,GJLivePull_connectSuccess,&connentDur);
-            }
-                break;
-            case kStreamPullMessageType_closeComplete:{
-                GJLOG(GJ_LOGINFO, "pull closeComplete");
-
-                GJPullSessionInfo info = {0};
-                info.sessionDuring = GJ_Gettime()/1000 - livePull->startPullClock;
-
-                livePull->callback(livePull->userData,GJLivePull_closeComplete,(GHandle)&info);
-            }
-                break;
-            default:
-                GJLOG(GJ_LOGFORBID,"not catch info：%d",messageType);
-                break;
+    switch (messageType) {
+        case kStreamPullMessageType_connectError:
+        case kStreamPullMessageType_urlPraseError:
+            GJLOG(GJ_LOGERROR, "pull connect error:%d",messageType);
+            GJLivePull_StopPull(livePull);
+            livePull->callback(livePull->userData,GJLivePull_connectError,"连接错误");
+            break;
+        case kStreamPullMessageType_receivePacketError:
+            GJLOG(GJ_LOGERROR, "pull sendPacket error:%d",messageType);
+            GJLivePull_StopPull(livePull);
+            livePull->callback(livePull->userData,GJLivePull_receivePacketError,"读取失败");
+            break;
+        case kStreamPullMessageType_connectSuccess:
+        {
+            GJLOG(GJ_LOGINFO, "pull connectSuccess");
+            livePull->connentClock = GJ_Gettime()/1000.0;
+            GTime connentDur = livePull->connentClock - livePull->startPullClock;
+            livePull->callback(livePull->userData,GJLivePull_connectSuccess,&connentDur);
         }
+            break;
+        case kStreamPullMessageType_closeComplete:{
+            GJLOG(GJ_LOGINFO, "pull closeComplete");
+            GJPullSessionInfo info = {0};
+            info.sessionDuring = GJ_Gettime()/1000 - livePull->startPullClock;
+            livePull->callback(livePull->userData,GJLivePull_closeComplete,(GHandle)&info);
+        }
+            break;
+        default:
+            GJLOG(GJ_LOGFORBID,"not catch info：%d",messageType);
+            break;
+    }
 }
 static const GInt32 mpeg4audio_sample_rates[16] = {
     96000, 88200, 64000, 48000, 44100, 32000,

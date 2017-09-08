@@ -63,17 +63,17 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
             case GJLivePush_connectError:
             {
                 GJLOG(GJ_LOGINFO, "推流连接失败");
+                [livePush stopStreamPush];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [livePush.delegate livePush:livePush errorType:kLivePushConnectError infoDesc:@"rtmp连接失败"];
-                    [livePush stopStreamPush];
                 });
             }
                 break;
             case GJLivePush_sendPacketError:
             {
+                [livePush stopStreamPush];
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [livePush.delegate livePush:livePush errorType:kLivePushWritePacketError infoDesc:@"发送失败"];
-                    [livePush stopStreamPush];
                 });
             }
                 break;
@@ -124,6 +124,7 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
     _pushConfig = pushConfig;
     GJLivePush_SetConfig(_livePush, &_pushConfig);
 }
+
 - (bool)startStreamPushWithUrl:(NSString *)url{
     if (_timer != nil) {
         GJLOG(GJ_LOGFORBID, "请先关闭上一个流");
@@ -193,10 +194,6 @@ static GVoid livePushCallback(GHandle userDate,GJLivePushMessageType messageType
         _measurementMode = measurementMode;
     }
 }
-
-
-
-
 
 -(void)setMixFileNeedToStream:(BOOL)mixFileNeedToStream{
     _mixFileNeedToStream = mixFileNeedToStream;

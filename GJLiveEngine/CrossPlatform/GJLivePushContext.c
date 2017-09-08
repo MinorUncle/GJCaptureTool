@@ -195,7 +195,6 @@ GVoid streamPushMessageCallback(GHandle userData, kStreamPushMessageType message
             pthread_mutex_unlock(&context->lock);
             GLong during = (GLong)(context->connentClock - context->startPushClock);
             context->callback(context->userData,GJLivePush_connectSuccess,&during);
-
         }
             break;
         case kStreamPushMessageType_closeComplete:{
@@ -208,12 +207,12 @@ GVoid streamPushMessageCallback(GHandle userData, kStreamPushMessageType message
         case kStreamPushMessageType_urlPraseError:
         case kStreamPushMessageType_connectError:
             GJLOG(GJ_LOGINFO, "推流连接失败");
-            context->callback(context->userData,GJLivePush_connectError,"rtmp连接失败");
             GJLivePush_StopPush(context);
+            context->callback(context->userData,GJLivePush_connectError,"rtmp连接失败");
             break;
         case kStreamPushMessageType_sendPacketError:
-            context->callback(context->userData,GJLivePush_sendPacketError,"发送失败");
             GJLivePush_StopPush(context);
+            context->callback(context->userData,GJLivePush_sendPacketError,"发送失败");
             break;
         default:
             break;
@@ -263,8 +262,6 @@ static void _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong 
             leftStep = 0;
         
         }
-   
-        
     }
     
     if (leftStep > 0 && context->videoDropStep.den != 0) {
@@ -291,10 +288,8 @@ static void _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong 
             }
             bitrate = maxBitRate;
             leftStep = 0;
-
         }
     }
-
 
     if(leftStep > 0){
         
@@ -327,7 +322,6 @@ static void _GJLivePush_AppendQualityWithStep(GJLivePushContext* context, GLong 
         context->callback(context->userData,GJLivePush_updateNetQuality,&quality);
         
     }
-    
 }
 
 GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
@@ -353,7 +347,6 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
         (context->videoDropStep.den == 0 || (GRationalValue(context->videoDropStep) <= 0.50001 &&// 小于1/2.
                                              GRationalValue(context->videoDropStep) < GRationalValue(context->videoMaxDropRate))))
     {
-        
         if(context->videoDropStep.num == 0)context->videoDropStep = GRationalMake(1, DEFAULT_MAX_DROP_STEP);
         context->videoDropStep.num = 1;
         context->videoDropStep.den -= leftStep;
@@ -409,7 +402,6 @@ GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext* context, GLong step){
             
         }
         context->callback(context->userData,GJLivePush_updateNetQuality,&quality);
-        
     }
 }
 
@@ -658,8 +650,8 @@ GVoid GJLivePush_StopPush(GJLivePushContext* context){
         context->videoEncoder->encodeFlush(context->videoEncoder);
         context->audioEncoder->encodeFlush(context->audioEncoder);
         while (context->operationCount) {
-            GJLOG(GJ_LOGDEBUG, "GJLivePush_StopPush wait 10 us");
-            usleep(10);
+            GJLOG(GJ_LOGDEBUG, "GJLivePush_StopPush wait 100 us");
+            usleep(100);
         }
         GJStreamPush_CloseAndDealloc(&context->videoPush);
     }else{

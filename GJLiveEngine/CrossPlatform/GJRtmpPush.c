@@ -67,11 +67,7 @@ static GHandle sendRunloop(GHandle parm){
     kStreamPushMessageType errType = kStreamPushMessageType_connectError;
     GHandle errParm = GNULL;
     
-    GInt32 ret = RTMP_SetupURL(push->rtmp, push->pushUrl);
-    if (!ret && push->messageCallback) {
-        errType = kStreamPushMessageType_urlPraseError;
-        goto ERROR;
-    }
+    GInt32 ret;
     GJLOG(GJ_LOGINFO, "Stream_SetupURL success");
     RTMP_EnableWrite(push->rtmp);
     
@@ -88,7 +84,7 @@ static GHandle sendRunloop(GHandle parm){
     RTMP_DeleteStream(push->rtmp);
 
     GJLOG(GJ_LOGINFO, "服务器连接成功，开始连接流");
-    ret = RTMP_ConnectStream(push->rtmp, 0);
+    ret = RTMP_ConnectStream(push->rtmp, 3000);
     
     if (!ret ) {
         
@@ -363,7 +359,7 @@ static GHandle sendRunloop(GHandle parm){
            R_BufferUnRetain(&packet->retain);
 
             if (iRet == GFalse) {
-                GJLOG(GJ_LOGFORBID, "error send packet FRAME");
+                GJLOG(GJ_LOGERROR, "error send packet FRAME");
                 errType = kStreamPushMessageType_sendPacketError;
                 goto ERROR;
             }
@@ -403,7 +399,7 @@ GBool GJStreamPush_Create(GJStreamPush** sender,StreamPushMessageCallback callba
     push->rtmp = RTMP_Alloc();
     RTMP_Init(push->rtmp);
     RTMP_SetInterruptCB(push->rtmp, interruptCB, push);
-    
+    RTMP_SetTimeout(push->rtmp, 8000);
     queueCreate(&push->sendBufferQueue, BUFFER_CACHE_SIZE, GTrue, GTrue);
     push->messageCallback = callback;
     push->rtmpPushParm = streamPushParm;
@@ -681,6 +677,10 @@ GBool  GJStreamPush_StartConnect(GJStreamPush* sender,const GChar* sendUrl){
         GJLOG(GJ_LOGWARNING,"等待push释放结束");
     }
     sender->stopRequest = GFalse;
+    
+    if (!RTMP_SetupURL(sender->rtmp, sender->pushUrl)) {
+        return GFalse;
+    }
     queueEnablePush(sender->sendBufferQueue, GTrue);
     queueEnablePop(sender->sendBufferQueue, GTrue);
     pthread_create(&sender->sendThread, GNULL, sendRunloop, sender);

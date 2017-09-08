@@ -55,7 +55,7 @@ typedef struct _GJLivePullContext{
 }GJLivePullContext;
 
 GBool GJLivePull_Create(GJLivePullContext** context,GJLivePullCallback callback,GHandle param);
-GBool GJLivePull_StartPull(GJLivePullContext* context,GChar* url);
+GBool GJLivePull_StartPull(GJLivePullContext* context,const GChar* url);
 GVoid GJLivePull_StopPull(GJLivePullContext* context);
 GVoid GJLivePull_Dealloc(GJLivePullContext** context);
 GJTrafficStatus GJLivePull_GetVideoTrafficStatus(GJLivePullContext* context);

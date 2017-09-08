@@ -62,12 +62,7 @@ static GHandle pullRunloop(GHandle parm){
     GJStreamPull* pull = (GJStreamPull*)parm;
     kStreamPullMessageType errType = kStreamPullMessageType_connectError;
     GHandle errParm = NULL;
-    GInt32 ret = RTMP_SetupURL(pull->rtmp, pull->pullUrl);
-    if (!ret) {
-        errType = kStreamPullMessageType_urlPraseError;
-        GJLOG(GJ_LOGERROR, "RTMP_SetupURL error");
-        goto ERROR;
-    }
+    GInt32 ret ;
     pull->rtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
     
     ret = RTMP_Connect(pull->rtmp, NULL);
@@ -87,7 +82,6 @@ static GHandle pullRunloop(GHandle parm){
             pull->messageCallback(pull, kStreamPullMessageType_connectSuccess,pull->messageCallbackParm,NULL);
         }
     }
-
     
     while(!pull->stopRequest){
         RTMPPacket packet = {0};
@@ -116,7 +110,6 @@ static GHandle pullRunloop(GHandle parm){
                 GUInt8* body = (GUInt8*)R_BufferStart(buffer);;
                 RTMPPacket_Free(&packet);
 #else
-                
                 R_GJPacket* aacPacket = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
                 memset(aacPacket, 0, sizeof(R_GJPacket));
                 GJRetainBuffer*buffer = &aacPacket->retain;
@@ -241,7 +234,6 @@ static GHandle pullRunloop(GHandle parm){
                                 index += size + 4;
 
                             }
-
                             
                         }else  if (pbody[index] == 2){
                             GJLOG(GJ_LOGDEBUG,"直播结束\n");
@@ -273,7 +265,6 @@ static GHandle pullRunloop(GHandle parm){
                 GJRetainBuffer*buffer = &h264Packet->retain;
 //               buffer->size = packet.m_nBodySize;
                 RTMPPacket_Free(&packet);
-
 #else
                 R_GJPacket* h264Packet = (R_GJPacket*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
                 memset(h264Packet, 0, sizeof(R_GJPacket));
@@ -283,7 +274,6 @@ static GHandle pullRunloop(GHandle parm){
                 R_BufferMoveDataToPoint(buffer, RTMP_MAX_HEADER_SIZE, GFalse);
                 packet.m_body=NULL;
 #endif
-                
                 h264Packet->dts = packet.m_nTimeStamp;
                 h264Packet->pts = h264Packet->dts + ct;
                 h264Packet->type = GJMediaType_Video;
@@ -298,7 +288,6 @@ static GHandle pullRunloop(GHandle parm){
                     h264Packet->dataOffset = pp - (GUInt8*)R_BufferStart(&h264Packet->retain);
                     h264Packet->dataSize = ppSize;
                 }
-                
                 
                 pull->videoPullInfo.ts = packet.m_nTimeStamp;
                 pull->videoPullInfo.count++;
@@ -359,7 +348,7 @@ GBool GJStreamPull_Create(GJStreamPull** pullP,StreamPullMessageCallback callbac
     pull->rtmp = RTMP_Alloc();
     RTMP_Init(pull->rtmp);
     RTMP_SetInterruptCB(pull->rtmp, interruptCB, pull);
-
+    RTMP_SetTimeout(pull->rtmp, 8000);
     pull->messageCallback = callback;
     pull->messageCallbackParm = rtmpPullParm;
     pull->stopRequest = GFalse;
@@ -422,8 +411,11 @@ GBool GJStreamPull_StartConnect(GJStreamPull* pull,StreamPullDataCallback dataCa
     pull->stopRequest = GFalse;
     pull->dataCallback = dataCallback;
     pull->dataCallbackParm = callbackParm;
-    pthread_create(&pull->pullThread, NULL, pullRunloop, pull);
-    return GTrue;
+    if (!RTMP_SetupURL(pull->rtmp, pull->pullUrl)) {
+        GJLOG(GJ_LOGERROR, "RTMP_SetupURL error");
+        return GFalse;
+    }
+    return pthread_create(&pull->pullThread, NULL, pullRunloop, pull) == 0;
 }
 GJTrafficUnit GJStreamPull_GetVideoPullInfo(GJStreamPull* pull){
     return pull->videoPullInfo;

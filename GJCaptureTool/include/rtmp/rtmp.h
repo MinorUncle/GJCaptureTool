@@ -340,6 +340,7 @@ extern "C"
     void RTMP_Close(RTMP *r);
     RTMP *RTMP_Alloc(void);
     void RTMP_SetInterruptCB(RTMP *r,IOInterruptCB CB,void* userData);
+    void RTMP_SetTimeout(RTMP *r,int timeout);
     void RTMP_Free(RTMP *r);
     void RTMP_EnableWrite(RTMP *r);
     

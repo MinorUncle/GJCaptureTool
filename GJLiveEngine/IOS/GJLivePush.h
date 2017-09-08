@@ -99,8 +99,6 @@ typedef GJStickerAttribute*(^StickersUpdate)(NSInteger index,BOOL* ioFinish);
 
 - (void)stopUIRecode;
 
-
-
 /**
  贴图，如果存在则取消已存在的
 
@@ -112,13 +110,11 @@ typedef GJStickerAttribute*(^StickersUpdate)(NSInteger index,BOOL* ioFinish);
  */
 - (BOOL)startStickerWithImages:(NSArray<UIImage*>*)images attribure:(GJStickerAttribute*)attribure fps:(NSInteger)fps updateBlock:(StickersUpdate)updateBlock;
 
-
 /**
  主动停止贴图。也可以通过addStickerWithImages的updateBlock，赋值ioFinish true来停止，不过该方法只能在更新的时候使用，可能会有延迟，fps越小延迟越大。
  */
 - (void)chanceSticker;
+
 //- (void)videoRecodeWithPath:(NSString*)path;
-
-
 
 @end

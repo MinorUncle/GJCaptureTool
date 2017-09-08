@@ -680,7 +680,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
 //        }
         
         if (btn.selected) {
-            if(![pull startStreamPullWithUrl:url]){
+            if(![pull startStreamPullWithUrl:[NSString stringWithUTF8String:url]]){
                 btn.selected = NO;
             };
         }else{
@@ -724,15 +724,16 @@ static char* url = "rtmp://10.0.1.142/live/room";
         case kLivePushConnectError:{
             dispatch_async(dispatch_get_main_queue(), ^{
                 _pushStateLab.text =@"推流连接失败";
-                [_livePush stopStreamPush];
-                _pushButton.selected = false;
             });
-            break;
         }
         case kLivePushWritePacketError:{
             dispatch_async(dispatch_get_main_queue(), ^{
-                _pushStateLab.text =@"网络错误";
+                _pushStateLab.text =@"尝试重连中";
             });
+            [_livePush stopStreamPush];
+            if(![_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]]){
+                NSLog(@"startStreamPushWithUrl error");
+            };
             break;
         }
         default:
@@ -802,10 +803,8 @@ static char* url = "rtmp://10.0.1.142/live/room";
     switch (type) {
         case kLivePullReadPacketError:
         case kLivePullConnectError:{
-                PullShow* show = [self getShowWithPush:livePull];
-                show.pullStateLab.text =@"connect error";
-                [show.pull stopStreamPull];
-                show.pullBtn.selected = false;
+            [livePull stopStreamPull];
+            [livePull startStreamPullWithUrl:[NSString stringWithUTF8String:url]];
             break;
         }
         default:

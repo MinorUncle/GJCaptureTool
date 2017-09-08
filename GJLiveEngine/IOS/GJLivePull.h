@@ -42,7 +42,7 @@
 @property(nonatomic,weak)id<GJLivePullDelegate> delegate;
 
 
-- (bool)startStreamPullWithUrl:(char*)url;
+- (bool)startStreamPullWithUrl:(NSString*)url;
 
 - (void)stopStreamPull;
 

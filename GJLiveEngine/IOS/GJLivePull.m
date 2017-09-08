@@ -20,7 +20,7 @@
     NSThread*  _playThread;
     GJPullSessionStatus _pullSessionStatus;
     GJLivePullContext* _pullContext;
-    
+    NSString* _pullUrl;
 }
 @property(strong,nonatomic)GJH264Decoder* videoDecoder;
 @property(strong,nonatomic)GJPCMDecodeFromAAC* audioDecoder;
@@ -59,13 +59,12 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
             case GJLivePull_connectError:
             case GJLivePull_urlPraseError:
                 GJLOG(GJ_LOGERROR, "pull connect error:%d",messageType);
-                [livePull.delegate livePull:livePull errorType:kLivePullConnectError infoDesc:@"连接错误"];
                 [livePull stopStreamPull];
+                [livePull.delegate livePull:livePull errorType:kLivePullConnectError infoDesc:@"连接错误"];
                 break;
             case GJLivePull_receivePacketError:
-                GJLOG(GJ_LOGERROR, "pull sendPacket error:%d",messageType);
+                GJLOG(GJ_LOGERROR, "pull readPacket error:%d",messageType);
                 [livePull.delegate livePull:livePull errorType:kLivePullReadPacketError infoDesc:@"读取失败"];
-                [livePull stopStreamPull];
                 break;
             case GJLivePull_connectSuccess:
             {
@@ -117,18 +116,18 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType,GHa
 #endif
 }
 
-- (bool)startStreamPullWithUrl:(char*)url{
+- (bool)startStreamPullWithUrl:(NSString*)url{
     if (_timer != nil) {
         GJLOG(GJ_LOGFORBID, "请先关闭上一个流");
         return NO;
     }else{
         _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
         GJLOG(GJ_LOGINFO, "NSTimer PULL START:%s",[NSString stringWithFormat:@"%@",_timer].UTF8String);
-
+        _pullUrl = url;
         memset(&_videoTraffic, 0, sizeof(_videoTraffic));
         memset(&_audioTraffic, 0, sizeof(_audioTraffic));
         memset(&_pullSessionStatus, 0, sizeof(_pullSessionStatus));
-        return GJLivePull_StartPull(_pullContext, url);
+        return GJLivePull_StartPull(_pullContext, url.UTF8String);
     }
     
 }
