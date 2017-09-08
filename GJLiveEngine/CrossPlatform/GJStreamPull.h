@@ -11,33 +11,30 @@
 
 #include "GJLiveDefine+internal.h"
 #include <stdlib.h>
-typedef enum _kStreamPullMessageType{
+typedef enum _kStreamPullMessageType {
     kStreamPullMessageType_connectSuccess,
     kStreamPullMessageType_closeComplete,
-    
-    
     kStreamPullMessageType_connectError,
     kStreamPullMessageType_urlPraseError,
     kStreamPullMessageType_receivePacketError
-}kStreamPullMessageType;
-
+} kStreamPullMessageType;
 
 typedef struct _GJStreamPull GJStreamPull;
 
-typedef GVoid(*StreamPullMessageCallback)(GJStreamPull* StreamPull, kStreamPullMessageType messageType,GHandle StreamPullParm,GHandle messageParm);
-typedef GVoid(*StreamPullDataCallback)(GJStreamPull* StreamPull,R_GJPacket* packet,GHandle StreamPullParm);
-
-
-
+typedef GVoid (*StreamPullMessageCallback)(GJStreamPull *StreamPull, kStreamPullMessageType messageType, GHandle StreamPullParm, GHandle messageParm);
+typedef GVoid (*StreamPullDataCallback)(GJStreamPull *StreamPull, R_GJPacket *packet, GHandle StreamPullParm);
 
 #define MAX_URL_LENGTH 100
 
-
 //所有不阻塞
-GBool GJStreamPull_Create(GJStreamPull** pull,StreamPullMessageCallback callback,GHandle StreamPullParm);
-GVoid GJStreamPull_CloseAndRelease(GJStreamPull* pull);
+GBool GJStreamPull_Create(GJStreamPull **pull, StreamPullMessageCallback callback, GHandle StreamPullParm);
 
-GBool GJStreamPull_StartConnect(GJStreamPull* pull,StreamPullDataCallback dataCallback,GHandle callbackParm,const GChar* pullUrl);
-GJTrafficUnit GJStreamPull_GetVideoPullInfo(GJStreamPull* pull);
-GJTrafficUnit GJStreamPull_GetAudioPullInfo(GJStreamPull* pull);
+GVoid GJStreamPull_CloseAndRelease(GJStreamPull *pull);
+
+GBool GJStreamPull_StartConnect(GJStreamPull *pull, StreamPullDataCallback dataCallback, GHandle callbackParm, const GChar *pullUrl);
+
+GJTrafficUnit GJStreamPull_GetVideoPullInfo(GJStreamPull *pull);
+
+GJTrafficUnit GJStreamPull_GetAudioPullInfo(GJStreamPull *pull);
+
 #endif /* GJStreamPull_h */

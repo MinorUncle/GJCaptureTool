@@ -8,6 +8,5 @@
 
 #import "GJBridegContext.h"
 
-GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext** context);
-GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext** context);
-
+GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext **context);
+GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext **context);

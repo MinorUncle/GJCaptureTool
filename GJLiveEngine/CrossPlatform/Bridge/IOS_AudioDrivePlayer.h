@@ -6,6 +6,5 @@
 //  Copyright © 2017年 MinorUncle. All rights reserved.
 //
 #include "GJBridegContext.h"
-GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext** context);
-GVoid GJ_AudioPlayContextDealloc(GJAudioPlayContext** context);
-
+GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext **context);
+GVoid GJ_AudioPlayContextDealloc(GJAudioPlayContext **context);
