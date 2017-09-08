@@ -731,6 +731,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
                 _pushStateLab.text =@"尝试重连中";
             });
             [_livePush stopStreamPush];
+            sleep(1);
             if(![_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]]){
                 NSLog(@"startStreamPushWithUrl error");
             };
@@ -804,6 +805,7 @@ static char* url = "rtmp://10.0.1.142/live/room";
         case kLivePullReadPacketError:
         case kLivePullConnectError:{
             [livePull stopStreamPull];
+            sleep(1);
             [livePull startStreamPullWithUrl:[NSString stringWithUTF8String:url]];
             break;
         }

@@ -112,7 +112,7 @@ static GVoid livePushCallback(GHandle               userDate,
 - (void)stopPreview {
     GJLivePush_StopPreview(_livePush);
 }
-- (UIView *)getPreviewView {
+- (UIView *)previewView {
     return (__bridge UIView *) (GJLivePush_GetDisplayView(_livePush));
 }
 

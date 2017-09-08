@@ -675,8 +675,11 @@ GBool GJStreamPush_StartConnect(GJStreamPush *sender, const GChar *sendUrl) {
     }
     queueEnablePush(sender->sendBufferQueue, GTrue);
     queueEnablePop(sender->sendBufferQueue, GTrue);
-    pthread_create(&sender->sendThread, GNULL, sendRunloop, sender);
-    return GTrue;
+    GInt32 ret = pthread_create(&sender->sendThread, GNULL, sendRunloop, sender);
+    if (ret != 0) {
+        GJLOG(GJ_LOGERROR, "pthread_create error:%d",ret);
+    }
+    return ret == 0;
 }
 GVoid GJStreamPush_Delloc(GJStreamPush *push) {
 
