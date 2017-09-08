@@ -22,16 +22,16 @@
     GJLivePullContext* _pullContext;
     NSString* _pullUrl;
 }
-@property(strong,nonatomic)GJH264Decoder* videoDecoder;
-@property(strong,nonatomic)GJPCMDecodeFromAAC* audioDecoder;
-@property(strong,nonatomic) NSRecursiveLock* lock;
+@property (strong,nonatomic) GJH264Decoder      * videoDecoder;
+@property (strong,nonatomic) GJPCMDecodeFromAAC * audioDecoder;
+@property (strong,nonatomic) NSRecursiveLock    * lock;
 
-@property(assign,nonatomic)GJLivePlayer* player;
-@property(assign,nonatomic)float gaterFrequency;
-@property(strong,nonatomic)NSTimer * timer;
+@property (assign,nonatomic) GJLivePlayer       * player;
+@property (assign,nonatomic) float              gaterFrequency;
+@property (strong,nonatomic) NSTimer            * timer;
 
-@property(assign,nonatomic)GJTrafficStatus videoTraffic;
-@property(assign,nonatomic)GJTrafficStatus audioTraffic;
+@property (assign,nonatomic) GJTrafficStatus    videoTraffic;
+@property (assign,nonatomic) GJTrafficStatus    audioTraffic;
 
 
 

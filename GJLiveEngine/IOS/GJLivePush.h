@@ -34,8 +34,8 @@
 @end
 
 @interface GJStickerAttribute : NSObject
-@property(assign,nonatomic)GCRect frame;
-@property(assign,nonatomic)CGFloat rotate;//绕frame的center旋转,0-360
+@property (assign,nonatomic) GCRect  frame;
+@property (assign,nonatomic) CGFloat rotate;//绕frame的center旋转,0-360
 
 +(instancetype)stickerAttributWithFrame:(GCRect)frame rotate:(CGFloat)rotate;
 @end
@@ -44,27 +44,25 @@ typedef GJStickerAttribute*(^StickersUpdate)(NSInteger index,BOOL* ioFinish);
 
 
 @interface GJLivePush : NSObject
-@property(nonatomic,assign)GJCameraPosition cameraPosition;
+@property (nonatomic,assign         ) GJCameraPosition       cameraPosition;
 
-@property(nonatomic,assign)GJInterfaceOrientation outOrientation;
+@property (nonatomic,assign         ) GJInterfaceOrientation outOrientation;
 
-@property(nonatomic,assign)BOOL mixFileNeedToStream;
+@property (nonatomic,assign         ) BOOL                   mixFileNeedToStream;
 
 
-@property(nonatomic,strong,readonly,getter=getPreviewView)UIView* previewView;
+@property (nonatomic,strong,readonly) UIView                 * previewView;
 
-//@property(nonatomic,assign,readonly)CaptureSizeType caputreSizeType;
-
-@property(nonatomic,assign,readonly)GJPushConfig pushConfig;
+@property (nonatomic,assign,readonly) GJPushConfig           pushConfig;
 
 //只读，根据pushConfig中的push size自动选择最优.outOrientation 和 pushsize会改变改值，
-@property(nonatomic,assign,readonly)CGSize captureSize;
+@property (nonatomic,assign,readonly) CGSize                 captureSize;
 
-@property(nonatomic,weak)id<GJLivePushDelegate> delegate;
+@property (nonatomic,weak           ) id<GJLivePushDelegate> delegate;
 
-@property(nonatomic,assign)BOOL videoMute;
-@property(nonatomic,assign)BOOL audioMute;
-@property(nonatomic,assign)BOOL measurementMode;
+@property (nonatomic,assign         ) BOOL                   videoMute;
+@property (nonatomic,assign         ) BOOL                   audioMute;
+@property (nonatomic,assign         ) BOOL                   measurementMode;
 
 
 //- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;

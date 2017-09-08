@@ -27,18 +27,18 @@ static char* url = "rtmp://10.0.1.142/live/room";
 {
     
 }
-@property (strong, nonatomic) UILabel *pullRateLab;
-@property (strong, nonatomic) UILabel *pullStateLab;
-@property (strong, nonatomic) UILabel *videoCacheLab;
-@property (strong, nonatomic) UILabel *audioCacheLab;
-@property (strong, nonatomic) UILabel *playerBufferLab;
-@property (strong, nonatomic) UILabel *netDelay;
+@property (strong, nonatomic) UILabel    *pullRateLab;
+@property (strong, nonatomic) UILabel    *pullStateLab;
+@property (strong, nonatomic) UILabel    *videoCacheLab;
+@property (strong, nonatomic) UILabel    *audioCacheLab;
+@property (strong, nonatomic) UILabel    *playerBufferLab;
+@property (strong, nonatomic) UILabel    *netDelay;
 
 
-@property (strong, nonatomic) UIView* view;;
-@property (assign, nonatomic) CGRect frame;
-@property (strong, nonatomic) GJLivePull* pull;
-@property (weak, nonatomic) UIButton* pullBtn;;
+@property (strong, nonatomic) UIView     * view;;
+@property (assign, nonatomic) CGRect     frame;
+@property (strong, nonatomic) GJLivePull * pull;
+@property (weak, nonatomic  ) UIButton   * pullBtn;;
 
 @end
 

@@ -20,27 +20,27 @@ typedef void(^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 //    AudioEncoder* _RWAudioEncoder;
 //    AACDecoder* _RWAudioDecoder;
 }
-@property (strong,nonatomic) AVCaptureSession *captureSession;//负责输入和输出设备之间的数据传递
-@property(strong,nonatomic)AVCaptureDevice *audioCaptureDevice;   //音频输入设备
-@property (strong,nonatomic)AVCaptureDeviceInput *audioCaptureDeviceInput; //音频输入
+@property (strong,nonatomic) AVCaptureSession     *captureSession;//负责输入和输出设备之间的数据传递
+@property (strong,nonatomic) AVCaptureDevice      *audioCaptureDevice;//音频输入设备
+@property (strong,nonatomic) AVCaptureDeviceInput *audioCaptureDeviceInput;//音频输入
 @property (strong,nonatomic) AVCaptureDeviceInput *videoCaptureDeviceInput;//负责从AVCaptureDevice获得输入数据
 
 
-@property (strong,nonatomic) AVCaptureConnection *videoConnect;//视频链接
-@property (strong,nonatomic) AVCaptureConnection *audioConnect;//音频链接
+@property (strong,nonatomic) AVCaptureConnection  *videoConnect;//视频链接
+@property (strong,nonatomic) AVCaptureConnection  *audioConnect;//音频链接
 
-@property (strong,nonatomic) dispatch_queue_t audioStreamQueue;//音频线程
-@property (strong,nonatomic) dispatch_queue_t videoStreamQueue;//视频线程
-@property (strong,nonatomic) dispatch_queue_t fileQueue;//音频线程
+@property (strong,nonatomic) dispatch_queue_t     audioStreamQueue;//音频线程
+@property (strong,nonatomic) dispatch_queue_t     videoStreamQueue;//视频线程
+@property (strong,nonatomic) dispatch_queue_t     fileQueue;//音频线程
 @property (strong,nonatomic) dispatch_queue_t imageQueue;//视频线程
 
 
 
 
-@property (strong,nonatomic)AVCaptureDevice *captureDevice;//相机拍摄预览图层
+@property (strong,nonatomic) AVCaptureDevice            *captureDevice;//相机拍摄预览图层
 
 //@property (assign,nonatomic) BOOL enableRotation;//是否允许旋转（注意在视频录制过程中禁止屏幕旋转）
-@property (assign,nonatomic) CGRect *lastBounds;//旋转的前大小
+@property (assign,nonatomic) CGRect                     *lastBounds;//旋转的前大小
 @property (assign,nonatomic) UIBackgroundTaskIdentifier backgroundTaskIdentifier;//后台任务标识
 
 @property (strong, nonatomic) CALayer *focusCursor; //聚焦光标
