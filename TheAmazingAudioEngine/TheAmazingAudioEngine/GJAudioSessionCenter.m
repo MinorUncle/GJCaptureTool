@@ -66,21 +66,26 @@ static  GJAudioSessionCenter* _gjAudioSession;
     }
     return _gjAudioSession;
 }
+
 -(BOOL)activeSession:(BOOL)active key:(NSString*)key error:(NSError**)error{
+    
     BOOL result = YES;
-    if (active){
-        if(![_activeRequest containsObject:key]){
-            [_activeRequest addObject:key];
-            if (_activeRequest.count ==1) {
+    @synchronized (self) {
+
+        if (active){
+            if(![_activeRequest containsObject:key]){
+                [_activeRequest addObject:key];
+                if (_activeRequest.count ==1) {
+                    NSLog(@"AVAudioSession setActive:%d",active);
+                    result = [[AVAudioSession sharedInstance] setActive:active error:error];
+                }
+            }
+        }else if([_activeRequest containsObject:key]){
+            [_activeRequest removeObject:key];
+            if (_activeRequest.count == 0) {
                 NSLog(@"AVAudioSession setActive:%d",active);
                 result = [[AVAudioSession sharedInstance] setActive:active error:error];
             }
-        }
-    }else if([_activeRequest containsObject:key]){
-        [_activeRequest removeObject:key];
-        if (_activeRequest.count == 0) {
-            NSLog(@"AVAudioSession setActive:%d",active);
-            result = [[AVAudioSession sharedInstance] setActive:active error:error];
         }
     }
     return result;
@@ -133,21 +138,25 @@ static  GJAudioSessionCenter* _gjAudioSession;
     
 }
 -(BOOL)requestPlay:(BOOL)play key:(NSString*)key error:(NSError**)error{
-    
     BOOL result = YES;
-    if (play){
-        if(![_playeRequest containsObject:key]){
-            [_playeRequest addObject:key];
-            if (_playeRequest.count ==1) {
+
+    @synchronized (self) {
+        
+        if (play){
+            if(![_playeRequest containsObject:key]){
+                [_playeRequest addObject:key];
+                if (_playeRequest.count ==1) {
+                    result = [self updateCategoryOptionsWithError:error];
+                }
+            }
+        }else if([_playeRequest containsObject:key]){
+            [_playeRequest removeObject:key];
+            if (_playeRequest.count == 0) {
                 result = [self updateCategoryOptionsWithError:error];
             }
         }
-    }else if([_playeRequest containsObject:key]){
-        [_playeRequest removeObject:key];
-        if (_playeRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
-        }
     }
+
     return result;
     
 }
@@ -155,17 +164,20 @@ static  GJAudioSessionCenter* _gjAudioSession;
 -(BOOL)requestRecode:(BOOL)recode key:(NSString*)key error:(NSError**)error{
     
     BOOL result = YES;
-    if (recode) {
-        if(![_recodeRequest containsObject:key]){
-            [_recodeRequest addObject:key];
-            if (_recodeRequest.count ==1) {
+    @synchronized (self) {
+
+        if (recode) {
+            if(![_recodeRequest containsObject:key]){
+                [_recodeRequest addObject:key];
+                if (_recodeRequest.count ==1) {
+                    result = [self updateCategoryOptionsWithError:error];
+                }
+            }
+        }else if([_recodeRequest containsObject:key]){
+            [_playeRequest removeObject:key];
+            if (_playeRequest.count == 0) {
                 result = [self updateCategoryOptionsWithError:error];
             }
-        }
-    }else if([_recodeRequest containsObject:key]){
-        [_playeRequest removeObject:key];
-        if (_playeRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
         }
     }
     return result;
@@ -174,19 +186,21 @@ static  GJAudioSessionCenter* _gjAudioSession;
 -(BOOL)requestMix:(BOOL)mix key:(NSString*)key error:(NSError**)error{
     
     BOOL result = YES;
+    @synchronized (self) {
 
-    if (mix) {
-        if (![_mixingRequest containsObject:key]) {
-            [_mixingRequest addObject:key];
-            if (_mixingRequest.count ==1) {
+        if (mix) {
+            if (![_mixingRequest containsObject:key]) {
+                [_mixingRequest addObject:key];
+                if (_mixingRequest.count ==1) {
+                    result = [self updateCategoryOptionsWithError:error];
+                }
+            }
+           
+        }else if ([_mixingRequest containsObject:key]) {
+            [_mixingRequest removeObject:key];
+            if (_mixingRequest.count == 0) {
                 result = [self updateCategoryOptionsWithError:error];
             }
-        }
-       
-    }else if ([_mixingRequest containsObject:key]) {
-        [_mixingRequest removeObject:key];
-        if (_mixingRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
         }
     }
     return result;
@@ -196,17 +210,20 @@ static  GJAudioSessionCenter* _gjAudioSession;
 {
     
     BOOL result = YES;
-    if (allowAirPlay) {
-        if (![_airplayRequest containsObject:key]) {
-            [_airplayRequest addObject:key];
-            if (_airplayRequest.count ==1) {
+    @synchronized (self) {
+
+        if (allowAirPlay) {
+            if (![_airplayRequest containsObject:key]) {
+                [_airplayRequest addObject:key];
+                if (_airplayRequest.count ==1) {
+                    result = [self updateCategoryOptionsWithError:error];
+                }
+            }
+        }else if ([_airplayRequest containsObject:key]) {
+            [_airplayRequest removeObject:key];
+            if (_airplayRequest.count == 0) {
                 result = [self updateCategoryOptionsWithError:error];
             }
-        }
-    }else if ([_airplayRequest containsObject:key]) {
-        [_airplayRequest removeObject:key];
-        if (_airplayRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
         }
     }
     
@@ -216,41 +233,45 @@ static  GJAudioSessionCenter* _gjAudioSession;
 -(BOOL)requestDefaultToSpeaker:(BOOL)speaker key:(NSString*)key error:(NSError**)error{
     
     BOOL result = YES;
-    if (speaker) {
-        if (![_speakerRequest containsObject:key]) {
-            [_speakerRequest addObject:key];
-            if (_speakerRequest.count ==1) {
+    
+    @synchronized (self) {
+
+        if (speaker) {
+            if (![_speakerRequest containsObject:key]) {
+                [_speakerRequest addObject:key];
+                if (_speakerRequest.count ==1) {
+                    result = [self updateCategoryOptionsWithError:error];
+                }
+            }
+        }else if ([_speakerRequest containsObject:key]) {
+            [_speakerRequest removeObject:key];
+            if (_speakerRequest.count == 0) {
                 result = [self updateCategoryOptionsWithError:error];
             }
         }
-    }else if ([_speakerRequest containsObject:key]) {
-        [_speakerRequest removeObject:key];
-        if (_speakerRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
-        }
     }
-    
     return result;
     
 }
 -(BOOL)requestBluetooth:(BOOL)bluetooth key:(NSString*)key error:(NSError**)error{
     
     BOOL result = YES;
-   
-    if (bluetooth) {
-        if (![_bluetoothRequest containsObject:key]) {
-            [_bluetoothRequest addObject:key];
-            if (_bluetoothRequest.count ==1) {
+    @synchronized (self) {
+
+        if (bluetooth) {
+            if (![_bluetoothRequest containsObject:key]) {
+                [_bluetoothRequest addObject:key];
+                if (_bluetoothRequest.count ==1) {
+                    result = [self updateCategoryOptionsWithError:error];
+                }
+            }
+        }else if ([_bluetoothRequest containsObject:key]) {
+            [_bluetoothRequest removeObject:key];
+            if (_bluetoothRequest.count == 0) {
                 result = [self updateCategoryOptionsWithError:error];
             }
         }
-    }else if ([_bluetoothRequest containsObject:key]) {
-        [_bluetoothRequest removeObject:key];
-        if (_bluetoothRequest.count == 0) {
-            result = [self updateCategoryOptionsWithError:error];
-        }
     }
-    
     return result;
     
 }

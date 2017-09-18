@@ -47,15 +47,15 @@ static GVoid _recodeCompleteCallback(GHandle userData, const GChar *filePath, GH
 static GVoid videoCaptureFrameOutCallback(GHandle userData, R_GJPixelFrame *frame) {
     GJLivePushContext *context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
-        context->operationCount++;
+        context->operationVCount++;
         if (!context->videoMute && (context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
             frame->pts = GJ_Gettime() / 1000 - context->connentClock;
             context->videoEncoder->encodeFrame(context->videoEncoder, frame);
         } else {
-            GJLOG(GJ_LOGWARNING, "丢视频帧");
+            GJLOG(GJ_LOGINFO, "丢视频帧");
             context->dropVideoCount++;
         }
-        context->operationCount--;
+        context->operationVCount--;
     }
 }
 
@@ -64,7 +64,7 @@ static GVoid audioCaptureFrameOutCallback(GHandle userData, R_GJPCMFrame *frame)
     GJLivePushContext *context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
 
-        context->operationCount++;
+        context->operationACount++;
         if (!context->audioMute) {
 
             frame->pts = GJ_Gettime() / 1000 - context->connentClock;
@@ -79,7 +79,7 @@ static GVoid audioCaptureFrameOutCallback(GHandle userData, R_GJPCMFrame *frame)
                 pthread_mutex_unlock(&context->lock);
             }
         }
-        context->operationCount--;
+        context->operationACount--;
     }
 }
 
@@ -635,8 +635,12 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context) {
         context->videoProducer->stopProduce(context->videoProducer);
         context->videoEncoder->encodeFlush(context->videoEncoder);
         context->audioEncoder->encodeFlush(context->audioEncoder);
-        while (context->operationCount) {
-            GJLOG(GJ_LOGDEBUG, "GJLivePush_StopPush wait 100 us");
+        while (context->operationACount) {
+            GJLOG(GJ_LOGDEBUG, "GJLivePush_StopPush wait A 100 us");
+            usleep(100);
+        }
+        while (context->operationVCount) {
+            GJLOG(GJ_LOGDEBUG, "GJLivePush_StopPush wait V 100 us");
             usleep(100);
         }
         GJStreamPush_CloseAndDealloc(&context->videoPush);

@@ -111,8 +111,16 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
         GJLOG(GJ_LOGFORBID, "请先关闭上一个流");
         return NO;
     } else {
-        _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
-        GJLOG(GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
+        if ([NSThread isMainThread]) {
+            _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
+            GJLOG(GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
+        }else{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
+                GJLOG(GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
+            });
+        }
+   
         _pullUrl = url;
         memset(&_videoTraffic, 0, sizeof(_videoTraffic));
         memset(&_audioTraffic, 0, sizeof(_audioTraffic));
@@ -122,8 +130,16 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
 }
 
 - (void)stopStreamPull {
-    [_timer invalidate];
-    _timer = nil;
+    if ([NSThread isMainThread]) {
+        [_timer invalidate];
+        _timer = nil;
+    }else{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_timer invalidate];
+            _timer = nil;
+        });
+    }
+
     return GJLivePull_StopPull(_pullContext);
 }
 

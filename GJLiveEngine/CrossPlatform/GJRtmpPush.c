@@ -121,27 +121,13 @@ static GHandle sendRunloop(GHandle parm) {
 
                 GInt32  index = 0;
                 GUInt8 *sps = GNULL, *pps = GNULL;
-                while (index < packet->dataSize) {
 
-                    if (packet->dataSize > index + 4 && start[index] == 0x00 && start[index + 1] == 0x00 && start[index + 2] == 00 && start[index + 3] == 01) {
-
-                        if ((start[index + 4] & 0x1f) == 7) {
-                            sps = start + index + 4;
-                            index += 3;
-                        } else if ((start[index + 4] & 0x1f) == 8) {
-                            pps = start + index + 4;
-                            index += 3;
-                        } else {
-                            break;
-                        }
-                    }
-                    index++;
-                }
-                if (sps && pps) {
-
+                if ((start[4] & 0x1f) == 7) {
+                    GInt32     spsSize = ntohl(*(GInt32*)start), ppsSize = ntohl(*(GInt32*)(start+4+spsSize));
+                    sps = start + 4;
+                    pps = sps + spsSize + 4;
+                    
                     RTMPPacket avcPacket;
-                    GInt32     spsSize = (GInt32)(pps - sps - 4), ppsSize = (GInt32)(index - (pps - start));
-
                     if (RTMP_AllocAndPakcetAVCSequenceHeader(push, sps, spsSize, pps, ppsSize, packet->pts, &avcPacket)) {
 
                         GInt32 iRet = RTMP_SendPacket(push->rtmp, &avcPacket, 0);
@@ -172,7 +158,7 @@ static GHandle sendRunloop(GHandle parm) {
 
                 } else {
 
-                    GJLOG(GJ_LOGERROR, "没有sps，pps，丢弃该帧");
+                    GJLOG(GJ_LOGFORBID, "没有sps，pps，丢弃该帧");
                     push->videoStatus.leave.byte  = packet->dataSize;
                     push->videoStatus.leave.count = 1;
                     push->videoStatus.leave.ts    = (GLong) packet->pts;
@@ -184,58 +170,12 @@ static GHandle sendRunloop(GHandle parm) {
 
             GInt32  ppPreSize = 5; //flv tag前置预留大小大小
             GUInt8  fristByte = 0x27;
-            GUInt8 *nal_start = GNULL;
-
-            if (packet->flag == GJPacketFlag_KEY) {
-
-                GUInt8 *start        = R_BufferStart(&packet->retain) + packet->dataOffset;
-                GInt32  index        = 0;
-                GUInt8 *pre_nal_unit = GNULL;
-
-                while (index < packet->dataSize) {
-                    if (packet->dataSize > index + 4 && start[index] == 0x00 && start[index + 1] == 0x00 && start[index + 2] == 0x00 && start[index + 3] == 0x01) {
-                        if ((start[index + 4] & 0x1f) == 5 || (start[index + 4] & 0x1f) == 1) { //key = 5
-
-                            if (pre_nal_unit) {
-                                GInt32 nal_size = (GInt32)(index - (pre_nal_unit - start) - 4);
-                                nal_size        = htonl(nal_size);
-                                memcpy(pre_nal_unit, &nal_size, 4);
-                            } else {
-                                nal_start = start + index;
-                            }
-
-                            GInt32 ppsSize = packet->dataSize - index - 4;
-                            ppsSize        = htonl(ppsSize);
-                            memcpy(start + index, &ppsSize, 4);
-                            break;
-
-                        } else { //sei == 6
-                            if (pre_nal_unit) {
-
-                                GInt32 nal_size = (GInt32)(index - (pre_nal_unit - start) - 4);
-                                nal_size        = htonl(nal_size);
-                                memcpy(pre_nal_unit, &nal_size, 4);
-
-                            } else {
-
-                                nal_start = start + index;
-                            }
-
-                            pre_nal_unit = start + index;
-                            index += 3;
-                        }
-                    }
-                    index++;
-                }
-
-            } else {
-
-                nal_start       = packet->dataOffset + R_BufferStart(&packet->retain);
-                GInt32 nal_size = packet->dataSize - 4;
-                nal_size        = htonl(nal_size);
-                memcpy(nal_start, &nal_size, 4);
+            GUInt8 *nal_start = R_BufferStart(&packet->retain) + packet->dataOffset;
+            if ((nal_start[4] & 0x1f) == 7) {
+                fristByte = 0x17;
             }
 
+            
             GInt32 preSize = ppPreSize + RTMP_MAX_HEADER_SIZE;
             if (nal_start - R_BufferStart(&packet->retain) + R_BufferFrontSize(&packet->retain) < preSize) {
 //申请内存控制得当的话不会进入此条件、  先扩大，在查找。

@@ -25,6 +25,8 @@
 @property (nonatomic, assign) BOOL    running;
 
 @end
+static int startCount;
+static int stopCount;
 
 @implementation GJPCMDecodeFromAAC
 - (instancetype)initWithDestDescription:(AudioStreamBasicDescription)destDescription SourceDescription:(AudioStreamBasicDescription)sourceDescription;
@@ -71,10 +73,12 @@
     GJLOG(GJ_LOGINFO, "AACDecode Start:%p", self);
     _running = YES;
     [self _createEncodeConverter];
+    startCount++;
 }
 - (void)stop {
     GJLOG(GJ_LOGINFO, "AACDecode stop:%p", self);
     _running = NO;
+    stopCount++;
     queueEnablePop(_resumeQueue, GFalse);
     queueEnablePush(_resumeQueue, GFalse);
     queueBroadcastPop(_resumeQueue);
@@ -139,7 +143,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     R_BufferRetain(&packet->retain);
     if (!_running || !queuePush(_resumeQueue, packet, 0)) {
         R_BufferUnRetain(&packet->retain);
-        GJLOG(GJ_LOGWARNING, "aac decode to pcm queuePush faile");
+        GJLOG(GJ_LOGFORBID, "aac decode to pcm queuePush faile");
     }
 }
 

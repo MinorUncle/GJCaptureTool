@@ -130,25 +130,44 @@ static GVoid livePushCallback(GHandle               userDate,
         memset(&_audioInfo, 0, sizeof(_audioInfo));
         memset(&_pushSessionStatus, 0, sizeof(_pushSessionStatus));
         _pushUrl = url;
-        _timer   = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency
-                                                  target:self
-                                                selector:@selector(updateGaterInfo:)
-                                                userInfo:nil
-                                                 repeats:YES];
+        if ([NSThread isMainThread]) {
+            _timer   = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency
+                                                        target:self
+                                                      selector:@selector(updateGaterInfo:)
+                                                      userInfo:nil
+                                                       repeats:YES];
+        }else{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                _timer   = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency
+                                                            target:self
+                                                          selector:@selector(updateGaterInfo:)
+                                                          userInfo:nil
+                                                           repeats:YES];
+            });
+        }
+       
         return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
     }
 }
 
 - (void)stopStreamPush {
-    [_timer invalidate];
-    _timer = nil;
+    if ([NSThread isMainThread]) {
+        [_timer invalidate];
+        _timer = nil;
+    }else{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_timer invalidate];
+            _timer = nil;
+        });
+    }
+
     GJLivePush_StopPush(_livePush);
 }
 
-- (bool)reStartStreamPush {
-    [self stopStreamPush];
-    return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
-}
+//- (bool)reStartStreamPush {
+//    [self stopStreamPush];
+//    return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
+//}
 
 - (void)setAudioMute:(BOOL)audioMute {
     _audioMute = audioMute;
@@ -199,7 +218,7 @@ static GVoid livePushCallback(GHandle               userDate,
     _mixFileNeedToStream = mixFileNeedToStream;
     GJLivePush_ShouldMixAudioToStream(_livePush, mixFileNeedToStream);
 }
-
+static int restartCount;
 - (void)updateGaterInfo:(NSTimer *)timer {
     GJTrafficStatus vInfo = GJLivePush_GetVideoTrafficStatus(_livePush);
     GJTrafficStatus aInfo = GJLivePush_GetAudioTrafficStatus(_livePush);
@@ -223,10 +242,12 @@ static GVoid livePushCallback(GHandle               userDate,
     _audioInfo = aInfo;
 
     [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
-    //    if (vInfo.enter.ts - vInfo.leave.ts > MAX_SEND_DELAY) {//延迟过多重启
-    //        GJLOG(GJ_LOGWARNING, "推流缓存过多，重新启动推流");
-    //        [self reStartStreamPush];
-    //    }
+    if (vInfo.enter.ts - vInfo.leave.ts > MAX_SEND_DELAY) {//延迟过多重启
+        GJLOG(GJ_LOGWARNING, "推流缓存过多，重新启动推流");
+        restartCount++;
+        [self stopStreamPush];
+        [self startStreamPushWithUrl:_pushUrl];
+    }
 }
 
 - (void)setCameraPosition:(GJCameraPosition)cameraPosition {

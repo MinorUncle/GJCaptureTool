@@ -217,25 +217,25 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
             return;
         }
         CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sample);
-        size_t                 sparameterSetSize, sparameterSetCount;
+        size_t                 spsSize, sparameterSetCount;
         int                    spHeadSize;
-        const uint8_t *        sparameterSet;
-        OSStatus               statusCode = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 0, &sparameterSet, &sparameterSetSize, &sparameterSetCount, &spHeadSize);
+        const uint8_t *        sps;
+        OSStatus               statusCode = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 0, &sps, &spsSize, &sparameterSetCount, &spHeadSize);
         if (statusCode != noErr) {
             GJLOG(GJ_LOGFORBID, "CMVideoFormatDescriptionGetH264ParameterSetAt sps error:%d", statusCode);
             return;
         }
 
-        size_t         pparameterSetSize, pparameterSetCount;
+        size_t         ppsSize, pparameterSetCount;
         int            ppHeadSize;
-        const uint8_t *pparameterSet;
-        statusCode = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 1, &pparameterSet, &pparameterSetSize, &pparameterSetCount, &ppHeadSize);
+        const uint8_t *pps;
+        statusCode = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 1, &pps, &ppsSize, &pparameterSetCount, &ppHeadSize);
         if ((statusCode != noErr)) {
             GJLOG(GJ_LOGFORBID, "CMVideoFormatDescriptionGetH264ParameterSetAt pps error:%d", statusCode);
             return;
         }
 
-        size_t spsppsSize = sparameterSetSize + pparameterSetSize;
+        size_t spsppsSize = spsSize + ppsSize;
         int    needSize   = (int) (8 + spsppsSize + totalLength + PUSH_H264_PACKET_PRE_SIZE);
         pushPacket        = (R_GJPacket *) GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
         buffer            = &pushPacket->retain;
@@ -247,16 +247,27 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         pushPacket->dataSize   = (GInt32)(totalLength + spsppsSize + 8);
 
         uint8_t *data = R_BufferStart(buffer);
-        memcpy(data, "\x00\x00\x00\x01", 4);
-        memcpy(data + 4, sparameterSet, sparameterSetSize);
-        encoder.sps = [NSData dataWithBytes:data length:sparameterSetSize];
+        uint32_t sSize = htonl(spsSize);
+//        memcpy(data, "\x00\x00\x00\x01", 4);
+        memcpy(data, &sSize, 4);
 
-        memcpy(data + 4 + sparameterSetSize, "\x00\x00\x00\x01", 4);
-        memcpy(data + 8 + sparameterSetSize, pparameterSet, pparameterSetSize);
-        encoder.pps = [NSData dataWithBytes:data + sparameterSetSize length:pparameterSetSize];
+        memcpy(data + 4, sps, spsSize);
+        encoder.sps = [NSData dataWithBytes:sps length:spsSize];
+
+        sSize = htonl(ppsSize);
+//        memcpy(data + 4 + sparameterSetSize, "\x00\x00\x00\x01", 4);
+        memcpy(data + 4 + spsSize,&sSize, 4);
+
+        memcpy(data + 8 + spsSize, pps, ppsSize);
+        encoder.pps = [NSData dataWithBytes:pps length:ppsSize];
 
         memcpy(data + spsppsSize + 8, inDataPointer, totalLength);
         inDataPointer = data + spsppsSize + 8;
+        
+        printf("encode sps size:%zu:", spsSize);
+        GJ_LogHexString(GJ_LOGERROR, sps, (GUInt32) spsSize);
+        printf("encode pps size:%zu:", ppsSize);
+        GJ_LogHexString(GJ_LOGERROR, pps, (GUInt32) ppsSize);
 
     } else {
         int needSize = (int) (totalLength + PUSH_H264_PACKET_PRE_SIZE);
@@ -326,19 +337,18 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     GJLOG(GJ_LOGINFO,"encode dts:%f pts:%f\n",dts.value*1.0 / dts.timescale,pts.value*1.0/pts.timescale);
 #endif
 
-    int bufferOffset = 0;
-
-    static const uint32_t AVCCHeaderLength = 4;
-    while (bufferOffset < totalLength) {
-        // Read the NAL unit length
-        uint32_t NALUnitLength = 0;
-        memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
-        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
-
-        uint8_t *data = inDataPointer + bufferOffset;
-        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
-        bufferOffset += AVCCHeaderLength + NALUnitLength;
-    }
+//    int bufferOffset = 0;
+//    static const uint32_t AVCCHeaderLength = 4;
+//    while (bufferOffset < totalLength) {
+//        // Read the NAL unit length
+//        uint32_t NALUnitLength = 0;
+//        memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
+//        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
+//
+//        uint8_t *data = inDataPointer + bufferOffset;
+//        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
+//        bufferOffset += AVCCHeaderLength + NALUnitLength;
+//    }
 
     encoder.completeCallback(pushPacket);
     R_BufferUnRetain(buffer);

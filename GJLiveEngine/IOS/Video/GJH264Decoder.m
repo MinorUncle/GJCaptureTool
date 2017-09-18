@@ -11,6 +11,8 @@
 #import "sps_decode.h"
 @interface GJH264Decoder () {
     dispatch_queue_t _decodeQueue; //解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
+    NSData* _spsData;
+    NSData* _ppsData;
 }
 @property (nonatomic) VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
@@ -124,68 +126,68 @@ void decodeOutputCallback(
     CMSampleBufferRef sampleBuffer = NULL;
     CMBlockBufferRef  blockBuffer  = NULL;
 
-    if (packet->flag == GJPacketFlag_KEY && _decompressionSession == nil) {
-        int32_t  spsSize, ppsSize;
-        uint8_t *sps, *pps;
-        memcpy(&spsSize, R_BufferStart(&packet->retain) + packet->dataOffset, 4);
-        spsSize = ntohl(spsSize);
-        sps     = R_BufferStart(&packet->retain) + 4;
-        memcpy(&ppsSize, spsSize + sps, 4);
-        ppsSize = ntohl(ppsSize);
-        pps     = sps + spsSize + 4;
-
-        printf("source sps size:%d:", spsSize);
-        GJ_LogHexString(GJ_LOGERROR, sps, (GUInt32) spsSize);
-        printf("source pps size:%d:", ppsSize);
-        GJ_LogHexString(GJ_LOGERROR, pps, (GUInt32) ppsSize);
-
-        uint8_t *parameterSetPointers[2] = {sps, pps};
-        size_t   parameterSetSizes[2]    = {spsSize, ppsSize};
-
-        CMVideoFormatDescriptionRef desc;
-        status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,
-                                                                     (const uint8_t *const *) parameterSetPointers,
-                                                                     parameterSetSizes, 4,
-                                                                     &desc);
-        BOOL shouldReCreate = NO;
-#if 0
-        FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
+    if (packet->flag == GJPacketFlag_KEY ) {
         
-        char* code = (char*)&re;
-        NSLog(@"code:%c %c %c %c \n",code[3],code[2],code[1],code[0]);
-        CFArrayRef arr = CMVideoFormatDescriptionGetExtensionKeysCommonWithImageBuffers();
-        signed long count = CFArrayGetCount(arr);
-        for (int i = 0; i<count; i++) {
-            CFPropertyListRef  list = CMFormatDescriptionGetExtension(desc, CFArrayGetValueAtIndex(arr, i));
-            NSLog(@"key:%@,%@",CFArrayGetValueAtIndex(arr, i),list);
+        int32_t  spsSize = 0, ppsSize = 0;
+        uint8_t *sps = NULL, *pps = NULL, *start;
+        start = R_BufferStart(&packet->retain) + packet->dataOffset;
+        
+        if ( (start[4] & 0x1f) == 7 ) {
+            spsSize = ntohl(*(uint32_t*)start);
+            sps = start + 4;
+            packet->dataOffset += 4 + spsSize;
+            if ((start[spsSize + 8] & 0x1f) == 8) {
+                memcpy(&ppsSize, spsSize + sps, 4);
+                ppsSize = ntohl(*(uint32_t*)(sps + spsSize));
+                pps     = sps + spsSize + 4;
+                packet->dataOffset += 4 + ppsSize;
+            }else{
+                GJLOG(GJ_LOGFORBID, "包含sps而不包含pps");
+            }
+            
         }
+
+        if(sps && (_decompressionSession == nil || memcmp(sps, _spsData.bytes, spsSize) || memcmp(pps, _ppsData.bytes, ppsSize))){
+            printf("decode sps size:%d:", spsSize);
+            GJ_LogHexString(GJ_LOGERROR, sps, (GUInt32) spsSize);
+            printf("decode pps size:%d:", ppsSize);
+            GJ_LogHexString(GJ_LOGERROR, pps, (GUInt32) ppsSize);
+            
+            uint8_t *parameterSetPointers[2] = {sps, pps};
+            size_t   parameterSetSizes[2]    = {spsSize, ppsSize};
+            
+            status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,
+                                                                         (const uint8_t *const *) parameterSetPointers,
+                                                                         parameterSetSizes, 4,
+                                                                         &_formatDesc);
+#if 0
+            FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
+            
+            char* code = (char*)&re;
+            NSLog(@"code:%c %c %c %c \n",code[3],code[2],code[1],code[0]);
+            CFArrayRef arr = CMVideoFormatDescriptionGetExtensionKeysCommonWithImageBuffers();
+            signed long count = CFArrayGetCount(arr);
+            for (int i = 0; i<count; i++) {
+                CFPropertyListRef  list = CMFormatDescriptionGetExtension(desc, CFArrayGetValueAtIndex(arr, i));
+                NSLog(@"key:%@,%@",CFArrayGetValueAtIndex(arr, i),list);
+            }
 #endif
-
-        if (status != noErr) {
-            GJAssert(0, "sps or pps error");
-            if (_formatDesc == NULL) {
-                return;
-            }
-        } else {
-            if (_formatDesc == NULL) {
-                _formatDesc = desc;
-            } else {
-                if (!CMFormatDescriptionEqual(_formatDesc, desc)) {
-                    shouldReCreate = true;
-                    CFRelease(_formatDesc);
-                    _formatDesc = desc;
-                } else {
-                    CFRelease(desc);
-                }
-            }
-        }
-
-        if (_decompressionSession == NULL || shouldReCreate || _shouldRestart) {
+            
+            
+            
             GJLOG(GJ_LOGWARNING, "reCreate decoder ,format:%p", _formatDesc);
             [self createDecompSession];
-        }
+            if (_decompressionSession) {
+                _spsData = [NSData dataWithBytes:sps length:spsSize];
+                _ppsData = [NSData dataWithBytes:pps length:ppsSize];
+            }else{
+                GJLOG(GJ_LOGFORBID, "解码器创建失败");
 
-        return;
+            }
+        }
+        if (packet->dataSize - packet->dataOffset <= 4) {
+            return;
+        }
     } else {
         if (_decompressionSession == NULL) {
             GJLOG(GJ_LOGFORBID, "解码器为空，且缺少关键帧，丢帧");

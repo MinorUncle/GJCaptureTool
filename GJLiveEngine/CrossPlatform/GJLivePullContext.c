@@ -147,7 +147,7 @@ static GVoid pullMessageCallback(GJStreamPull *pull, kStreamPullMessageType mess
             livePull->callback(livePull->userData, GJLivePull_connectError, "连接错误");
             break;
         case kStreamPullMessageType_receivePacketError:
-            GJLOG(GJ_LOGERROR, "pull sendPacket error:%d", messageType);
+            GJLOG(GJ_LOGERROR, "pull receivePacket error:%d", messageType);
             GJLivePull_StopPull(livePull);
             livePull->callback(livePull->userData, GJLivePull_receivePacketError, "读取失败");
             break;
