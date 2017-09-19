@@ -65,7 +65,9 @@ static GHandle sendRunloop(GHandle parm) {
                 goto END;
             }
             GJLOG(GJ_LOGINFO, "peek index:%d type:%d, pts:%lld\n", 0, packet->type, packet->pts);
-            if (packet->type == GJMediaType_Video) {
+            GUInt8 *start = packet->dataOffset + R_BufferStart(&packet->retain);
+
+            if (packet->type == GJMediaType_Video && (start[4] & 0x1f) == 7) {
                 if ((packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY) {
                     GJLOG(GJ_LOGFORBID, "第一帧视频非关键帧,丢帧");
                     queuePop(push->sendBufferQueue, (GHandle) packet, 0);
@@ -75,43 +77,15 @@ static GHandle sendRunloop(GHandle parm) {
                     R_BufferUnRetain(&packet->retain);
                     continue;
                 }
-                GUInt8 *start = packet->dataOffset + R_BufferStart(&packet->retain);
 
-                GInt32  index = 0;
-                GUInt8 *sps = GNULL, *pps = GNULL;
-                while (index < packet->dataSize) {
-                    if (packet->dataSize > index + 4 && start[index] == 0x00 && start[index + 1] == 0x00) {
-                        if (start[index + 2] == 0x01) {
-                            if ((start[index + 3] & 0x1f) == 7) {
-                                sps = start + index;
-                                index += 2;
-                            } else if ((start[index + 3] & 0x1f) == 8) {
-                                pps = start + index;
-                                index += 2;
-                            } else {
-                                break;
-                            }
-                        } else if (start[index + 2] == 00 && start[index + 3] == 01) {
-                            if ((start[index + 4] & 0x1f) == 7) {
-                                sps = start + index;
-                                index += 3;
-                            } else if ((start[index + 4] & 0x1f) == 8) {
-                                pps = start + index;
-                                index += 3;
-                            } else {
-                                break;
-                            }
-                        }
-                    }
-                    index++;
-                }
-                if (sps && pps) {
-                    index++;
-                    push->vStream->codecpar->extradata_size = (GInt32)(start + index - sps);
-                    push->vStream->codecpar->extradata      = av_malloc(push->vStream->codecpar->extradata_size);
-                    memcpy(push->vStream->codecpar->extradata, sps, push->vStream->codecpar->extradata_size);
-                    break;
-                } else {
+                GUInt8 *sps = start + 4, *pps;
+                GUInt32 spsSize = ntohl(*(GUInt32*)start), ppsSize;
+                
+                if ((sps[spsSize+4] & 0x1f) == 8 ) {
+                    pps = sps + spsSize + 4;
+                    ppsSize = ntohl(*(GUInt32*)(pps - 4));
+                }else{
+                    
                     GJLOG(GJ_LOGFORBID, "没有sps，pps，丢弃该帧");
                     queuePop(push->sendBufferQueue, (GHandle) packet, 0);
                     push->videoStatus.leave.byte += packet->dataSize;
@@ -120,7 +94,15 @@ static GHandle sendRunloop(GHandle parm) {
                     R_BufferUnRetain(&packet->retain);
                     continue;
                 }
+
+                push->vStream->codecpar->extradata_size = (GInt32)(spsSize + ppsSize + 8);
+                push->vStream->codecpar->extradata      = av_malloc(push->vStream->codecpar->extradata_size);
+                memcpy(push->vStream->codecpar->extradata, sps - 4, push->vStream->codecpar->extradata_size);
+                memcpy(push->vStream->codecpar->extradata, "\x00\x00\x00\x01", 4);
+                memcpy(push->vStream->codecpar->extradata + spsSize + 4, "\x00\x00\x00\x01", 4);
+                break;
             } else {
+                
                 GJLOG(GJ_LOGWARNING, "非视频帧，丢弃该帧");
                 queuePop(push->sendBufferQueue, (GHandle) &packet, 0);
                 push->audioStatus.leave.byte += packet->dataSize;
@@ -171,16 +153,25 @@ static GHandle sendRunloop(GHandle parm) {
         av_init_packet(sendPacket);
         sendPacket->pts = packet->pts;
         sendPacket->dts = packet->dts;
+        sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
+        sendPacket->size = packet->dataSize;
         if (packet->type == GJMediaType_Video) {
             sendPacket->stream_index = push->vStream->index;
+            GUInt32 nalSize;
+            GUInt8* start = sendPacket->data;
+            GUInt8* end = sendPacket->data + sendPacket->size;
+            while (end - start >= 4 ) {
+                nalSize = ntohl(*(GUInt32*)(start));
+                memcpy(start, "\x00\x00\x00\x01", 4);
+                start += nalSize + 4;
+            }
         } else {
             sendPacket->stream_index = push->aStream->index;
         }
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
-        sendPacket->size = packet->dataSize;
+
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
             if (packet->type == GJMediaType_Video) {
