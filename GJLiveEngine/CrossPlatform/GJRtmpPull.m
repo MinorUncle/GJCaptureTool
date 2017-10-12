@@ -232,11 +232,18 @@ static GHandle pullRunloop(GHandle parm) {
                             }
 
                         } else if (pbody[index] == 2) {
+#if CLOSE_WHILE_STREAM_COMPLETE
                             GJLOG(GJ_LOGDEBUG, "直播结束\n");
                             RTMPPacket_Free(&packet);
                             errType = kStreamPullMessageType_closeComplete;
                             goto ERROR;
                             break;
+#else
+                            GJLOG(GJ_LOGDEBUG, "直播结束,继续等待开始\n");
+                            RTMPPacket_Free(&packet);
+                            break;
+
+#endif
                         } else {
                             GJLOG(GJ_LOGFORBID, "h264格式有误\n");
                             RTMPPacket_Free(&packet);
@@ -314,6 +321,8 @@ static GHandle pullRunloop(GHandle parm) {
             goto ERROR;
         }
     }
+    
+END:
     errType = kStreamPullMessageType_closeComplete;
 ERROR:
     RTMP_Close(pull->rtmp);

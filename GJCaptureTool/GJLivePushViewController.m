@@ -15,7 +15,7 @@
 #import "GJBufferPool.h"
 #import "GJAudioManager.h"
 //static char* url = "rtmp://10.0.23.70/live/room";
-static char* url = "rtmp://10.0.1.142/live/room";
+static char* url = "rtmp://10.0.1.65/live/room";
 //static char* url = "rtmp://192.168.199.187/live/room";
 //static char* url = "rtmp://192.168.199.187/live/room";
 //static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
