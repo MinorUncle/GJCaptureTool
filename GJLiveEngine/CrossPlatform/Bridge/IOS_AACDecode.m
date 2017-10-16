@@ -16,15 +16,15 @@ inline static GBool decodeSetup(struct _GJAACDecodeContext *context, GJAudioForm
     pthread_mutex_lock(&context->lock);
     GJAssert(context->obaque == GNULL, "上一个音频解码器没有释放");
     if (sourceFormat.mType != GJAudioType_AAC) {
-        GJLOG(GJ_LOGERROR, "解码音频源格式不支持");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码音频源格式不支持");
         return GFalse;
     }
     if (destForamt.mType != GJAudioType_PCM) {
-        GJLOG(GJ_LOGERROR, "解码目标音频格式不支持");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码目标音频格式不支持");
         return GFalse;
     }
     if (callback == GNULL) {
-        GJLOG(GJ_LOGERROR, "回调函数不能为空");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "回调函数不能为空");
         return GFalse;
     }
     AudioStreamBasicDescription s = {0};
@@ -49,7 +49,7 @@ inline static GBool decodeSetup(struct _GJAACDecodeContext *context, GJAudioForm
     };
     context->obaque = (__bridge_retained GHandle) decode;
     [decode start];
-    GJLOG(GJ_LOGDEBUG, "aac decode decodeSetup:%p", decode);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "aac decode decodeSetup:%p", decode);
     pthread_mutex_unlock(&context->lock);
     return GTrue;
 }
@@ -59,7 +59,7 @@ inline static GVoid decodeUnSetup(struct _GJAACDecodeContext *context) {
         GJPCMDecodeFromAAC *decode = (__bridge_transfer GJPCMDecodeFromAAC *) (context->obaque);
         [decode stop];
         context->obaque = GNULL;
-        GJLOG(GJ_LOGDEBUG, "aac decode unSetup:%p", decode);
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "aac decode unSetup:%p", decode);
         decode = nil;
     }
     pthread_mutex_unlock(&context->lock);
@@ -85,7 +85,7 @@ GVoid GJ_AACDecodeContextCreate(GJAACDecodeContext **decodeContext) {
 }
 GVoid GJ_AACDecodeContextDealloc(GJAACDecodeContext **context) {
     if ((*context)->obaque) {
-        GJLOG(GJ_LOGWARNING, "decodeUnSetup 没有调用，自动调用");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "decodeUnSetup 没有调用，自动调用");
         (*context)->decodeUnSetup(*context);
     }
     //pthread_mutex_destroy(&(*context)->lock);

@@ -25,7 +25,7 @@
 inline static GBool audioProduceSetup(struct _GJAudioProduceContext *context, GJAudioFormat format, AudioFrameOutCallback callback, GHandle userData) {
     GJAssert(context->obaque == GNULL, "上一个音频生产器没有释放");
     if (format.mType != GJAudioType_PCM) {
-        GJLOG(GJ_LOGERROR, "解码音频源格式不支持");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码音频源格式不支持");
         return GFalse;
     }
     UInt32 formatid = 0;
@@ -34,13 +34,13 @@ inline static GBool audioProduceSetup(struct _GJAudioProduceContext *context, GJ
             formatid = kAudioFormatLinearPCM;
             break;
         default: {
-            GJLOG(GJ_LOGERROR, "解码音频源格式不支持");
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码音频源格式不支持");
             return GFalse;
             break;
         }
     }
     if (callback == GNULL) {
-        GJLOG(GJ_LOGERROR, "回调函数不能为空");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "回调函数不能为空");
         return GFalse;
     }
 #ifdef AUDIO_QUEUE_RECODE
@@ -67,7 +67,7 @@ inline static GBool audioProduceSetup(struct _GJAudioProduceContext *context, GJ
         callback(userData, frame);
     };
     if (!manager) {
-        GJLOG(GJ_LOGERROR, "GJAudioManager setup ERROR");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "GJAudioManager setup ERROR");
         return GFalse;
     } else {
         context->obaque = (__bridge_retained GHandle) manager;
@@ -102,7 +102,7 @@ inline static GBool audioProduceStart(struct _GJAudioProduceContext *context) {
         NSError *       error;
         GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
         if (![manager startRecode:&error]) {
-            GJLOG(GJ_LOGERROR, "startRecode error:%s", error.localizedDescription.UTF8String);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "startRecode error:%s", error.localizedDescription.UTF8String);
             result = GFalse;
         }
     } else {
@@ -110,7 +110,7 @@ inline static GBool audioProduceStart(struct _GJAudioProduceContext *context) {
             NSError *       error;
             GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
             if (![manager startRecode:&error]) {
-                GJLOG(GJ_LOGERROR, "startRecode error:%s", error.localizedDescription.UTF8String);
+                GJLOG(DEFAULT_LOG, GJ_LOGERROR, "startRecode error:%s", error.localizedDescription.UTF8String);
                 result = GFalse;
             }
         });
@@ -239,7 +239,7 @@ GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext **recodeContext) {
 }
 GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext **context) {
     if ((*context)->obaque) {
-        GJLOG(GJ_LOGWARNING, "encodeUnSetup 没有调用，自动调用");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "encodeUnSetup 没有调用，自动调用");
         (*context)->audioProduceUnSetup(*context);
     }
     free(*context);

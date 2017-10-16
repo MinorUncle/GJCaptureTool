@@ -591,7 +591,7 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
 
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {
     if ((*context)->obaque) {
-        GJLOG(GJ_LOGWARNING, "videoProduceUnSetup 没有调用，自动调用");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "videoProduceUnSetup 没有调用，自动调用");
         (*context)->videoProduceUnSetup(*context);
     }
     free(*context);

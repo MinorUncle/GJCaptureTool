@@ -82,7 +82,7 @@ static void MCAudioFileStreamPacketsCallBack(void *                        inCli
 - (void)_errorForOSStatus:(OSStatus)status error:(NSError *__autoreleasing *)outError {
     if (status != noErr) {
         NSError *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil];
-        GJLOG(@"error:%@", error.localizedDescription);
+        GJLOG(DEFAULT_LOG, @"error:%@", error.localizedDescription);
         if (outError != NULL) {
             *outError = error;
         }
@@ -147,7 +147,7 @@ static void MCAudioFileStreamPacketsCallBack(void *                        inCli
         return NO;
     }
 
-    GJLOG(@"_discontinuous:%d", _discontinuous);
+    GJLOG(DEFAULT_LOG, @"_discontinuous:%d", _discontinuous);
     OSStatus status = AudioFileStreamParseBytes(_audioFileStreamID, (UInt32) lenth, data, _discontinuous ? kAudioFileStreamParseFlag_Discontinuity : 0);
     [self _errorForOSStatus:status error:error];
     return status == noErr;
@@ -192,7 +192,7 @@ static void MCAudioFileStreamPacketsCallBack(void *                        inCli
 
 - (void)handleAudioFileStreamProperty:(AudioFileStreamPropertyID)propertyID {
     char *property = (char *) &propertyID;
-    GJLOG(@"propertyID:%c%c%c%c", property[3], property[2], property[1], property[0]);
+    GJLOG(DEFAULT_LOG, @"propertyID:%c%c%c%c", property[3], property[2], property[1], property[0]);
     switch (propertyID) {
         case kAudioFileStreamProperty_ReadyToProducePackets: {
             _readyToProducePackets = YES;
@@ -252,7 +252,7 @@ static void MCAudioFileStreamPacketsCallBack(void *                        inCli
                             NSLog(@"format:%d  support:%d", (unsigned int) format.mFormatID, (unsigned int) supportedFormats[j]);
                             if (format.mFormatID == supportedFormats[j]) {
                                 char *formatC = (char *) &(format.mFormatID);
-                                GJLOG(@"formatC:%c%c%c%c", formatC[3], formatC[2], formatC[1], formatC[0]);
+                                GJLOG(DEFAULT_LOG, @"formatC:%c%c%c%c", formatC[3], formatC[2], formatC[1], formatC[0]);
                                 _format = format;
                                 [self calculatepPacketDuration];
                             }

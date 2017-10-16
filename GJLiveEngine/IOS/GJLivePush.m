@@ -44,7 +44,7 @@ static GVoid livePushCallback(GHandle               userDate,
     GJLivePush *livePush = (__bridge GJLivePush *) (userDate);
     switch (messageType) {
         case GJLivePush_connectSuccess: {
-            GJLOG(GJ_LOGINFO, "推流连接成功");
+            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "推流连接成功");
             GLong elapsed = *(GLong *) param;
             dispatch_async(dispatch_get_main_queue(), ^{
                 [livePush.delegate livePush:livePush connentSuccessWithElapsed:elapsed];
@@ -60,7 +60,7 @@ static GVoid livePushCallback(GHandle               userDate,
         } break;
         case GJLivePush_urlPraseError:
         case GJLivePush_connectError: {
-            GJLOG(GJ_LOGINFO, "推流连接失败");
+            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "推流连接失败");
             [livePush stopStreamPush];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [livePush.delegate livePush:livePush
@@ -123,7 +123,7 @@ static GVoid livePushCallback(GHandle               userDate,
 
 - (bool)startStreamPushWithUrl:(NSString *)url {
     if (_timer != nil) {
-        GJLOG(GJ_LOGFORBID, "请先关闭上一个流");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "请先关闭上一个流");
         return NO;
     } else {
         memset(&_videoInfo, 0, sizeof(_videoInfo));
@@ -243,7 +243,7 @@ static int restartCount;
 
     [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
     if (vInfo.enter.ts - vInfo.leave.ts > MAX_SEND_DELAY) {//延迟过多重启
-        GJLOG(GJ_LOGWARNING, "推流缓存过多，重新启动推流");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "推流缓存过多，重新启动推流");
         restartCount++;
         [self stopStreamPush];
         [self startStreamPushWithUrl:_pushUrl];
@@ -314,6 +314,6 @@ static GStickerParm stickerUpdateCallback(const GHandle userDate, GLong index,
     if (_livePush) {
         GJLivePush_Dealloc(&_livePush);
     }
-    GJLOG(GJ_LOGDEBUG, "GJLivePush");
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJLivePush");
 }
 @end

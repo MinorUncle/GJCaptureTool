@@ -38,7 +38,7 @@
         [[GJAudioSessionCenter shareSession] setPrefferSampleRate:audioFormat.mSampleRate error:&error];
 
         if (error != nil) {
-            GJLOG(GJ_LOGERROR, "setPrefferSampleRate error:%s", error.description.UTF8String);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "setPrefferSampleRate error:%s", error.description.UTF8String);
         }
 
         _audioController                    = [[AEAudioController alloc] initWithAudioDescription:audioFormat inputEnabled:YES];
@@ -109,10 +109,10 @@
     [[GJAudioSessionCenter shareSession] requestAllowAirPlay:YES key:self.description error:&configError];
     [[GJAudioSessionCenter shareSession] unLockApplyConfig:&configError];
     if (configError) {
-        GJLOG(GJ_LOGERROR, "Apply audio session Config error:%@", configError.description.UTF8String);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%@", configError.description.UTF8String);
     }
     if (![_audioController start:error]) {
-        GJLOG(GJ_LOGERROR, "AEAudioController start error:%@", (*error).description.UTF8String);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "AEAudioController start error:%@", (*error).description.UTF8String);
     }
 
     return *error == nil;
@@ -128,7 +128,7 @@
     [[GJAudioSessionCenter shareSession] requestAllowAirPlay:NO key:self.description error:nil];
     [[GJAudioSessionCenter shareSession] unLockApplyConfig:&configError];
     if (configError) {
-        GJLOG(GJ_LOGERROR, "Apply audio session Config error:%@", configError.description.UTF8String);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%@", configError.description.UTF8String);
     }
 
     if (_alignCacheFrame) {
@@ -190,14 +190,14 @@
 }
 - (BOOL)setMixFile:(NSURL *)file {
     if (_mixfilePlay != nil) {
-        GJLOG(GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
         [_audioController removeChannels:@[ _mixfilePlay ]];
         _mixfilePlay = nil;
     }
     NSError *error;
     _mixfilePlay = [[AEAudioFilePlayer alloc] initWithURL:file error:&error];
     if (_mixfilePlay == nil) {
-        GJLOG(GJ_LOGERROR, "AEAudioFilePlayer alloc error:%s", error.localizedDescription.UTF8String);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "AEAudioFilePlayer alloc error:%s", error.localizedDescription.UTF8String);
         return GFalse;
     } else {
         __weak AEAudioController *wkAE = _audioController;
@@ -215,13 +215,13 @@
         [_mixfilePlay playAtTime:time];
         return YES;
     } else {
-        GJLOG(GJ_LOGERROR, "请先设置minx file");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "请先设置minx file");
         return NO;
     }
 }
 - (void)stopMix {
     if (_mixfilePlay == nil) {
-        GJLOG(GJ_LOGWARNING, "重复stop mix");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "重复stop mix");
     } else {
         [_audioController removeChannels:@[ _mixfilePlay ]];
         [_audioController removeOutputReceiver:_audioMixer];
@@ -229,7 +229,7 @@
     }
 }
 - (void)dealloc {
-    GJLOG(GJ_LOGDEBUG, "GJAudioManager dealloc");
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJAudioManager dealloc");
     [_audioController removeInputReceiver:_audioMixer];
     NSMutableArray *play = [NSMutableArray arrayWithCapacity:2];
 

@@ -52,7 +52,7 @@ static GHandle pullRunloop(GHandle parm) {
 
     GInt32 result = avformat_open_input(&pull->formatContext, pull->pullUrl, GNULL, GNULL);
     if (result < 0) {
-        GJLOG(GJ_LOGERROR, "avformat_open_input error");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avformat_open_input error");
         message = kStreamPullMessageType_connectError;
         goto END;
     }
@@ -61,7 +61,7 @@ static GHandle pullRunloop(GHandle parm) {
     //    pull->formatContext->max_analyze_duration = 0;
     result = avformat_find_stream_info(pull->formatContext, GNULL);
     if (result < 0) {
-        GJLOG(GJ_LOGERROR, "avformat_find_stream_info");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avformat_find_stream_info");
         message = kStreamPullMessageType_connectError;
         goto END;
     }
@@ -72,7 +72,7 @@ static GHandle pullRunloop(GHandle parm) {
 
     GInt32 vsIndex = av_find_best_stream(pull->formatContext, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
     if (vsIndex < 0) {
-        GJLOG(GJ_LOGWARNING, "not found video stream");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "not found video stream");
     } else {
         AVStream *vStream  = pull->formatContext->streams[vsIndex];
         GUInt8 *  avcc     = vStream->codecpar->extradata;
@@ -110,7 +110,7 @@ static GHandle pullRunloop(GHandle parm) {
 
     GInt32 asIndex = av_find_best_stream(pull->formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
     if (asIndex < 0) {
-        GJLOG(GJ_LOGWARNING, "not found audio stream");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "not found audio stream");
     } else {
         AVStream *aStream  = pull->formatContext->streams[asIndex];
         GUInt8 *  aacc     = aStream->codecpar->extradata;
@@ -211,7 +211,7 @@ END:
     if (shouldDelloc) {
         GJStreamPull_Delloc(pull);
     }
-    GJLOG(GJ_LOGDEBUG, "pullRunloop end");
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pullRunloop end");
     return GNULL;
 }
 
@@ -255,13 +255,13 @@ GVoid GJStreamPull_Delloc(GJStreamPull *pull) {
 #endif
         avformat_free_context(pull->formatContext);
         free(pull);
-        GJLOG(GJ_LOGDEBUG, "GJStreamPull_Delloc:%p", pull);
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_Delloc:%p", pull);
     } else {
-        GJLOG(GJ_LOGWARNING, "GJStreamPull_Delloc NULL PULL");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "GJStreamPull_Delloc NULL PULL");
     }
 }
 GVoid GJStreamPull_Release(GJStreamPull *pull) {
-    GJLOG(GJ_LOGDEBUG, "GJStreamPull_Release:%p", pull);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_Release:%p", pull);
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
     pull->messageCallback = NULL;
@@ -275,7 +275,7 @@ GVoid GJStreamPull_Release(GJStreamPull *pull) {
     }
 }
 GVoid GJStreamPull_Close(GJStreamPull *pull) {
-    GJLOG(GJ_LOGDEBUG, "GJStreamPull_Close:%p", pull);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_Close:%p", pull);
     pull->stopRequest = GTrue;
 }
 
@@ -285,7 +285,7 @@ GVoid GJStreamPull_CloseAndRelease(GJStreamPull *pull) {
 }
 
 GBool GJStreamPull_StartConnect(GJStreamPull *pull, StreamPullDataCallback dataCallback, GHandle callbackParm, const GChar *pullUrl) {
-    GJLOG(GJ_LOGDEBUG, "GJStreamPull_StartConnect:%p", pull);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_StartConnect:%p", pull);
 
     if (pull->pullThread != NULL) {
         GJStreamPull_Close(pull);

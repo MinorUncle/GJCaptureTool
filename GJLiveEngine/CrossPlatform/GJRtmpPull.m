@@ -65,16 +65,16 @@ static GHandle pullRunloop(GHandle parm) {
     ret = RTMP_Connect(pull->rtmp, NULL);
     if (!ret) {
         errType = kStreamPullMessageType_connectError;
-        GJLOG(GJ_LOGERROR, "RTMP_Connect error");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "RTMP_Connect error");
         goto ERROR;
     }
     ret = RTMP_ConnectStream(pull->rtmp, 0);
     if (!ret) {
         errType = kStreamPullMessageType_connectError;
-        GJLOG(GJ_LOGERROR, "RTMP_ConnectStream error");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "RTMP_ConnectStream error");
         goto ERROR;
     } else {
-        GJLOG(GJ_LOGDEBUG, "RTMP_Connect success");
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "RTMP_Connect success");
         if (pull->messageCallback) {
             pull->messageCallback(pull, kStreamPullMessageType_connectSuccess, pull->messageCallbackParm, NULL);
         }
@@ -142,7 +142,7 @@ static GHandle pullRunloop(GHandle parm) {
                     aacPacket->flag       = GJPacketFlag_KEY;
 
                 } else {
-                    GJLOG(GJ_LOGFORBID, "音频流格式错误");
+                    GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "音频流格式错误");
                     R_BufferUnRetain(buffer);
                     break;
                 }
@@ -156,7 +156,7 @@ static GHandle pullRunloop(GHandle parm) {
 
             } else if (packet.m_packetType == RTMP_PACKET_TYPE_VIDEO) {
                 GJLOGFREQ("receive video pts:%d", packet.m_nTimeStamp);
-                //                GJLOG(GJ_LOGDEBUG,"receive video pts:%d",packet.m_nTimeStamp);
+                //                GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"receive video pts:%d",packet.m_nTimeStamp);
 
                 GUInt8 *body  = (GUInt8 *) packet.m_body;
                 GUInt8 *pbody = body;
@@ -178,7 +178,7 @@ static GHandle pullRunloop(GHandle parm) {
                             pps = pbody + index;
                             index += ppsSize;
                             if (pbody + 4 > body + packet.m_nBodySize) {
-                                GJLOG(GJ_LOGINFO, "only spspps\n");
+                                GJLOG(DEFAULT_LOG, GJ_LOGINFO, "only spspps\n");
                             }
                             R_GJPacket *h264Packet = (R_GJPacket *) GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
                             memset(h264Packet, 0, sizeof(R_GJPacket));
@@ -233,25 +233,25 @@ static GHandle pullRunloop(GHandle parm) {
 
                         } else if (pbody[index] == 2) {
 #if CLOSE_WHILE_STREAM_COMPLETE
-                            GJLOG(GJ_LOGDEBUG, "直播结束\n");
+                            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "直播结束\n");
                             RTMPPacket_Free(&packet);
                             errType = kStreamPullMessageType_closeComplete;
                             goto ERROR;
                             break;
 #else
-                            GJLOG(GJ_LOGDEBUG, "直播结束,继续等待开始\n");
+                            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "直播结束,继续等待开始\n");
                             RTMPPacket_Free(&packet);
                             break;
 
 #endif
                         } else {
-                            GJLOG(GJ_LOGFORBID, "h264格式有误\n");
+                            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "h264格式有误\n");
                             RTMPPacket_Free(&packet);
                             goto ERROR;
                         }
 
                     } else {
-                        GJLOG(GJ_LOGFORBID, "h264格式有误，type:%d\n", body[0]);
+                        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "h264格式有误，type:%d\n", body[0]);
                         RTMPPacket_Free(&packet);
                         break;
                     }
@@ -305,7 +305,7 @@ static GHandle pullRunloop(GHandle parm) {
                 R_BufferUnRetain(buffer);
 
             } else {
-                GJLOG(GJ_LOGWARNING, "not media Packet:%p type:%d", packet, packet.m_packetType);
+                GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "not media Packet:%p type:%d", packet, packet.m_packetType);
                 RTMPPacket_Free(&packet);
                 break;
             }
@@ -317,7 +317,7 @@ static GHandle pullRunloop(GHandle parm) {
         //        }
         if (rResult == GFalse) {
             errType = kStreamPullMessageType_receivePacketError;
-            GJLOG(GJ_LOGWARNING, "pull Read Packet Error");
+            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "pull Read Packet Error");
             goto ERROR;
         }
     }
@@ -339,7 +339,7 @@ ERROR:
     if (shouldDelloc) {
         GJStreamPull_Delloc(pull);
     }
-    GJLOG(GJ_LOGDEBUG, "pullRunloop end");
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pullRunloop end");
     return NULL;
 }
 GBool GJStreamPull_Create(GJStreamPull **pullP, StreamPullMessageCallback callback, GHandle rtmpPullParm) {
@@ -374,17 +374,17 @@ GVoid GJStreamPull_Delloc(GJStreamPull *pull) {
 #endif
         RTMP_Free(pull->rtmp);
         free(pull);
-        GJLOG(GJ_LOGDEBUG, "GJStreamPull_Delloc:%p", pull);
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_Delloc:%p", pull);
     } else {
-        GJLOG(GJ_LOGWARNING, "GJStreamPull_Delloc NULL PULL");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "GJStreamPull_Delloc NULL PULL");
     }
 }
 GVoid GJStreamPull_Close(GJStreamPull *pull) {
-    GJLOG(GJ_LOGDEBUG, "GJStreamPull_Close:%p", pull);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_Close:%p", pull);
     pull->stopRequest = GTrue;
 }
 GVoid GJStreamPull_Release(GJStreamPull *pull) {
-    GJLOG(GJ_LOGDEBUG, "GJStreamPull_Release:%p", pull);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_Release:%p", pull);
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
     pull->messageCallback = NULL;
@@ -403,7 +403,7 @@ GVoid GJStreamPull_CloseAndRelease(GJStreamPull *pull) {
 }
 
 GBool GJStreamPull_StartConnect(GJStreamPull *pull, StreamPullDataCallback dataCallback, GHandle callbackParm, const GChar *pullUrl) {
-    GJLOG(GJ_LOGDEBUG, "GJStreamPull_StartConnect:%p", pull);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_StartConnect:%p", pull);
 
     if (pull->pullThread != NULL) {
         GJStreamPull_Close(pull);
@@ -416,7 +416,7 @@ GBool GJStreamPull_StartConnect(GJStreamPull *pull, StreamPullDataCallback dataC
     pull->dataCallback     = dataCallback;
     pull->dataCallbackParm = callbackParm;
     if (!RTMP_SetupURL(pull->rtmp, pull->pullUrl)) {
-        GJLOG(GJ_LOGERROR, "RTMP_SetupURL error");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "RTMP_SetupURL error");
         return GFalse;
     }
     return pthread_create(&pull->pullThread, NULL, pullRunloop, pull) == 0;

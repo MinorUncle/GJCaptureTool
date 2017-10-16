@@ -49,7 +49,7 @@ static GHandle sendRunloop(GHandle parm) {
     GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl, AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, &option);
     av_dict_free(&option);
     if (ret < 0) {
-        GJLOG(GJ_LOGERROR, "avio_open2 error:%d", ret);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avio_open2 error:%d", ret);
         errType = kStreamPushMessageType_connectError;
         goto END;
     }
@@ -64,12 +64,12 @@ static GHandle sendRunloop(GHandle parm) {
             if (push->stopRequest) {
                 goto END;
             }
-            GJLOG(GJ_LOGINFO, "peek index:%d type:%d, pts:%lld\n", 0, packet->type, packet->pts);
+            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "peek index:%d type:%d, pts:%lld\n", 0, packet->type, packet->pts);
             GUInt8 *start = packet->dataOffset + R_BufferStart(&packet->retain);
 
             if (packet->type == GJMediaType_Video && (start[4] & 0x1f) == 7) {
                 if ((packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY) {
-                    GJLOG(GJ_LOGFORBID, "第一帧视频非关键帧,丢帧");
+                    GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "第一帧视频非关键帧,丢帧");
                     queuePop(push->sendBufferQueue, (GHandle) packet, 0);
                     push->videoStatus.leave.byte += packet->dataSize;
                     push->videoStatus.leave.count++;
@@ -86,7 +86,7 @@ static GHandle sendRunloop(GHandle parm) {
                     ppsSize = ntohl(*(GUInt32*)(pps - 4));
                 }else{
                     
-                    GJLOG(GJ_LOGFORBID, "没有sps，pps，丢弃该帧");
+                    GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "没有sps，pps，丢弃该帧");
                     queuePop(push->sendBufferQueue, (GHandle) packet, 0);
                     push->videoStatus.leave.byte += packet->dataSize;
                     push->videoStatus.leave.count++;
@@ -103,7 +103,7 @@ static GHandle sendRunloop(GHandle parm) {
                 break;
             } else {
                 
-                GJLOG(GJ_LOGWARNING, "非视频帧，丢弃该帧");
+                GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "非视频帧，丢弃该帧");
                 queuePop(push->sendBufferQueue, (GHandle) &packet, 0);
                 push->audioStatus.leave.byte += packet->dataSize;
                 push->audioStatus.leave.count++;
@@ -123,7 +123,7 @@ static GHandle sendRunloop(GHandle parm) {
         } else if (push->audioFormat->format.mSampleRate == 11025) {
             srIndex = 10;
         } else {
-            GJLOG(GJ_LOGFORBID, "sampleRate error");
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "sampleRate error");
             return GFalse;
         }
         GUInt8 channels                         = push->audioFormat->format.mChannelsPerFrame;
@@ -135,7 +135,7 @@ static GHandle sendRunloop(GHandle parm) {
 
     ret = avformat_write_header(push->formatContext, GNULL);
     if (ret < 0) {
-        GJLOG(GJ_LOGERROR, "avformat_write_header error:%d", ret);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avformat_write_header error:%d", ret);
         errType = kStreamPushMessageType_connectError;
         goto END;
     }
@@ -191,13 +191,13 @@ static GHandle sendRunloop(GHandle parm) {
         } else {
             switch (iRet) {
                 case -22:
-                    GJLOG(GJ_LOGERROR, "error send video FRAME,pts乱序");
+                    GJLOG(DEFAULT_LOG, GJ_LOGERROR, "error send video FRAME,pts乱序");
                     break;
                 case -32:
-                    GJLOG(GJ_LOGERROR, "error send video FRAME,断网拉");
+                    GJLOG(DEFAULT_LOG, GJ_LOGERROR, "error send video FRAME,断网拉");
                     break;
                 default:
-                    GJLOG(GJ_LOGFORBID, "error send video FRAME,未知错误");
+                    GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "error send video FRAME,未知错误");
 
                     break;
             }
@@ -209,17 +209,17 @@ static GHandle sendRunloop(GHandle parm) {
     av_free(sendPacket);
     GInt32 result = av_write_trailer(push->formatContext);
     if (result < 0) {
-        GJLOG(GJ_LOGERROR, "av_write_trailer error:%d", result);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "av_write_trailer error:%d", result);
     } else {
-        GJLOG(GJ_LOGDEBUG, "av_write_trailer success");
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "av_write_trailer success");
     }
 
 END:
     result = avio_close(push->formatContext->pb);
     if (result < 0) {
-        GJLOG(GJ_LOGERROR, "avio_close error:%d", result);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avio_close error:%d", result);
     } else {
-        GJLOG(GJ_LOGDEBUG, "avio_close success");
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "avio_close success");
     }
 
     if (push->messageCallback) {
@@ -235,7 +235,7 @@ END:
     if (shouldDelloc) {
         GJStreamPush_Delloc(push);
     }
-    GJLOG(GJ_LOGINFO, "sendRunloop end");
+    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "sendRunloop end");
 
     return GNULL;
 }
@@ -277,7 +277,7 @@ static int interrupt_callback(void *parm) {
 }
 GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
 
-    GJLOG(GJ_LOGINFO, "GJRtmpPush_StartConnect:%p", push);
+    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJRtmpPush_StartConnect:%p", push);
 
     size_t length = strlen(sendUrl);
     memset(&push->videoStatus, 0, sizeof(GJTrafficStatus));
@@ -285,10 +285,10 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
     GJAssert(length <= 100 - 1, "sendURL 长度不能大于：%d", 100 - 1);
     memcpy(push->pushUrl, sendUrl, length + 1);
     if (push->sendThread) {
-        GJLOG(GJ_LOGWARNING, "上一个push没有释放，开始释放并等待");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "上一个push没有释放，开始释放并等待");
         GJStreamPush_Close(push);
         pthread_join(push->sendThread, GNULL);
-        GJLOG(GJ_LOGWARNING, "等待push释放结束");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "等待push释放结束");
     }
     push->stopRequest = GFalse;
 
@@ -297,7 +297,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
 
     GInt32 ret = avformat_alloc_output_context2(&push->formatContext, GNULL, "flv", sendUrl);
     if (ret < 0) {
-        GJLOG(GJ_LOGFORBID, "ffmpeg 不知道该封装格式");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "ffmpeg 不知道该封装格式");
         return GFalse;
     }
     AVIOInterruptCB cb = {.callback = interrupt_callback, .opaque = push};
@@ -316,7 +316,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
                 break;
         }
         if (videoCode == GNULL) {
-            GJLOG(GJ_LOGFORBID, "ffmpeg 找不到视频编码器");
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "ffmpeg 找不到视频编码器");
             return GFalse;
         }
 
@@ -341,7 +341,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
                 break;
         }
         if (audioCode == GNULL) {
-            GJLOG(GJ_LOGFORBID, "ffmpeg 找不到音频编码器");
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "ffmpeg 找不到音频编码器");
             return GFalse;
         }
 
@@ -383,10 +383,10 @@ GVoid GJStreamPush_Delloc(GJStreamPush *push) {
     if (push->videoFormat) free(push->videoFormat);
     if (push->audioFormat) free(push->audioFormat);
     free(push);
-    GJLOG(GJ_LOGDEBUG, "GJRtmpPush_Delloc:%p", push);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJRtmpPush_Delloc:%p", push);
 }
 GVoid GJStreamPush_Release(GJStreamPush *push) {
-    GJLOG(GJ_LOGINFO, "GJRtmpPush_Release::%p", push);
+    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJRtmpPush_Release::%p", push);
 
     GBool shouldDelloc    = GFalse;
     push->messageCallback = GNULL;
@@ -402,9 +402,9 @@ GVoid GJStreamPush_Release(GJStreamPush *push) {
 }
 GVoid GJStreamPush_Close(GJStreamPush *sender) {
     if (sender->stopRequest) {
-        GJLOG(GJ_LOGINFO, "GJRtmpPush_Close：%p  重复关闭", sender);
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJRtmpPush_Close：%p  重复关闭", sender);
     } else {
-        GJLOG(GJ_LOGINFO, "GJRtmpPush_Close:%p", sender);
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJRtmpPush_Close:%p", sender);
         sender->stopRequest = GTrue;
         queueEnablePush(sender->sendBufferQueue, GFalse);
         queueEnablePop(sender->sendBufferQueue, GFalse);

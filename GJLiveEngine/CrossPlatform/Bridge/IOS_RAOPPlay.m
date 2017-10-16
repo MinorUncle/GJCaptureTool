@@ -126,7 +126,7 @@ void audio_output_destroy(struct audio_output_t *ao) {
         }
 
         free(ao);
-        GJLOG(GJ_LOGDEBUG, "audio_output_destroy");
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "audio_output_destroy");
     }];
 }
 void audio_output_set_volume(struct audio_output_t *ao, double volume) {

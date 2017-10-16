@@ -93,7 +93,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         return noErr;
     }else{
         *ioNumberDataPackets = 0;
-        GJLOG(GJ_LOGWARNING, "encodeInputDataProc 0 faile");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "encodeInputDataProc 0 faile");
         return -1;
     }
 }
@@ -151,7 +151,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
 
     if(_encodeConvert){
-        GJLOG(GJ_LOGINFO, "AACEncoderFromPCM :%p",_encodeConvert);
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AACEncoderFromPCM :%p",_encodeConvert);
         AudioConverterDispose(_encodeConvert);
         _encodeConvert = nil;
     }
@@ -198,7 +198,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     dispatch_async(_encoderQueue, ^{
         [self _converterStart];
     });
-    GJLOG(GJ_LOGDEBUG, "AudioConverterNewSpecific success:%p",_encodeConvert);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AudioConverterNewSpecific success:%p",_encodeConvert);
     return YES;
 }
 -(void)setBitrate:(int)bitrate{
@@ -238,9 +238,9 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     result = AudioConverterSetProperty(_encodeConvert, kAudioConverterEncodeBitRate, propSize, &outputBitRate);
     if(result == noErr){
         _bitrate = (int)outputBitRate;
-        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps\n", (unsigned int)outputBitRate/1000);
     }else{
-        GJLOG(GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps error:%d\n", (unsigned int)outputBitRate/1000,result);
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"AAC Encode Bitrate: %u kbps error:%d\n", (unsigned int)outputBitRate/1000,result);
     }
     free(arry);
 }
@@ -248,14 +248,14 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     UInt32 audioClassSize;
     OSStatus status = AudioFormatGetPropertyInfo(kAudioFormatProperty_Encoders, sizeof(type), &type, &audioClassSize);
     if (status != noErr) {
-        GJLOG(GJ_LOGFORBID, "AudioFormatGetPropertyInfo error:%d",status);
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioFormatGetPropertyInfo error:%d",status);
         return status;
     }
     int count = audioClassSize / sizeof(AudioClassDescription);
     AudioClassDescription audioList[count];
     status = AudioFormatGetProperty(kAudioFormatProperty_Encoders, sizeof(type), &type, &audioClassSize, audioList);
     if (status != noErr) {
-        GJLOG(GJ_LOGFORBID, "AudioFormatGetPropertyInfo error2:%d",status);
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioFormatGetPropertyInfo error2:%d",status);
         return status;
     }
     int i = 0;
@@ -266,7 +266,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         }
     }
     if (i >= count) {
-        GJLOG(GJ_LOGFORBID, "not find audio encoder");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "not find audio encoder");
 
     }
     
@@ -274,7 +274,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 }
 
 -(void)_converterStart{
-    GJLOG(GJ_LOGDEBUG,"_converterStart");
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"_converterStart");
     UInt32 outputDataPacketSize               = 1;
     AudioStreamPacketDescription packetDesc;
     AudioBufferList outCacheBufferList;
@@ -297,10 +297,10 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         if (status != noErr ) {
            R_BufferUnRetain(audioBuffer);
             if(_isRunning){
-                GJLOG(GJ_LOGERROR, "running状态编码错误 times:%d",_errorTimes++);
+                GJLOG(DEFAULT_LOG, GJ_LOGERROR, "running状态编码错误 times:%d",_errorTimes++);
                 _isRunning = NO;
             }else{
-                GJLOG(GJ_LOGWARNING, "编码结束");
+                GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "编码结束");
             }
             break;
         }
@@ -421,7 +421,7 @@ int get_f_index(unsigned int sampling_frequency)
         });
     }
 
-    GJLOG(GJ_LOGINFO, "AACEncoderFromPCM");
+    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AACEncoderFromPCM");
     
 }
 #pragma mark - mutex

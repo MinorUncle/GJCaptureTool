@@ -41,6 +41,7 @@ GBool GJLivePull_Create(GJLivePullContext **pullContext, GJLivePullCallback call
             result = GFalse;
             break;
         }
+        context->logSwitch = GJLivePullContext_LOG_SWITCH;
         pthread_mutex_init(&context->lock, GNULL);
     } while (0);
     return result;
@@ -50,7 +51,7 @@ GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
     do {
         pthread_mutex_lock(&context->lock);
         if (context->videoPull != GNULL) {
-            GJLOG(GJ_LOGERROR, "请先停止上一个流");
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "请先停止上一个流");
         } else {
             context->fristAudioPullClock = context->fristVideoPullClock = context->connentClock = context->fristVideoDecodeClock = G_TIME_INVALID;
             context->audioUnDecodeByte = context->videoUnDecodeByte = 0;
@@ -80,7 +81,7 @@ GVoid GJLivePull_StopPull(GJLivePullContext *context) {
         GJStreamPull_CloseAndRelease(context->videoPull);
         context->videoPull = GNULL;
     } else {
-        GJLOG(GJ_LOGWARNING, "重复停止拉流");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "重复停止拉流");
     }
     GJLivePlay_Stop(context->player);
     context->audioDecoder->decodeUnSetup(context->audioDecoder);
@@ -103,7 +104,7 @@ GHandle GJLivePull_GetDisplayView(GJLivePullContext *context) {
 GVoid GJLivePull_Dealloc(GJLivePullContext **pullContext) {
     GJLivePullContext *context = *pullContext;
     if (context == GNULL) {
-        GJLOG(GJ_LOGERROR, "非法释放");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "非法释放");
     } else {
 
         GJLivePlay_Dealloc(&context->player);
@@ -142,29 +143,29 @@ static GVoid pullMessageCallback(GJStreamPull *pull, kStreamPullMessageType mess
     switch (messageType) {
         case kStreamPullMessageType_connectError:
         case kStreamPullMessageType_urlPraseError:
-            GJLOG(GJ_LOGERROR, "pull connect error:%d", messageType);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "pull connect error:%d", messageType);
             GJLivePull_StopPull(livePull);
             livePull->callback(livePull->userData, GJLivePull_connectError, "连接错误");
             break;
         case kStreamPullMessageType_receivePacketError:
-            GJLOG(GJ_LOGERROR, "pull receivePacket error:%d", messageType);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "pull receivePacket error:%d", messageType);
             GJLivePull_StopPull(livePull);
             livePull->callback(livePull->userData, GJLivePull_receivePacketError, "读取失败");
             break;
         case kStreamPullMessageType_connectSuccess: {
-            GJLOG(GJ_LOGINFO, "pull connectSuccess");
+            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "pull connectSuccess");
             livePull->connentClock = GJ_Gettime() / 1000.0;
             GTime connentDur       = livePull->connentClock - livePull->startPullClock;
             livePull->callback(livePull->userData, GJLivePull_connectSuccess, &connentDur);
         } break;
         case kStreamPullMessageType_closeComplete: {
-            GJLOG(GJ_LOGINFO, "pull closeComplete");
+            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "pull closeComplete");
             GJPullSessionInfo info = {0};
             info.sessionDuring     = GJ_Gettime() / 1000 - livePull->startPullClock;
             livePull->callback(livePull->userData, GJLivePull_closeComplete, (GHandle) &info);
         } break;
         default:
-            GJLOG(GJ_LOGFORBID, "not catch info：%d", messageType);
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "not catch info：%d", messageType);
             break;
     }
 }
@@ -229,7 +230,7 @@ void pullDataCallback(GJStreamPull *pull, R_GJPacket *packet, void *parm) {
                 pthread_mutex_unlock(&livePull->lock);
                 return;
             } else {
-                GJLOG(GJ_LOGFORBID, "音频没有adts");
+                GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "音频没有adts");
                 return;
             }
         }

@@ -9,10 +9,13 @@
 #ifndef GJLivePullContext_h
 #define GJLivePullContext_h
 
+#define GJLivePullContext_LOG_SWITCH 1
+
 #include "GJLiveDefine+internal.h"
 #include "GJLivePlayer.h"
 #include "GJStreamPull.h"
 #include <stdio.h>
+#include "GJLog.h"
 
 #include "GJBridegContext.h"
 
@@ -32,6 +35,7 @@ typedef enum _GJLivePullMessageType {
 typedef GVoid (*GJLivePullCallback)(GHandle userDate, GJLivePullMessageType message, GHandle param);
 
 typedef struct _GJLivePullContext {
+    GBool                logSwitch;
     GJStreamPull *       videoPull;
     pthread_t            playThread;
     GJPullSessionStatus  pullSessionStatus;
@@ -51,7 +55,6 @@ typedef struct _GJLivePullContext {
     GJTrafficStatus    audioTraffic;
     GLong              videoUnDecodeByte; //没有解码前的数据大小，
     GLong              audioUnDecodeByte;
-
 } GJLivePullContext;
 
 GBool GJLivePull_Create(GJLivePullContext **context, GJLivePullCallback callback, GHandle param);

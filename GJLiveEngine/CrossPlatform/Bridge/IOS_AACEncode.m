@@ -12,15 +12,15 @@
 GBool encodeSetup(struct _GJEncodeToAACContext *context, GJAudioFormat sourceFormat, GJAudioStreamFormat destForamt, AACPacketOutCallback callback, GHandle userData) {
     GJAssert(context->obaque == GNULL, "上一个音频解码器没有释放");
     if (sourceFormat.mType != GJAudioType_PCM) {
-        GJLOG(GJ_LOGERROR, "编码音频源格式不支持");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "编码音频源格式不支持");
         return GFalse;
     }
     if (destForamt.format.mType != GJAudioType_AAC) {
-        GJLOG(GJ_LOGERROR, "编码目标音频格式不支持");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "编码目标音频格式不支持");
         return GFalse;
     }
     if (callback == GNULL) {
-        GJLOG(GJ_LOGERROR, "回调函数不能为空");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "回调函数不能为空");
         return GFalse;
     }
     context->encodeCompleteCallback  = callback;
@@ -79,7 +79,7 @@ GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext **encodeContext) {
 
 GVoid GJ_AACEncodeContextDealloc(GJEncodeToAACContext **context) {
     if ((*context)->obaque) {
-        GJLOG(GJ_LOGWARNING, "encodeUnSetup 没有调用，自动调用");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "encodeUnSetup 没有调用，自动调用");
         (*context)->encodeUnSetup(*context);
     }
     free(*context);

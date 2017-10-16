@@ -53,20 +53,20 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
     switch (messageType) {
         case GJLivePull_connectError:
         case GJLivePull_urlPraseError:
-            GJLOG(GJ_LOGERROR, "pull connect error:%d", messageType);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "pull connect error:%d", messageType);
             [livePull stopStreamPull];
             [livePull.delegate livePull:livePull errorType:kLivePullConnectError infoDesc:@"连接错误"];
             break;
         case GJLivePull_receivePacketError:
-            GJLOG(GJ_LOGERROR, "pull readPacket error:%d", messageType);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "pull readPacket error:%d", messageType);
             [livePull.delegate livePull:livePull errorType:kLivePullReadPacketError infoDesc:@"读取失败"];
             break;
         case GJLivePull_connectSuccess: {
-            GJLOG(GJ_LOGINFO, "pull connectSuccess");
+            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "pull connectSuccess");
             [livePull.delegate livePull:livePull connentSuccessWithElapsed:*(GInt32 *) parm];
         } break;
         case GJLivePull_closeComplete: {
-            GJLOG(GJ_LOGINFO, "pull closeComplete");
+            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "pull closeComplete");
             [livePull.delegate livePull:livePull closeConnent:parm resion:kConnentCloce_Active];
         } break;
         case GJLivePull_bufferUpdate: {
@@ -79,7 +79,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
             [livePull.delegate livePull:livePull fristFrameDecode:parm];
         } break;
         default:
-            GJLOG(GJ_LOGERROR, "not catch info：%d", messageType);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "not catch info：%d", messageType);
             break;
     }
 }
@@ -108,16 +108,16 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
 
 - (bool)startStreamPullWithUrl:(NSString *)url {
     if (_timer != nil) {
-        GJLOG(GJ_LOGFORBID, "请先关闭上一个流");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "请先关闭上一个流");
         return NO;
     } else {
         if ([NSThread isMainThread]) {
             _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
-            GJLOG(GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
+            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
         }else{
             dispatch_async(dispatch_get_main_queue(), ^{
                 _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
-                GJLOG(GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
+                GJLOG(DEFAULT_LOG, GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
             });
         }
    

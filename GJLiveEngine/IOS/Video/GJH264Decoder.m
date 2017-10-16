@@ -76,7 +76,7 @@ void decodeOutputCallback(
     //    NSLog(@"decodeOutputCallback:%@",[NSThread currentThread]);
 
     if (status != 0) {
-        GJLOG(GJ_LOGWARNING, "解码error1:%d", (int) status);
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "解码error1:%d", (int) status);
         return;
     }
     GInt64 pts = presentationTimeStamp.value * 1000 / presentationTimeStamp.timescale;
@@ -142,7 +142,7 @@ void decodeOutputCallback(
                 pps     = sps + spsSize + 4;
                 packet->dataOffset += 4 + ppsSize;
             }else{
-                GJLOG(GJ_LOGFORBID, "包含sps而不包含pps");
+                GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "包含sps而不包含pps");
             }
             
         }
@@ -175,13 +175,13 @@ void decodeOutputCallback(
             
             
             
-            GJLOG(GJ_LOGWARNING, "reCreate decoder ,format:%p", _formatDesc);
+            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "reCreate decoder ,format:%p", _formatDesc);
             [self createDecompSession];
             if (_decompressionSession) {
                 _spsData = [NSData dataWithBytes:sps length:spsSize];
                 _ppsData = [NSData dataWithBytes:pps length:ppsSize];
             }else{
-                GJLOG(GJ_LOGFORBID, "解码器创建失败");
+                GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "解码器创建失败");
 
             }
         }
@@ -190,7 +190,7 @@ void decodeOutputCallback(
         }
     } else {
         if (_decompressionSession == NULL) {
-            GJLOG(GJ_LOGFORBID, "解码器为空，且缺少关键帧，丢帧");
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "解码器为空，且缺少关键帧，丢帧");
             goto ERROR;
         }
     }
@@ -220,11 +220,11 @@ void decodeOutputCallback(
                                           &sampleSize, &sampleBuffer);
 
             if (status != 0) {
-                GJLOG(GJ_LOGFORBID, "CMSampleBufferCreate：%d", status);
+                GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "CMSampleBufferCreate：%d", status);
                 goto ERROR;
             }
         } else {
-            GJLOG(GJ_LOGFORBID, "CMBlockBufferCreateWithMemoryBlock error:%d", status);
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "CMBlockBufferCreateWithMemoryBlock error:%d", status);
             goto ERROR;
         }
 
@@ -244,16 +244,16 @@ void decodeOutputCallback(
             if (kVTInvalidSessionErr == status) {
                 VTDecompressionSessionInvalidate(_decompressionSession);
                 _decompressionSession = nil;
-                GJLOG(GJ_LOGWARNING, "解码错误  kVTInvalidSessionErr");
+                GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "解码错误  kVTInvalidSessionErr");
                 [self createDecompSession];
                 goto RETRY;
             } else {
-                GJLOG(GJ_LOGERROR, "解码错误0：%d  ,format:%p", status, _formatDesc);
+                GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码错误0：%d  ,format:%p", status, _formatDesc);
             }
             //                    [self createDecompSession];
             //                    status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
             //                    if (status < 0) {
-            //                        GJLOG(GJ_LOGFORBID, "解码错误：%d  丢帧",status);
+            //                        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "解码错误：%d  丢帧",status);
             //                        _shouldRestart = YES;
             //                    }
         }
@@ -262,7 +262,7 @@ void decodeOutputCallback(
         CFRelease(blockBuffer);
     }
     } else {
-        GJLOG(GJ_LOGWARNING, "帧没有pp");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "帧没有pp");
     }
 
 ERROR:

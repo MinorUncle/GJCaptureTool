@@ -14,7 +14,7 @@
 
 inline static GBool decodeSetup(struct _GJH264DecodeContext *context, GJPixelType format, VideoFrameOutCallback callback, GHandle userData) {
     GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
-    GJLOG(GJ_LOGINFO, "GJH264Decoder setup");
+    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder setup");
 
     GJH264Decoder *decode   = [[GJH264Decoder alloc] init];
     decode.completeCallback = ^(R_GJPixelFrame *frame) {
@@ -28,7 +28,7 @@ inline static GVoid decodeUnSetup(struct _GJH264DecodeContext *context) {
         GJH264Decoder *decode = (__bridge_transfer GJH264Decoder *) (context->obaque);
         context->obaque       = GNULL;
         decode                = nil;
-        GJLOG(GJ_LOGINFO, "GJH264Decoder unsetup");
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder unsetup");
     }
 }
 inline static GBool decodePacket(struct _GJH264DecodeContext *context, R_GJPacket *packet) {
@@ -50,7 +50,7 @@ GVoid GJ_H264DecodeContextCreate(GJH264DecodeContext **decodeContext) {
 }
 GVoid GJ_H264DecodeContextDealloc(GJH264DecodeContext **context) {
     if ((*context)->obaque) {
-        GJLOG(GJ_LOGWARNING, "decodeUnSetup 没有调用，自动调用");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "decodeUnSetup 没有调用，自动调用");
         (*context)->decodeUnSetup(*context);
     }
     free(*context);

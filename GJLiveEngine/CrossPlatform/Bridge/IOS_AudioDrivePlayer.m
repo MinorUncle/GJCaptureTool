@@ -19,17 +19,17 @@
 @end
 inline static GBool audioPlaySetup(struct _GJAudioPlayContext *context, GJAudioFormat format, FillDataCallback dataCallback, GHandle userData) {
     if (format.mType != GJAudioType_PCM) {
-        GJLOG(GJ_LOGFORBID, "视频格式不支持");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "视频格式不支持");
         return GFalse;
     }
     GJAudioQueueDrivePlayer *player = [[GJAudioQueueDrivePlayer alloc] initWithSampleRate:format.mSampleRate channel:format.mChannelsPerFrame formatID:kAudioFormatLinearPCM];
     NSError *error;
     if (![[GJAudioSessionCenter shareSession] requestPlay:YES key:[NSString stringWithFormat:@"%p", player] error:&error]) {
-        GJLOG(GJ_LOGERROR, "request play session fail:%@", error);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "request play session fail:%@", error);
     }
 
     if (![[GJAudioSessionCenter shareSession] activeSession:YES key:[NSString stringWithFormat:@"%p", player] error:&error]) {
-        GJLOG(GJ_LOGERROR, "activeSession session fail:%@", error);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "activeSession session fail:%@", error);
     }
 
     player.fillDataCallback = ^BOOL(void *data, int *size) {
@@ -43,10 +43,10 @@ inline static GVoid audioPlayUnSetup(struct _GJAudioPlayContext *context) {
         GJAudioQueueDrivePlayer *player = (__bridge_transfer GJAudioQueueDrivePlayer *) (context->obaque);
         NSError *                error;
         if (![[GJAudioSessionCenter shareSession] requestPlay:NO key:[NSString stringWithFormat:@"%p", player] error:&error]) {
-            GJLOG(GJ_LOGERROR, "request play session fail:%@", error);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "request play session fail:%@", error);
         }
         if (![[GJAudioSessionCenter shareSession] activeSession:NO key:[NSString stringWithFormat:@"%p", player] error:&error]) {
-            GJLOG(GJ_LOGERROR, "activeSession session fail:%@", error);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "activeSession session fail:%@", error);
         }
         context->obaque = GNULL;
         player          = nil;
@@ -94,7 +94,7 @@ GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext **audioPlayContext) {
 }
 GVoid GJ_AudioPlayContextDealloc(GJAudioPlayContext **context) {
     if ((*context)->obaque) {
-        GJLOG(GJ_LOGWARNING, "audioPlayUnSetup 没有调用，自动调用");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "audioPlayUnSetup 没有调用，自动调用");
         (*context)->audioPlayUnSetup(*context);
     }
     free(*context);

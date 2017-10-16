@@ -70,13 +70,13 @@ static int stopCount;
 }
 
 - (void)start {
-    GJLOG(GJ_LOGINFO, "AACDecode Start:%p", self);
+    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AACDecode Start:%p", self);
     _running = YES;
     [self _createEncodeConverter];
     startCount++;
 }
 - (void)stop {
-    GJLOG(GJ_LOGINFO, "AACDecode stop:%p", self);
+    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AACDecode stop:%p", self);
     _running = NO;
     stopCount++;
     queueEnablePop(_resumeQueue, GFalse);
@@ -85,7 +85,7 @@ static int stopCount;
 
     if (_decodeConvert) {
         AudioConverterDispose(_decodeConvert);
-        GJLOG(GJ_LOGINFO, "AudioConverterDispose");
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AudioConverterDispose");
         _decodeConvert = nil;
     }
     R_GJPacket *packet = NULL;
@@ -123,7 +123,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         *ioNumberDataPackets                = 1;
     } else {
         *ioNumberDataPackets = 0;
-        GJLOG(GJ_LOGWARNING, "decodeInputDataProc 0 faile");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "decodeInputDataProc 0 faile");
         return -1;
     }
 
@@ -143,7 +143,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     R_BufferRetain(&packet->retain);
     if (!_running || !queuePush(_resumeQueue, packet, 0)) {
         R_BufferUnRetain(&packet->retain);
-        GJLOG(GJ_LOGFORBID, "aac decode to pcm queuePush faile");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "aac decode to pcm queuePush faile");
     }
 }
 
@@ -174,7 +174,7 @@ static const int mpeg4audio_sample_rates[16] = {
             _sourceFormat.mSampleRate       = sampleRate;
             _sourceFormat.mFramesPerPacket  = 1024;
         } else {
-            GJLOG(GJ_LOGFORBID, "aac decode queuePeekWaitValue faile");
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "aac decode queuePeekWaitValue faile");
             return false;
         }
     }
@@ -193,7 +193,7 @@ static const int mpeg4audio_sample_rates[16] = {
     AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_sourceFormat);
     OSStatus status = AudioConverterNew(&_sourceFormat, &_destFormat, &_decodeConvert);
     if (status != noErr) {
-        GJLOG(GJ_LOGFORBID, "AudioConverterNew error:%d", status);
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioConverterNew error:%d", status);
         return NO;
     }
     _destMaxOutSize = 0;
@@ -222,7 +222,7 @@ static const int mpeg4audio_sample_rates[16] = {
 }
 
 - (void)_converterStart {
-    GJLOG(GJ_LOGDEBUG, "_converterStart");
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "_converterStart");
 
     AudioStreamPacketDescription packetDesc;
     AudioBufferList              outCacheBufferList;
@@ -243,10 +243,10 @@ static const int mpeg4audio_sample_rates[16] = {
             queueEnablePop(_resumeQueue, GTrue);
             char *codeChar = (char *) &status;
             if (_running && status != -1) {
-                GJLOG(GJ_LOGFORBID, "AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d", codeChar[3], codeChar[2], codeChar[1], codeChar[0], status);
+                GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d", codeChar[3], codeChar[2], codeChar[1], codeChar[0], status);
             } else {
                 _running = GFalse;
-                GJLOG(GJ_LOGDEBUG, "停止导致解码错误:%p", self);
+                GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "停止导致解码错误:%p", self);
             }
             break;
         }
@@ -275,7 +275,7 @@ static const int mpeg4audio_sample_rates[16] = {
     if (_resumeQueue) {
         queueFree(&(_resumeQueue));
     }
-    GJLOG(GJ_LOGDEBUG, "gjpcmdecodeformaac delloc");
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "gjpcmdecodeformaac delloc");
 }
 
 #pragma mark - mutex

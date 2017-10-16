@@ -68,7 +68,7 @@
         _assetWriter = [[AVAssetWriter alloc] initWithURL:[NSURL fileURLWithPath:self.destFileUrl.path]
                                                  fileType:AVFileTypeQuickTimeMovie
                                                     error:&error];
-        if(error)GJLOG(GJ_LOGFORBID,"error = %@", [error localizedDescription].description);
+        if(error)GJLOG(DEFAULT_LOG, GJ_LOGFORBID,"error = %@", [error localizedDescription].description);
     }
     return self;
 }
@@ -118,7 +118,7 @@
 
 
 -(void)stopRecord{
-   GJLOG(GJ_LOGINFO, "stop uirecord\n");
+   GJLOG(DEFAULT_LOG, GJ_LOGINFO, "stop uirecord\n");
     if (_status == screenRecorderStopStatus) {
         return ;
     }
@@ -167,7 +167,7 @@
 -(void)finshWrite{
     [_assetWriter finishWritingWithCompletionHandler:^{
         NSError* error = _assetWriter.error;
-        GJLOG(GJ_LOGINFO, "_assetWriter finishWriting");
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "_assetWriter finishWriting");
         if (self.callback) {
             self.callback(self.destFileUrl, error);
             self.callback = nil;
@@ -250,7 +250,7 @@
                 totalLength -= size;
             }
         }if (_audioTime - currentTime > during*0.5) {
-            GJLOG(GJ_LOGWARNING, "pts 太快 丢帧",pts);
+            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "pts 太快 丢帧",pts);
             return;
         }
         pts = (_audioTime - _startTime)*1000;
@@ -284,7 +284,7 @@
         }
         static double preVPts;
         
-        GJLOG(GJ_LOGINFO, "receive video Pts:%f,dt:%f",pts,pts-preVPts);
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "receive video Pts:%f,dt:%f",pts,pts-preVPts);
         preVPts = pts;
 
         NSArray* arry = @[image,@(pts)];
@@ -339,13 +339,13 @@
      _videoInput.expectsMediaDataInRealTime = YES;
 
     if (![_assetWriter canAddInput:_videoInput]){
-        GJLOG(GJ_LOGFORBID, "can not AddInput error,");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "can not AddInput error,");
         return NO;
     }
     [_assetWriter addInput:_videoInput];
     BOOL result = [_assetWriter startWriting];
     if (result == NO) {
-        GJLOG(GJ_LOGFORBID, "startWriting error,%@",_assetWriter.error);
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "startWriting error,%@",_assetWriter.error);
 
         return NO;
     }
@@ -368,21 +368,21 @@
                             CVPixelBufferRef buffer = [self pixelBufferFromCGImage:[image CGImage] size:size bufferPool:adaptor.pixelBufferPool];
                             CMTime currentSampleTime = CMTimeMake((int64_t)time, 1000);
                             if (buffer == NULL) {
-                                GJLOG(GJ_LOGFORBID, "get buffer Pool ERROR:%@ ",_assetWriter.error);
+                                GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "get buffer Pool ERROR:%@ ",_assetWriter.error);
                                 [self videoFourceFinsh];
                                 
                             }else{
                                 if(![adaptor appendPixelBuffer:buffer withPresentationTime:currentSampleTime]){
-                                    GJLOG(GJ_LOGFORBID, "appendPixelBuffer pts:%f error:%@",time,_assetWriter.error);
+                                    GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "appendPixelBuffer pts:%f error:%@",time,_assetWriter.error);
                                     [self videoFourceFinsh];
 
                                 }else{
-                                    GJLOG(GJ_LOGINFO, "appendPixelBuffer pts:%f",time);
+                                    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "appendPixelBuffer pts:%f",time);
                                 }
                                 CVPixelBufferRelease(buffer);
                             }                       
                         }else{
-                            GJLOG(GJ_LOGINFO, "video pop time out ");
+                            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "video pop time out ");
 
                         }
                 }else{
@@ -398,22 +398,22 @@
                         CMTime currentSampleTime = CMTimeMake((int64_t)time, 1000);
                         
                         if (buffer == NULL) {
-                            GJLOG(GJ_LOGFORBID, "get buffer Pool ERROR:%@",_assetWriter.error);
+                            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "get buffer Pool ERROR:%@",_assetWriter.error);
                             [self videoFourceFinsh];
 
                         }else{
                             if(![adaptor appendPixelBuffer:buffer withPresentationTime:currentSampleTime]){
-                                GJLOG(GJ_LOGERROR, "appendPixelBuffer stoped pts:%f error:%@ ",time,_assetWriter.error);
+                                GJLOG(DEFAULT_LOG, GJ_LOGERROR, "appendPixelBuffer stoped pts:%f error:%@ ",time,_assetWriter.error);
                                 [self videoFourceFinsh];
                             }else{
-                                GJLOG(GJ_LOGINFO, "appendPixelBuffer stoped pts:%f",time);
+                                GJLOG(DEFAULT_LOG, GJ_LOGINFO, "appendPixelBuffer stoped pts:%f",time);
                             }
                             CVPixelBufferRelease(buffer);
                         }
                     }else{
                         [_videoInput markAsFinished];
                         _videoInput = nil;
-                        GJLOG(GJ_LOGINFO, "video stop");
+                        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "video stop");
                         @synchronized (self) {
                             if (_videoInput == nil && _audioInput == nil) {
                                 [self finshWrite];
@@ -439,13 +439,13 @@
                         if (queuePop(_audioCache, (GHandle*)&audioBuffer, 20)) {
                            BOOL result =  [_audioInput appendSampleBuffer:audioBuffer];
                             if (!result) {
-                                GJLOG(GJ_LOGERROR, "appendSampleBuffer error:%@",_assetWriter.error);
+                                GJLOG(DEFAULT_LOG, GJ_LOGERROR, "appendSampleBuffer error:%@",_assetWriter.error);
                                 [self audioFourceFinsh];
                         
                                 
                             }else{
                                 int64_t samplePts = CMSampleBufferGetOutputPresentationTimeStamp(audioBuffer).value;
-                                GJLOG(GJ_LOGINFO, "appendSampleBuffer pts:%lld dt:%d",samplePts,samplePts - prePts);
+                                GJLOG(DEFAULT_LOG, GJ_LOGINFO, "appendSampleBuffer pts:%lld dt:%d",samplePts,samplePts - prePts);
                                 prePts = samplePts;
                             }
                             
@@ -455,7 +455,7 @@
 
                         }else{
                             double current = CFAbsoluteTimeGetCurrent();
-                            GJLOG(GJ_LOGINFO, "audio pop timeout:%f\n",current);
+                            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "audio pop timeout:%f\n",current);
                             @synchronized (self) {
                                 if (current - _audioTime > 4096/_format.mSampleRate && _audioTime > 100) {
                                     int blockSize = 1024 * _format.mBytesPerFrame;
@@ -469,13 +469,13 @@
                                     _audioTime += blockDuring;
                                     BOOL result =  [_audioInput appendSampleBuffer:sample];
                                     if (!result) {
-                                        GJLOG(GJ_LOGFORBID, "appendSampleBuffer error:%@",_assetWriter.error);
+                                        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "appendSampleBuffer error:%@",_assetWriter.error);
                                         [self audioFourceFinsh];
                                     }
 #ifdef DEBUG
                                     else{
                                         int64_t samplePts = CMSampleBufferGetOutputPresentationTimeStamp(sample).value;
-                                        GJLOG(GJ_LOGINFO, "appendSampleBuffer empty data pts:%lld dt:%d",samplePts,samplePts - prePts);
+                                        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "appendSampleBuffer empty data pts:%lld dt:%d",samplePts,samplePts - prePts);
                                         prePts = samplePts;
                                     }
 #endif
@@ -494,13 +494,13 @@
                         
                         BOOL result =  [_audioInput appendSampleBuffer:sample];
                         if (!result) {
-                            GJLOG(GJ_LOGFORBID, "appendSampleBuffer error:%@",_assetWriter.error);
+                            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "appendSampleBuffer error:%@",_assetWriter.error);
                             [self audioFourceFinsh];
                         }
 #ifdef DEBUG
                         else{
                             int64_t samplePts = CMSampleBufferGetOutputPresentationTimeStamp(sample).value;
-                            GJLOG(GJ_LOGINFO, "appendSampleBuffer pts:%lld dt:%d",samplePts,samplePts - prePts);
+                            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "appendSampleBuffer pts:%lld dt:%d",samplePts,samplePts - prePts);
                             prePts = samplePts;
                         }
 #endif
@@ -510,7 +510,7 @@
                     }else{
                         [_audioInput markAsFinished];
                         _audioInput = nil;
-                        GJLOG(GJ_LOGINFO, "audio stop");
+                        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "audio stop");
                         @synchronized (self) {
                             if (_audioInput == nil && _videoInput == nil) {
                                 [self finshWrite];
@@ -591,7 +591,7 @@
 
 -(void)dealloc{
 
-    GJLOG(GJ_LOGDEBUG, "screenrecorder delloc:%p",self);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "screenrecorder delloc:%p",self);
     free(_slientData);
 }
 @end

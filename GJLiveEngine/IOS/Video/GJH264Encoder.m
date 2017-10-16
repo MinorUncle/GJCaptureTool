@@ -80,14 +80,14 @@
             return YES;
         } else {
             if (status == kVTInvalidSessionErr) {
-                GJLOG(GJ_LOGWARNING, "编码失败 kVTInvalidSessionErr:%d,重新编码", status);
+                GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "编码失败 kVTInvalidSessionErr:%d,重新编码", status);
                 VTCompressionSessionInvalidate(_enCodeSession);
                 _enCodeSession = nil;
                 [self creatEnCodeSession];
                 [self setAllParm];
                 //                goto RETRY;//不重试，防止占用太多时间
             } else {
-                GJLOG(GJ_LOGFORBID, "编码失败：%d", status);
+                GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "编码失败：%d", status);
             }
             _shouldRestart = YES;
             return NO;
@@ -134,28 +134,28 @@
     OSStatus    result           = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_MaxKeyFrameInterval, frameIntervalRef);
     CFRelease(frameIntervalRef);
     if (result != 0) {
-        GJLOG(GJ_LOGFORBID, "kVTCompressionPropertyKey_MaxKeyFrameInterval set error");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_MaxKeyFrameInterval set error");
     }
 }
 - (void)setProfileLevel:(ProfileLevel)profileLevel {
     _profileLevel   = profileLevel;
     OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ProfileLevel, getCFStrByLevel(_profileLevel));
     if (result != 0) {
-        GJLOG(GJ_LOGFORBID, "kVTCompressionPropertyKey_ProfileLevel set error");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_ProfileLevel set error");
     }
 }
 - (void)setEntropyMode:(EntropyMode)entropyMode {
     _entropyMode    = entropyMode;
     OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_H264EntropyMode, getCFStrByEntropyMode(_entropyMode));
     if (result != 0) {
-        GJLOG(GJ_LOGFORBID, "kVTCompressionPropertyKey_H264EntropyMode set error");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_H264EntropyMode set error");
     }
 }
 - (void)setAllowBFrame:(BOOL)allowBFrame {
     _allowBFrame    = allowBFrame;
     OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowFrameReordering, _allowBFrame ? kCFBooleanTrue : kCFBooleanFalse);
     if (result != 0) {
-        GJLOG(GJ_LOGFORBID, "kVTCompressionPropertyKey_AllowFrameReordering set error");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_AllowFrameReordering set error");
     }
 }
 - (void)setAllParm {
@@ -177,9 +177,9 @@
         OSStatus    result  = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, bitRate);
         CFRelease(bitRate);
         if (result != noErr) {
-            GJLOG(GJ_LOGFORBID, "kVTCompressionPropertyKey_AverageBitRate set error:%d", result);
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_AverageBitRate set error:%d", result);
         } else {
-            GJLOG(GJ_LOGINFO, "set video bitrate:%0.2f kB/s", bitrate / 1024.0 / 8.0);
+            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "set video bitrate:%0.2f kB/s", bitrate / 1024.0 / 8.0);
         }
     }
 }
@@ -196,7 +196,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     if (statu != 0) return;
     if (!CMSampleBufferDataIsReady(sample)) {
 
-        GJLOG(GJ_LOGWARNING, "didCompressH264 data is not ready ");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "didCompressH264 data is not ready ");
         return;
     }
     GJH264Encoder * encoder    = (__bridge GJH264Encoder *) (outputCallbackRefCon);
@@ -222,7 +222,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         const uint8_t *        sps;
         OSStatus               statusCode = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 0, &sps, &spsSize, &sparameterSetCount, &spHeadSize);
         if (statusCode != noErr) {
-            GJLOG(GJ_LOGFORBID, "CMVideoFormatDescriptionGetH264ParameterSetAt sps error:%d", statusCode);
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "CMVideoFormatDescriptionGetH264ParameterSetAt sps error:%d", statusCode);
             return;
         }
 
@@ -231,7 +231,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         const uint8_t *pps;
         statusCode = CMVideoFormatDescriptionGetH264ParameterSetAtIndex(format, 1, &pps, &ppsSize, &pparameterSetCount, &ppHeadSize);
         if ((statusCode != noErr)) {
-            GJLOG(GJ_LOGFORBID, "CMVideoFormatDescriptionGetH264ParameterSetAt pps error:%d", statusCode);
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "CMVideoFormatDescriptionGetH264ParameterSetAt pps error:%d", statusCode);
             return;
         }
 
@@ -334,7 +334,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     CMTime odts = CMSampleBufferGetOutputDecodeTimeStamp(sample);
     CMTime optd = CMSampleBufferGetOutputDuration(sample);
     CMTime dts = CMSampleBufferGetDecodeTimeStamp(sample);
-    GJLOG(GJ_LOGINFO,"encode dts:%f pts:%f\n",dts.value*1.0 / dts.timescale,pts.value*1.0/pts.timescale);
+    GJLOG(DEFAULT_LOG, GJ_LOGINFO,"encode dts:%f pts:%f\n",dts.value*1.0 / dts.timescale,pts.value*1.0/pts.timescale);
 #endif
 
 //    int bufferOffset = 0;
@@ -361,7 +361,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 }
 
 - (void)dealloc {
-    GJLOG(GJ_LOGDEBUG, "GJH264Encoder：%p", self);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJH264Encoder：%p", self);
     if (_enCodeSession) VTCompressionSessionInvalidate(_enCodeSession);
     if (_bufferPool) {
         GJRetainBufferPool *pool = _bufferPool;

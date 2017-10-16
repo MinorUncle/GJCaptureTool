@@ -11,12 +11,12 @@
 #import "GJScreenRecorder.h"
 static GBool setup(struct _GJRecodeContext *context, const GChar *fileUrl, RecodeCompleteCallback callback, GHandle userHandle) {
     if (context->obaque != GNULL) {
-        GJLOG(GJ_LOGFORBID, "重复setup recoder");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "重复setup recoder");
         return GFalse;
     }
     NSURL *url = [NSURL fileURLWithPath:[NSString stringWithUTF8String:fileUrl]];
     if (url == nil) {
-        GJLOG(GJ_LOGFORBID, "录制文件路径错误");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "录制文件路径错误");
         return GFalse;
     }
     GJScreenRecorder *recoder = [[GJScreenRecorder alloc] initWithDestUrl:url];
@@ -32,7 +32,7 @@ static GVoid unSetup(struct _GJRecodeContext *context) {
         context->obaque           = GNULL;
         recoder                   = nil;
     } else {
-        GJLOG(GJ_LOGWARNING, "重复unSetup recoder");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "重复unSetup recoder");
     }
 }
 static GBool addVideoSource(struct _GJRecodeContext *context, GJPixelFormat format) {
@@ -64,7 +64,7 @@ static GBool startRecode(struct _GJRecodeContext *context, GView view, GInt32 fp
 
     GJScreenRecorder *recoder = (__bridge GJScreenRecorder *) (context->obaque);
     if (recoder.status != screenRecorderStopStatus) {
-        GJLOG(GJ_LOGFORBID, "请先完成上一个录制");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "请先完成上一个录制");
         return GFalse;
     }
 
@@ -95,7 +95,7 @@ GVoid GJ_RecodeContextCreate(GJRecodeContext **recodeContext) {
 GVoid GJ_RecodeContextDealloc(GJRecodeContext **context) {
 
     if ((*context)->obaque) {
-        GJLOG(GJ_LOGWARNING, "videoProduceUnSetup 没有调用，自动调用");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "videoProduceUnSetup 没有调用，自动调用");
         (*context)->unSetup(*context);
     }
     free(*context);

@@ -26,7 +26,7 @@
 - (BOOL)displaySetFormat:(GJPixelType)format {
     _imageInput = [[GJImagePixelImageInput alloc] initWithFormat:(GJYUVPixelImageFormat) format];
     if (_imageInput == nil) {
-        GJLOG(GJ_LOGFORBID, "GJImagePixelImageInput 创建失败！");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "GJImagePixelImageInput 创建失败！");
         return NO;
     }
     [_imageInput addTarget:(GPUImageView *) _displayView];
@@ -38,7 +38,7 @@
 @end
 static GBool IOS_PictureDisplaySetup(GJPictureDisplayContext *context) {
     if (context->obaque != GNULL) {
-        GJLOG(GJ_LOGFORBID, "重复setup video play");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "重复setup video play");
         return GFalse;
     }
     context->obaque = (__bridge_retained GHandle)([[IOS_PictureDisplay alloc] init]);
@@ -77,7 +77,7 @@ GVoid GJ_PictureDisplayContextCreate(GJPictureDisplayContext **disPlayContext) {
 }
 GVoid GJ_PictureDisplayContextDealloc(GJPictureDisplayContext **context) {
     if ((*context)->obaque) {
-        GJLOG(GJ_LOGWARNING, "displayUnSetup 没有调用，自动调用");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "displayUnSetup 没有调用，自动调用");
         (*context)->displayUnSetup(*context);
     }
     free(*context);
