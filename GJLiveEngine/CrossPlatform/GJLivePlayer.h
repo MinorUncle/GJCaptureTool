@@ -11,7 +11,7 @@
 #import "GJLiveDefine.h"
 #import "GJRetainBuffer.h"
 
-//#define SHOULD_BUFFER_VIDEO_IN_AUDIO_CLOCK
+#define SHOULD_BUFFER_VIDEO_IN_AUDIO_CLOCK
 
 typedef enum _GJPlayStatus {
     kPlayStatusStop,
@@ -50,7 +50,8 @@ typedef struct PlayControl {
     pthread_t       playVideoThread;
     GJQueue *       imageQueue;
     GJQueue *       audioQueue;
-    GInt32          videoQueueWaitTime; //视频出队列等待时间，音频不等待
+    GInt32          videoQueueWaitTime;
+    //视频出队列等待时间(因为需要知道是否没有数据了，主动去缓存。也可以修改为还剩1帧时去缓存，就可以一直等待了)，音频不等待
 } GJPlayControl;
 typedef struct _GJNetShakeInfo {
     GTime collectStartClock;

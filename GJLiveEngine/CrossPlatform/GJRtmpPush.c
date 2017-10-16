@@ -226,6 +226,8 @@ static GHandle sendRunloop(GHandle parm) {
                 GJLOG(DEFAULT_LOG, GJ_LOGERROR, "error send video FRAME");
                 errType = kStreamPushMessageType_sendPacketError;
                 goto ERROR;
+            }else{
+                GJLOG(DEFAULT_LOG, GJ_LOGALL, "send video pts:%lld dts:%lld size:%d",packet->pts,packet->dts,packet->dataSize);
             }
         } else {
             //            printf("send packet pts:%lld size:%d  last data:%d\n",packet->pts,packet->dataSize,(packet->retain.data + packet->dataOffset + packet->dataSize -1)[0]);
@@ -295,6 +297,8 @@ static GHandle sendRunloop(GHandle parm) {
                 GJLOG(DEFAULT_LOG, GJ_LOGERROR, "error send packet FRAME");
                 errType = kStreamPushMessageType_sendPacketError;
                 goto ERROR;
+            }else{
+                GJLOG(DEFAULT_LOG, GJ_LOGALL, "send audio pts:%lld dts:%lld size:%d",packet->pts,packet->dts,packet->dataSize);
             }
         }
     }

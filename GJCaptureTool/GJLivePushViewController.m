@@ -184,8 +184,8 @@ static char* url = "rtmp://10.0.1.65/live/room";
 - (void)viewDidLoad {
     [super viewDidLoad];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
-    GJ_LogSetLevel(GJ_LOGINFO);
-    RTMP_LogSetLevel(RTMP_LOGERROR);
+//    GJ_LogSetLevel(GJ_LOGINFO);
+//    RTMP_LogSetLevel(RTMP_LOGERROR);
     _livePush = [[GJLivePush alloc]init];
     GJPushConfig config = {0};
     config.mAudioChannel = 2;

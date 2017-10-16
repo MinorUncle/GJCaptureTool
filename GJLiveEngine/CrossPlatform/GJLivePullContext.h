@@ -9,7 +9,6 @@
 #ifndef GJLivePullContext_h
 #define GJLivePullContext_h
 
-#define GJLivePullContext_LOG_SWITCH 1
 
 #include "GJLiveDefine+internal.h"
 #include "GJLivePlayer.h"
@@ -35,7 +34,7 @@ typedef enum _GJLivePullMessageType {
 typedef GVoid (*GJLivePullCallback)(GHandle userDate, GJLivePullMessageType message, GHandle param);
 
 typedef struct _GJLivePullContext {
-    GBool                logSwitch;
+    GJClass              priv_class;
     GJStreamPull *       videoPull;
     pthread_t            playThread;
     GJPullSessionStatus  pullSessionStatus;
