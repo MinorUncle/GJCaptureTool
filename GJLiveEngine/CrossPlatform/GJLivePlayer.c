@@ -438,30 +438,30 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
             }
 
             if (_syncControl->syncType == kTimeSYNCVideo) {
+                
                 GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待视频时间过长 delay:%ld PTS:%ld clock:%ld,重置同步管理", delay, cImageBuf->pts, timeStandards);
                 resetSyncToStartPts(_syncControl, (GLong) cImageBuf->pts);
                 delay = 0;
             } else {
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待音频时间过长 delay:%ld PTS:%ld clock:%ld，等待下一帧做判断处理", delay, cImageBuf->pts, timeStandards);
+                
+                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待音频时间过长 delay:%ld PTS:%ld clock:%ld，等待下一帧视频做判断处理", delay, cImageBuf->pts, timeStandards);
                 R_GJPixelFrame nextBuffer = {0};
-                GBool          peekResult = GFalse;
-                while ((peekResult = queuePeekWaitCopyValue(_playControl->imageQueue, 0, (GHandle) &nextBuffer, sizeof(R_GJPixelFrame), VIDEO_PTS_PRECISION))) {
+                //会一直等待，知道超时，或者stop or buffering广播，1ms用于执行时间
+                if(queuePeekWaitCopyValue(_playControl->imageQueue, 0, (GHandle) &nextBuffer, sizeof(R_GJPixelFrame), (GUInt32)delay - 1)) {
                     if (_playControl->status == kPlayStatusStop) {
                         goto DROP;
                     }
-                    if (nextBuffer.pts < cImageBuf->pts) {
-                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束，视频PTS减小，重新开始");
+                    if( getClockLine(_syncControl) > nextBuffer.pts-1){
+                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束，超过下一帧显示时间，直接丢帧");
                         delay = 0;
-                    } else {
-                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束，正常显示");
+                        goto DROP;
+                    }else{
+                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束,正常显示");
                     }
-                    break;
-                }
-
-                if (!peekResult) {
-                    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待音频时间过长,并且没有下一帧，直接显示");
+                    
+                }else{
+                    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束,没有下一帧，直接显示");
                     delay = 0;
-                    goto DROP;
                 }
             }
         } else if (delay < -VIDEO_PTS_PRECISION) {
@@ -480,7 +480,7 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
         }
 
     DISPLAY:
-        if (delay > 20) {
+        if (delay > 1) {
             GJLOGFREQ("play wait:%d, video pts:%ld", delay, _syncControl->videoInfo.cPTS);
             usleep((GUInt32) delay * 1000);
             if (_playControl->status == kPlayStatusStop) {
