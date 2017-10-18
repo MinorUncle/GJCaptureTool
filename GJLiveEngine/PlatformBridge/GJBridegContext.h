@@ -18,7 +18,7 @@ typedef GVoid (*H264PacketOutCallback) (GHandle userData, R_GJPacket* packet);
 typedef GBool (*FillDataCallback)(GHandle userData, GVoid* data, GInt32* size);
 typedef GVoid (*RecodeCompleteCallback) (GHandle userData,const GChar* filePath, GHandle error);
 typedef GStickerParm (*GJStickerUpdateCallback)(GHandle userDate,GLong index,GBool* ioFinish);
-
+typedef GVoid (*AudioMixFinishCallback) (GHandle userData,const GChar* filePath, GHandle error);
 
 typedef struct _GJRecodeContext{
     GHandle obaque;
@@ -69,7 +69,7 @@ typedef struct _GJAudioProduceContext{
     GBool   (*audioProduceStart)      (struct _GJAudioProduceContext* context);
     GVoid   (*audioProduceStop)       (struct _GJAudioProduceContext* context);
     GBool   (*enableAudioInEarMonitoring)(struct _GJAudioProduceContext* context, GBool enable);
-    GBool   (*setupMixAudioFile)      (struct _GJAudioProduceContext* context, const GChar* file, GBool loop);
+    GBool   (*setupMixAudioFile)      (struct _GJAudioProduceContext* context, const GChar* file, GBool loop,AudioMixFinishCallback callback, GHandle userData);
     GBool   (*startMixAudioFileAtTime)(struct _GJAudioProduceContext* context, GUInt64 time);
     GBool   (*setInputGain)           (struct _GJAudioProduceContext* context, GFloat32 inputGain);
     GBool   (*setMixVolume)           (struct _GJAudioProduceContext* context, GFloat32 volume);

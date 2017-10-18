@@ -21,7 +21,7 @@
 
 //#define UIIMAGE_SHOW
 
-#define VIDEO_PTS_PRECISION 600
+#define VIDEO_PTS_PRECISION 1000
 #define AUDIO_PTS_PRECISION 100
 
 #define UPDATE_SHAKE_TIME 10000
@@ -35,13 +35,26 @@
 GTime getClockLine(GJSyncControl *sync) {
     if (sync->syncType == kTimeSYNCAudio) {
         GTime time     = GJ_Gettime() / 1000;
-        GTime timeDiff = time - sync->audioInfo.clock;
+        GTime timeDiff = (time - sync->audioInfo.clock) * sync->speed;
         return sync->audioInfo.cPTS + timeDiff;
     } else {
+        //不能采用上面的方法，应为time - sync->audioInfo.clock每次回产生误差， * sync->speed也会产生误差
         GTime time     = GJ_Gettime() / 1000;
         GTime timeDiff = time - sync->videoInfo.startTime;
         return timeDiff + sync->videoInfo.startPts - sync->bufferInfo.bufferTotalDuration + sync->bufferInfo.speedTotalDuration;
     }
+    
+//    SyncInfo* info;
+//    if (sync->syncType == kTimeSYNCAudio) {
+//        info = &sync->audioInfo;
+//    } else {
+//        info = &sync->videoInfo;
+//    }
+//
+//    GTime time     = GJ_Gettime() / 1000;
+//    GTime timeDiff = (time - info->clock) * sync->speed;
+//    return sync->audioInfo.cPTS + timeDiff;
+ 
 }
 
 static void resetSyncToStartPts(GJSyncControl *sync, GTime startPts) {
@@ -67,10 +80,10 @@ static GBool GJLivePlay_StartDewatering(GJLivePlayer *player) {
     //    return;
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->playControl.status == kPlayStatusRunning) {
-        if (player->syncControl.speed <= 1.0) {
+        if (player->syncControl.speed <= 1.00001) {
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "startDewatering");
             player->syncControl.speed = 1.2;
-            player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.2);
+//            player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.2);
         }
     }
     pthread_mutex_unlock(&player->playControl.oLock);
@@ -82,8 +95,8 @@ static GBool GJLivePlay_StopDewatering(GJLivePlayer *player) {
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->syncControl.speed > 1.0) {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "stopDewatering");
-        player->syncControl.speed = 1.0;
-        player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.0);
+        player->syncControl.speed = 1.0f;
+//        player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.0f);
     }
     pthread_mutex_unlock(&player->playControl.oLock);
     return GTrue;
@@ -282,7 +295,7 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer *player) {
             cache                 = aCache;
             if ((aCache == 0 && vCache >= _syncControl->bufferInfo.lowWaterFlag) || //音频没有了，视频足够
                 vCache >= _syncControl->bufferInfo.highWaterFlag - 300) {           //音频缓冲了一部分后音频消失
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "等待音频缓冲过程中，音频为空视频足够、或者视频(%d ms)足够大于音频(%d ms)。切换到视频同步",vCache,aCache);
+                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "等待音频缓冲过程中(lowWater:%lld)，音频为空视频足够、或者视频(%d ms)足够大于音频(%d ms)。切换到视频同步",_syncControl->bufferInfo.lowWaterFlag,vCache,aCache);
                 player->playControl.videoQueueWaitTime = 0;
                 GJLivePlay_StopBuffering(player);
                 changeSyncType(_syncControl, kTimeSYNCVideo);
@@ -291,7 +304,7 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer *player) {
 #ifdef SHOULD_BUFFER_VIDEO_IN_AUDIO_CLOCK
             //音频等待缓冲视频
             else if ((vCache == 0 && aCache >= _syncControl->bufferInfo.lowWaterFlag) || vCache >= _syncControl->bufferInfo.highWaterFlag - 300) {
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "等待视频缓冲过程中，视频为空音频足够、或者音频（%d ms）足够大于视频(%d ms)。停止视频等待",aCache,vCache);
+                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "等待视频缓冲过程中(lowWater:%lld)，视频为空音频足够、或者音频（%d ms）足够大于视频(%d ms)。停止视频等待",_syncControl->bufferInfo.lowWaterFlag,aCache,vCache);
                 player->playControl.videoQueueWaitTime = GINT32_MAX;
                 GJLivePlay_StopBuffering(player);
                 return;
@@ -415,8 +428,9 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
         }
 
         GTime timeStandards = getClockLine(_syncControl);
-        GTime delay         = (GLong) cImageBuf->pts - timeStandards;
-
+        
+        //速度的时空变化
+        GTime delay         = (GTime)((cImageBuf->pts - timeStandards)/_syncControl->speed);
         if (delay > VIDEO_PTS_PRECISION) {
 
             if (_playControl->status == kPlayStatusStop) {
@@ -436,20 +450,12 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
                         goto DROP;
                     }
                     if (nextBuffer.pts < cImageBuf->pts) {
-                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频PTS重新开始，直接显示");
+                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束，视频PTS减小，重新开始");
                         delay = 0;
-                        break;
                     } else {
-                        timeStandards = getClockLine(_syncControl);
-                        delay         = (GLong) cImageBuf->pts - timeStandards;
-
-                        if (delay > 30 * 1000) {
-                            usleep(30 * 1000);
-                        } else {
-                            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束");
-                            break;
-                        }
+                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束，正常显示");
                     }
+                    break;
                 }
 
                 if (!peekResult) {

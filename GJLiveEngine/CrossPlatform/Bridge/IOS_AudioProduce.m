@@ -161,7 +161,7 @@ GBool enableAudioInEarMonitoring(struct _GJAudioProduceContext *context, GBool e
 #endif
     return GFalse;
 }
-GBool setupMixAudioFile(struct _GJAudioProduceContext *context, const GChar *file, GBool loop) {
+GBool setupMixAudioFile(struct _GJAudioProduceContext *context, const GChar *file, GBool loop,AudioMixFinishCallback callback, GHandle userData) {
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
     NSURL *         url     = [NSURL fileURLWithPath:[NSString stringWithUTF8String:file]];
