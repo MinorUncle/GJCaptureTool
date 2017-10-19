@@ -18,7 +18,7 @@
 @protocol GJLivePushDelegate <NSObject>
 @required
 
-
+-(void)livePush:(GJLivePush*)livePush mixFileFinish:(NSString*)path;
 -(void)livePush:(GJLivePush*)livePush updatePushStatus:(GJPushSessionStatus*)status;
 -(void)livePush:(GJLivePush*)livePush closeConnent:(GJPushSessionInfo*)info resion:(GJConnentCloceReason)reason;
 -(void)livePush:(GJLivePush*)livePush connentSuccessWithElapsed:(GLong)elapsed;

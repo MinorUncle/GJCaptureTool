@@ -165,9 +165,14 @@ GBool setupMixAudioFile(struct _GJAudioProduceContext *context, const GChar *fil
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
     NSURL *         url     = [NSURL fileURLWithPath:[NSString stringWithUTF8String:file]];
-    return [manager setMixFile:url];
+    GBool result = [manager setMixFile:url finish:^(GBool finish) {
+        if (callback) {
+            callback(userData,url.path.UTF8String,GNULL);
+        }
+    }];
+    return result;
 #endif
-    return GTrue;
+    return GFalse;
 }
 GBool startMixAudioFileAtTime(struct _GJAudioProduceContext *context, GUInt64 time) {
 #ifdef AMAZING_AUDIO_ENGINE

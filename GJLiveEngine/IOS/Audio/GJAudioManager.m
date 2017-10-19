@@ -188,7 +188,7 @@
     }
 #endif
 }
-- (BOOL)setMixFile:(NSURL *)file {
+- (BOOL)setMixFile:(NSURL*)file finish:(MixFinishBlock)finishBlock {
     if (_mixfilePlay != nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
         [_audioController removeChannels:@[ _mixfilePlay ]];
@@ -202,8 +202,13 @@
     } else {
         __weak AEAudioController *wkAE = _audioController;
         __weak id<AEAudioReceiver> wkM = _audioMixer;
+        __weak GJAudioManager* wkSelf = self;
         _mixfilePlay.completionBlock   = ^{
             [wkAE removeOutputReceiver:wkM];
+            if (finishBlock) {
+                finishBlock(GTrue);
+            }
+            wkSelf.mixfilePlay.completionBlock = nil;
         };
         [_audioController addChannels:@[ _mixfilePlay ]];
         [_audioController addOutputReceiver:_audioMixer];

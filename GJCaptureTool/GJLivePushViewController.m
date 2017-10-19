@@ -764,6 +764,10 @@ static char* url = "rtmp://10.0.1.65/live/room";
         NSLog(@"recode success");
     }
 }
+-(void)livePush:(GJLivePush *)livePush mixFileFinish:(NSString *)path{
+    
+    _audioMixBtn.selected = NO;
+}
 
 -(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushSessionStatus *)status{
     _sendRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f KB/s A:%0.2f KB/s",status->videoStatus.bitrate/1024.0,status->audioStatus.bitrate/1024.0];

@@ -28,6 +28,7 @@ static GBool     requestDestoryServer;
 static GVoid _GJLivePush_AppendQualityWithStep(GJLivePushContext *context, GLong step, GInt32 maxLimit);
 static GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext *context, GLong step, GInt32 minLimit);
 
+
 static GVoid _recodeCompleteCallback(GHandle userData, const GChar *filePath, GHandle error) {
     GJLivePushContext *context = userData;
     pthread_mutex_lock(&context->lock);
@@ -749,10 +750,10 @@ GBool GJLivePush_SetVideoMute(GJLivePushContext *context, GBool mute) {
     return GTrue;
 }
 
-GBool GJLivePush_StartMixFile(GJLivePushContext *context, const GChar *fileName) {
+GBool GJLivePush_StartMixFile(GJLivePushContext *context, const GChar *fileName,AudioMixFinishCallback finishCallback) {
     
     pthread_mutex_lock(&context->lock);
-    GBool result = context->audioProducer->setupMixAudioFile(context->audioProducer, fileName, GFalse);
+    GBool result = context->audioProducer->setupMixAudioFile(context->audioProducer, fileName, GFalse,finishCallback,context->userData);
     if (result != GFalse) {
         result = context->audioProducer->startMixAudioFileAtTime(context->audioProducer, 0);
     }

@@ -30,6 +30,8 @@
 {
     GJRetainBufferPool* _bufferPool;
 }
+
+typedef void(^MixFinishBlock)(GBool finish);
 @property (nonatomic, assign)BOOL mixToSream;
 @property (nonatomic, retain)AEPlaythroughChannel* playthrough;
 @property (nonatomic, retain)AEAudioFilePlayer* mixfilePlay;
@@ -51,7 +53,7 @@
 -(instancetype)initWithFormat:(AudioStreamBasicDescription )audioFormat;
 -(void)stopMix;
 -(BOOL)mixFilePlayAtTime:(uint64_t)time;
--(BOOL)setMixFile:(NSURL*)file;
+-(BOOL)setMixFile:(NSURL*)file finish:(MixFinishBlock)finishBlock ;
 -(void)setMixToSream:(BOOL)mixToSream;
 -(BOOL)enableAudioInEarMonitoring:(BOOL)enable;
 -(BOOL)enableReverb:(BOOL)enable;

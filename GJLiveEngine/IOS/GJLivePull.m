@@ -13,7 +13,7 @@
 #import "GJLog.h"
 #import "GJPCMDecodeFromAAC.h"
 #import <CoreImage/CoreImage.h>
-
+#import <AVFoundation/AVFoundation.h>
 @interface GJLivePull () {
     NSThread *          _playThread;
     GJPullSessionStatus _pullSessionStatus;
@@ -125,6 +125,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
         memset(&_videoTraffic, 0, sizeof(_videoTraffic));
         memset(&_audioTraffic, 0, sizeof(_audioTraffic));
         memset(&_pullSessionStatus, 0, sizeof(_pullSessionStatus));
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(audioSessionInterrupt:) name:AVAudioSessionInterruptionNotification object:nil];
         return GJLivePull_StartPull(_pullContext, url.UTF8String);
     }
 }
@@ -155,5 +156,9 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
     if (_pullContext) {
         GJLivePull_Dealloc(&(_pullContext));
     }
+}
+- (void)audioSessionInterrupt:(NSNotification *)notification{
+    
+    
 }
 @end

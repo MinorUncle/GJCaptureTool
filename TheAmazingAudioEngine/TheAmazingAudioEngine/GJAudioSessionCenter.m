@@ -111,9 +111,9 @@ static  GJAudioSessionCenter* _gjAudioSession;
     if (_speakerRequest.count>0) {
         options |= AVAudioSessionCategoryOptionDefaultToSpeaker;
     }
-    if (_playeRequest > 0) {
+    if (_playeRequest.count > 0) {
         
-        if (_recodeRequest > 0) {
+        if (_recodeRequest.count > 0) {
             category = AVAudioSessionCategoryPlayAndRecord;
         }else{
             category = AVAudioSessionCategoryPlayback;

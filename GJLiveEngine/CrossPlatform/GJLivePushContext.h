@@ -101,7 +101,7 @@ GHandle GJLivePush_GetDisplayView(GJLivePushContext *context);
 GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext *context, GBool enable);
 GBool GJLivePush_EnableReverb(GJLivePushContext *context, GBool enable);
 GVoid GJLivePush_StopAudioMix(GJLivePushContext *context);
-GBool GJLivePush_StartMixFile(GJLivePushContext *context, const GChar *fileName);
+GBool GJLivePush_StartMixFile(GJLivePushContext *context, const GChar *fileName,AudioMixFinishCallback finishCallback);
 GBool GJLivePush_SetMixVolume(GJLivePushContext *context, GFloat32 volume);
 GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext *context, GBool should);
 GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat32 volume);

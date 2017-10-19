@@ -38,6 +38,13 @@
 
 @implementation GJLivePush
 @synthesize     previewView = _previewView;
+
+static GVoid audioMixFinishCallback(GHandle userData,const GChar* filePath, GHandle error){
+    GJLivePush* self = (__bridge GJLivePush *)(userData);
+    if ([self.delegate respondsToSelector:@selector(livePush:mixFileFinish:)]) {
+        [self.delegate livePush:self mixFileFinish:[NSString stringWithUTF8String:filePath]];
+    }
+}
 static GVoid livePushCallback(GHandle               userDate,
                               GJLivePushMessageType messageType,
                               GHandle               param) {
@@ -180,7 +187,7 @@ static GVoid livePushCallback(GHandle               userDate,
 }
 
 - (BOOL)startAudioMixWithFile:(NSURL *)fileUrl {
-    return GJLivePush_StartMixFile(_livePush, fileUrl.path.UTF8String);
+    return GJLivePush_StartMixFile(_livePush, fileUrl.path.UTF8String,audioMixFinishCallback);
 }
 
 - (void)stopAudioMix {
@@ -295,7 +302,7 @@ static GStickerParm stickerUpdateCallback(const GHandle userDate, GLong index,
     parm.rotation = attribure.rotate;
     return GJLivePush_StartSticker(_livePush, CFBridgingRetain(images), parm,
                                    (GInt32) fps, stickerUpdateCallback,
-                                   CFBridgingRetain(updateBlock));
+                                   (GVoid*)CFBridgingRetain(updateBlock));
 }
 
 - (void)chanceSticker {
