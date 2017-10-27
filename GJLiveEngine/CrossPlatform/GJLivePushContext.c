@@ -950,8 +950,16 @@ GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps,
             format.mFramePerPacket   = 1;
             GJ_RecodeContextCreate(&context->recoder);
             context->recoder->setup(context->recoder, fileUrl, _recodeCompleteCallback, context);
+            
+            GJVideoFormat vFormat = {0};
+            vFormat.mFps = fps;
+            
             context->recoder->addAudioSource(context->recoder, format);
-            result = context->recoder->startRecode(context->recoder, view, fps);
+            context->recoder->addVideoSource(context->recoder,vFormat,view);
+            result = context->recoder->startRecode(context->recoder);
+            if (!result) {
+                GJLivePush_StopRecode(context);
+            }
         }
     } while (0);
     pthread_mutex_unlock(&context->lock);

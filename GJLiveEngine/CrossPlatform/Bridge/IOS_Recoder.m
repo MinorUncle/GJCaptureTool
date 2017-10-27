@@ -35,9 +35,10 @@ static GVoid unSetup(struct _GJRecodeContext *context) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "重复unSetup recoder");
     }
 }
-static GBool addVideoSource(struct _GJRecodeContext *context, GJPixelFormat format) {
+static GBool addVideoSource(struct _GJRecodeContext *context, GJVideoFormat format, GView targetView) {
+    GJScreenRecorder *          recoder     = (__bridge GJScreenRecorder *) (context->obaque);
 
-    return GTrue;
+    return [recoder addVideoSourceWithView:(__bridge UIView *)(targetView) fps:format.mFps];
 }
 static GBool addAudioSource(struct _GJRecodeContext *context, GJAudioFormat format) {
 
@@ -51,7 +52,7 @@ static GBool addAudioSource(struct _GJRecodeContext *context, GJAudioFormat form
     audioFormat.mBytesPerPacket             = audioFormat.mBytesPerFrame * audioFormat.mFramesPerPacket;
     audioFormat.mFormatFlags                = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
     audioFormat.mFormatID                   = kAudioFormatLinearPCM;
-    return [recoder setExternalAudioSourceWithFormat:audioFormat];
+    return [recoder addAudioSourceWithFormat:audioFormat];
 }
 static GVoid sendVideoSourcePacket(struct _GJRecodeContext *context, R_GJPixelFrame *packet) {
 }
@@ -60,7 +61,7 @@ static GVoid sendAudioSourcePacket(struct _GJRecodeContext *context, R_GJPCMFram
     GJScreenRecorder *recoder = (__bridge GJScreenRecorder *) (context->obaque);
     [recoder addCurrentAudioSource:R_BufferStart(&packet->retain) size:R_BufferSize(&packet->retain)];
 }
-static GBool startRecode(struct _GJRecodeContext *context, GView view, GInt32 fps) {
+static GBool startRecode(struct _GJRecodeContext *context) {
 
     GJScreenRecorder *recoder = (__bridge GJScreenRecorder *) (context->obaque);
     if (recoder.status != screenRecorderStopStatus) {
@@ -68,7 +69,7 @@ static GBool startRecode(struct _GJRecodeContext *context, GView view, GInt32 fp
         return GFalse;
     }
 
-    return [recoder startWithView:(__bridge UIView *) (view) fps:fps];
+    return [recoder startRecode];
 }
 static GVoid stopRecode(struct _GJRecodeContext *context) {
 

@@ -24,11 +24,11 @@ typedef struct _GJRecodeContext{
     GHandle obaque;
     GBool   (*setup)                  (struct _GJRecodeContext* context, const GChar* fileUrl, RecodeCompleteCallback callback, GHandle userHandle);
     GVoid   (*unSetup)                (struct _GJRecodeContext* context);
-    GBool   (*addVideoSource)         (struct _GJRecodeContext* context, GJPixelFormat format);
+    GBool   (*addVideoSource)         (struct _GJRecodeContext* context, GJVideoFormat format, GView targetView);
     GBool   (*addAudioSource)         (struct _GJRecodeContext* context, GJAudioFormat format);
     GVoid   (*sendVideoSourcePacket)  (struct _GJRecodeContext* context, R_GJPixelFrame* packet);
     GVoid   (*sendAudioSourcePacket)  (struct _GJRecodeContext* context, R_GJPCMFrame* packet);
-    GBool   (*startRecode)            (struct _GJRecodeContext* context, GView view, GInt32 fps);
+    GBool   (*startRecode)            (struct _GJRecodeContext* context);
     GVoid   (*stopRecode)             (struct _GJRecodeContext* context);
 }GJRecodeContext;
 

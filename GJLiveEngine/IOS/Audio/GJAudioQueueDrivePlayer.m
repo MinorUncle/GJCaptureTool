@@ -52,7 +52,7 @@
             format.mFramesPerPacket  = 1;          // 7
             format.mBitsPerChannel   = 16;         // 5
             format.mBytesPerFrame    = format.mChannelsPerFrame * format.mBitsPerChannel / 8;
-            format.mFramesPerPacket  = format.mBytesPerFrame * format.mFramesPerPacket;
+            format.mBytesPerPacket  = format.mBytesPerFrame * format.mFramesPerPacket;
             format.mFormatFlags      = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
             maxBufferSize            = format.mBytesPerFrame * 1024;
             break;

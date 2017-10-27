@@ -911,7 +911,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = YES;
 				DSTROOT = /tmp/TheAmazingAudioEngine.dst;
-				ENABLE_BITCODE = NO;
+				ENABLE_BITCODE = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "TheAmazingAudioEngine/TheAmazingAudioEngine-Prefix.pch";
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;
@@ -953,7 +953,7 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = YES;
 				DSTROOT = /tmp/TheAmazingAudioEngine.dst;
-				ENABLE_BITCODE = NO;
+				ENABLE_BITCODE = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "TheAmazingAudioEngine/TheAmazingAudioEngine-Prefix.pch";
 				GCC_WARN_INHIBIT_ALL_WARNINGS = YES;

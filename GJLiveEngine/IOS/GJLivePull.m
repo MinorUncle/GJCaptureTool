@@ -19,6 +19,7 @@
     GJPullSessionStatus _pullSessionStatus;
     GJLivePullContext * _pullContext;
     NSString *          _pullUrl;
+    BOOL                _shouldResume;
 }
 @property (strong, nonatomic) GJH264Decoder *     videoDecoder;
 @property (strong, nonatomic) GJPCMDecodeFromAAC *audioDecoder;
@@ -158,7 +159,20 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
     }
 }
 - (void)audioSessionInterrupt:(NSNotification *)notification{
-    
+    int reason = [[[notification userInfo] valueForKey:AVAudioSessionInterruptionTypeKey] intValue];
+    switch (reason) {
+        case AVAudioSessionInterruptionTypeBegan: {
+            if (_timer != nil) {
+                _shouldResume = YES;
+                [self stopStreamPull];
+            }
+            break;
+        }
+        case AVAudioSessionInterruptionTypeEnded: {
+            
+            break;
+        }
+    }
     
 }
 @end

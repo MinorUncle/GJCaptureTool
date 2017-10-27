@@ -92,8 +92,10 @@ static GVoid livePushCallback(GHandle               userDate,
             break;
         }
         case GJLivePush_recodeComplete: {
-            NSError *error = (__bridge NSError *) (param);
-            [livePush.delegate livePush:livePush UIRecodeFinish:error];
+            NSError *error = [((__bridge NSError *) (param)) copy];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [livePush.delegate livePush:livePush UIRecodeFinish:error];
+            });
             break;
         }
         default:

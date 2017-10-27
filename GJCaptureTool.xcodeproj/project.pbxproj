@@ -416,6 +416,7 @@
 		6A34887F1F45468F008223AA /* GJImagePixelImageInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImagePixelImageInput.h; sourceTree = "<group>"; };
 		6A3488801F45468F008223AA /* GJImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImageView.h; sourceTree = "<group>"; };
 		6A3488811F45468F008223AA /* GJImageYUVDataInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImageYUVDataInput.h; sourceTree = "<group>"; };
+		6A3955401FA33DE4002931D9 /* GJLiveEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJLiveEngine.h; sourceTree = "<group>"; };
 		6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = TheAmazingAudioEngine.xcodeproj; path = TheAmazingAudioEngine/TheAmazingAudioEngine.xcodeproj; sourceTree = "<group>"; };
 		6A40DFBB1EE8DB630047E0F0 /* AEAudioBufferManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioBufferManager.h; sourceTree = "<group>"; };
 		6A40DFBC1EE8DB630047E0F0 /* AEAudioController+Audiobus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AEAudioController+Audiobus.h"; sourceTree = "<group>"; };
@@ -1346,6 +1347,7 @@
 				AE70A4CB1ECB4DFE0009E49A /* GJLiveDefine+internal.c */,
 				AE70A4CC1ECB4DFE0009E49A /* GJLiveDefine+internal.h */,
 				AE70A4CD1ECB4DFE0009E49A /* GJLiveDefine.h */,
+				6A3955401FA33DE4002931D9 /* GJLiveEngine.h */,
 			);
 			name = LiveEngine;
 			path = CrossPlatform;
@@ -2138,6 +2140,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
 				DEVELOPMENT_TEAM = K7MDP8Y272;
 				DYLIB_COMPATIBILITY_VERSION = 1;

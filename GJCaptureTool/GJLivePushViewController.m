@@ -22,6 +22,7 @@ static char* url = "rtmp://10.0.1.65/live/room";
 //static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
 //
 
+
 #define PULL_COUNT 2
 @interface PullShow : NSObject
 {
@@ -136,6 +137,7 @@ static char* url = "rtmp://10.0.1.65/live/room";
 @interface GJLivePushViewController ()<GJLivePushDelegate,GJLivePullDelegate>
 {
     GJLivePush* _livePush;
+    NSDictionary* _videoSize;
 
 }
 @property (strong, nonatomic) UIView *topView;
@@ -154,6 +156,7 @@ static char* url = "rtmp://10.0.1.65/live/room";
 @property (strong, nonatomic) UIButton *messureModel;
 @property (strong, nonatomic) UIButton *sticker;
 @property (strong, nonatomic) UIButton *exitBtn;
+@property (strong, nonatomic) UIButton *sizeChangeBtn;
 
 
 
@@ -183,6 +186,10 @@ static char* url = "rtmp://10.0.1.65/live/room";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    _videoSize = @{@"360*640":[NSValue valueWithCGSize:CGSizeMake(360, 640)],
+                   @"480*640":[NSValue valueWithCGSize:CGSizeMake(480, 640)],
+                   @"720*1280":[NSValue valueWithCGSize:CGSizeMake(720, 1280)]
+                   };
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
 //    GJ_LogSetLevel(GJ_LOGINFO);
 //    RTMP_LogSetLevel(RTMP_LOGERROR);
@@ -339,6 +346,14 @@ static char* url = "rtmp://10.0.1.65/live/room";
     _sticker.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_sticker];
     
+    _sizeChangeBtn = [[UIButton alloc]init];
+    _sizeChangeBtn.backgroundColor = [UIColor clearColor];
+    [_sizeChangeBtn setTitle:_videoSize.allKeys[0] forState:UIControlStateNormal];
+    [_sizeChangeBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_sizeChangeBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _sizeChangeBtn.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:_sizeChangeBtn];
+    
     _inputGainLab = [[UILabel alloc]init];
     _inputGainLab.text = @"采集音量";
     _inputGainLab.textColor = [UIColor whiteColor];
@@ -484,6 +499,9 @@ static char* url = "rtmp://10.0.1.65/live/room";
     _sticker.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
+    _sizeChangeBtn.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
     rect.size.width *= 0.4;
     _inputGainLab.frame = rect;
     
@@ -576,7 +594,18 @@ static char* url = "rtmp://10.0.1.65/live/room";
 -(void)takeSelect:(UIButton*)btn{
 
     btn.selected = !btn.selected;//rtmp://10.0.1.126/live/room
-    if (btn == _exitBtn){
+    if (btn == _sizeChangeBtn) {
+        btn.selected = NO;
+        btn.tag++;
+        NSInteger dex = btn.tag % _videoSize.allKeys.count;
+        [btn setTitle:_videoSize.allKeys[dex] forState:UIControlStateNormal];
+        GJPushConfig config = _livePush.pushConfig;
+        CGSize size = [_videoSize[_videoSize.allKeys[dex]] CGSizeValue];
+        config.mPushSize.height = size.height;
+        config.mPushSize.width = size.width;
+        [_livePush setPushConfig:config];
+
+    }else if (btn == _exitBtn){
         for (PullShow* pull in _pulls) {
             [pull.pull stopStreamPull];
         }
@@ -641,12 +670,15 @@ static char* url = "rtmp://10.0.1.65/live/room";
             
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
             path = [path stringByAppendingPathComponent:@"test.mp4"];
+            _sizeChangeBtn.enabled = NO;
             if(![_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]]){
                 [_livePush stopStreamPush];
                 btn.selected = NO;
+                _sizeChangeBtn.enabled = YES;
             }
         }else{
              [_livePush stopStreamPush];
+            _sizeChangeBtn.enabled = YES;
         }
     }else if(btn == _audioMixBtn){
         if (btn.selected) {
