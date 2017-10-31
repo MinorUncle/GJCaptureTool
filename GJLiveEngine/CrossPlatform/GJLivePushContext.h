@@ -73,6 +73,7 @@ typedef struct _GJLivePushContext {
     GInt32  netSpeedCheckInterval; //最近netSpeedCheckInterval次rateCheck网速为平均网速
     GInt32 *netSpeedUnit;
     GInt32  collectCount; //已经收集的个数
+    GInt32  favorableCount;//连续良好网速的个数
     GInt32  captureVideoCount;
     GInt32  dropVideoCount;
 

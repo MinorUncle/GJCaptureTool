@@ -75,9 +75,7 @@ typedef struct SyncControl {
     GJNetShakeInfo netShake;
     GFloat32       speed;
 
-#ifdef NETWORK_DELAY
-    GLong networkDelay;
-#endif
+
 } GJSyncControl;
 typedef GVoid (*GJLivePlayCallback)(GHandle userDate, GJPlayMessage message, GHandle param);
 

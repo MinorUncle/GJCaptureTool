@@ -381,7 +381,7 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize, CGSize destSize) {
         return;
     }
     _outputOrientation             = outputOrientation;
-    _camera.outputImageOrientation = outputOrientation;
+    self.camera.outputImageOrientation = outputOrientation;
     [self updateCropSize];
 }
 
@@ -392,12 +392,12 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize, CGSize destSize) {
 
 - (void)setFrameRate:(int)frameRate {
     _frameRate        = frameRate;
-    _camera.frameRate = frameRate;
+    self.camera.frameRate = frameRate;
 }
 
 - (void)setCameraPosition:(AVCaptureDevicePosition)cameraPosition {
     _cameraPosition = cameraPosition;
-    if (_camera.cameraPosition != _cameraPosition) {
+    if (self.camera.cameraPosition != _cameraPosition) {
         [_camera rotateCamera];
     }
 }

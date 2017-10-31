@@ -246,7 +246,7 @@ static const int mpeg4audio_sample_rates[16] = {
                 GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioConverterFillComplexBufferError：%c%c%c%c CODE:%d", codeChar[3], codeChar[2], codeChar[1], codeChar[0], status);
             } else {
                 _running = GFalse;
-                GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "停止导致解码错误:%p", self);
+                GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "停止解码:%p", self);
             }
             break;
         }

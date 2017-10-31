@@ -11,9 +11,10 @@
 #include "GJStreamPull.h"
 #include "avformat.h"
 #include <stdio.h>
+#include "GJUtil.h"
 struct _GJStreamPull {
     AVFormatContext *formatContext;
-    char             pullUrl[MAX_URL_LENGTH];
+    GChar*             pullUrl[MAX_URL_LENGTH];
 #if MENORY_CHECK
     GJRetainBufferPool *memoryCachePool;
 #endif
@@ -29,8 +30,15 @@ struct _GJStreamPull {
     GHandle messageCallbackParm;
     GHandle dataCallbackParm;
 
-    int stopRequest;
-    int releaseRequest;
+    GBool stopRequest;
+    GBool releaseRequest;
+    
+    GBool hasVideoKey;
+    //保证有第一个关键帧才回调数据
+#ifdef NETWORK_DELAY
+    GInt32 networkDelay;
+    GInt32 delayCount;
+#endif
 };
 GVoid GJStreamPull_Delloc(GJStreamPull *pull);
 
@@ -50,7 +58,7 @@ static GHandle pullRunloop(GHandle parm) {
     GJStreamPull *         pull    = parm;
     kStreamPullMessageType message = 0;
 
-    GInt32 result = avformat_open_input(&pull->formatContext, pull->pullUrl, GNULL, GNULL);
+    GInt32 result = avformat_open_input(&pull->formatContext, (const GChar*)pull->pullUrl, GNULL, GNULL);
     if (result < 0) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avformat_open_input error");
         message = kStreamPullMessageType_connectError;
@@ -92,8 +100,9 @@ static GHandle pullRunloop(GHandle parm) {
                     avccPacket->type = GJMediaType_Video;
                     avccPacket->flag = GJPacketFlag_KEY;
 
-                    avccPacket->dataOffset = 0;
-                    avccPacket->dataSize   = R_BufferSize(&avccPacket->retain);
+                    avccPacket->dataOffset = avccPacket->dataSize = 0;
+                    avccPacket->extendDataOffset = 0;
+                    avccPacket->extendDataSize   = 8 + spsSize + ppsSize;
                     GUInt8 *packetData     = R_BufferStart(&avccPacket->retain) + avccPacket->dataOffset;
                     GInt32  spsNsize       = htonl(spsSize);
                     GInt32  ppsNsize       = htonl(ppsSize);
@@ -101,7 +110,12 @@ static GHandle pullRunloop(GHandle parm) {
                     memcpy(packetData + 4, sps, spsSize);
                     memcpy(packetData + 4 + spsSize, &ppsNsize, 4);
                     memcpy(packetData + 8 + spsSize, pps, ppsSize);
-                    pull->dataCallback(pull, avccPacket, pull->dataCallbackParm);
+                    R_BufferSetSize(&avccPacket->retain, 8 + spsSize + ppsSize);
+                    pthread_mutex_lock(&pull->mutex);
+                    if (!pull->releaseRequest) {
+                        pull->dataCallback(pull, avccPacket, pull->dataCallbackParm);
+                    }
+                    pthread_mutex_unlock(&pull->mutex);
                     R_BufferUnRetain(&avccPacket->retain);
                 }
             }
@@ -126,8 +140,8 @@ static GHandle pullRunloop(GHandle parm) {
             GUInt8 chanCfg = (aacc[1] >> 3) & 0x0f;
 
             int adtsLength         = 7;
-            aaccPacket->dataOffset = 0;
-            aaccPacket->dataSize   = adtsLength;
+            aaccPacket->dataOffset = aaccPacket->dataSize = aaccPacket->extendDataOffset = 0;
+            aaccPacket->extendDataSize   = adtsLength;
             GUInt8 *adts           = R_BufferStart(&aaccPacket->retain);
             GInt32  fullLength     = adtsLength + 0;
             adts[0]                = (char) 0xFF;                                                 // 11111111  	= syncword
@@ -138,7 +152,12 @@ static GHandle pullRunloop(GHandle parm) {
             adts[5]                = (char) (((fullLength & 7) << 5) + 0x1F);
             adts[6]                = (char) 0xFC;
 
-            pull->dataCallback(pull, aaccPacket, pull->dataCallbackParm);
+            pthread_mutex_lock(&pull->mutex);
+            if (!pull->releaseRequest) {
+                pull->dataCallback(pull, aaccPacket, pull->dataCallbackParm);
+            }
+            pthread_mutex_unlock(&pull->mutex);
+
             R_BufferUnRetain(&aaccPacket->retain);
         }
     }
@@ -150,6 +169,11 @@ static GHandle pullRunloop(GHandle parm) {
             goto END;
         }
 
+#ifdef NETWORK_DELAY
+        pull->networkDelay += (GInt32)(GJ_Gettime()/1000 - pkt.dts);
+        pull->delayCount ++;
+#endif
+        
         if (pkt.stream_index == vsIndex) {
 #if MENORY_CHECK
             R_GJPacket *h264Packet = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
@@ -166,10 +190,18 @@ static GHandle pullRunloop(GHandle parm) {
             h264Packet->pts      = pkt.pts;
             h264Packet->dts      = pkt.dts;
             h264Packet->type     = GJMediaType_Video;
+            h264Packet->flag = ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY);
+            if(!pull->hasVideoKey && ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY)){
+                pull->hasVideoKey = GTrue;
+            }
+            h264Packet->extendDataSize = h264Packet->extendDataOffset = 0;
             //            printf("video pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
-            pull->dataCallback(pull, h264Packet, pull->dataCallbackParm);
+            pthread_mutex_lock(&pull->mutex);
+            if (!pull->releaseRequest && pull->hasVideoKey){
+                pull->dataCallback(pull, h264Packet, pull->dataCallbackParm);
+            }
+            pthread_mutex_unlock(&pull->mutex);
             R_BufferUnRetain(&h264Packet->retain);
-
         } else if (pkt.stream_index == asIndex) {
 //            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
 #if MENORY_CHECK
@@ -186,11 +218,16 @@ static GHandle pullRunloop(GHandle parm) {
             aacPacket->dataSize = pkt.size;
             aacPacket->pts      = pkt.pts;
             aacPacket->dts      = pkt.dts;
+            aacPacket->extendDataOffset = aacPacket->extendDataSize = 0;
             aacPacket->type     = GJMediaType_Audio;
             //            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
             //            printf("receive packet pts:%lld size:%d  last data:%d\n",aacPacket->pts,aacPacket->dataSize,(aacPacket->retain.data + aacPacket->dataOffset + aacPacket->dataSize -1)[0]);
+            pthread_mutex_lock(&pull->mutex);
+            if (!pull->releaseRequest && pull->hasVideoKey) {
+                pull->dataCallback(pull, aacPacket, pull->dataCallbackParm);
+            }
+            pthread_mutex_unlock(&pull->mutex);
 
-            pull->dataCallback(pull, aacPacket, pull->dataCallbackParm);
             R_BufferUnRetain(&aacPacket->retain);
         }
 
@@ -301,5 +338,13 @@ GBool GJStreamPull_StartConnect(GJStreamPull *pull, StreamPullDataCallback dataC
 
     return GTrue;
 }
+#ifdef NETWORK_DELAY
+GInt32 GJStreamPull_GetNetWorkDelay(GJStreamPull *pull){
+    GInt32 delay = pull->networkDelay/pull->delayCount;
+    pull->delayCount = 0;
+    pull->networkDelay = 0;
+    return delay;
+}
+#endif
 GJTrafficUnit GJStreamPull_GetVideoPullInfo(GJStreamPull *pull);
 GJTrafficUnit GJStreamPull_GetAudioPullInfo(GJStreamPull *pull);

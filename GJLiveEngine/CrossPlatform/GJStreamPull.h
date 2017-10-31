@@ -37,4 +37,8 @@ GJTrafficUnit GJStreamPull_GetVideoPullInfo(GJStreamPull *pull);
 
 GJTrafficUnit GJStreamPull_GetAudioPullInfo(GJStreamPull *pull);
 
+#ifdef NETWORK_DELAY
+GInt32 GJStreamPull_GetNetWorkDelay(GJStreamPull *pull);
+#endif
+
 #endif /* GJStreamPull_h */

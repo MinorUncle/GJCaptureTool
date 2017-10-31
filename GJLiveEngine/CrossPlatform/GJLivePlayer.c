@@ -17,7 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define GJLivePlay_LOG_SWITCH LOG_ALL
+#define GJLivePlay_LOG_SWITCH GNULL
 
 //#define UIIMAGE_SHOW
 
@@ -439,12 +439,12 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
 
             if (_syncControl->syncType == kTimeSYNCVideo) {
                 
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待视频时间过长 delay:%ld PTS:%ld clock:%ld,重置同步管理", delay, cImageBuf->pts, timeStandards);
+                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待视频时间过长 delay:%ld PTS:%lld clock:%lld,重置同步管理", delay, cImageBuf->pts, timeStandards);
                 resetSyncToStartPts(_syncControl, (GLong) cImageBuf->pts);
                 delay = 0;
             } else {
                 
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待音频时间过长 delay:%ld PTS:%ld clock:%ld，等待下一帧视频做判断处理", delay, cImageBuf->pts, timeStandards);
+                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待音频时间过长 delay:%lld PTS:%lld clock:%lld，等待下一帧视频做判断处理", delay, cImageBuf->pts, timeStandards);
                 R_GJPixelFrame nextBuffer = {0};
                 //会一直等待，知道超时，或者stop or buffering广播，1ms用于执行时间
                 if(queuePeekWaitCopyValue(_playControl->imageQueue, 0, (GHandle) &nextBuffer, sizeof(R_GJPixelFrame), (GUInt32)delay - 1)) {
@@ -467,11 +467,11 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
         } else if (delay < -VIDEO_PTS_PRECISION) {
 
             if (_syncControl->syncType == kTimeSYNCVideo) {
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频落后视频严重，delay：%ld, PTS:%ld clock:%ld，重置同步管理", delay, cImageBuf->pts, timeStandards);
+                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频落后视频严重，delay：%lld, PTS:%lld clock:%lld，重置同步管理", delay, cImageBuf->pts, timeStandards);
                 resetSyncToStartPts(_syncControl, (GLong) cImageBuf->pts);
                 delay = 0;
             } else {
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频落后音频严重，delay：%ld, PTS:%ld clock:%ld，丢视频帧", delay, cImageBuf->pts, timeStandards);
+                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频落后音频严重，delay：%lld, PTS:%lld clock:%lld，丢视频帧", delay, cImageBuf->pts, timeStandards);
                 _syncControl->videoInfo.cPTS                   = (GLong) cImageBuf->pts;
                 _syncControl->videoInfo.trafficStatus.leave.ts = (GLong) cImageBuf->pts;
                 _syncControl->videoInfo.clock                  = GJ_Gettime() / 1000;
@@ -481,7 +481,7 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
 
     DISPLAY:
         if (delay > 1) {
-            GJLOGFREQ("play wait:%d, video pts:%ld", delay, _syncControl->videoInfo.cPTS);
+            GJLOGFREQ("play wait:%lld, video pts:%lld", delay, _syncControl->videoInfo.cPTS);
             usleep((GUInt32) delay * 1000);
             if (_playControl->status == kPlayStatusStop) {
                 //减少退出时的时间。
@@ -681,10 +681,7 @@ RETRY:
     if (queuePush(player->playControl.imageQueue, videoFrame, 0)) {
         player->syncControl.videoInfo.trafficStatus.enter.ts = (GLong) videoFrame->pts;
         player->syncControl.videoInfo.trafficStatus.enter.count++;
-#ifdef NETWORK_DELAY
-        GUInt32 date                     = [[NSDate date] timeIntervalSince1970] * 1000;
-        player->syncControl.networkDelay = date - player->syncControl.videoInfo.trafficStatus.enter.ts;
-#endif
+
         GJLivePlay_CheckWater(player);
         result = GTrue;
 
@@ -714,7 +711,7 @@ RETRY:
 }
 GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
 
-    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "收到视频 PTS:%lld\n",videoFrame->pts);
+    GJLOG(LOG_ALL, GJ_LOGALL, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts,videoFrame->dts);
 
     if (videoFrame->dts < player->syncControl.videoInfo.inDtsSeries) {
 
@@ -772,7 +769,7 @@ GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) 
 }
 GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
 
-    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "收到音频 PTS:%lld\n",audioFrame->pts);
+    GJLOG(LOG_ALL, GJ_LOGALL, "收到音频 PTS:%lld DTS:%lld\n",audioFrame->pts,audioFrame->dts);
     GJPlayControl *_playControl = &(player->playControl);
     GJSyncControl *_syncControl = &(player->syncControl);
     GBool          result       = GTrue;
@@ -849,10 +846,6 @@ RETRY:
         _syncControl->audioInfo.trafficStatus.enter.count++;
         _syncControl->audioInfo.trafficStatus.enter.byte += R_BufferSize(&audioFrame->retain);
 
-#ifdef NETWORK_DELAY
-        GUInt32 date              = [[NSDate date] timeIntervalSince1970] * 1000;
-        _syncControl.networkDelay = date - _syncControl.audioInfo.trafficStatus.enter.ts;
-#endif
         GJLivePlay_CheckWater(player);
         result = GTrue;
 

@@ -92,6 +92,9 @@ typedef struct GJPacket{
     GInt64 dts;
     GInt64 dataOffset;
     GInt32 dataSize;
+    GInt64 extendDataOffset;
+    //h264表示sps，pps等,aac表示aac头
+    GInt32 extendDataSize;
     GJPacketFlag  flag;
 }R_GJPacket;
 

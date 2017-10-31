@@ -56,18 +56,18 @@ GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
     GBool result = GTrue;
     do {
         pthread_mutex_lock(&context->lock);
-        if (context->videoPull != GNULL) {
+        if (context->streamPull != GNULL) {
             GJLOG(context, GJ_LOGERROR, "请先停止上一个流");
         } else {
             context->fristAudioPullClock = context->fristVideoPullClock = context->connentClock = context->fristVideoDecodeClock = G_TIME_INVALID;
             context->audioUnDecodeByte = context->videoUnDecodeByte = 0;
             context->audioTraffic = context->videoTraffic = (GJTrafficStatus){0};
 
-            if (!GJStreamPull_Create(&context->videoPull, pullMessageCallback, context)) {
+            if (!GJStreamPull_Create(&context->streamPull, pullMessageCallback, context)) {
                 result = GFalse;
                 break;
             };
-            if (!GJStreamPull_StartConnect(context->videoPull, pullDataCallback, context, (const GChar *) url)) {
+            if (!GJStreamPull_StartConnect(context->streamPull, pullDataCallback, context, (const GChar *) url)) {
                 result = GFalse;
                 break;
             };
@@ -83,9 +83,9 @@ GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
 }
 GVoid GJLivePull_StopPull(GJLivePullContext *context) {
     pthread_mutex_lock(&context->lock);
-    if (context->videoPull) {
-        GJStreamPull_CloseAndRelease(context->videoPull);
-        context->videoPull = GNULL;
+    if (context->streamPull) {
+        GJStreamPull_CloseAndRelease(context->streamPull);
+        context->streamPull = GNULL;
     } else {
         GJLOG(context, GJ_LOGWARNING, "重复停止拉流");
     }
@@ -103,6 +103,13 @@ GJTrafficStatus GJLivePull_GetAudioTrafficStatus(GJLivePullContext *context) {
     status.enter.byte      = context->audioUnDecodeByte;
     return status;
 }
+
+#ifdef NETWORK_DELAY
+GInt32 GJLivePull_GetNetWorkDelay(GJLivePullContext *context){
+    
+    return GJStreamPull_GetNetWorkDelay(context->streamPull);
+}
+#endif
 
 GHandle GJLivePull_GetDisplayView(GJLivePullContext *context) {
     return GJLivePlay_GetVideoDisplayView(context->player);
@@ -143,7 +150,7 @@ static GVoid livePlayCallback(GHandle userDate, GJPlayMessage message, GHandle p
 }
 static GVoid pullMessageCallback(GJStreamPull *pull, kStreamPullMessageType messageType, GHandle rtmpPullParm, GHandle messageParm) {
     GJLivePullContext *livePull = rtmpPullParm;
-    if (pull != livePull->videoPull) {
+    if (pull != livePull->streamPull) {
         return;
     }
     switch (messageType) {
@@ -181,9 +188,10 @@ static const GInt32 mpeg4audio_sample_rates[16] = {
 
 void pullDataCallback(GJStreamPull *pull, R_GJPacket *packet, void *parm) {
     GJLivePullContext *livePull = parm;
-    if (pull != livePull->videoPull) {
+    if (pull != livePull->streamPull) {
         return;
     }
+    
     if (packet->type == GJMediaType_Video) {
 
         livePull->videoUnDecodeByte += R_BufferSize(&packet->retain);
@@ -192,9 +200,9 @@ void pullDataCallback(GJStreamPull *pull, R_GJPacket *packet, void *parm) {
 
         livePull->audioUnDecodeByte += R_BufferSize(&packet->retain);
         if (livePull->fristAudioPullClock == G_TIME_INVALID) {
-            if (packet->dataSize > 0 && packet->flag == GJPacketFlag_KEY) {
+            if (packet->extendDataSize > 0 && packet->flag == GJPacketFlag_KEY) {
                 livePull->fristAudioPullClock = GJ_Gettime() / 1000.0;
-                uint8_t *adts                 = packet->dataOffset + R_BufferStart(&packet->retain);
+                uint8_t *adts                 = packet->extendDataOffset + R_BufferStart(&packet->retain);
                 uint8_t  sampleIndex          = adts[2] << 2;
                 sampleIndex                   = sampleIndex >> 4;
                 int     sampleRate            = mpeg4audio_sample_rates[sampleIndex];
@@ -227,7 +235,7 @@ void pullDataCallback(GJStreamPull *pull, R_GJPacket *packet, void *parm) {
                 //            destformat.mFramesPerPacket = destformat.mBytesPerFrame * destformat.mFramesPerPacket ;
                 //            destformat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger|kLinearPCMFormatFlagIsPacked;
                 pthread_mutex_lock(&livePull->lock);
-                if (livePull->videoPull) {
+                if (livePull->streamPull) {
                     livePull->audioDecoder->decodeSetup(livePull->audioDecoder, sourceformat, destformat, aacDecodeCompleteCallback, livePull);
                     GJLivePlay_SetAudioFormat(livePull->player, destformat);
                 }

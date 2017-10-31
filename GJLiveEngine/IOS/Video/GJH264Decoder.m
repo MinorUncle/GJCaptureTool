@@ -126,11 +126,11 @@ void decodeOutputCallback(
     CMSampleBufferRef sampleBuffer = NULL;
     CMBlockBufferRef  blockBuffer  = NULL;
 
-    if (packet->flag == GJPacketFlag_KEY ) {
+    if (packet->flag == GJPacketFlag_KEY && packet->extendDataSize > 0) {
         
         int32_t  spsSize = 0, ppsSize = 0;
         uint8_t *sps = NULL, *pps = NULL, *start;
-        start = R_BufferStart(&packet->retain) + packet->dataOffset;
+        start = R_BufferStart(&packet->retain) + packet->extendDataOffset;
         
         if ( (start[4] & 0x1f) == 7 ) {
             spsSize = ntohl(*(uint32_t*)start);
@@ -144,14 +144,13 @@ void decodeOutputCallback(
             }else{
                 GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "包含sps而不包含pps");
             }
-            
         }
 
-        if(sps && (_decompressionSession == nil || memcmp(sps, _spsData.bytes, spsSize) || memcmp(pps, _ppsData.bytes, ppsSize))){
-            printf("decode sps size:%d:", spsSize);
-            GJ_LogHexString(GJ_LOGERROR, sps, (GUInt32) spsSize);
-            printf("decode pps size:%d:", ppsSize);
-            GJ_LogHexString(GJ_LOGERROR, pps, (GUInt32) ppsSize);
+        if(sps && pps && (_decompressionSession == nil || memcmp(sps, _spsData.bytes, spsSize) || memcmp(pps, _ppsData.bytes, ppsSize))){
+            GJLOG(DEFAULT_LOG,GJ_LOGINFO,"decode sps size:%d:", spsSize);
+            GJ_LogHexString(GJ_LOGINFO, sps, (GUInt32) spsSize);
+            GJLOG(DEFAULT_LOG,GJ_LOGINFO,"decode pps size:%d:", ppsSize);
+            GJ_LogHexString(GJ_LOGINFO, pps, (GUInt32) ppsSize);
             
             uint8_t *parameterSetPointers[2] = {sps, pps};
             size_t   parameterSetSizes[2]    = {spsSize, ppsSize};
@@ -184,9 +183,6 @@ void decodeOutputCallback(
                 GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "解码器创建失败");
 
             }
-        }
-        if (packet->dataSize - packet->dataOffset <= 4) {
-            return;
         }
     } else {
         if (_decompressionSession == NULL) {

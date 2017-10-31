@@ -9,5 +9,6 @@
 #import <UIKit/UIKit.h>
 
 @interface GJLivePushViewController : UIViewController
-
+@property(nonatomic,copy)NSString* pullAddr;
+@property(nonatomic,copy)NSString* pushAddr;
 @end

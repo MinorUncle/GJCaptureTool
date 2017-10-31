@@ -14,6 +14,7 @@
 #include "rtmp.h"
 #include "sps_decode.h"
 #include <string.h>
+#include "GJUtil.h"
 
 #define BUFFER_CACHE_SIZE 40
 #define RTMP_RECEIVE_TIMEOUT 10
@@ -38,7 +39,12 @@ struct _GJStreamPull {
 
     int stopRequest;
     int releaseRequest;
+#ifdef NETWORK_DELAY
+    GInt32 networkDelay;
+#endif
 };
+
+
 
 GVoid GJStreamPull_Delloc(GJStreamPull *pull);
 
@@ -151,6 +157,10 @@ static GHandle pullRunloop(GHandle parm) {
                 if (!pull->releaseRequest) {
                     pull->dataCallback(pull, aacPacket, pull->dataCallbackParm);
                 }
+                
+#ifdef NETWORK_DELAY
+                pull->networkDelay = (GInt32)(GJ_Gettime()/1000 - packet.m_nTimeStamp);
+#endif
                 pthread_mutex_unlock(&pull->mutex);
                 R_BufferUnRetain(buffer);
 
@@ -160,7 +170,7 @@ static GHandle pullRunloop(GHandle parm) {
 
                 GUInt8 *body  = (GUInt8 *) packet.m_body;
                 GUInt8 *pbody = body;
-                GInt32  isKey = 0;
+//                GInt32  isKey = 0;
                 GInt32  index = 0;
                 GInt32  ct    = 0;
 
@@ -184,8 +194,9 @@ static GHandle pullRunloop(GHandle parm) {
                             memset(h264Packet, 0, sizeof(R_GJPacket));
                             GJRetainBuffer *buffer = &h264Packet->retain;
                             R_BufferAlloc(&buffer, spsSize + ppsSize + 8, packetBufferRelease, GNULL);
-                            h264Packet->dataOffset = 0;
-                            h264Packet->dataSize   = 8 + spsSize + ppsSize;
+                            h264Packet->extendDataOffset = 0;
+                            h264Packet->extendDataSize   = 8 + spsSize + ppsSize;
+                            h264Packet->dataOffset = h264Packet->dataSize = 0;
                             GInt32  spsNsize       = htonl(spsSize);
                             GInt32  ppsNsize       = htonl(ppsSize);
                             GUInt8 *data           = R_BufferStart(buffer);
@@ -220,11 +231,11 @@ static GHandle pullRunloop(GHandle parm) {
                                     seiSize = size + 4;
                                     sei     = body + index;
                                 } else if (type == 0x5) {
-                                    isKey  = GTrue;
+//                                    isKey  = GTrue;
                                     ppSize = size + 4;
                                     pp     = pbody + index;
                                 } else if (type == 0x1) {
-                                    isKey  = GFalse;
+//                                    isKey  = GFalse;
                                     ppSize = size + 4;
                                     pp     = pbody + index;
                                 }
@@ -301,6 +312,9 @@ static GHandle pullRunloop(GHandle parm) {
                 if (!pull->releaseRequest) {
                     pull->dataCallback(pull, h264Packet, pull->dataCallbackParm);
                 }
+#ifdef NETWORK_DELAY
+                pull->networkDelay = (GInt32)(GJ_Gettime()/1000 - packet.m_nTimeStamp);
+#endif
                 pthread_mutex_unlock(&pull->mutex);
                 R_BufferUnRetain(buffer);
 
@@ -427,3 +441,8 @@ GJTrafficUnit GJStreamPull_GetVideoPullInfo(GJStreamPull *pull) {
 GJTrafficUnit GJStreamPull_GetAudioPullInfo(GJStreamPull *pull) {
     return pull->audioPullInfo;
 }
+#ifdef NETWORK_DELAY
+GInt32 GJStreamPull_GetNetWorkDelay(GJStreamPull *pull){
+    return pull->networkDelay;
+}
+#endif

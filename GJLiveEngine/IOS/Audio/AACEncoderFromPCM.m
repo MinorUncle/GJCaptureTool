@@ -250,10 +250,13 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     adtsDataForPacketLength(outCacheBufferList.mBuffers[0].mDataByteSize, R_BufferStart(&packet->retain), _destFormat.mSampleRate, _destFormat.mChannelsPerFrame);
 
     packet->type       = GJMediaType_Audio;
-    packet->dataOffset = 7;
+    packet->extendDataSize = 7;
+    packet->extendDataOffset = 0;
+    packet->dataOffset = packet->extendDataSize;
     packet->dataSize   = outCacheBufferList.mBuffers[0].mDataByteSize;
     packet->pts        = frame->pts;
     packet->dts        = frame->pts;
+
     self.completeCallback(packet);
     R_BufferUnRetain(audioBuffer);
     return YES;

@@ -14,13 +14,7 @@
 #import "log.h"
 #import "GJBufferPool.h"
 #import "GJAudioManager.h"
-//static char* url = "rtmp://10.0.23.70/live/room";
-static char* url = "rtmp://10.0.1.65/live/room";
-//static char* url = "rtmp://192.168.199.187/live/room";
-//static char* url = "rtmp://192.168.199.187/live/room";
-//static char* url = "rtmp://live.hkstv.hk.lxdns.com/live/hks";
-//static char* url = "rtsp://10.0.23.65/sample_100kbit.mp4";
-//
+
 
 
 #define PULL_COUNT 2
@@ -191,7 +185,7 @@ static char* url = "rtmp://10.0.1.65/live/room";
                    @"720*1280":[NSValue valueWithCGSize:CGSizeMake(720, 1280)]
                    };
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
-//    GJ_LogSetLevel(GJ_LOGINFO);
+    GJ_LogSetLevel(GJ_LOGDEBUG);
 //    RTMP_LogSetLevel(RTMP_LOGERROR);
     _livePush = [[GJLivePush alloc]init];
     GJPushConfig config = {0};
@@ -203,12 +197,21 @@ static char* url = "rtmp://10.0.1.65/live/room";
     config.mAudioBitrate = 0;
     [_livePush setPushConfig:config];
     _livePush.delegate = self;
-    _livePush.cameraPosition = kGJInterfaceOrientationPortrait;
+    _livePush.cameraPosition = GJCameraPositionFront;
 
     [self buildUI];
     [self updateFrame];
  
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
     [_livePush startPreview];
+}
+
+-(void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [_livePush stopPreview];
 }
 -(void)buildUI{
     self.topView = _livePush.previewView;//
@@ -671,7 +674,7 @@ static char* url = "rtmp://10.0.1.65/live/room";
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
             path = [path stringByAppendingPathComponent:@"test.mp4"];
             _sizeChangeBtn.enabled = NO;
-            if(![_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]]){
+            if(![_livePush startStreamPushWithUrl:_pushAddr]){
                 [_livePush stopStreamPush];
                 btn.selected = NO;
                 _sizeChangeBtn.enabled = YES;
@@ -712,7 +715,7 @@ static char* url = "rtmp://10.0.1.65/live/room";
 //        }
         
         if (btn.selected) {
-            if(![pull startStreamPullWithUrl:[NSString stringWithUTF8String:url]]){
+            if(![pull startStreamPullWithUrl:_pullAddr]){
                 btn.selected = NO;
             };
         }else{
@@ -764,7 +767,7 @@ static char* url = "rtmp://10.0.1.65/live/room";
             });
             [_livePush stopStreamPush];
             sleep(1);
-            if(![_livePush startStreamPushWithUrl:[NSString stringWithUTF8String:url]]){
+            if(![_livePush startStreamPushWithUrl:_pushAddr]){
                 NSLog(@"startStreamPushWithUrl error");
             };
             break;
@@ -842,7 +845,7 @@ static char* url = "rtmp://10.0.1.65/live/room";
         case kLivePullConnectError:{
             [livePull stopStreamPull];
             sleep(1);
-            [livePull startStreamPullWithUrl:[NSString stringWithUTF8String:url]];
+            [livePull startStreamPullWithUrl:_pullAddr];
             break;
         }
         default:

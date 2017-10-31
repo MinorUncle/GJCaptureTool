@@ -70,7 +70,7 @@
 -(UIImage*)captureImageWithView:(UIView*)view{
     UIImage *image ;
     UIGraphicsBeginImageContext(view.bounds.size);
-    [view drawViewHierarchyInRect:self.captureView.frame afterScreenUpdates:YES];
+    [view drawViewHierarchyInRect:self.captureView.frame afterScreenUpdates:NO];
     image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return image;
@@ -319,7 +319,8 @@ NSData* createData;
         //注意第n个变换参数会应用0 ~ n-1个数据的变换
         CGAffineTransform affine = CGAffineTransformTranslate(CGAffineTransformMakeScale(1, -1), 0, -1*_captureFrame.size.height);
         CGContextConcatCTM(context, affine);
-        result = [self.captureView drawViewHierarchyInRect:self.captureView.frame afterScreenUpdates:YES];
+//        采用afterScreenUpdates：NO,采用YES，防止动画变慢
+        result = [self.captureView drawViewHierarchyInRect:self.captureView.frame afterScreenUpdates:NO];
         UIGraphicsPopContext();
         CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
         CGColorSpaceRelease(rgbColorSpace);

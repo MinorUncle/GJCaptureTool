@@ -102,7 +102,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
 #ifdef NETWORK_DELAY
 
     if ([self.delegate respondsToSelector:@selector(livePull:networkDelay:)]) {
-        [self.delegate livePull:self networkDelay:[_player getNetWorkDelay]];
+        [self.delegate livePull:self networkDelay:GJLivePull_GetNetWorkDelay(_pullContext)];
     }
 #endif
 }

@@ -179,7 +179,7 @@
         if (result != noErr) {
             GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_AverageBitRate set error:%d", result);
         } else {
-            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "set video bitrate:%0.2f kB/s", bitrate / 1024.0 / 8.0);
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "set video bitrate:%0.2f kB/s", bitrate / 1024.0 / 8.0);
         }
     }
 }
@@ -243,14 +243,15 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
             R_BufferMoveDataToPoint(buffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
         }
         pushPacket->flag       = GJPacketFlag_KEY;
-        pushPacket->dataOffset = 0;
-        pushPacket->dataSize   = (GInt32)(totalLength + spsppsSize + 8);
+        pushPacket->extendDataOffset = 0;
+        pushPacket->extendDataSize   = (GInt32)(spsppsSize + 8);
 
+        pushPacket->dataOffset = pushPacket->extendDataSize;
+        pushPacket->dataSize = (GInt32)totalLength;
         uint8_t *data = R_BufferStart(buffer);
         uint32_t sSize = htonl(spsSize);
 //        memcpy(data, "\x00\x00\x00\x01", 4);
         memcpy(data, &sSize, 4);
-
         memcpy(data + 4, sps, spsSize);
         encoder.sps = [NSData dataWithBytes:sps length:spsSize];
 
@@ -264,10 +265,10 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         memcpy(data + spsppsSize + 8, inDataPointer, totalLength);
         inDataPointer = data + spsppsSize + 8;
         
-        printf("encode sps size:%zu:", spsSize);
-        GJ_LogHexString(GJ_LOGERROR, sps, (GUInt32) spsSize);
-        printf("encode pps size:%zu:", ppsSize);
-        GJ_LogHexString(GJ_LOGERROR, pps, (GUInt32) ppsSize);
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO,"encode sps size:%zu:", spsSize);
+        GJ_LogHexString(GJ_LOGINFO, sps, (GUInt32) spsSize);
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO,"encode pps size:%zu:", ppsSize);
+        GJ_LogHexString(GJ_LOGINFO, pps, (GUInt32) ppsSize);
 
     } else {
         int needSize = (int) (totalLength + PUSH_H264_PACKET_PRE_SIZE);
@@ -280,6 +281,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         pushPacket->flag       = 0;
         pushPacket->dataOffset = 0;
         pushPacket->dataSize   = (GInt32)(totalLength);
+        pushPacket->extendDataSize = pushPacket->extendDataOffset = 0;
 
         //拷贝
         uint8_t *rDate = R_BufferStart(buffer);

@@ -35,7 +35,7 @@ typedef GVoid (*GJLivePullCallback)(GHandle userDate, GJLivePullMessageType mess
 
 typedef struct _GJLivePullContext {
     GJClass              priv_class;
-    GJStreamPull *       videoPull;
+    GJStreamPull *       streamPull;
     pthread_t            playThread;
     GJPullSessionStatus  pullSessionStatus;
     GJH264DecodeContext *videoDecoder;
@@ -54,6 +54,8 @@ typedef struct _GJLivePullContext {
     GJTrafficStatus    audioTraffic;
     GLong              videoUnDecodeByte; //没有解码前的数据大小，
     GLong              audioUnDecodeByte;
+    
+
 } GJLivePullContext;
 
 GBool GJLivePull_Create(GJLivePullContext **context, GJLivePullCallback callback, GHandle param);
@@ -63,5 +65,8 @@ GVoid GJLivePull_Dealloc(GJLivePullContext **context);
 GJTrafficStatus GJLivePull_GetVideoTrafficStatus(GJLivePullContext *context);
 GJTrafficStatus GJLivePull_GetAudioTrafficStatus(GJLivePullContext *context);
 GHandle GJLivePull_GetDisplayView(GJLivePullContext *context);
+#ifdef NETWORK_DELAY
+GInt32 GJLivePull_GetNetWorkDelay(GJLivePullContext *context);
+#endif
 
 #endif /* GJLivePullContext_h */
