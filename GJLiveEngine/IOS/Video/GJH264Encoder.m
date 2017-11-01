@@ -179,7 +179,7 @@
         if (result != noErr) {
             GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_AverageBitRate set error:%d", result);
         } else {
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "set video bitrate:%0.2f kB/s", bitrate / 1024.0 / 8.0);
+            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "set video bitrate:%0.2f kB/s", bitrate / 1024.0 / 8.0);
         }
     }
 }

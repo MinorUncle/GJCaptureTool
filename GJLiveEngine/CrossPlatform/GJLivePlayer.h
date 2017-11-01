@@ -34,6 +34,8 @@ typedef enum _GJPlayMessage {
     GJPlayMessage_BufferStart,
     GJPlayMessage_BufferUpdate,
     GJPlayMessage_BufferEnd,
+    GJPlayMessage_NetShake,
+    GJPlayMessage_FristRender,
 } GJPlayMessage;
 typedef struct CacheInfo {
     GTime lowWaterFlag;

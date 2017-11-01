@@ -12,7 +12,7 @@
 #include "GJUtil.h"
 
 #include <unistd.h>
-#define LIVEPUSH_LOG LOG_INFO
+#define LIVEPUSH_LOG GNULL
 //#define I_P_RATE 4   不需用，按照平均降码率来
 //#define DROP_BITRATE_RATE 0.1     //最小码率与最大码率之间的分割比率   //修改，采用帧率
 //#define NET_ADD_STEP 8 * 1024 * 5 //5KB                          //修改，context->pushConfig->mVideoBitrate/context->pushConfig->mFps)
@@ -135,7 +135,7 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
                 GInt32 currentBitRate = sendByte * 8  / (sendTs / 1000.0);
                 context->netSpeedUnit[context->collectCount++ % context->netSpeedCheckInterval] = currentBitRate;
                 
-                GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG,"current net rate :%f kB/s  sendByte:%ld sendTs:%ld\n",currentBitRate / 8.0 / 1024, sendByte,sendTs);
+                GJLOG(LIVEPUSH_LOG, GJ_LOGINFO,"current net rate :%f kB/s  sendByte:%ld sendTs:%ld\n",currentBitRate / 8.0 / 1024, sendByte,sendTs);
                 
                 if (sendCount < context->rateCheckStep) {
                     int count              = 0;
@@ -148,7 +148,7 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
                     }
                     if (count > 0) {
                         context->videoNetSpeed /= count;
-                        GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG,"avg rate:%0.2f\n",context->videoNetSpeed/ 8.0 / 1024);
+                        GJLOG(LIVEPUSH_LOG, GJ_LOGINFO,"avg rate:%0.2f\n",context->videoNetSpeed/ 8.0 / 1024);
 
                     }
                     GInt32 minLimit = GMIN(context->videoNetSpeed,context->videoBitrate);

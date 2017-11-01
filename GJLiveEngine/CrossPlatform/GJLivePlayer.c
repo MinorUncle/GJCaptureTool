@@ -25,9 +25,9 @@
 #define AUDIO_PTS_PRECISION 100
 
 #define UPDATE_SHAKE_TIME 10000
-#define MAX_CACHE_DUR 3000 //抖动最大缓存控制
-#define MIN_CACHE_DUR 200  //抖动最小缓存控制
-#define MAX_CACHE_RATIO 5
+#define MAX_CACHE_DUR 5000 //抖动最大缓存控制
+#define MIN_CACHE_DUR 100  //抖动最小缓存控制
+#define MAX_CACHE_RATIO 3
 
 #define VIDEO_MAX_CACHE_COUNT 100 //初始化缓存空间
 #define AUDIO_MAX_CACHE_COUNT 200
@@ -170,7 +170,7 @@ GVoid GJLivePlay_CheckNetShake(GJSyncControl *_syncControl, GTime pts) {
             }
             _syncControl->bufferInfo.lowWaterFlag  = shake;
             _syncControl->bufferInfo.highWaterFlag = _syncControl->bufferInfo.lowWaterFlag * MAX_CACHE_RATIO;
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "setLowWater:%lld,hightWater:%d，max:%lld ,preMax:%lld", _syncControl->bufferInfo.lowWaterFlag, _syncControl->bufferInfo.highWaterFlag, netShake->maxDownShake, netShake->preMaxDownShake);
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "setLowWater:%lld,hightWater:%d，max:%lld ,preMax:%lld", _syncControl->bufferInfo.lowWaterFlag, _syncControl->bufferInfo.highWaterFlag, netShake->maxDownShake, netShake->preMaxDownShake);
         }
     }
     if (clock - netShake->collectStartClock >= UPDATE_SHAKE_TIME) {
@@ -511,6 +511,9 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
 #else
 
         GJLOGFREQ("video show pts:%d", cImageBuf->pts);
+        if (_syncControl->videoInfo.trafficStatus.leave.count == 0 && player->callback) {
+            player->callback(player->userDate,GJPlayMessage_FristRender,GNULL);
+        }
         player->videoPlayer->displayView(player->videoPlayer, &cImageBuf->retain);
 #endif
 
@@ -711,7 +714,7 @@ RETRY:
 }
 GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
 
-    GJLOG(LOG_ALL, GJ_LOGALL, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts,videoFrame->dts);
+    GJLOG(GNULL, GJ_LOGALL, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts,videoFrame->dts);
 
     if (videoFrame->dts < player->syncControl.videoInfo.inDtsSeries) {
 
@@ -769,7 +772,7 @@ GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) 
 }
 GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
 
-    GJLOG(LOG_ALL, GJ_LOGALL, "收到音频 PTS:%lld DTS:%lld\n",audioFrame->pts,audioFrame->dts);
+    GJLOG(GNULL, GJ_LOGALL, "收到音频 PTS:%lld DTS:%lld\n",audioFrame->pts,audioFrame->dts);
     GJPlayControl *_playControl = &(player->playControl);
     GJSyncControl *_syncControl = &(player->syncControl);
     GBool          result       = GTrue;
