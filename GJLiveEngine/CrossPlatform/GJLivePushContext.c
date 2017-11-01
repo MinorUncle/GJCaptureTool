@@ -534,6 +534,8 @@ GBool GJLivePush_Create(GJLivePushContext **pushContext, GJLivePushCallback call
         GJ_H264EncodeContextCreate(&context->videoEncoder);
         GJ_AACEncodeContextCreate(&context->audioEncoder);
         GJ_VideoProduceContextCreate(&context->videoProducer);
+        context->videoProducer->videoProduceSetup(context->videoProducer, videoCaptureFrameOutCallback, context);
+        
         GJ_AudioProduceContextCreate(&context->audioProducer);
         pthread_mutex_init(&context->lock, GNULL);
 
@@ -578,16 +580,15 @@ GVoid GJLivePush_SetConfig(GJLivePushContext *context, const GJPushConfig *confi
                     context->videoEncoder->encodeUnSetup(context->videoEncoder);
                 }
             }
-
-            if (context->videoProducer->obaque != GNULL) {
-                if (context->pushConfig->mFps != config->mFps) {
-                    context->videoProducer->setFrameRate(context->videoProducer, config->mFps);
-                }
-                if (!GSizeEqual(context->pushConfig->mPushSize, config->mPushSize)) {
-                    context->videoProducer->setProduceSize(context->videoProducer, config->mPushSize);
-                }
-            }
         }
+
+        GJPixelFormat format;
+        format.mHeight = config->mPushSize.height;
+        format.mWidth = config->mPushSize.width;
+        format.mType =  GJPixelType_YpCbCr8BiPlanar_Full;
+        context->videoProducer->setVideoFormat(context->videoProducer,format);
+        context->videoProducer->setFrameRate(context->videoProducer,config->mFps);
+
         *(context->pushConfig) = *config;
     }
     pthread_mutex_unlock(&context->lock);
@@ -627,14 +628,6 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
             }
             memset(context->netSpeedUnit, 0, context->netSpeedCheckInterval * sizeof(GInt32));
 
-            GJPixelFormat vFormat = {0};
-            vFormat.mHeight       = (GUInt32) context->pushConfig->mPushSize.height;
-            vFormat.mWidth        = (GUInt32) context->pushConfig->mPushSize.width;
-            vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
-            if (context->videoProducer->obaque == GNULL) {
-                context->videoProducer->videoProduceSetup(context->videoProducer, vFormat, context->pushConfig->mFps, videoCaptureFrameOutCallback, context);
-            }
-
             if (context->audioProducer->obaque == GNULL) {
                 GJAudioFormat aFormat     = {0};
                 aFormat.mBitsPerChannel   = 16;
@@ -661,11 +654,17 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
                 context->audioEncoder->encodeSetup(context->audioEncoder, aFormat, aDFormat, aacPacketOutCallback, context);
             }
 
+            GJPixelFormat vFormat = {0};
+            vFormat.mHeight       = (GUInt32) context->pushConfig->mPushSize.height;
+            vFormat.mWidth        = (GUInt32) context->pushConfig->mPushSize.width;
+            vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
             if (context->videoEncoder->obaque == GNULL) {
+
+                
                 context->videoEncoder->encodeSetup(context->videoEncoder, vFormat, h264PacketOutCallback, context);
                 context->videoEncoder->encodeSetBitrate(context->videoEncoder, context->pushConfig->mVideoBitrate);
                 context->videoEncoder->encodeSetProfile(context->videoEncoder, profileLevelMain);
-                context->videoEncoder->encodeSetGop(context->videoEncoder, 10);
+                context->videoEncoder->encodeSetGop(context->videoEncoder, context->pushConfig->mFps);
                 context->videoEncoder->encodeAllowBFrame(context->videoEncoder, GTrue);
                 context->videoEncoder->encodeSetEntropy(context->videoEncoder, EntropyMode_CABAC);
             }
@@ -724,17 +723,6 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context) {
 
 GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene){
     pthread_mutex_lock(&context->lock);
-    if (context->videoProducer->obaque == GNULL) {
-        GJPixelFormat vFormat = {0};
-        vFormat.mHeight       = 640;
-        vFormat.mWidth        = 360;
-        vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
-        GInt32 fps = 15;
-        if (context->pushConfig && context->pushConfig->mFps >0) {
-            fps = context->pushConfig->mFps;
-        }
-        context->videoProducer->videoProduceSetup(context->videoProducer, vFormat, fps, videoCaptureFrameOutCallback, context);
-    }
     GBool result = context->videoProducer->setARScene(context->videoProducer,scene);
     pthread_mutex_unlock(&context->lock);
     return result;
@@ -841,13 +829,6 @@ GVoid GJLivePush_StopAudioMix(GJLivePushContext *context) {
 GVoid GJLivePush_SetCameraPosition(GJLivePushContext *context, GJCameraPosition position) {
     
     pthread_mutex_lock(&context->lock);
-    if (context->videoProducer->obaque == GNULL) {
-        GJPixelFormat vFormat = {0};
-        vFormat.mHeight       = 640;
-        vFormat.mWidth        = 360;
-        vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
-        context->videoProducer->videoProduceSetup(context->videoProducer, vFormat, context->pushConfig->mFps, videoCaptureFrameOutCallback, context);
-    }
     context->videoProducer->setCameraPosition(context->videoProducer, position);
     pthread_mutex_unlock(&context->lock);
 
@@ -856,13 +837,6 @@ GVoid GJLivePush_SetCameraPosition(GJLivePushContext *context, GJCameraPosition 
 GVoid GJLivePush_SetOutOrientation(GJLivePushContext *context, GJInterfaceOrientation orientation) {
     
     pthread_mutex_lock(&context->lock);
-    if (context->videoProducer->obaque == GNULL) {
-        GJPixelFormat vFormat = {0};
-        vFormat.mHeight       = 640;
-        vFormat.mWidth        = 360;
-        vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
-        context->videoProducer->videoProduceSetup(context->videoProducer, vFormat, context->pushConfig->mFps, videoCaptureFrameOutCallback, context);
-    }
     context->videoProducer->setOrientation(context->videoProducer, orientation);
     pthread_mutex_unlock(&context->lock);
 
@@ -871,13 +845,6 @@ GVoid GJLivePush_SetOutOrientation(GJLivePushContext *context, GJInterfaceOrient
 GVoid GJLivePush_SetPreviewHMirror(GJLivePushContext *context, GBool preViewMirror) {
     
     pthread_mutex_lock(&context->lock);
-    if (context->videoProducer->obaque == GNULL) {
-        GJPixelFormat vFormat = {0};
-        vFormat.mHeight       = 640;
-        vFormat.mWidth        = 360;
-        vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
-        context->videoProducer->videoProduceSetup(context->videoProducer, vFormat, context->pushConfig->mFps, videoCaptureFrameOutCallback, context);
-    }
     context->videoProducer->setHorizontallyMirror(context->videoProducer, preViewMirror);
     pthread_mutex_unlock(&context->lock);
     
@@ -951,14 +918,6 @@ GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext *context) {
 GHandle GJLivePush_GetDisplayView(GJLivePushContext *context) {
     pthread_mutex_lock(&context->lock);
     GHandle result = NULL;
-    if (context->videoProducer->obaque == GNULL) {
-        GJPixelFormat vFormat = {0};
-        vFormat.mHeight       = 640;
-        vFormat.mWidth        = 360;
-        vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
-        context->videoProducer->videoProduceSetup(context->videoProducer, vFormat, context->pushConfig->mFps, videoCaptureFrameOutCallback, context);
-       
-    }
     if (context->videoProducer->obaque != GNULL) {
         result = context->videoProducer->getRenderView(context->videoProducer);
     }

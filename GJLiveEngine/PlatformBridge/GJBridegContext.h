@@ -43,7 +43,7 @@ typedef struct _GJPictureDisplayContext{
 
 typedef struct _GJVideoProduceContext{
     GHandle obaque;
-    GBool   (*videoProduceSetup)      (struct _GJVideoProduceContext* context, GJPixelFormat format, GInt32 fps, VideoFrameOutCallback callback, GHandle userData);
+    GBool   (*videoProduceSetup)      (struct _GJVideoProduceContext* context, VideoFrameOutCallback callback, GHandle userData);
     GVoid   (*videoProduceUnSetup)    (struct _GJVideoProduceContext* context);
     GBool   (*startProduce)           (struct _GJVideoProduceContext* context);
     GVoid   (*stopProduce)            (struct _GJVideoProduceContext* context);
@@ -51,12 +51,14 @@ typedef struct _GJVideoProduceContext{
     GBool   (*setARScene)             (struct _GJVideoProduceContext* context,GHandle scene);
     GVoid   (*stopPreview)            (struct _GJVideoProduceContext* context);
     GHandle (*getRenderView)          (struct _GJVideoProduceContext* context);
-    GSize   (*getCaptureSize)          (struct _GJVideoProduceContext* context);
-    GBool   (*setProduceSize)         (struct _GJVideoProduceContext* context, GSize size);
+    GSize   (*getCaptureSize)         (struct _GJVideoProduceContext* context);
     GBool   (*setCameraPosition)      (struct _GJVideoProduceContext* context, GJCameraPosition cameraPosition);
     GBool   (*setOrientation)         (struct _GJVideoProduceContext* context, GJInterfaceOrientation outOrientation);
     GBool   (*setHorizontallyMirror)  (struct _GJVideoProduceContext* context, GBool mirror);
     GBool   (*setFrameRate)           (struct _GJVideoProduceContext* context, GInt32 fps);
+    GBool   (*setVideoFormat)         (struct _GJVideoProduceContext* context, GJPixelFormat format);
+
+    
     GBool   (*addSticker)             (struct _GJVideoProduceContext* context, const GVoid* images, GStickerParm parm, GInt32 fps, GJStickerUpdateCallback callback,const GVoid* userData);
     GVoid   (*chanceSticker)          (struct _GJVideoProduceContext* context);
 

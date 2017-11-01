@@ -15,7 +15,7 @@
 #import "log.h"
 #import "GJBufferPool.h"
 #import "GJAudioManager.h"
-
+#import <ARKit/ARConfiguration.h>
 
 
 #define PULL_COUNT 2
@@ -189,9 +189,21 @@
     GJ_LogSetLevel(GJ_LOGDEBUG);
 //    RTMP_LogSetLevel(RTMP_LOGERROR);
     _livePush = [[GJLivePush alloc]init];
+
+    
     if (_isAr) {
-        _livePush.ARScene = [[GJSunSystemARScene alloc]init];
+        if (@available(iOS 11.0, *)) {
+            if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){
+                [[[UIAlertView alloc]initWithTitle:@"提示" message:@"该手机不支持ar,切换到普通直播" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles: nil] show];
+            }else{
+                _livePush.ARScene = [[GJSunSystemARScene alloc]init];
+            }
+        } else {
+            // Fallback on earlier versions
+        }
     }
+    
+    
     GJPushConfig config = {0};
     config.mAudioChannel = 2;
     config.mAudioSampleRate = 44100;
@@ -200,6 +212,7 @@
     config.mFps = 15;
     config.mAudioBitrate = 0;
     [_livePush setPushConfig:config];
+
     _livePush.delegate = self;
     _livePush.cameraPosition = GJCameraPositionFront;
 
