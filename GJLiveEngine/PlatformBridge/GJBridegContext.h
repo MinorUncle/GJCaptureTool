@@ -48,6 +48,7 @@ typedef struct _GJVideoProduceContext{
     GBool   (*startProduce)           (struct _GJVideoProduceContext* context);
     GVoid   (*stopProduce)            (struct _GJVideoProduceContext* context);
     GBool   (*startPreview)           (struct _GJVideoProduceContext* context);
+    GBool   (*setARScene)             (struct _GJVideoProduceContext* context,GHandle scene);
     GVoid   (*stopPreview)            (struct _GJVideoProduceContext* context);
     GHandle (*getRenderView)          (struct _GJVideoProduceContext* context);
     GSize   (*getCaptureSize)          (struct _GJVideoProduceContext* context);

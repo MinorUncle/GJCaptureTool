@@ -15,6 +15,24 @@
 @class UIView;
 @class GJLivePush;
 
+@class ARSCNView;
+typedef void(^ARUpdateBlock)();
+@protocol GJImageARScene <NSObject>
+@required
+@property(nonatomic,retain,readonly) ARSCNView* scene;
+@property(nonatomic,assign) NSInteger updateFps;
+@property(readonly, nonatomic) BOOL isRunning;
+@property(nonatomic,assign) ARUpdateBlock updateBlock;
+
+- (AVCaptureDevicePosition)cameraPosition;
+- (void)rotateCamera;
+
+-(BOOL)startRun;
+-(void)stopRun;
+-(void)pause;
+-(BOOL)resume;
+@end
+
 @protocol GJLivePushDelegate <NSObject>
 @required
 
@@ -32,6 +50,8 @@
 @optional
 
 @end
+
+
 
 @interface GJStickerAttribute : NSObject
 @property (assign,nonatomic) GCRect  frame;
@@ -64,10 +84,13 @@ typedef GJStickerAttribute*(^StickersUpdate)(NSInteger index,BOOL* ioFinish);
 @property (nonatomic,assign         ) BOOL                   audioMute;
 @property (nonatomic,assign         ) BOOL                   measurementMode;
 
+//配置ar场景，开启ar模式，预览和推流前配置。scene= nil表示取消;
+@property (nonatomic,retain         ) id<GJImageARScene>                     ARScene;
 
 //- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
 
 //- (void)stopCapture;
+
 
 - (void)startPreview;
 

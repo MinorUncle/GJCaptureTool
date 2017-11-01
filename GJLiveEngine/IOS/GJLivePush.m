@@ -114,6 +114,11 @@ static GVoid livePushCallback(GHandle               userDate,
     return self;
 }
 
+-(void)setARScene:(id<GJImageARScene>)ARScene{
+    GJLivePush_SetARScene(_livePush, (__bridge GHandle)(ARScene));
+    _ARScene = ARScene;
+}
+
 - (void)startPreview {
     GJLivePush_StartPreview(_livePush);
 }

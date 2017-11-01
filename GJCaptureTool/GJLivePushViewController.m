@@ -10,6 +10,7 @@
 #import "GJLivePush.h"
 #import <AVFoundation/AVFoundation.h>
 #import "GJLivePull.h"
+#import "GJSunSystemARScene.h"
 #import "GJLog.h"
 #import "log.h"
 #import "GJBufferPool.h"
@@ -188,6 +189,9 @@
     GJ_LogSetLevel(GJ_LOGDEBUG);
 //    RTMP_LogSetLevel(RTMP_LOGERROR);
     _livePush = [[GJLivePush alloc]init];
+    if (_isAr) {
+        _livePush.ARScene = [[GJSunSystemARScene alloc]init];
+    }
     GJPushConfig config = {0};
     config.mAudioChannel = 2;
     config.mAudioSampleRate = 44100;

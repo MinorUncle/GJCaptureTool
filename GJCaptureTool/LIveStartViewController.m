@@ -8,17 +8,19 @@
 
 #import "LIveStartViewController.h"
 #import "GJLivePushViewController.h"
-//static NSString* url = @"rtmp://10.0.23.70/live/room";
-static NSString* url = @"rtmp://10.0.1.65/live/room";
+static NSString* pullUlr = @"rtmp://10.0.1.65/live/room";
 //static NSString* url = @"rtmp://192.168.199.187/live/room";
 //static NSString* url = @"rtmp://192.168.199.187/live/room";
 //static NSString* url = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
 //static NSString* url = @"rtsp://10.0.23.65/sample_100kbit.mp4";
-//
+//static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/117368033";
+static NSString* pushUrl = @"rtmp://10.0.1.65/live/room";
 
 @interface LIveStartViewController ()
 {
     UIButton* _startBtn;
+    UIButton* _arStartBtn;
+
     UITextField* _pushAddr;
     UITextField* _pullAddr;
     
@@ -47,12 +49,12 @@ static NSString* url = @"rtmp://10.0.1.65/live/room";
 
     _pullAddr = [[UITextField alloc]initWithFrame:rect];
     _pullAddr.borderStyle =  UITextBorderStyleRoundedRect;
-    _pullAddr.text = url;
+    _pullAddr.text = pullUlr;
     [self.view addSubview:_pullAddr];
 
     rect.origin.y += 100;
     _pushAddr = [[UITextField alloc]initWithFrame:rect];
-    _pushAddr.text = url;
+    _pushAddr.text = pushUrl;
     _pushAddr.borderStyle =  UITextBorderStyleRoundedRect;
     [self.view addSubview:_pushAddr];
     
@@ -61,9 +63,18 @@ static NSString* url = @"rtmp://10.0.1.65/live/room";
     rect.origin.y += 100;
     _startBtn = [[UIButton alloc]initWithFrame:rect];
     [_startBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchUpInside];
-    [_startBtn setTitle:@"点击进入" forState:UIControlStateNormal];
+    [_startBtn setTitle:@"普通直播" forState:UIControlStateNormal];
     [_startBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.view addSubview:_startBtn];
+    
+    rect.origin.x = 0;
+    rect.size.width = self.view.bounds.size.width;
+    rect.origin.y += 100;
+    _arStartBtn = [[UIButton alloc]initWithFrame:rect];
+    [_arStartBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchUpInside];
+    [_arStartBtn setTitle:@"AR直播" forState:UIControlStateNormal];
+    [_arStartBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [self.view addSubview:_arStartBtn];
     // Do any additional setup after loading the view.
 }
 -(void)startBtn:(UIButton*)btn{
@@ -72,10 +83,14 @@ static NSString* url = @"rtmp://10.0.1.65/live/room";
     if (!pull || !pull) {
         return;
     }
+    
 
     GJLivePushViewController* c = [[GJLivePushViewController alloc]init];
     c.pullAddr = pull;
     c.pushAddr = push;
+    if (btn == _arStartBtn) {
+        c.isAr = YES;
+    }
     [self presentViewController:c animated:YES completion:nil];
 }
 

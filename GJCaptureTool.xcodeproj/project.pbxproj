@@ -102,6 +102,10 @@
 		6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BCF1ED5956800B049EB /* GJLivePullContext.h */; };
 		6AE37BD81ED5956800B049EB /* GJLivePushContext.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AE37BD01ED5956800B049EB /* GJLivePushContext.c */; };
 		6AE37BD91ED5956800B049EB /* GJLivePushContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BD11ED5956800B049EB /* GJLivePushContext.h */; };
+		6AF9DDA91FA970AC00F6B4F7 /* GJImageARCapture.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AF9DD8F1FA970AB00F6B4F7 /* GJImageARCapture.h */; };
+		6AF9DDB61FA9763D00F6B4F7 /* SCNViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AF9DDB51FA9763C00F6B4F7 /* SCNViewController.h */; };
+		6AF9DDB91FA976A100F6B4F7 /* GJSunSystemARScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AF9DDB81FA976A100F6B4F7 /* GJSunSystemARScene.m */; };
+		6AF9DDBB1FA97A6000F6B4F7 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 6AF9DDBA1FA97A5F00F6B4F7 /* art.scnassets */; };
 		AE3634111F0810E000E3C0AD /* decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C341F07FE0400C24BAA /* decoder.h */; };
 		AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */ = {isa = PBXBuildFile; fileRef = AE3634131F08120600E3C0AD /* decoder_alac_apple.m */; };
 		AE3634161F08122100E3C0AD /* alac_format.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3634151F08122100E3C0AD /* alac_format.h */; };
@@ -602,6 +606,11 @@
 		6AE37BD11ED5956800B049EB /* GJLivePushContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePushContext.h; sourceTree = "<group>"; };
 		6AE37BD21ED5956800B049EB /* Mp4Writer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Mp4Writer.c; sourceTree = "<group>"; };
 		6AE37BD31ED5956800B049EB /* Mp4Writer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp4Writer.h; sourceTree = "<group>"; };
+		6AF9DD8F1FA970AB00F6B4F7 /* GJImageARCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImageARCapture.h; sourceTree = "<group>"; };
+		6AF9DDB51FA9763C00F6B4F7 /* SCNViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCNViewController.h; sourceTree = "<group>"; };
+		6AF9DDB71FA976A100F6B4F7 /* GJSunSystemARScene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJSunSystemARScene.h; sourceTree = "<group>"; };
+		6AF9DDB81FA976A100F6B4F7 /* GJSunSystemARScene.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GJSunSystemARScene.m; sourceTree = "<group>"; };
+		6AF9DDBA1FA97A5F00F6B4F7 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
 		AE3634131F08120600E3C0AD /* decoder_alac_apple.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = decoder_alac_apple.m; sourceTree = "<group>"; };
 		AE3634151F08122100E3C0AD /* alac_format.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = alac_format.h; path = libairfloat/libairfloat/alac_format.h; sourceTree = SOURCE_ROOT; };
 		AE3634171F08123B00E3C0AD /* endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = endian.h; path = libairfloat/libairfloat/endian.h; sourceTree = SOURCE_ROOT; };
@@ -887,6 +896,7 @@
 		04D15EC81E7E69C9005F6DDD /* GJImageFilters */ = {
 			isa = PBXGroup;
 			children = (
+				6AF9DD8F1FA970AB00F6B4F7 /* GJImageARCapture.h */,
 				6A34887B1F45468F008223AA /* GJImageBeautifyFilter.h */,
 				6A34887C1F45468F008223AA /* GJImageFilters.h */,
 				6A34887D1F45468F008223AA /* GJImageFramebuffer.h */,
@@ -1614,6 +1624,10 @@
 				C561AC8D1D51D3DC00113453 /* OpenGLPlayer */,
 				C561AC931D51D3DC00113453 /* ViewController.h */,
 				C561AC941D51D3DC00113453 /* ViewController.mm */,
+				6AF9DDBA1FA97A5F00F6B4F7 /* art.scnassets */,
+				6AF9DDB51FA9763C00F6B4F7 /* SCNViewController.h */,
+				6AF9DDB71FA976A100F6B4F7 /* GJSunSystemARScene.h */,
+				6AF9DDB81FA976A100F6B4F7 /* GJSunSystemARScene.m */,
 				041702831E5FC3D100D5B5D9 /* GJLivePushViewController.h */,
 				041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */,
 				6AB297E31F4D8A9C00115220 /* LIveStartViewController.h */,
@@ -1689,6 +1703,7 @@
 				6ABF2B281F0B413600721DB3 /* IOS_VideoProduce.h in Headers */,
 				6A0C84671FA84A00007C7CEA /* Version.h in Headers */,
 				6A40E1A51EEAA2D70047E0F0 /* AEPlaythroughChannel.h in Headers */,
+				6AF9DDB61FA9763D00F6B4F7 /* SCNViewController.h in Headers */,
 				6A85FA1B1F01FA990037A64F /* GJBufferPool.h in Headers */,
 				AE70A5271ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h in Headers */,
 				6A3488871F45468F008223AA /* GJImageView.h in Headers */,
@@ -1699,6 +1714,7 @@
 				6ABF2B1C1F0B413600721DB3 /* IOS_AACEncode.h in Headers */,
 				6ABF2B241F0B413600721DB3 /* IOS_H264Encode.h in Headers */,
 				6A85FA1E1F01FA990037A64F /* GJPlatformHeader.h in Headers */,
+				6AF9DDA91FA970AC00F6B4F7 /* GJImageARCapture.h in Headers */,
 				AE70A51F1ECB4DFE0009E49A /* AACEncoderFromPCM.h in Headers */,
 				6A9856C51F2B3D2500128480 /* IOS_RAOPPlay.h in Headers */,
 				6AB4F4981EF270D300FD4172 /* GJAudioSessionCenter.h in Headers */,
@@ -2043,6 +2059,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6A3488481F453803008223AA /* 5.png in Resources */,
+				6AF9DDBB1FA97A6000F6B4F7 /* art.scnassets in Resources */,
 				6A3488431F453803008223AA /* 0.png in Resources */,
 				6A34884E1F453803008223AA /* index4.png in Resources */,
 				6A34884A1F453803008223AA /* index0.png in Resources */,
@@ -2125,6 +2142,7 @@
 			files = (
 				6AB297E51F4D8A9C00115220 /* LIveStartViewController.m in Sources */,
 				C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */,
+				6AF9DDB91FA976A100F6B4F7 /* GJSunSystemARScene.m in Sources */,
 				C561ACB51D51D3DC00113453 /* main.m in Sources */,
 				C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */,
 				6A8F5E361F341FFC00FA57A4 /* GJLivePushViewController.m in Sources */,

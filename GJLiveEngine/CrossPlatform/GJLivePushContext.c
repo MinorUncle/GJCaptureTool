@@ -175,7 +175,6 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
                     
                     //缓存小，保证网速大于编码速率
                     if(context->videoNetSpeed < context->videoBitrate){
-                        GJLOG(LIVEPUSH_LOG, GJ_LOGWARNING, "网络检测出现偏差或网速突然变快,校正,avg rate:%0.2f,  videoBitrate:%0.2f",context->videoNetSpeed / 8.0 / 1024,context->videoBitrate / 8.0 / 1024);
                         context->videoNetSpeed  = context->videoBitrate;
                     }
 
@@ -721,6 +720,24 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context) {
         GJLOG(LIVEPUSH_LOG, GJ_LOGWARNING, "重复停止推流流");
     }
     pthread_mutex_unlock(&context->lock);
+}
+
+GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene){
+    pthread_mutex_lock(&context->lock);
+    if (context->videoProducer->obaque == GNULL) {
+        GJPixelFormat vFormat = {0};
+        vFormat.mHeight       = 640;
+        vFormat.mWidth        = 360;
+        vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
+        GInt32 fps = 15;
+        if (context->pushConfig && context->pushConfig->mFps >0) {
+            fps = context->pushConfig->mFps;
+        }
+        context->videoProducer->videoProduceSetup(context->videoProducer, vFormat, fps, videoCaptureFrameOutCallback, context);
+    }
+    GBool result = context->videoProducer->setARScene(context->videoProducer,scene);
+    pthread_mutex_unlock(&context->lock);
+    return result;
 }
 
 GBool GJLivePush_StartPreview(GJLivePushContext *context) {

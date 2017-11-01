@@ -14,6 +14,7 @@
 #import "GJLiveDefine.h"
 #import "GJLog.h"
 #import "GPUImageVideoCamera.h"
+#import "GJImageARCapture.h"
 #import <stdlib.h>
 typedef enum { //filter深度
     kFilterCamera = 0,
@@ -107,7 +108,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 @interface IOS_VideoProduce : NSObject
-@property (nonatomic, strong) GPUImageVideoCamera *   camera;
+@property (nonatomic, strong) GPUImageOutput<GJCameraProtocal>*    camera;
 @property (nonatomic, strong) GJImageView *           imageView;
 @property (nonatomic, strong) GPUImageCropFilter *    cropFilter;
 @property (nonatomic, strong) GPUImageBeautifyFilter *beautifyFilter;
@@ -120,6 +121,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property (nonatomic, assign) int                     frameRate;
 @property (nonatomic, assign) GJRetainBufferPool *    bufferPool;
 @property (nonatomic, strong) GJImagePictureOverlay * sticker;
+@property (nonatomic, strong) id<GJImageARScene> scene;
 
 @property (nonatomic, copy) VideoRecodeCallback callback;
 
@@ -133,7 +135,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _frameRate         = fps;
         _cameraPosition    = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
-        self.destSize      = CGSizeMake((CGFloat) format.mWidth, (CGFloat) format.mHeight);
+        _destSize      = CGSizeMake((CGFloat) format.mWidth, (CGFloat) format.mHeight);
         GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, pixelReleaseCallBack, GNULL);
     }
     return self;
@@ -157,7 +159,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         GJRetainBufferPoolFree(temPool);
     });
 }
-- (GPUImageVideoCamera *)camera {
+
+- (GPUImageOutput<GJCameraProtocal>*)camera {
     if (_camera == nil) {
         CGSize size = _destSize;
         if (_outputOrientation == UIInterfaceOrientationPortrait ||
@@ -166,11 +169,17 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             size.width  = size.height - size.width;
             size.height = size.height - size.width;
         }
-        NSString *preset               = getCapturePresetWithSize(size);
-        _camera                        = [[GPUImageVideoCamera alloc] initWithSessionPreset:preset cameraPosition:_cameraPosition];
+        if (_scene == nil) {
+  
+            NSString *preset               = getCapturePresetWithSize(size);
+            _camera                        = [[GPUImageVideoCamera alloc] initWithSessionPreset:preset cameraPosition:_cameraPosition];
+            //        [self.beautifyFilter addTarget:self.cropFilter];
+        }else{
+           _camera = [[GJImageARCapture alloc]initWithScene:_scene captureSize:size];
+           _camera.frameRate              = _frameRate;
+        }
         _camera.frameRate              = _frameRate;
         _camera.outputImageOrientation = _outputOrientation;
-        //        [self.beautifyFilter addTarget:self.cropFilter];
     }
     return _camera;
 }
@@ -514,6 +523,12 @@ inline static GBool videoProduceSetOutputOrientation(struct _GJVideoProduceConte
     return GTrue;
 }
 
+inline static GBool videoProduceSetARScene(struct _GJVideoProduceContext *context, GHandle scene) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    recode.scene = (__bridge id<GJImageARScene>)(scene);
+    return GTrue;
+}
+
 inline static GBool videoProduceSetHorizontallyMirror(struct _GJVideoProduceContext *context, GBool mirror) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
     [recode setHorizontallyMirror:mirror];
@@ -587,6 +602,7 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     context->setFrameRate          = videoProduceSetFrameRate;
     context->addSticker            = addSticker;
     context->chanceSticker         = chanceSticker;
+    context->setARScene            = videoProduceSetARScene;
 }
 
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {
