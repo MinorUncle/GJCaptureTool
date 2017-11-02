@@ -24,7 +24,7 @@
 #define VIDEO_PTS_PRECISION 1000
 #define AUDIO_PTS_PRECISION 100
 
-#define UPDATE_SHAKE_TIME 5000 //
+#define UPDATE_SHAKE_TIME 3000 //
 #define MAX_CACHE_DUR 5000 //抖动最大缓存控制
 #define MIN_CACHE_DUR 100  //抖动最小缓存控制
 #define MAX_CACHE_RATIO 3
@@ -202,7 +202,15 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 #endif
         }
     }
-    if (shake < 0 || clock - netShake->collectStartClock >= UPDATE_SHAKE_TIME) {
+    
+    if(shake < 0){
+        netShake->collectStartClock = clock;
+        netShake->collectStartPts   = pts;
+#ifdef NETWORK_DELAY
+        netShake->collectStartDelay = delay;
+        netShake->maxTestDownShake = 0;
+#endif
+    }else if (clock - netShake->collectStartClock >= UPDATE_SHAKE_TIME) {
         netShake->preMaxDownShake   = netShake->maxDownShake;
         netShake->maxDownShake      = 0;
         netShake->collectStartClock = clock;
@@ -210,7 +218,6 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 #ifdef NETWORK_DELAY
         netShake->collectStartDelay = delay;
         netShake->maxTestDownShake = 0;
-        
 #endif
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "更新网络抖动收集");
     }
