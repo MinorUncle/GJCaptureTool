@@ -172,6 +172,13 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     netShake->delayCount ++;
     
     GTime testShake = delay - netShake->collectStartDelay;
+    
+    if (testShake > MAX_CACHE_DUR) {
+        testShake = MAX_CACHE_DUR;
+    } else if (testShake < MIN_CACHE_DUR) {
+        testShake = MIN_CACHE_DUR;
+    }
+    
     if (testShake > netShake->maxTestDownShake) {
         netShake->maxTestDownShake = testShake;
     }

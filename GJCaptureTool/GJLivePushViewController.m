@@ -129,7 +129,7 @@
     _frame = frame;
     self.view.frame = frame;
     CGRect rect = frame;
-    int count = 8;
+    int count = 9;
     rect.origin.x = 0;
     rect.origin.y = 0;
     rect.size.height *= 1.0/count;

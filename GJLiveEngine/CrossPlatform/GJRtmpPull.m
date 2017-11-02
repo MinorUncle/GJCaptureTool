@@ -145,7 +145,9 @@ static GHandle pullRunloop(GHandle parm) {
                     adts[6]            = (char) 0xFC;
 
                     aacPacket->dataOffset = 0;
-                    aacPacket->dataSize   = adtsLength;
+                    aacPacket->dataSize   = 0;
+                    aacPacket->extendDataOffset = 0;
+                    aacPacket->extendDataSize = adtsLength;
                     aacPacket->flag       = GJPacketFlag_KEY;
 
                 } else {

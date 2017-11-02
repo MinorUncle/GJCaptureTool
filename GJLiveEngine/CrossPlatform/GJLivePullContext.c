@@ -253,6 +253,9 @@ void pullDataCallback(GJStreamPull *pull, R_GJPacket *packet, void *parm) {
                 if (livePull->streamPull) {
                     livePull->audioDecoder->decodeSetup(livePull->audioDecoder, sourceformat, destformat, aacDecodeCompleteCallback, livePull);
                     GJLivePlay_SetAudioFormat(livePull->player, destformat);
+                    if (packet->dataSize > 0) {
+                        livePull->audioDecoder->decodePacket(livePull->audioDecoder, packet);
+                    }
                 }
 
                 pthread_mutex_unlock(&livePull->lock);
