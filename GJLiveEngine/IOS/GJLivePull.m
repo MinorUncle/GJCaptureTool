@@ -93,6 +93,14 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
                 [livePull.delegate livePull:livePull netShake:(long)time];
             }
         }break;
+#ifdef NETWORK_DELAY
+        case GJLivePull_testNetShakeUpdate:
+            if ([livePull.delegate respondsToSelector:@selector(livePull:testNetShake:)]) {
+                GTime time = *(GTime*)parm;
+                [livePull.delegate livePull:livePull testNetShake:(long)time];
+            }
+            break;
+#endif
         case GJLivePull_decodeFristAudioFrame:{
             
         }break;

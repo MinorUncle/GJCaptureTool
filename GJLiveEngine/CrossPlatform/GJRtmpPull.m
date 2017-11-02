@@ -160,7 +160,8 @@ static GHandle pullRunloop(GHandle parm) {
                 }
                 
 #ifdef NETWORK_DELAY
-                pull->networkDelay = (GInt32)(GJ_Gettime()/1000 - packet.m_nTimeStamp);
+                pull->networkDelay += (GInt32)(GJ_Gettime()/1000 - packet.m_nTimeStamp);
+                pull->delayCount++;
 #endif
                 pthread_mutex_unlock(&pull->mutex);
                 R_BufferUnRetain(buffer);

@@ -35,6 +35,9 @@ typedef enum _GJPlayMessage {
     GJPlayMessage_BufferUpdate,
     GJPlayMessage_BufferEnd,
     GJPlayMessage_NetShakeUpdate,//const GTime;
+#ifdef NETWORK_DELAY
+    GJPlayMessage_TestNetShakeUpdate,//同一手机下真正测试的抖动
+#endif
     GJPlayMessage_DewateringUpdate,//gbool
     GJPlayMessage_FristRender,
 } GJPlayMessage;
@@ -61,6 +64,14 @@ typedef struct _GJNetShakeInfo {
     GTime collectStartPts;
     GTime maxDownShake;
     GTime preMaxDownShake;
+    
+#ifdef NETWORK_DELAY
+    GInt32 networkDelay;
+    GInt32 delayCount;
+    GTime  collectStartDelay;
+    GTime  maxTestDownShake;
+
+#endif
 } GJNetShakeInfo;
 typedef struct _SyncInfo {
     GTime           clock;

@@ -53,7 +53,11 @@ static GVoid videoCaptureFrameOutCallback(GHandle userData, R_GJPixelFrame *fram
     if (context->stopPushClock == G_TIME_INVALID) {
         context->operationVCount++;
         if (!context->videoMute && (context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
+#ifdef NETWORK_DELAY
+            frame->pts = GJ_Gettime() / 1000;
+#else
             frame->pts = GJ_Gettime() / 1000 - context->connentClock;
+#endif
             context->videoEncoder->encodeFrame(context->videoEncoder, frame);
         } else {
             GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "丢视频帧");
@@ -70,8 +74,11 @@ static GVoid audioCaptureFrameOutCallback(GHandle userData, R_GJPCMFrame *frame)
 
         context->operationACount++;
         if (!context->audioMute) {
-
+#ifdef NETWORK_DELAY
+            frame->pts = GJ_Gettime() / 1000;
+#else
             frame->pts = GJ_Gettime() / 1000 - context->connentClock;
+#endif
             context->audioEncoder->encodeFrame(context->audioEncoder, frame);
             if (context->recoder) {
 

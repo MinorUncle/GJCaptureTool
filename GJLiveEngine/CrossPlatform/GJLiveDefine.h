@@ -11,7 +11,8 @@
 #import <CoreGraphics/CGGeometry.h>
 #import "GJRetainBuffer.h"
 
-//网络延迟收集，只有在同一收集同时推拉流才准确
+//延迟收集，只有在同一收集同时推拉流才准确，
+
 #define NETWORK_DELAY
 
 //#define GJVIDEODECODE_TEST

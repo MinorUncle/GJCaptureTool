@@ -30,6 +30,7 @@
 @property (strong, nonatomic) UILabel    *playerBufferLab;
 @property (strong, nonatomic) UILabel    *netDelay;
 @property (strong, nonatomic) UILabel    *netShake;
+@property (strong, nonatomic) UILabel    *testNetShake;
 @property (strong, nonatomic) UILabel    *dewaterStatus;
 
 
@@ -90,14 +91,21 @@
         _netDelay = [[UILabel alloc]init];
         _netDelay.numberOfLines = 0;
         _netDelay.textColor = [UIColor redColor];
-        _netDelay.text = @"NetDelay:0ms";
+        _netDelay.text = @"NetDelay Test:0 ms";
         _netDelay.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_netDelay];
+        
+        _testNetShake = [[UILabel alloc]init];
+        _testNetShake.numberOfLines = 0;
+        _testNetShake.textColor = [UIColor redColor];
+        _testNetShake.text = @"netShake Test:0 ms";
+        _testNetShake.font = [UIFont systemFontOfSize:10];
+        [self.view addSubview:_testNetShake];
         
         _netShake = [[UILabel alloc]init];
         _netShake.numberOfLines = 0;
         _netShake.textColor = [UIColor redColor];
-        _netShake.text = @"Max netShake:0ms";
+        _netShake.text = @"Max netShake:0 ms";
         _netShake.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_netShake];
         
@@ -138,6 +146,9 @@
     
     rect.origin.y = CGRectGetMaxY(rect);
     _netDelay.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _testNetShake.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     _netShake.frame = rect;
@@ -880,6 +891,13 @@
     });
 }
 
+-(void)livePull:(GJLivePull *)livePull testNetShake:(long)shake{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        PullShow* show = [self getShowWithPush:livePull];
+        show.testNetShake.text = [NSString stringWithFormat:@"netShake Test:%ld ms",shake];
+    });
+}
+
 -(void)livePull:(GJLivePull *)livePull isDewatering:(BOOL)isDewatering{
     dispatch_async(dispatch_get_main_queue(), ^{
         PullShow* show = [self getShowWithPush:livePull];
@@ -919,7 +937,7 @@
 -(void)livePull:(GJLivePull *)livePull networkDelay:(long)delay{
     PullShow* show = [self getShowWithPush:livePull];
     dispatch_async(dispatch_get_main_queue(), ^{
-        show.netDelay.text = [NSString stringWithFormat:@"NetDelay:%ld ms",delay];
+        show.netDelay.text = [NSString stringWithFormat:@"NetDelay Test:%ld ms",delay];
     });
 }
 -(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{

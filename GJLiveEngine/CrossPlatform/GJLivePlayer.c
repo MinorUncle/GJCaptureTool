@@ -24,7 +24,7 @@
 #define VIDEO_PTS_PRECISION 1000
 #define AUDIO_PTS_PRECISION 100
 
-#define UPDATE_SHAKE_TIME 10000
+#define UPDATE_SHAKE_TIME 5000 //
 #define MAX_CACHE_DUR 5000 //抖动最大缓存控制
 #define MIN_CACHE_DUR 100  //抖动最小缓存控制
 #define MAX_CACHE_RATIO 3
@@ -166,7 +166,16 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     //    GTime shake =  -(pts - netShake->collectStartPts - clock + netShake->collectStartClock);
 
     GTime shake = (clock - netShake->collectStartClock) - (pts - netShake->collectStartPts); //统计少发的抖动
-
+#ifdef NETWORK_DELAY
+    GTime delay = GJ_Gettime() / 1000 - pts;
+    netShake->networkDelay += delay;
+    netShake->delayCount ++;
+    
+    GTime testShake = delay - netShake->collectStartDelay;
+    if (testShake > netShake->maxTestDownShake) {
+        netShake->maxTestDownShake = testShake;
+    }
+#endif
     //    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "setLowshake:%lld,max:%lld ,preMax:%lld",shake,netShake->maxDownShake,netShake->preMaxDownShake);
     if (shake > netShake->maxDownShake) {
         netShake->maxDownShake = shake;
@@ -181,6 +190,9 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             _syncControl->bufferInfo.highWaterFlag = _syncControl->bufferInfo.lowWaterFlag * MAX_CACHE_RATIO;
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "setLowWater:%lld,hightWater:%d，max:%lld ,preMax:%lld", _syncControl->bufferInfo.lowWaterFlag, _syncControl->bufferInfo.highWaterFlag, netShake->maxDownShake, netShake->preMaxDownShake);
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&shake);
+#ifdef NETWORK_DELAY
+            player->callback(player->userDate,GJPlayMessage_TestNetShakeUpdate,&testShake);
+#endif
         }
     }
     if (shake < 0 || clock - netShake->collectStartClock >= UPDATE_SHAKE_TIME) {
@@ -188,6 +200,11 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         netShake->maxDownShake      = 0;
         netShake->collectStartClock = clock;
         netShake->collectStartPts   = pts;
+#ifdef NETWORK_DELAY
+        netShake->collectStartDelay = delay;
+        netShake->maxTestDownShake = 0;
+        
+#endif
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "更新网络抖动收集");
     }
 }
@@ -892,6 +909,18 @@ GJTrafficStatus GJLivePlay_GetAudioCacheInfo(GJLivePlayer *player) {
     return player->syncControl.audioInfo.trafficStatus;
 }
 
+#ifdef NETWORK_DELAY
+GLong GJLivePlay_GetNetWorkDelay(GJLivePlayer *player){
+    GInt32 delay = 0;
+    if (player->syncControl.netShake.delayCount > 0) {
+        delay = player->syncControl.netShake.networkDelay / player->syncControl.netShake.delayCount;
+    }
+    player->syncControl.netShake.delayCount = 0;
+    player->syncControl.netShake.networkDelay = 0;
+    return delay;
+}
+#endif
+
 GHandle GJLivePlay_GetVideoDisplayView(GJLivePlayer *player) {
     return player->videoPlayer->getDispayView(player->videoPlayer);
 }
@@ -907,3 +936,5 @@ GVoid GJLivePlay_Dealloc(GJLivePlayer **livePlayer) {
     free(player);
     *livePlayer = GNULL;
 }
+
+

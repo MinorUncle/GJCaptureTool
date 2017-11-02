@@ -31,6 +31,9 @@ typedef enum _GJLivePullMessageType {
     GJLivePull_bufferEnd,
     GJLivePull_bufferUpdate,//UnitBufferInfo
     GJLivePull_fristRender,
+#ifdef NETWORK_DELAY
+    GJLivePull_testNetShakeUpdate,//GTime
+#endif
     GJLivePull_netShakeUpdate,//GTime
     GJLivePull_dewateringUpdate,//GFloat
 } GJLivePullMessageType;

@@ -107,7 +107,8 @@ GJTrafficStatus GJLivePull_GetAudioTrafficStatus(GJLivePullContext *context) {
 #ifdef NETWORK_DELAY
 GInt32 GJLivePull_GetNetWorkDelay(GJLivePullContext *context){
     
-    return GJStreamPull_GetNetWorkDelay(context->streamPull);
+//    return GJStreamPull_GetNetWorkDelay(context->streamPull);
+    return (GInt32)GJLivePlay_GetNetWorkDelay(context->player);
 }
 #endif
 
@@ -149,6 +150,11 @@ static GVoid livePlayCallback(GHandle userDate, GJPlayMessage message, GHandle p
         case GJPlayMessage_NetShakeUpdate:
             pullMessage = GJLivePull_netShakeUpdate;
             break;
+#ifdef NETWORK_DELAY
+        case GJPlayMessage_TestNetShakeUpdate:
+            pullMessage = GJLivePull_testNetShakeUpdate;
+            break;
+#endif
         case GJPlayMessage_DewateringUpdate:
             pullMessage = GJLivePull_dewateringUpdate;
             break;

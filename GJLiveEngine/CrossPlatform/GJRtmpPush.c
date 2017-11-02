@@ -107,11 +107,6 @@ static GHandle sendRunloop(GHandle parm) {
             R_BufferUnRetain(&packet->retain);
             break;
         }
-#ifdef NETWORK_DELAY
-        GTime oldDts = packet->dts;
-        packet->dts = GJ_Gettime() / 1000;
-        packet->pts += packet->dts - oldDts;
-#endif
 
         if (packet->type == GJMediaType_Video) {
 
@@ -215,7 +210,7 @@ static GHandle sendRunloop(GHandle parm) {
 
             GInt32 iRet = RTMP_SendPacket(push->rtmp, &rtmpPacket, 0);
 
-            push->videoStatus.leave.ts = rtmpPacket.m_nTimeStamp;
+            push->videoStatus.leave.ts = packet->dts;
             push->videoStatus.leave.count++;
             push->videoStatus.leave.byte += rtmpPacket.m_nBodySize;
             R_BufferUnRetain(&packet->retain);
@@ -288,7 +283,7 @@ static GHandle sendRunloop(GHandle parm) {
             GInt32 iRet = RTMP_SendPacket(push->rtmp, &rtmpPacket, 0);
             push->audioStatus.leave.byte += rtmpPacket.m_nBodySize;
             push->audioStatus.leave.count++;
-            push->audioStatus.leave.ts = rtmpPacket.m_nTimeStamp;
+            push->audioStatus.leave.ts = packet->dts;
             R_BufferUnRetain(&packet->retain);
 
             if (iRet == GFalse) {
@@ -571,11 +566,7 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
 
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-#ifdef NETWORK_DELAY
-        GTime oldDts = packet->dts;
-        packet->dts = GJ_Gettime() / 1000;
-        packet->pts += packet->dts - oldDts;
-#endif
+        
         push->videoStatus.enter.ts = (GLong) packet->dts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
@@ -592,11 +583,7 @@ GBool GJStreamPush_SendAudioData(GJStreamPush *push, R_GJPacket *packet) {
 
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-#ifdef NETWORK_DELAY
-        GTime oldDts = packet->dts;
-        packet->dts = GJ_Gettime() / 1000;
-        packet->pts += packet->dts - oldDts;
-#endif
+
         push->audioStatus.enter.ts = (GLong) packet->dts;
         push->audioStatus.enter.count++;
         push->audioStatus.enter.byte += packet->dataSize;
