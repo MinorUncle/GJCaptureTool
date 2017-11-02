@@ -21,8 +21,11 @@
 -(void)livePull:(GJLivePull*)livePull closeConnent:(GJPullSessionInfo*)info resion:(GJConnentCloceReason)reason;
 -(void)livePull:(GJLivePull*)livePull connentSuccessWithElapsed:(int)elapsed;
 -(void)livePull:(GJLivePull*)livePull bufferUpdatePercent:(float)percent duration:(long)duration;
+#ifdef NETWORK_DELAY
 -(void)livePull:(GJLivePull*)livePull networkDelay:(long)delay;
 -(void)livePull:(GJLivePull *)livePull testNetShake:(long)shake;
+-(void)livePull:(GJLivePull *)livePull testKeyDelay:(long)delay;
+#endif
 -(void)livePull:(GJLivePull*)livePull netShake:(long)shake;
 -(void)livePull:(GJLivePull*)livePull isDewatering:(BOOL)isDewatering;
 

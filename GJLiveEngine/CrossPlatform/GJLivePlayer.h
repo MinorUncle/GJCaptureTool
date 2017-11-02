@@ -37,6 +37,7 @@ typedef enum _GJPlayMessage {
     GJPlayMessage_NetShakeUpdate,//const GTime;
 #ifdef NETWORK_DELAY
     GJPlayMessage_TestNetShakeUpdate,//同一手机下真正测试的抖动
+    GJPlayMessage_TestKeyDelayUpdate,//影响抖动的关键延迟
 #endif
     GJPlayMessage_DewateringUpdate,//gbool
     GJPlayMessage_FristRender,

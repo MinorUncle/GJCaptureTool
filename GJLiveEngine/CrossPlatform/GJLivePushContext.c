@@ -54,7 +54,12 @@ static GVoid videoCaptureFrameOutCallback(GHandle userData, R_GJPixelFrame *fram
         context->operationVCount++;
         if (!context->videoMute && (context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
 #ifdef NETWORK_DELAY
-            frame->pts = GJ_Gettime() / 1000;
+            if (NeedTestNetwork) {
+
+                frame->pts = GJ_Gettime() / 1000;
+            }else{
+                frame->pts = GJ_Gettime() / 1000 - context->connentClock;
+            }
 #else
             frame->pts = GJ_Gettime() / 1000 - context->connentClock;
 #endif
@@ -75,7 +80,11 @@ static GVoid audioCaptureFrameOutCallback(GHandle userData, R_GJPCMFrame *frame)
         context->operationACount++;
         if (!context->audioMute) {
 #ifdef NETWORK_DELAY
-            frame->pts = GJ_Gettime() / 1000;
+            if (NeedTestNetwork) {
+                frame->pts = GJ_Gettime() / 1000;
+            }else{
+                frame->pts = GJ_Gettime() / 1000 - context->connentClock;
+            }
 #else
             frame->pts = GJ_Gettime() / 1000 - context->connentClock;
 #endif
@@ -100,16 +109,19 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
     if (context->firstVideoEncodeClock == G_TIME_INVALID) {
 
         GJAssert(packet->flag && GJPacketFlag_KEY, "第一帧非关键帧");
+        context->preVideoTraffic = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
         context->firstVideoEncodeClock = GJ_Gettime() / 1000;
         GJStreamPush_SendVideoData(context->videoPush, packet);
-        context->preVideoTraffic = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
 
     } else {
         GJTrafficStatus bufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
+        GJTrafficStatus aBufferStatus = GJStreamPush_GetAudioBufferCacheInfo(context->videoPush);
         GJStreamPush_SendVideoData(context->videoPush, packet);
         
         GLong cacheInCount = bufferStatus.enter.count - bufferStatus.leave.count;
-        if(cacheInCount > 1){
+        cacheInCount = GMAX(cacheInCount,aBufferStatus.enter.count - aBufferStatus.leave.count);
+        //同时考虑音频，更加精确
+        if(cacheInCount > 0){
             context->favorableCount = 0;
         }else{
             context->favorableCount ++;
@@ -118,7 +130,7 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
 
             //GLong cacheInPts = bufferStatus.enter.ts - bufferStatus.leave.ts;
             GLong sendCount = bufferStatus.leave.count - context->preVideoTraffic.leave.count;
-            if (cacheInCount > 1) {
+            if (cacheInCount > 0) {
                 //快降慢升
 
                 ///<<<考虑丢帧算法

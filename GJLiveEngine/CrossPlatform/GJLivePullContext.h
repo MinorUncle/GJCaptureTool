@@ -33,6 +33,7 @@ typedef enum _GJLivePullMessageType {
     GJLivePull_fristRender,
 #ifdef NETWORK_DELAY
     GJLivePull_testNetShakeUpdate,//GTime
+    GJLivePull_testKeyDelayUpdate,//GTime
 #endif
     GJLivePull_netShakeUpdate,//GTime
     GJLivePull_dewateringUpdate,//GFloat

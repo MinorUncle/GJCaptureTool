@@ -147,11 +147,7 @@ static GHandle sendRunloop(GHandle parm) {
             R_BufferUnRetain(&packet->retain);
             break;
         }
-#ifdef NETWORK_DELAY
-        GTime oldDts = packet->dts;
-        packet->dts = GJ_Gettime()/1000;
-        packet->pts += packet->dts - oldDts;
-#endif
+
         av_init_packet(sendPacket);
         sendPacket->pts = packet->pts;
         sendPacket->dts = packet->dts;
@@ -424,11 +420,6 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
     if (push == GNULL) return GFalse;
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-#ifdef NETWORK_DELAY
-        GTime oldDts = packet->dts;
-        packet->dts = GJ_Gettime()/1000;
-        packet->pts += packet->dts - oldDts;
-#endif
         
         push->videoStatus.enter.ts = (GLong) packet->dts;
         push->videoStatus.enter.count++;
@@ -445,11 +436,7 @@ GBool GJStreamPush_SendAudioData(GJStreamPush *push, R_GJPacket *packet) {
 
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-#ifdef NETWORK_DELAY
-        GTime oldDts = packet->dts;
-        packet->dts = GJ_Gettime()/1000;
-        packet->pts += packet->dts - oldDts;
-#endif
+
         push->audioStatus.enter.ts = (GLong) packet->dts;
         push->audioStatus.enter.count++;
         push->audioStatus.enter.byte += packet->dataSize;

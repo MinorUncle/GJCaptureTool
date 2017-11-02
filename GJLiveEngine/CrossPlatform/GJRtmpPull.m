@@ -39,10 +39,10 @@ struct _GJStreamPull {
 
     int stopRequest;
     int releaseRequest;
-#ifdef NETWORK_DELAY
-    GInt32 networkDelay;
-    GInt32 delayCount;
-#endif
+//#ifdef NETWORK_DELAY
+//    GInt32 networkDelay;
+//    GInt32 delayCount;
+//#endif
 };
 
 
@@ -161,10 +161,6 @@ static GHandle pullRunloop(GHandle parm) {
                     pull->dataCallback(pull, aacPacket, pull->dataCallbackParm);
                 }
                 
-#ifdef NETWORK_DELAY
-                pull->networkDelay += (GInt32)(GJ_Gettime()/1000 - packet.m_nTimeStamp);
-                pull->delayCount++;
-#endif
                 pthread_mutex_unlock(&pull->mutex);
                 R_BufferUnRetain(buffer);
 
@@ -316,10 +312,7 @@ static GHandle pullRunloop(GHandle parm) {
                 if (!pull->releaseRequest) {
                     pull->dataCallback(pull, h264Packet, pull->dataCallbackParm);
                 }
-#ifdef NETWORK_DELAY
-                pull->networkDelay += (GInt32)(GJ_Gettime()/1000 - packet.m_nTimeStamp);
-                pull->delayCount ++;
-#endif
+
                 pthread_mutex_unlock(&pull->mutex);
                 R_BufferUnRetain(buffer);
 
@@ -446,14 +439,15 @@ GJTrafficUnit GJStreamPull_GetVideoPullInfo(GJStreamPull *pull) {
 GJTrafficUnit GJStreamPull_GetAudioPullInfo(GJStreamPull *pull) {
     return pull->audioPullInfo;
 }
-#ifdef NETWORK_DELAY
-GInt32 GJStreamPull_GetNetWorkDelay(GJStreamPull *pull){
-    GInt32 delay = 0;
-    if (pull->delayCount > 0) {
-        delay = pull->networkDelay/pull->delayCount;
-    }
-    pull->delayCount = 0;
-    pull->networkDelay = 0;
-    return delay;
-}
-#endif
+//#ifdef NETWORK_DELAY
+//GInt32 GJStreamPull_GetNetWorkDelay(GJStreamPull *pull){
+//    GInt32 delay = 0;
+//    if (pull->delayCount > 0) {
+//        delay = pull->networkDelay/pull->delayCount;
+//    }
+//    pull->delayCount = 0;
+//    pull->networkDelay = 0;
+//    return delay;
+//}
+//#endif
+

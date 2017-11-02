@@ -35,10 +35,10 @@ struct _GJStreamPull {
     
     GBool hasVideoKey;
     //保证有第一个关键帧才回调数据
-#ifdef NETWORK_DELAY
-    GInt32 networkDelay;
-    GInt32 delayCount;
-#endif
+//#ifdef NETWORK_DELAY
+//    GInt32 networkDelay;
+//    GInt32 delayCount;
+//#endif
 };
 GVoid GJStreamPull_Delloc(GJStreamPull *pull);
 
@@ -169,10 +169,7 @@ static GHandle pullRunloop(GHandle parm) {
             goto END;
         }
 
-#ifdef NETWORK_DELAY
-        pull->networkDelay += (GInt32)(GJ_Gettime()/1000 - pkt.dts);
-        pull->delayCount ++;
-#endif
+
         
         if (pkt.stream_index == vsIndex) {
             GJLOG(LOG_ALL,GJ_LOGALL,"receive video pts:%lld dts:%lld size:%d\n", pkt.pts, pkt.dts, pkt.size);
@@ -339,16 +336,16 @@ GBool GJStreamPull_StartConnect(GJStreamPull *pull, StreamPullDataCallback dataC
 
     return GTrue;
 }
-#ifdef NETWORK_DELAY
-GInt32 GJStreamPull_GetNetWorkDelay(GJStreamPull *pull){
-    GInt32 delay = 0;
-    if (pull->delayCount > 0) {
-        delay = pull->networkDelay/pull->delayCount;
-    }
-    pull->delayCount = 0;
-    pull->networkDelay = 0;
-    return delay;
-}
-#endif
+//#ifdef NETWORK_DELAY
+//GInt32 GJStreamPull_GetNetWorkDelay(GJStreamPull *pull){
+//    GInt32 delay = 0;
+//    if (pull->delayCount > 0) {
+//        delay = pull->networkDelay/pull->delayCount;
+//    }
+//    pull->delayCount = 0;
+//    pull->networkDelay = 0;
+//    return delay;
+//}
+//#endif
 GJTrafficUnit GJStreamPull_GetVideoPullInfo(GJStreamPull *pull);
 GJTrafficUnit GJStreamPull_GetAudioPullInfo(GJStreamPull *pull);

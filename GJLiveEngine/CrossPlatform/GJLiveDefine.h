@@ -15,6 +15,8 @@
 
 #define NETWORK_DELAY
 
+static GBool NeedTestNetwork = GFalse;
+
 //#define GJVIDEODECODE_TEST
 typedef struct GSize {
     GFloat32 width;
@@ -119,6 +121,7 @@ typedef struct PullInfo{
     GFloat32 frameRate;//
     GLong  cacheTime;
     GLong  cacheCount;
+    GLong  lastReceivePts;
 }GJPullInfo;
 typedef struct UnitBufferInfo{
     GFloat32 percent;//byte/s

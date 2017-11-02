@@ -100,6 +100,12 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
                 [livePull.delegate livePull:livePull testNetShake:(long)time];
             }
             break;
+        case GJLivePull_testKeyDelayUpdate:
+            if ([livePull.delegate respondsToSelector:@selector(livePull:testKeyDelay:)]) {
+                GTime time = *(GTime*)parm;
+                [livePull.delegate livePull:livePull testKeyDelay:(long)time];
+            }
+            break;
 #endif
         case GJLivePull_decodeFristAudioFrame:{
             
@@ -117,17 +123,22 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
     _pullSessionStatus.videoStatus.cacheTime  = vCache.enter.ts - vCache.leave.ts;
     _pullSessionStatus.videoStatus.bitrate    = (vCache.enter.byte - _videoTraffic.enter.byte) * 1.0 / _gaterFrequency;
     _pullSessionStatus.videoStatus.frameRate  = (vCache.leave.count - _videoTraffic.leave.count) * 1.0 / _gaterFrequency;
+    _pullSessionStatus.videoStatus.lastReceivePts = vCache.enter.ts;
+    
     _pullSessionStatus.audioStatus.cacheCount = aCache.enter.count - aCache.leave.count;
     _pullSessionStatus.audioStatus.cacheTime  = aCache.enter.ts - aCache.leave.ts;
     _pullSessionStatus.audioStatus.bitrate    = (aCache.enter.byte - _audioTraffic.enter.byte) * 1.0 / _gaterFrequency;
     _pullSessionStatus.audioStatus.frameRate  = (aCache.leave.count - _audioTraffic.leave.count) * 1.0 / _gaterFrequency;
+    _pullSessionStatus.audioStatus.lastReceivePts = aCache.enter.ts;
+    
     _videoTraffic                             = vCache;
     _audioTraffic                             = aCache;
     [self.delegate livePull:self updatePullStatus:&_pullSessionStatus];
 #ifdef NETWORK_DELAY
-
-    if ([self.delegate respondsToSelector:@selector(livePull:networkDelay:)]) {
-        [self.delegate livePull:self networkDelay:GJLivePull_GetNetWorkDelay(_pullContext)];
+    if(NeedTestNetwork){
+        if ([self.delegate respondsToSelector:@selector(livePull:networkDelay:)]) {
+            [self.delegate livePull:self networkDelay:GJLivePull_GetNetWorkDelay(_pullContext)];
+        }
     }
 #endif
 }

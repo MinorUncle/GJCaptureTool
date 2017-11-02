@@ -29,6 +29,7 @@
 @property (strong, nonatomic) UILabel    *audioCacheLab;
 @property (strong, nonatomic) UILabel    *playerBufferLab;
 @property (strong, nonatomic) UILabel    *netDelay;
+@property (strong, nonatomic) UILabel    *keyDelay;
 @property (strong, nonatomic) UILabel    *netShake;
 @property (strong, nonatomic) UILabel    *testNetShake;
 @property (strong, nonatomic) UILabel    *dewaterStatus;
@@ -91,14 +92,21 @@
         _netDelay = [[UILabel alloc]init];
         _netDelay.numberOfLines = 0;
         _netDelay.textColor = [UIColor redColor];
-        _netDelay.text = @"NetDelay Test:0 ms";
+        _netDelay.text = @"NetDelay Test:未工作";
         _netDelay.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_netDelay];
+        
+        _keyDelay = [[UILabel alloc]init];
+        _keyDelay.numberOfLines = 0;
+        _keyDelay.textColor = [UIColor redColor];
+        _keyDelay.text = @"KeyNetDelay Test:未工作";
+        _keyDelay.font = [UIFont systemFontOfSize:10];
+        [self.view addSubview:_keyDelay];
         
         _testNetShake = [[UILabel alloc]init];
         _testNetShake.numberOfLines = 0;
         _testNetShake.textColor = [UIColor redColor];
-        _testNetShake.text = @"netShake Test:0 ms";
+        _testNetShake.text = @"netShake Test:未工作";
         _testNetShake.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_testNetShake];
         
@@ -129,7 +137,7 @@
     _frame = frame;
     self.view.frame = frame;
     CGRect rect = frame;
-    int count = 9;
+    int count = 10;
     rect.origin.x = 0;
     rect.origin.y = 0;
     rect.size.height *= 1.0/count;
@@ -146,6 +154,9 @@
     
     rect.origin.y = CGRectGetMaxY(rect);
     _netDelay.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _keyDelay.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     _testNetShake.frame = rect;
@@ -913,7 +924,6 @@
     NSLog(@"pull w:%f,h:%f",info->size.width,info->size.height);
 }
 -(void)livePull:(GJLivePull *)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString *)infoDesc{
-
     switch (type) {
         case kLivePullReadPacketError:
         case kLivePullConnectError:{
@@ -940,6 +950,14 @@
         show.netDelay.text = [NSString stringWithFormat:@"NetDelay Test:%ld ms",delay];
     });
 }
+
+-(void)livePull:(GJLivePull *)livePull testKeyDelay:(long)delay{
+    PullShow* show = [self getShowWithPush:livePull];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        show.keyDelay.text = [NSString stringWithFormat:@"KeyNetDelay Test:%ld ms",delay];
+    });
+}
+
 -(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
 //    UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"提示" message:@"是否测试释放推拉流对象" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:@"取消", nil];
 //    [alert show];
