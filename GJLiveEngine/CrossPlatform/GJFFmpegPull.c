@@ -175,6 +175,8 @@ static GHandle pullRunloop(GHandle parm) {
 #endif
         
         if (pkt.stream_index == vsIndex) {
+            GJLOG(LOG_ALL,GJ_LOGALL,"receive video pts:%lld dts:%lld size:%d\n", pkt.pts, pkt.dts, pkt.size);
+
 #if MENORY_CHECK
             R_GJPacket *h264Packet = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
             h264Packet->dataOffset = 0;
@@ -195,7 +197,6 @@ static GHandle pullRunloop(GHandle parm) {
                 pull->hasVideoKey = GTrue;
             }
             h264Packet->extendDataSize = h264Packet->extendDataOffset = 0;
-            //            printf("video pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
             pthread_mutex_lock(&pull->mutex);
             if (!pull->releaseRequest && pull->hasVideoKey){
                 pull->dataCallback(pull, h264Packet, pull->dataCallbackParm);
@@ -203,7 +204,7 @@ static GHandle pullRunloop(GHandle parm) {
             pthread_mutex_unlock(&pull->mutex);
             R_BufferUnRetain(&h264Packet->retain);
         } else if (pkt.stream_index == asIndex) {
-//            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
+            GJLOG(LOG_ALL,GJ_LOGALL,"receive audio pts:%lld dts:%lld size:%d\n", pkt.pts, pkt.dts, pkt.size);
 #if MENORY_CHECK
             R_GJPacket *aacPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
             aacPacket->dataOffset = 0;
@@ -340,7 +341,10 @@ GBool GJStreamPull_StartConnect(GJStreamPull *pull, StreamPullDataCallback dataC
 }
 #ifdef NETWORK_DELAY
 GInt32 GJStreamPull_GetNetWorkDelay(GJStreamPull *pull){
-    GInt32 delay = pull->networkDelay/pull->delayCount;
+    GInt32 delay = 0;
+    if (pull->delayCount > 0) {
+        delay = pull->networkDelay/pull->delayCount;
+    }
     pull->delayCount = 0;
     pull->networkDelay = 0;
     return delay;

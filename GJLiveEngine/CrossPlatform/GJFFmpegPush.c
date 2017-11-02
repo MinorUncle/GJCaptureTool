@@ -178,13 +178,13 @@ static GHandle sendRunloop(GHandle parm) {
         if (iRet >= 0) {
             if (packet->type == GJMediaType_Video) {
 
-                GJLOG(STREAM_PUSH_LOG,GJ_LOGALL,"send video pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
+                GJLOG(LOG_ALL,GJ_LOGALL,"send video pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
                 push->videoStatus.leave.byte += packet->dataSize;
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.ts = (GLong) packet->dts;
             } else {
 
-                GJLOG(STREAM_PUSH_LOG,GJ_LOGALL,"send audio pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
+                GJLOG(LOG_ALL,GJ_LOGALL,"send audio pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
                 push->audioStatus.leave.byte += packet->dataSize;
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.ts = (GLong) packet->dts;

@@ -22,6 +22,9 @@
 -(void)livePull:(GJLivePull*)livePull connentSuccessWithElapsed:(int)elapsed;
 -(void)livePull:(GJLivePull*)livePull bufferUpdatePercent:(float)percent duration:(long)duration;
 -(void)livePull:(GJLivePull*)livePull networkDelay:(long)delay;
+-(void)livePull:(GJLivePull*)livePull netShake:(long)shake;
+-(void)livePull:(GJLivePull*)livePull isDewatering:(BOOL)isDewatering;
+
 
 -(void)livePull:(GJLivePull*)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString*)infoDesc;
 

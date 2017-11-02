@@ -256,7 +256,8 @@ static int restartCount;
     _audioInfo = aInfo;
 
     [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
-    if (vInfo.enter.ts - vInfo.leave.ts > MAX_SEND_DELAY) {//延迟过多重启
+    if (vInfo.enter.ts - vInfo.leave.ts > MAX_SEND_DELAY &&//延迟过多重启
+        vInfo.enter.count - vInfo.leave.count > 2) {//防止初始ts不为0导致一直重启
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "推流缓存过多，重新启动推流");
         restartCount++;
         [self stopStreamPush];

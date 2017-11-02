@@ -72,13 +72,30 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
         } break;
         case GJLivePull_bufferUpdate: {
             UnitBufferInfo *info = parm;
-            [livePull.delegate livePull:livePull bufferUpdatePercent:info->percent duration:info->bufferDur];
+            if ([livePull.delegate respondsToSelector:@selector(livePull:bufferUpdatePercent:duration:)]) {
+                [livePull.delegate livePull:livePull bufferUpdatePercent:info->percent duration:info->bufferDur];
+            }
         } break;
         case GJLivePull_decodeFristVideoFrame: {
             //                GJPullFristFrameInfo info = {0};
             //                info.size = *(GSize*)parm;
             [livePull.delegate livePull:livePull fristFrameDecode:parm];
         } break;
+        case GJLivePull_dewateringUpdate:{
+            if ([livePull.delegate respondsToSelector:@selector(livePull:isDewatering:)]) {
+                GBool dewatering = *(GBool*)parm;
+                [livePull.delegate livePull:livePull isDewatering:dewatering];
+            }
+        }break;
+        case GJLivePull_netShakeUpdate:{
+            if ([livePull.delegate respondsToSelector:@selector(livePull:netShake:)]) {
+                GTime time = *(GTime*)parm;
+                [livePull.delegate livePull:livePull netShake:(long)time];
+            }
+        }break;
+        case GJLivePull_decodeFristAudioFrame:{
+            
+        }break;
         default:
             GJLOG(DEFAULT_LOG, GJ_LOGERROR, "not catch info：%d", messageType);
             break;

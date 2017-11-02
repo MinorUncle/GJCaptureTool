@@ -29,6 +29,7 @@ typedef GVoid (*StreamPullDataCallback)(GJStreamPull *StreamPull, R_GJPacket *pa
 //所有不阻塞
 GBool GJStreamPull_Create(GJStreamPull **pull, StreamPullMessageCallback callback, GHandle StreamPullParm);
 
+//保证不会再有回调
 GVoid GJStreamPull_CloseAndRelease(GJStreamPull *pull);
 
 GBool GJStreamPull_StartConnect(GJStreamPull *pull, StreamPullDataCallback dataCallback, GHandle callbackParm, const GChar *pullUrl);

@@ -82,8 +82,12 @@ static GBool GJLivePlay_StartDewatering(GJLivePlayer *player) {
     if (player->playControl.status == kPlayStatusRunning) {
         if (player->syncControl.speed <= 1.00001) {
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "startDewatering");
+            if (player->callback) {
+                GFloat32 speed = 1.2f;
+                player->callback(player->userDate,GJPlayMessage_DewateringUpdate,&speed);
+            }
             player->syncControl.speed = 1.2;
-//            player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.2);
+            player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.2);
         }
     }
     pthread_mutex_unlock(&player->playControl.oLock);
@@ -95,8 +99,12 @@ static GBool GJLivePlay_StopDewatering(GJLivePlayer *player) {
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->syncControl.speed > 1.0) {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "stopDewatering");
+        if (player->callback) {
+            GFloat32 speed = 1.0f;
+            player->callback(player->userDate,GJPlayMessage_DewateringUpdate,&speed);
+        }
         player->syncControl.speed = 1.0f;
-//        player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.0f);
+        player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.0f);
     }
     pthread_mutex_unlock(&player->playControl.oLock);
     return GTrue;
@@ -146,8 +154,9 @@ static GVoid GJLivePlay_StopBuffering(GJLivePlayer *player) {
     pthread_mutex_unlock(&player->playControl.oLock);
 }
 
-GVoid GJLivePlay_CheckNetShake(GJSyncControl *_syncControl, GTime pts) {
+GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 
+    GJSyncControl *_syncControl = &player->syncControl;
     GTime           clock    = GJ_Gettime() / 1000;
     SyncInfo *      syncInfo = &_syncControl->audioInfo;
     GJNetShakeInfo *netShake = &_syncControl->netShake;
@@ -170,10 +179,11 @@ GVoid GJLivePlay_CheckNetShake(GJSyncControl *_syncControl, GTime pts) {
             }
             _syncControl->bufferInfo.lowWaterFlag  = shake;
             _syncControl->bufferInfo.highWaterFlag = _syncControl->bufferInfo.lowWaterFlag * MAX_CACHE_RATIO;
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "setLowWater:%lld,hightWater:%d，max:%lld ,preMax:%lld", _syncControl->bufferInfo.lowWaterFlag, _syncControl->bufferInfo.highWaterFlag, netShake->maxDownShake, netShake->preMaxDownShake);
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "setLowWater:%lld,hightWater:%d，max:%lld ,preMax:%lld", _syncControl->bufferInfo.lowWaterFlag, _syncControl->bufferInfo.highWaterFlag, netShake->maxDownShake, netShake->preMaxDownShake);
+            player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&shake);
         }
     }
-    if (clock - netShake->collectStartClock >= UPDATE_SHAKE_TIME) {
+    if (shake < 0 || clock - netShake->collectStartClock >= UPDATE_SHAKE_TIME) {
         netShake->preMaxDownShake   = netShake->maxDownShake;
         netShake->maxDownShake      = 0;
         netShake->collectStartClock = clock;
@@ -661,7 +671,7 @@ GVoid GJLivePlay_Stop(GJLivePlayer *player) {
     }
 }
 inline static GBool _internal_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
-    GJLivePlay_CheckNetShake(&player->syncControl, videoFrame->pts);
+    GJLivePlay_CheckNetShake(player, videoFrame->pts);
     //    printf("add play video pts:%lld\n",videoFrame->pts);
     if (player->playControl.playVideoThread == GNULL) {
 
@@ -821,7 +831,7 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
         _syncControl->audioInfo.trafficStatus.leave.ts = (GLong) audioFrame->pts; ///防止audioInfo.startPts不为从0开始时，audiocache过大，
     }
 
-    GJLivePlay_CheckNetShake(&player->syncControl, audioFrame->pts);
+    GJLivePlay_CheckNetShake(player, audioFrame->pts);
 
     if (player->audioPlayer->obaque == GNULL) {
         _syncControl->audioInfo.startPts               = (GLong) audioFrame->pts;

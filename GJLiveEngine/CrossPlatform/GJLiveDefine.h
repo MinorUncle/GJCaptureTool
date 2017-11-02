@@ -12,7 +12,7 @@
 #import "GJRetainBuffer.h"
 
 //网络延迟收集，只有在同一收集同时推拉流才准确
-//#define NETWORK_DELAY
+#define NETWORK_DELAY
 
 //#define GJVIDEODECODE_TEST
 typedef struct GSize {

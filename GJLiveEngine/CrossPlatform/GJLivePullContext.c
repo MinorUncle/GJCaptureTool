@@ -143,6 +143,15 @@ static GVoid livePlayCallback(GHandle userDate, GJPlayMessage message, GHandle p
         case GJPlayMessage_BufferEnd:
             pullMessage = GJLivePull_bufferEnd;
             break;
+        case GJPlayMessage_FristRender:
+            pullMessage = GJLivePull_fristRender;
+            break;
+        case GJPlayMessage_NetShakeUpdate:
+            pullMessage = GJLivePull_netShakeUpdate;
+            break;
+        case GJPlayMessage_DewateringUpdate:
+            pullMessage = GJLivePull_dewateringUpdate;
+            break;
         default:
             break;
     }

@@ -29,6 +29,8 @@
 @property (strong, nonatomic) UILabel    *audioCacheLab;
 @property (strong, nonatomic) UILabel    *playerBufferLab;
 @property (strong, nonatomic) UILabel    *netDelay;
+@property (strong, nonatomic) UILabel    *netShake;
+@property (strong, nonatomic) UILabel    *dewaterStatus;
 
 
 @property (strong, nonatomic) UIView     * view;;
@@ -91,7 +93,20 @@
         _netDelay.text = @"NetDelay:0ms";
         _netDelay.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_netDelay];
-
+        
+        _netShake = [[UILabel alloc]init];
+        _netShake.numberOfLines = 0;
+        _netShake.textColor = [UIColor redColor];
+        _netShake.text = @"Max netShake:0ms";
+        _netShake.font = [UIFont systemFontOfSize:10];
+        [self.view addSubview:_netShake];
+        
+        _dewaterStatus = [[UILabel alloc]init];
+        _dewaterStatus.numberOfLines = 0;
+        _dewaterStatus.textColor = [UIColor redColor];
+        _dewaterStatus.text = @"dewaterStatus:false";
+        _dewaterStatus.font = [UIFont systemFontOfSize:10];
+        [self.view addSubview:_dewaterStatus];
         
         _playerBufferLab = [[UILabel alloc]init];
         _playerBufferLab.numberOfLines = 0;
@@ -106,7 +121,7 @@
     _frame = frame;
     self.view.frame = frame;
     CGRect rect = frame;
-    int count = 6;
+    int count = 8;
     rect.origin.x = 0;
     rect.origin.y = 0;
     rect.size.height *= 1.0/count;
@@ -123,6 +138,12 @@
     
     rect.origin.y = CGRectGetMaxY(rect);
     _netDelay.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _netShake.frame = rect;
+    
+    rect.origin.y = CGRectGetMaxY(rect);
+    _dewaterStatus.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     _playerBufferLab.frame = rect;
@@ -849,6 +870,24 @@
         show.pullRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f KB/s A:%0.2f KB/s",pullStatus.videoStatus.bitrate/1024.0,pullStatus.audioStatus.bitrate/1024.0];
         show.videoCacheLab.text = [NSString stringWithFormat:@"cache V t:%ld ms f:%ld",pullStatus.videoStatus.cacheTime,pullStatus.videoStatus.cacheCount];
         show.audioCacheLab.text = [NSString stringWithFormat:@"cache A t:%ld ms f:%ld",pullStatus.audioStatus.cacheTime,pullStatus.audioStatus.cacheCount];
+    });
+}
+
+-(void)livePull:(GJLivePull *)livePull netShake:(long)shake{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        PullShow* show = [self getShowWithPush:livePull];
+        show.netShake.text = [NSString stringWithFormat:@"Max netShake:%ld ms",shake];
+    });
+}
+
+-(void)livePull:(GJLivePull *)livePull isDewatering:(BOOL)isDewatering{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        PullShow* show = [self getShowWithPush:livePull];
+        if (isDewatering) {
+            show.dewaterStatus.text = @"dewaterStatus:true";
+        }else{
+            show.dewaterStatus.text = @"dewaterStatus:false";
+        }
     });
 }
 

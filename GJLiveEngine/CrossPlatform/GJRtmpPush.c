@@ -108,7 +108,9 @@ static GHandle sendRunloop(GHandle parm) {
             break;
         }
 #ifdef NETWORK_DELAY
-        packet->dts = (GUInt32)(GJ_Gettime() / 1000);
+        GTime oldDts = packet->dts;
+        packet->dts = GJ_Gettime() / 1000;
+        packet->pts += packet->dts - oldDts;
 #endif
 
         if (packet->type == GJMediaType_Video) {
@@ -570,7 +572,9 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
 #ifdef NETWORK_DELAY
-        packet->dts = (GUInt32)(GJ_Gettime() / 1000);
+        GTime oldDts = packet->dts;
+        packet->dts = GJ_Gettime() / 1000;
+        packet->pts += packet->dts - oldDts;
 #endif
         push->videoStatus.enter.ts = (GLong) packet->dts;
         push->videoStatus.enter.count++;
@@ -589,7 +593,9 @@ GBool GJStreamPush_SendAudioData(GJStreamPush *push, R_GJPacket *packet) {
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
 #ifdef NETWORK_DELAY
-        packet->dts = (GUInt32)(GJ_Gettime() / 1000);
+        GTime oldDts = packet->dts;
+        packet->dts = GJ_Gettime() / 1000;
+        packet->pts += packet->dts - oldDts;
 #endif
         push->audioStatus.enter.ts = (GLong) packet->dts;
         push->audioStatus.enter.count++;

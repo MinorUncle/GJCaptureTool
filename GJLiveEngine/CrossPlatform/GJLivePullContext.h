@@ -29,7 +29,10 @@ typedef enum _GJLivePullMessageType {
     GJLivePull_decodeFristAudioFrame,
     GJLivePull_bufferStart,
     GJLivePull_bufferEnd,
-    GJLivePull_bufferUpdate,
+    GJLivePull_bufferUpdate,//UnitBufferInfo
+    GJLivePull_fristRender,
+    GJLivePull_netShakeUpdate,//GTime
+    GJLivePull_dewateringUpdate,//GFloat
 } GJLivePullMessageType;
 typedef GVoid (*GJLivePullCallback)(GHandle userDate, GJLivePullMessageType message, GHandle param);
 
