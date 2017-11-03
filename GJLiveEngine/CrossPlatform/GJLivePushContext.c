@@ -17,7 +17,8 @@
 //#define DROP_BITRATE_RATE 0.1     //最小码率与最大码率之间的分割比率   //修改，采用帧率
 //#define NET_ADD_STEP 8 * 1024 * 5 //5KB                          //修改，context->pushConfig->mVideoBitrate/context->pushConfig->mFps)
 
-
+#define NET_ADD_STEP_B  1000  //每步增加的码率
+#define NET_ADD_STEP_R  0.1   //每步增加的比例
 #ifdef RVOP
 static rvop_server_p rvopserver;
 #endif
@@ -30,7 +31,7 @@ static GBool     requestDestoryServer;
 
 static GVoid _GJLivePush_AppendQualityWithStep(GJLivePushContext *context, GLong step, GInt32 maxLimit);
 static GVoid _GJLivePush_reduceQualityWithStep(GJLivePushContext *context, GLong step, GInt32 minLimit);
-
+static void _GJLivePush_SetQuality(GJLivePushContext *context, GInt32 destRate, GInt32 maxLimit,GInt32 minLimit);
 
 static GVoid _recodeCompleteCallback(GHandle userData, const GChar *filePath, GHandle error) {
     GJLivePushContext *context = userData;
@@ -170,8 +171,10 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
                         GJLOG(LIVEPUSH_LOG, GJ_LOGINFO,"avg rate:%0.2f\n",context->videoNetSpeed/ 8.0 / 1024);
 
                     }
-                    GInt32 minLimit = GMIN(context->videoNetSpeed,context->videoBitrate);
-                    _GJLivePush_reduceQualityWithStep(context, (context->rateCheckStep - sendCount) ,minLimit - 2* context->pushConfig->mVideoBitrate/context->pushConfig->mFps);
+                    GInt32 minLimit = GMIN(context->videoNetSpeed,context->videoBitrate) - 2* context->pushConfig->mVideoBitrate/context->pushConfig->mFps;
+                    _GJLivePush_SetQuality(context, GMAX(1,context->rateCheckStep - (GInt32)sendCount) * NET_ADD_STEP_B, GINT32_MAX, minLimit);
+
+//                    _GJLivePush_reduceQualityWithStep(context, (context->rateCheckStep - sendCount) ,minLimit - 2* context->pushConfig->mVideoBitrate/context->pushConfig->mFps);
                 }
 
             } else{
@@ -196,8 +199,10 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
                     if(context->videoNetSpeed < context->videoBitrate){
                         context->videoNetSpeed  = context->videoBitrate;
                     }
+                    GInt32 maxLimit = context->videoNetSpeed + context->pushConfig->mVideoBitrate/context->pushConfig->mFps;
 
-                    _GJLivePush_AppendQualityWithStep(context,GMAX(1,sendCount - context->rateCheckStep),context->videoNetSpeed + context->pushConfig->mVideoBitrate/context->pushConfig->mFps);
+                    _GJLivePush_SetQuality(context, GMAX(1,(GInt32)sendCount - context->rateCheckStep) * NET_ADD_STEP_B, maxLimit, 0);
+//                    _GJLivePush_AppendQualityWithStep(context,GMAX(1,sendCount - context->rateCheckStep),context->videoNetSpeed + context->pushConfig->mVideoBitrate/context->pushConfig->mFps);
                 }
             }
             //
@@ -263,6 +268,71 @@ GVoid streamPushMessageCallback(GHandle userData, kStreamPushMessageType message
         default:
             break;
     }
+}
+
+static void _GJLivePush_SetQuality(GJLivePushContext *context, GInt32 destRate, GInt32 maxLimit,GInt32 minLimit){
+    if (destRate > maxLimit) {
+        destRate = maxLimit;
+    }
+    GJNetworkQuality  quality = GJNetworkQualitybad;
+ 
+    if (destRate > context->videoMinBitrate) {
+        if (destRate > maxLimit) {
+            destRate = maxLimit;
+        }else if (destRate < minLimit){
+            destRate = minLimit;
+        }
+        if (destRate >= context->pushConfig->mVideoBitrate - 0.1) {
+            quality = GJNetworkQualityExcellent;
+        }else{
+            quality = GJNetworkQualityGood;
+
+        }
+        context->videoDropStep = GRationalMake(0, 0);
+    }else{
+        GInt32 userAllowMin = context->videoMinBitrate * GRationalValue(context->videoMaxDropRate);
+        if (destRate > maxLimit) {
+            maxLimit = GMIN(maxLimit, userAllowMin);
+            destRate = maxLimit;
+        }else{
+            minLimit = GMAX(minLimit,userAllowMin);
+            if (destRate < minLimit){
+                destRate = minLimit;
+            }
+        }
+
+        if (destRate > context->videoMinBitrate * 0.5) {
+            context->videoDropStep.den = context->videoMinBitrate/destRate;
+            context->videoDropStep.den =  context->videoDropStep.den * context->pushConfig->mFps;
+            context->videoDropStep.num = context->videoDropStep.den - 1;
+            quality = GJNetworkQualitybad;
+
+        }else{
+            context->videoDropStep = GRationalMake(1, 1.0/(1.0-destRate*1.0/context->videoMinBitrate));
+            quality = GJNetworkQualityTerrible;
+        }
+    }
+    
+    GJAssert(context->videoBitrate - destRate > 0.1 || context->videoBitrate - destRate < -0.1 , "变化太小");
+    if (context->videoBitrate != destRate) {
+        
+        if (context->videoEncoder->encodeSetBitrate(context->videoEncoder, destRate)) {
+            context->videoBitrate = destRate;
+            
+            VideoDynamicInfo info;
+            info.sourceFPS     = context->pushConfig->mFps;
+            info.sourceBitrate = context->pushConfig->mVideoBitrate;
+            if (context->videoDropStep.den > 0) {
+                info.currentFPS = info.sourceFPS * (1 - GRationalValue(context->videoDropStep));
+            } else {
+                info.currentFPS = info.sourceFPS;
+            }
+            info.currentBitrate = destRate;
+            context->callback(context->userData, GJLivePush_dynamicVideoUpdate, &info);
+        }
+        context->callback(context->userData, GJLivePush_updateNetQuality, &quality);
+    }
+    
 }
 
 //快降慢升，最高升到GMIN(context->pushConfig->mVideoBitrate, context->videoNetSpeed)
