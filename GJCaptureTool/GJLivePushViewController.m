@@ -216,6 +216,8 @@
 @property (strong, nonatomic) UILabel *delayALab;
 @property (strong, nonatomic) UILabel *currentV;
 
+@property (strong, nonatomic) UILabel *timeLab;
+
 @property(strong,nonatomic)NSMutableArray<PullShow*>* pulls;
 
 @end
@@ -245,7 +247,8 @@
             // Fallback on earlier versions
         }
     }
-    
+    _timeLab = [[UILabel alloc]init];
+    [self.view addSubview:_timeLab];
     
     GJPushConfig config = {0};
     config.mAudioChannel = 2;
@@ -684,15 +687,18 @@
         [self dismissViewControllerAnimated:YES completion:nil];
     }else if (btn == _sticker) {
         if (btn.selected) {
+            CGRect rect = CGRectMake(0, 0, 360, 100);
+            _timeLab.frame = rect;
+            _timeLab.backgroundColor = [UIColor redColor];
+            _timeLab.textAlignment = NSTextAlignmentCenter;
+            _timeLab.textColor = [UIColor yellowColor];
+            _timeLab.font = [UIFont systemFontOfSize:26];
             NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
-            for (int i = 0; i< 1 ; i++) {
-                images[i] = [UIImage imageNamed:[NSString stringWithFormat:@"%d.png",i]];
-            }
-            CGSize size = _livePush.captureSize;
-            GCRect rect = {size.width*0.5,size.height*0.5,100.0,100.0};
-            GJStickerAttribute* attr = [GJStickerAttribute stickerAttributWithFrame:rect rotate:0];
+            images[0] = [self getSnapshotImageWithSize:rect.size];
+            GCRect frame = {_livePush.captureSize.width*0.5,_livePush.captureSize.height*0.5,rect.size.width,rect.size.height};
+            GJStickerAttribute* attr = [GJStickerAttribute stickerAttributWithImage:images[0] frame:frame rotate:0];
             [_livePush startStickerWithImages:images attribure:attr fps:15 updateBlock:^GJStickerAttribute *(NSInteger index, BOOL *ioFinish) {
-                GCRect re = rect;
+                GCRect re = frame;
                 re.size.width = images[index].size.width;
                 re.size.height = images[index].size.height;
                 *ioFinish = NO;
@@ -701,8 +707,33 @@
                 }
                 static CGFloat r;
                 r += 5;
-                return [GJStickerAttribute stickerAttributWithFrame:re rotate:r];
+                __block UIImage* image ;
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                 image = [self getSnapshotImageWithSize:rect.size];
+
+                });
+                return [GJStickerAttribute stickerAttributWithImage:image frame:frame rotate:0];
             }];
+            
+//            NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
+//            for (int i = 0; i< 1 ; i++) {
+//                images[i] = [UIImage imageNamed:[NSString stringWithFormat:@"%d.png",i]];
+//            }
+//            CGSize size = _livePush.captureSize;
+//            GCRect rect = {size.width*0.5,size.height*0.5,100.0,100.0};
+//            GJStickerAttribute* attr = [GJStickerAttribute stickerAttributWithFrame:rect rotate:0];
+//            [_livePush startStickerWithImages:images attribure:attr fps:15 updateBlock:^GJStickerAttribute *(NSInteger index, BOOL *ioFinish) {
+//                GCRect re = rect;
+//                re.size.width = images[index].size.width;
+//                re.size.height = images[index].size.height;
+//                *ioFinish = NO;
+//                if (*ioFinish) {
+//                    btn.selected = NO;
+//                }
+//                static CGFloat r;
+//                r += 5;
+//                return [GJStickerAttribute stickerAttributWithFrame:re rotate:r];
+//            }];
         }else{
             [_livePush chanceSticker];
         }
@@ -785,6 +816,94 @@
     }
 
 }
+static void ReleaseCVPixelBuffer(void *pixel, const void *data, size_t size)
+{
+    CVPixelBufferRef pixelBuffer = (CVPixelBufferRef)pixel;
+    CVPixelBufferUnlockBaseAddress( pixelBuffer, 0 );
+    CVPixelBufferRelease( pixelBuffer );
+}
+static OSStatus CreateCGImageFromCVPixelBuffer(CVPixelBufferRef pixelBuffer, CGImageRef *imageOut)
+{
+    OSStatus err = noErr;
+    OSType sourcePixelFormat;
+    size_t width, height, sourceRowBytes;
+    void *sourceBaseAddr = NULL;
+    CGBitmapInfo bitmapInfo;
+    CGColorSpaceRef colorspace = NULL;
+    CGDataProviderRef provider = NULL;
+    CGImageRef image = NULL;
+    sourcePixelFormat = CVPixelBufferGetPixelFormatType( pixelBuffer );
+    if ( kCVPixelFormatType_32ARGB == sourcePixelFormat )
+        bitmapInfo = kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipFirst;
+    else if ( kCVPixelFormatType_32BGRA == sourcePixelFormat )
+        bitmapInfo = kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst;
+    else
+        return -95014; // only uncompressed pixel formats
+    sourceRowBytes = CVPixelBufferGetBytesPerRow( pixelBuffer );
+    width = CVPixelBufferGetWidth( pixelBuffer );
+    height = CVPixelBufferGetHeight( pixelBuffer );
+    CVPixelBufferLockBaseAddress( pixelBuffer, 0 );
+    sourceBaseAddr = CVPixelBufferGetBaseAddress( pixelBuffer );
+    colorspace = CGColorSpaceCreateDeviceRGB();
+    CVPixelBufferRetain( pixelBuffer );
+    provider = CGDataProviderCreateWithData( (void *)pixelBuffer, sourceBaseAddr, sourceRowBytes * height, ReleaseCVPixelBuffer);
+    image = CGImageCreate(width, height, 8, 32, sourceRowBytes, colorspace, bitmapInfo, provider, NULL, true, kCGRenderingIntentDefault);
+    if ( err && image ) {
+        CGImageRelease( image );
+        image = NULL;
+    }
+    if ( provider ) CGDataProviderRelease( provider );
+    if ( colorspace ) CGColorSpaceRelease( colorspace );
+    *imageOut = image;
+    return err;
+}
+
+-(UIImage*)getSnapshotImageWithSize:(CGSize)size{
+
+//    CGRect rect = CGRectMake(0, 0, size.width, size.height);
+//    CVPixelBufferRef pixelBuffer = NULL ;
+//    NSDictionary *dic = [NSDictionary dictionaryWithObjectsAndKeys:
+//                                                           [NSNumber numberWithInt:       kCVPixelFormatType_32BGRA], kCVPixelBufferPixelFormatTypeKey,
+//                                                           [NSNumber numberWithInt:size.width], kCVPixelBufferWidthKey,
+//                                                           [NSNumber numberWithInt:size.height], kCVPixelBufferHeightKey,
+//                                                           [NSNumber numberWithBool:YES], kCVPixelBufferCGImageCompatibilityKey,
+//                                                          [NSNumber numberWithBool:YES],kCVPixelBufferCGBitmapContextCompatibilityKey,
+//                                                           nil];
+//
+//    CVReturn result = CVPixelBufferCreate(GNULL, rect.size.width, rect.size.height, kCVPixelFormatType_32BGRA, (__bridge CFDictionaryRef _Nullable)(dic), &pixelBuffer);
+//    if (result != kCVReturnSuccess) {
+//        GJLOG( GNULL,  GJ_LOGERROR,"CVPixelBufferPoolCreatePixelBuffer error:%d",result);
+//        return nil;
+//    }
+//    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
+//
+//    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+//    void *pxdata = CVPixelBufferGetBaseAddress(pixelBuffer);
+//    CGColorSpaceRef rgbColorSpace = CGColorSpaceCreateDeviceRGB();
+//
+//    CGContextRef context = CGBitmapContextCreate(pxdata, rect.size.width, rect.size.height, 8, bytesPerRow, rgbColorSpace, kCGImageAlphaPremultipliedFirst);
+//    //注意第n个变换参数会应用0 ~ n-1个数据的变换
+//    CGAffineTransform affine = CGAffineTransformTranslate(CGAffineTransformMakeScale(1, -1), 0, -1*rect.size.height);
+//    CGContextConcatCTM(context, affine);
+//    //        采用afterScreenUpdates：NO,采用YES，防止动画变慢
+//    result = [_timeLab drawViewHierarchyInRect:rect afterScreenUpdates:NO];
+//    UIGraphicsPopContext();
+//    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+//    CGColorSpaceRelease(rgbColorSpace);
+//    CGContextRelease(context);
+    
+    static   NSDateFormatter *formatter ;
+    formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"yyyy-MM-dd hh:mm:ss:SSS"];
+    NSString *dateTime = [formatter stringFromDate:[NSDate date]];
+    _timeLab.text = dateTime;
+    UIGraphicsBeginImageContextWithOptions(size, GTrue, [UIScreen mainScreen].scale);
+    [_timeLab drawViewHierarchyInRect:_timeLab.bounds afterScreenUpdates:NO];
+    UIImage* image = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return image;
+}
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.

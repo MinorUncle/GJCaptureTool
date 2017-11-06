@@ -625,15 +625,15 @@ inline static GBool addSticker(struct _GJVideoProduceContext *context, const GVo
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
     CGRect            rect   = CGRectMake(parm.frame.center.x, parm.frame.center.y, parm.frame.size.width, parm.frame.size.height);
     if (callback == GNULL) {
-        [recode startStickerWithImages:CFBridgingRelease(images) attribure:[GJOverlayAttribute overlayAttributeWithFrame:rect rotate:parm.rotation] fps:fps updateBlock:nil];
+        [recode startStickerWithImages:(__bridge NSArray<UIImage *> *)(images) attribure:[GJOverlayAttribute overlayAttributeWithImage:nil frame:rect rotate:parm.rotation] fps:fps updateBlock:nil];
     } else {
-        [recode startStickerWithImages:CFBridgingRelease(images)
-                             attribure:[GJOverlayAttribute overlayAttributeWithFrame:rect rotate:parm.rotation]
+        [recode startStickerWithImages:(__bridge NSArray<UIImage *> *)(images)
+                             attribure:[GJOverlayAttribute overlayAttributeWithImage:nil frame:rect rotate:parm.rotation]
                                    fps:fps
                            updateBlock:^GJOverlayAttribute *(NSInteger index, BOOL *ioFinish) {
                                GStickerParm rParm = callback((GHandle) userData, index, (GBool *) ioFinish);
                                CGRect       rRect = CGRectMake(rParm.frame.center.x, rParm.frame.center.y, rParm.frame.size.width, rParm.frame.size.height);
-                               return [GJOverlayAttribute overlayAttributeWithFrame:rRect rotate:rParm.rotation];
+                               return [GJOverlayAttribute overlayAttributeWithImage:(__bridge_transfer UIImage *)(rParm.image) frame:rRect rotate:rParm.rotation];
                            }];
     }
     return GTrue;

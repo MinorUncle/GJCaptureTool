@@ -27,10 +27,11 @@
 
 @implementation GJStickerAttribute
 
-+ (instancetype)stickerAttributWithFrame:(GCRect)frame rotate:(CGFloat)rotate {
++(instancetype)stickerAttributWithImage:(UIImage*)image frame:(GCRect)frame rotate:(CGFloat)rotate{
     GJStickerAttribute *attribute = [[GJStickerAttribute alloc] init];
     attribute.frame               = frame;
     attribute.rotate              = rotate;
+    attribute.image               = image;
     return attribute;
 }
 
@@ -294,6 +295,7 @@ static GStickerParm stickerUpdateCallback(const GHandle userDate, GLong index,
     GStickerParm        parm;
     parm.frame    = attr.frame;
     parm.rotation = attr.rotate;
+    parm.image    = (__bridge_retained GHandle)(attr.image);
     if (*ioFinsh) {
         id tem = CFBridgingRelease(userDate); //释放
         tem    = nil;

@@ -61,7 +61,6 @@ typedef struct _GJLivePushContext {
     GJTrafficStatus  preVideoTraffic;
     // 网速检查速率单元，默认等于fps，表示1s检查一次。（越大越准确，但是越迟钝，越小越敏感）
     GInt32 rateCheckStep;
-    GInt32 dropStepPrecision; //发送速率大于DROP_STEP_PRECISION，则开始减速
 
     GRational videoDropStep; //每den帧丢num帧
     //     表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，

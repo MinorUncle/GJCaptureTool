@@ -29,6 +29,7 @@
 typedef struct GStickerParm{
     GCRect frame;
     GFloat32 rotation;
+    GHandle image;
 } GStickerParm;
 typedef struct TrafficUnit{
     GLong ts;//ms

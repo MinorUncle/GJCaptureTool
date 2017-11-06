@@ -56,8 +56,9 @@ typedef void(^ARUpdateBlock)();
 @interface GJStickerAttribute : NSObject
 @property (assign,nonatomic) GCRect  frame;
 @property (assign,nonatomic) CGFloat rotate;//绕frame的center旋转,0-360
+@property (retain,nonatomic) UIImage* image;//nil表示不更新。
 
-+(instancetype)stickerAttributWithFrame:(GCRect)frame rotate:(CGFloat)rotate;
++(instancetype)stickerAttributWithImage:(UIImage*)image frame:(GCRect)frame rotate:(CGFloat)rotate;
 @end
 typedef GJStickerAttribute*(^StickersUpdate)(NSInteger index,BOOL* ioFinish);
 

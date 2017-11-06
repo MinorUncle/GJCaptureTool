@@ -10,8 +10,11 @@
 @interface GJOverlayAttribute : NSObject
 @property(assign,nonatomic)CGRect frame;
 @property(assign,nonatomic)CGFloat rotate;
+//注意image更新后，每次循环都是更新后的图片
+@property(retain,nonatomic)UIImage* image;
 
-+(instancetype)overlayAttributeWithFrame:(CGRect)frame rotate:(CGFloat)rotate;
+
++(instancetype)overlayAttributeWithImage:(UIImage*)image frame:(CGRect)frame rotate:(CGFloat)rotate;
 @end
 
 
@@ -21,7 +24,7 @@ typedef GJOverlayAttribute*(^OverlaysUpdate)(NSInteger index,BOOL* ioFinish);
 
 /**
  开始贴图
-
+ 
  @param images 图片
  @param frame 位置，采用相对采集图片大小的相对关系，所有都在0-1之间
  @param fps 帧率
@@ -31,3 +34,4 @@ typedef GJOverlayAttribute*(^OverlaysUpdate)(NSInteger index,BOOL* ioFinish);
 -(BOOL)startOverlaysWithImages:(NSArray<UIImage*>*)images frame:(CGRect)frame fps:(NSInteger)fps updateBlock:(OverlaysUpdate)update;
 -(void)stop;
 @end
+
