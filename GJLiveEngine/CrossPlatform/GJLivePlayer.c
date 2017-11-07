@@ -17,7 +17,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define GJLivePlay_LOG_SWITCH GNULL
+#define GJLivePlay_LOG_SWITCH LOG_INFO
 
 //#define UIIMAGE_SHOW
 
@@ -84,6 +84,7 @@ static void updateWater(GJSyncControl *syncControl, GTime shake){
     }
     syncControl->bufferInfo.lowWaterFlag  = shake;
     syncControl->bufferInfo.highWaterFlag = syncControl->bufferInfo.lowWaterFlag * MAX_CACHE_RATIO;
+    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "updateWater lowWaterFlag:%d,highWaterFlag:%d",syncControl->bufferInfo.lowWaterFlag,syncControl->bufferInfo.highWaterFlag);
 }
 
 static GBool GJLivePlay_StartDewatering(GJLivePlayer *player) {
@@ -204,7 +205,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 #endif
         if (shake > netShake->preMaxDownShake) {
             updateWater(_syncControl, shake);
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "setLowWater:%lld,hightWater:%d，max:%lld ,preMax:%lld", _syncControl->bufferInfo.lowWaterFlag, _syncControl->bufferInfo.highWaterFlag, netShake->maxDownShake, netShake->preMaxDownShake);
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "new shake to update max:%lld ,preMax:%lld", netShake->maxDownShake, netShake->preMaxDownShake);
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&shake);
 #ifdef NETWORK_DELAY
             if (NeedTestNetwork) {
@@ -229,6 +230,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         
         if (netShake->preMaxDownShake > netShake->maxDownShake) {
             updateWater(_syncControl,netShake->maxDownShake);
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update max:%lld ,preMax:%lld", netShake->maxDownShake, netShake->preMaxDownShake);
         }
         netShake->preMaxDownShake   = netShake->maxDownShake;
         netShake->maxDownShake      = 0;

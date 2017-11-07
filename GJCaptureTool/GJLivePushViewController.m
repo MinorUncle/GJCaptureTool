@@ -706,13 +706,13 @@
                     btn.selected = NO;
                 }
                 static CGFloat r;
-                r += 5;
+                r += 1;
                 __block UIImage* image ;
                 dispatch_sync(dispatch_get_main_queue(), ^{
                  image = [self getSnapshotImageWithSize:rect.size];
 
                 });
-                return [GJStickerAttribute stickerAttributWithImage:image frame:frame rotate:0];
+                return [GJStickerAttribute stickerAttributWithImage:image frame:frame rotate:r];
             }];
             
 //            NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];

@@ -172,7 +172,7 @@ static GHandle pullRunloop(GHandle parm) {
 
         
         if (pkt.stream_index == vsIndex) {
-            GJLOG(LOG_ALL,GJ_LOGALL,"receive video pts:%lld dts:%lld size:%d\n", pkt.pts, pkt.dts, pkt.size);
+            GJLOG(GNULL,GJ_LOGALL,"receive video pts:%lld dts:%lld size:%d\n", pkt.pts, pkt.dts, pkt.size);
 
 #if MENORY_CHECK
             R_GJPacket *h264Packet = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
@@ -201,7 +201,7 @@ static GHandle pullRunloop(GHandle parm) {
             pthread_mutex_unlock(&pull->mutex);
             R_BufferUnRetain(&h264Packet->retain);
         } else if (pkt.stream_index == asIndex) {
-            GJLOG(LOG_ALL,GJ_LOGALL,"receive audio pts:%lld dts:%lld size:%d\n", pkt.pts, pkt.dts, pkt.size);
+            GJLOG(GNULL,GJ_LOGALL,"receive audio pts:%lld dts:%lld size:%d\n", pkt.pts, pkt.dts, pkt.size);
 #if MENORY_CHECK
             R_GJPacket *aacPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
             aacPacket->dataOffset = 0;

@@ -391,7 +391,7 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize, CGSize destSize) {
 }
 
 - (void)stopProduce {
-    runSynchronouslyOnVideoProcessingQueue(^{
+    runAsynchronouslyOnVideoProcessingQueue(^{
         GPUImageOutput *parentFilter = _sticker;
         if (parentFilter == nil) {
             parentFilter = [self getParentFilterWithDeep:kFilterSticker];
