@@ -177,7 +177,7 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
                     }
                     context->videoNetSpeed /= count;
 //count越大越准确
-                    GJLOG(LOG_INFO, GJ_LOGINFO,"avg rate :%f kB/s avg count:%d sendByte:%ld cache count:%d time:%d ms",context->videoNetSpeed / 8.0 / 1024, count,sendByte,cacheInCount,bufferStatus.enter.ts - bufferStatus.leave.ts);
+                    GJLOG(GNULL, GJ_LOGINFO,"avg rate :%f kB/s avg count:%d sendByte:%ld cache count:%d time:%d ms",context->videoNetSpeed / 8.0 / 1024, count,sendByte,cacheInCount,bufferStatus.enter.ts - bufferStatus.leave.ts);
 
                     if (context->videoNetSpeed > context->videoBitrate) {
                         GJLOG(LOG_DEBUG, GJ_LOGINFO,"网速（%d）大于码率（%d），仍然出现缓存上升，警告", context->videoNetSpeed / 8.0 / 1024,context->videoBitrate / 8.0 / 1024);
@@ -310,7 +310,7 @@ static void _GJLivePush_SetQuality(GJLivePushContext *context, GInt32 destRate){
     if (context->videoBitrate - destRate > 10 || context->videoBitrate - destRate < 10) {
         
         if (context->videoEncoder->encodeSetBitrate(context->videoEncoder, destRate)) {
-            GJLOG(LOG_INFO, GJ_LOGINFO, "Set Video Bitrate:%d",destRate/8/1024);
+            GJLOG(GNULL, GJ_LOGINFO, "Set Video Bitrate:%d",destRate/8/1024);
 
             context->videoBitrate = destRate;
             

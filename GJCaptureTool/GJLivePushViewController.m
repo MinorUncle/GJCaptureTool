@@ -239,7 +239,7 @@
     if (_isAr) {
         if (@available(iOS 11.0, *)) {
             if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){
-                [[[UIAlertView alloc]initWithTitle:@"提示" message:@"该手机不支持ar,切换到普通直播" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles: nil] show];
+                [[[UIAlertView alloc]initWithTitle:@"提示" message:@"该手机不支持ar,已切换到普通直播" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles: nil] show];
             }else{
                 _livePush.ARScene = [[GJSunSystemARScene alloc]init];
             }
@@ -689,9 +689,9 @@
         if (btn.selected) {
             CGRect rect = CGRectMake(0, 0, 360, 100);
             _timeLab.frame = rect;
-            _timeLab.backgroundColor = [UIColor redColor];
+            _timeLab.backgroundColor = [UIColor whiteColor];
             _timeLab.textAlignment = NSTextAlignmentCenter;
-            _timeLab.textColor = [UIColor yellowColor];
+            _timeLab.textColor = [UIColor blackColor];
             _timeLab.font = [UIFont systemFontOfSize:26];
             NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
             images[0] = [self getSnapshotImageWithSize:rect.size];

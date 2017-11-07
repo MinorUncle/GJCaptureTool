@@ -11,7 +11,9 @@
 #import "GJLiveDefine.h"
 #import "GJRetainBuffer.h"
 
-#define SHOULD_BUFFER_VIDEO_IN_AUDIO_CLOCK
+
+//音频存在时，不会产生视频缓冲
+//#define SHOULD_BUFFER_VIDEO_IN_AUDIO_CLOCK
 
 typedef enum _GJPlayStatus {
     kPlayStatusStop,

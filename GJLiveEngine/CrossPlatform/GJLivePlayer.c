@@ -181,7 +181,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     GInt32 delay = 0;
     GTime testShake = 0;
     if (NeedTestNetwork) {
-        delay = (GInt32)(GJ_Gettime() / 1000) - (GInt32)pts;
+        delay = (GInt32)((GJ_Gettime() / 1000 ) & 0x7fffffff) - (GInt32)pts;
         netShake->networkDelay += delay;
         netShake->delayCount ++;
         
@@ -198,7 +198,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 #ifdef NETWORK_DELAY
         if (NeedTestNetwork) {
 
-            GJLOG(LOG_DEBUG, GJ_LOGDEBUG, "Current unit MaxDownShake:%lld  current delay:%lld",netShake->maxDownShake,delay);
+            GJLOG(LOG_DEBUG, GJ_LOGDEBUG, "Current unit MaxDownShake:%lld  current delay:%d",netShake->maxDownShake,delay);
             GTime parm = (GTime)delay;
             player->callback(player->userDate,GJPlayMessage_TestKeyDelayUpdate,&parm);
         }
@@ -206,6 +206,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         if (shake > netShake->preMaxDownShake) {
             updateWater(_syncControl, shake);
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "new shake to update max:%lld ,preMax:%lld", netShake->maxDownShake, netShake->preMaxDownShake);
+            
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&shake);
 #ifdef NETWORK_DELAY
             if (NeedTestNetwork) {
@@ -230,6 +231,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         
         if (netShake->preMaxDownShake > netShake->maxDownShake) {
             updateWater(_syncControl,netShake->maxDownShake);
+            player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&netShake->maxDownShake);
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update max:%lld ,preMax:%lld", netShake->maxDownShake, netShake->preMaxDownShake);
         }
         netShake->preMaxDownShake   = netShake->maxDownShake;

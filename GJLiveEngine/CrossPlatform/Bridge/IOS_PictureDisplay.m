@@ -14,14 +14,26 @@
 @interface IOS_PictureDisplay : NSObject
 @property (strong, nonatomic) GJImagePixelImageInput *imageInput;
 @property (strong, nonatomic) GJImageView *           displayView;
+@property (assign, nonatomic) BOOL enableRender;
 @end
 @implementation IOS_PictureDisplay
 - (instancetype)init {
     self = [super init];
     if (self) {
         _displayView = [[GJImageView alloc] init];
+        _enableRender = YES;
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillEnterForegroundNotification object:nil];
+
     }
     return self;
+}
+-(void)receiveNotification:(NSNotification* )notic{
+    if ([notic.name isEqualToString:UIApplicationDidEnterBackgroundNotification]) {
+        _enableRender = NO;
+    }else if ([notic.name isEqualToString:UIApplicationWillEnterForegroundNotification]) {
+        _enableRender = YES;
+    }
 }
 - (BOOL)displaySetFormat:(GJPixelType)format {
     _imageInput = [[GJImagePixelImageInput alloc] initWithFormat:(GJYUVPixelImageFormat) format];
@@ -33,7 +45,13 @@
     return YES;
 }
 - (void)displayImage:(CVImageBufferRef)image {
-    [_imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
+    if (_enableRender) {
+        [_imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
+    }
+}
+
+-(void)dealloc{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 @end
 static GBool IOS_PictureDisplaySetup(GJPictureDisplayContext *context) {

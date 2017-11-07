@@ -15,7 +15,7 @@
 
 #define NETWORK_DELAY
 
-static GBool NeedTestNetwork = GFalse;
+static GBool NeedTestNetwork = GTrue;
 
 //#define GJVIDEODECODE_TEST
 typedef struct GSize {
