@@ -123,6 +123,11 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         *ioNumberDataPackets                = 1;
     } else {
         *ioNumberDataPackets = 0;
+#ifdef DEBUG
+        if (decode.running) {
+            assert(0);
+        }
+#endif
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "decodeInputDataProc 0 faile");
         return -1;
     }

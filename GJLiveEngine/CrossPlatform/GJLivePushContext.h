@@ -9,7 +9,7 @@
 #ifndef GJLivePushContext_h
 #define GJLivePushContext_h
 #include "webserver.h"
-//#define RAOP
+#define RAOP
 
 #ifdef RAOP
 #include "raopserver.h"
@@ -59,13 +59,16 @@ typedef struct _GJLivePushContext {
     GJPushConfig *   pushConfig;
     GJNetworkQuality netQuality;
     GJTrafficStatus  preVideoTraffic;
+    GTime            preCheckTime;
     // 网速检查速率单元，默认等于fps，表示1s检查一次。（越大越准确，但是越迟钝，越小越敏感）
     GInt32 rateCheckStep;
 
     GRational videoDropStep; //每den帧丢num帧
     //     表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
     GRational videoMaxDropRate; //
+    GRational videoDropStepBack; //保存丢帧率，用于连续丢帧时保存，恢复时候恢复到此丢帧率
     GInt32    videoBitrate;     //当前编码码率
+    GInt32    maxVideoDelay;     //默认最大的延时，超过此延时，则启动连续丢帧，直到延迟恢复到3/4,默认500ms；
     //不丢帧情况下允许的最小码率,主要用来控制质量，实际码率可能低于此。用于动态码率
     GInt32  videoMinBitrate;
     GInt32  videoNetSpeed;         //当前视频网络速度
@@ -73,6 +76,7 @@ typedef struct _GJLivePushContext {
     GInt32 *netSpeedUnit;
     GInt32  collectCount; //已经收集的个数
     GInt32  favorableCount;//连续良好网速的个数
+    GInt32  checkCount;//用于控制检查间隔
     GInt32  captureVideoCount;
     GInt32  dropVideoCount;
 

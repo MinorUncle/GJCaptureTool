@@ -54,9 +54,11 @@ static GHandle sendRunloop(GHandle parm) {
         errType = kStreamPushMessageType_connectError;
         goto END;
     }
+    pthread_mutex_lock(&push->mutex);
     if (push->messageCallback) {
         push->messageCallback(push->streamPushParm, kStreamPushMessageType_connectSuccess, GNULL);
     }
+    pthread_mutex_unlock(&push->mutex);
 
     R_GJPacket *packet;
 
@@ -169,6 +171,7 @@ static GHandle sendRunloop(GHandle parm) {
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
+        GJLOG(GNULL,GJ_LOGDEBUG,"send pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
 
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
@@ -184,7 +187,15 @@ static GHandle sendRunloop(GHandle parm) {
                 push->audioStatus.leave.byte += packet->dataSize;
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.ts = (GLong) packet->dts;
+
             }
+
+            pthread_mutex_lock(&push->mutex);
+            if (push->messageCallback) {
+                push->messageCallback(push->streamPushParm,kStreamPushMessageType_packetSendSignal,&(packet->type));
+            }
+            pthread_mutex_unlock(&push->mutex);
+
             R_BufferUnRetain(&packet->retain);
         } else {
             switch (iRet) {
@@ -220,11 +231,12 @@ END:
         GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "avio_close success");
     }
 
+
+    GBool shouldDelloc = GFalse;
+    pthread_mutex_lock(&push->mutex);
     if (push->messageCallback) {
         push->messageCallback(push->streamPushParm, errType, errParm);
     }
-    GBool shouldDelloc = GFalse;
-    pthread_mutex_lock(&push->mutex);
     push->sendThread = GNULL;
     if (push->releaseRequest == GTrue) {
         shouldDelloc = GTrue;
@@ -387,8 +399,8 @@ GVoid GJStreamPush_Release(GJStreamPush *push) {
     GJLOG(STREAM_PUSH_LOG, GJ_LOGINFO, "GJRtmpPush_Release::%p", push);
 
     GBool shouldDelloc    = GFalse;
-    push->messageCallback = GNULL;
     pthread_mutex_lock(&push->mutex);
+    push->messageCallback = GNULL;
     push->releaseRequest = GTrue;
     if (push->sendThread == GNULL) {
         shouldDelloc = GTrue;

@@ -100,7 +100,9 @@ struct audio_output_t *audio_output_create(struct decoder_output_format_t decode
             ao->convertInBuffer = audio;
             AudioConverterFillComplexBuffer(ao->_convert, decodeInputDataProc, ao, &frames, &ao->convertOutBuffer, nil);
         }
-        ao->callback(ao, audio->mBuffers[0].mData, audio->mBuffers[0].mDataByteSize, hardware_host_time_to_seconds(time->mHostTime), ao->callback_ctx);
+        if (ao->callback) {
+            ao->callback(ao, audio->mBuffers[0].mData, audio->mBuffers[0].mDataByteSize, hardware_host_time_to_seconds(time->mHostTime), ao->callback_ctx);
+        }
 
     }];
 

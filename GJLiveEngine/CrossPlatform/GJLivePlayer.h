@@ -73,6 +73,7 @@ typedef struct _GJNetShakeInfo {
     GInt32 delayCount;
     GTime  collectStartDelay;
     GTime  maxTestDownShake;
+    GTime  preMaxTestDownShake;
 
 #endif
 } GJNetShakeInfo;

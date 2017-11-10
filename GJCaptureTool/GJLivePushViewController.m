@@ -92,21 +92,21 @@
         _netDelay = [[UILabel alloc]init];
         _netDelay.numberOfLines = 0;
         _netDelay.textColor = [UIColor redColor];
-        _netDelay.text = @"NetDelay Test:未工作";
+        _netDelay.text = @"NetDelay Measure:未工作";
         _netDelay.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_netDelay];
         
         _keyDelay = [[UILabel alloc]init];
         _keyDelay.numberOfLines = 0;
         _keyDelay.textColor = [UIColor redColor];
-        _keyDelay.text = @"KeyNetDelay Test:未工作";
+        _keyDelay.text = @"KeyNetDelay Measure:未工作";
         _keyDelay.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_keyDelay];
         
         _testNetShake = [[UILabel alloc]init];
         _testNetShake.numberOfLines = 0;
         _testNetShake.textColor = [UIColor redColor];
-        _testNetShake.text = @"netShake Test:未工作";
+        _testNetShake.text = @"Max netShake Measure:未工作";
         _testNetShake.font = [UIFont systemFontOfSize:10];
         [self.view addSubview:_testNetShake];
         
@@ -1024,7 +1024,7 @@ static OSStatus CreateCGImageFromCVPixelBuffer(CVPixelBufferRef pixelBuffer, CGI
 -(void)livePull:(GJLivePull *)livePull testNetShake:(long)shake{
     dispatch_async(dispatch_get_main_queue(), ^{
         PullShow* show = [self getShowWithPush:livePull];
-        show.testNetShake.text = [NSString stringWithFormat:@"netShake Test:%ld ms",shake];
+        show.testNetShake.text = [NSString stringWithFormat:@"Max NetShake Measure:%ld ms",shake];
     });
 }
 
@@ -1066,14 +1066,14 @@ static OSStatus CreateCGImageFromCVPixelBuffer(CVPixelBufferRef pixelBuffer, CGI
 -(void)livePull:(GJLivePull *)livePull networkDelay:(long)delay{
     PullShow* show = [self getShowWithPush:livePull];
     dispatch_async(dispatch_get_main_queue(), ^{
-        show.netDelay.text = [NSString stringWithFormat:@"NetDelay Test:%ld ms",delay];
+        show.netDelay.text = [NSString stringWithFormat:@"Avg NetDelay Measure:%ld ms",delay];
     });
 }
 
 -(void)livePull:(GJLivePull *)livePull testKeyDelay:(long)delay{
     PullShow* show = [self getShowWithPush:livePull];
     dispatch_async(dispatch_get_main_queue(), ^{
-        show.keyDelay.text = [NSString stringWithFormat:@"KeyNetDelay Test:%ld ms",delay];
+        show.keyDelay.text = [NSString stringWithFormat:@"KeyNetDelay Measure:%ld ms",delay];
     });
 }
 

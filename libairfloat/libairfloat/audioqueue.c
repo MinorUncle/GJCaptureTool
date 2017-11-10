@@ -46,7 +46,9 @@
 #define MAX_QUEUE_COUNT 4096
 #define CLIENT_SERVER_DIFFERENCE_BACKLOG 10
 #define LOOP_FROM(x, y, d, c) for (struct audio_packet_t* x = y ; x != c ; x = x->d)
+//第15位为1
 #define IS_UPPER(x) (((x % 0xFFFF) & 0x8000) != 0)
+//第15，16位为0
 #define IS_LOWER(x) (((x % 0xFFFF) & 0xC000) == 0)
 #define MIN(x,y) (x < y ? x : y)
 #define MAX(x,y) (x > y ? x : y)
@@ -72,8 +74,8 @@ enum audio_packet_state {
 
 struct audio_packet_t {
     uint16_t seq_no;
-    uint32_t sample_time;
-    double time;
+    uint32_t sample_time;//当前帧的起始时间，但是一般也是帧数位置，单位为一帧的时间
+    double time;//自然时间
     enum audio_packet_state state;
     struct audio_packet_t* next;
     struct audio_packet_t* previous;
@@ -176,7 +178,7 @@ struct audio_queue_t {
     struct audio_packet_t* queue_tail;
     decoder_p decoder;
     struct decoder_output_format_t output_format;
-    bool output_is_homed;
+    bool output_is_homed;//表示output播放的在正常范围内，形象表示为在家里，没有跑偏
     double output_homed_at_host_time;
     bool synchronization_enabled;
     double client_server_difference;
@@ -480,7 +482,7 @@ void _audio_queue_output_render(audio_output_p ao, void* buffer, size_t size, do
                     _audio_queue_get_audio_buffer(aq, &((char*)buffer)[data_offset], size - data_offset);
                     
                 } else {
-                    
+                    //延时太多，等待同步
                     aq->output_is_homed = false;
                     aq->output_homed_at_host_time = host_time + 1.0;
                     audio_output_set_muted(aq->output, true);
@@ -623,7 +625,8 @@ void audio_queue_set_remote_time(struct audio_queue_t* aq, double remote_time) {
 uint32_t audio_queue_add_packet(struct audio_queue_t* aq, void* encoded_buffer, size_t encoded_buffer_size, uint16_t seq_no, uint32_t sample_time) {
     
     assert(encoded_buffer != NULL && encoded_buffer_size > 0);
-    
+    log_message(LOG_INFO, "Receive Packet sample_time %u seq_no:%u",sample_time, seq_no);
+
     int ret = 0;
     
     mutex_lock(aq->mutex);
@@ -637,7 +640,7 @@ uint32_t audio_queue_add_packet(struct audio_queue_t* aq, void* encoded_buffer, 
     
     // Determine if package is a resend package.
     if (aq->queue_head != NULL) {
-        
+        //判断是否重发包，注意，就算是迟到的包也当做重发包处理，因为漏发的包已经用空包占用了位置
         if (aq->queue_tail->seq_no < aq->queue_head->seq_no)
             package_resend = (seq_no <= aq->queue_tail->seq_no || seq_no >= aq->queue_head->seq_no);
         else
@@ -663,11 +666,12 @@ uint32_t audio_queue_add_packet(struct audio_queue_t* aq, void* encoded_buffer, 
             memcpy(decoded_buffer, encoded_buffer, encoded_buffer_size);
         }
         
-        if (aq->queue_head == NULL || !package_resend) {
+        if (aq->queue_head == NULL || !package_resend) {//即aq不为空且是重发包，则不进入
             
-            if (aq->queue_head != NULL) {
-                                
+            if (aq->queue_head != NULL) {//（表示aq->queue_head != NULL && !package_resend）表示是一定不是重发包，即表示seq_no连续
+                
                 // If sequence number has overflowed
+                //计算此包之前漏了几个没有到达
                 if (seq_no < aq->queue_tail->seq_no)
                     ret = ((uint32_t)seq_no | (1 << 16)) - aq->queue_tail->seq_no - 1;
                 else
@@ -679,12 +683,13 @@ uint32_t audio_queue_add_packet(struct audio_queue_t* aq, void* encoded_buffer, 
                     mutex_unlock(aq->mutex);
                     return 0;
                 }
-                
+                //迟到的包可以先在这里用空包代替
                 for (uint32_t i = 0 ; i < ret ; i++)
                     _audio_queue_add_empty_packet(aq);
                 
-            } else if (!package_resend && aq->audio_received_callback != NULL)
+            } else if (!package_resend && aq->audio_received_callback != NULL)//表示（aq->queue_head == NULL && !package_resend）不是重发包且aq->queue_head == NULL,表示正常连续收到，则直接到播放列表
                 aq->audio_received_callback(aq, aq->audio_received_callback_ctx);
+            //剩下就是（aq->queue_head == NULL && package_resend））
             
             struct audio_packet_t* new_packet = audio_packet_create(audio_packet_state_complete);
             
@@ -706,7 +711,7 @@ uint32_t audio_queue_add_packet(struct audio_queue_t* aq, void* encoded_buffer, 
             
             _audio_queue_add_packet_to_tail(aq, new_packet);
             
-        } else {
+        } else {//(aq->queue_head != NULL && package_resen)  不为空且重发
             
             bool found = false;
             LOOP_FROM(current_packet, aq->queue_tail, previous, aq->queue_head) {

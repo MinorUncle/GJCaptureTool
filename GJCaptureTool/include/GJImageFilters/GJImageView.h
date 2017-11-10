@@ -9,5 +9,5 @@
 #import "GPUImage.h"
 
 @interface GJImageView : GPUImageView
-
+@property(assign,nonatomic)BOOL disable;
 @end

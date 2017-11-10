@@ -108,7 +108,7 @@ void _socket_accept_loop(void* ctx) {
             new_socket->socket = new_socket_fd;
             new_socket->mutex = mutex_create();
             new_socket->is_connected = true;
-            log_message(LOG_INFO, "socket:%p accept socket:%p",s,new_socket);
+            log_message(LOG_INFO, "accect socket:%p accept socket:%p",s,new_socket);
             bool accept = false;
             if (s->callbacks.accept != NULL) {
                 mutex_unlock(s->mutex);
@@ -119,6 +119,9 @@ void _socket_accept_loop(void* ctx) {
             if (!accept)
                 socket_destroy(new_socket);
             
+        }else{
+            log_message(LOG_INFO, "accect socket error:%d",new_socket_fd);
+
         }
         
     } while (new_socket_fd >= 0);

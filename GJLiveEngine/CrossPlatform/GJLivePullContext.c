@@ -13,7 +13,7 @@
 
 static const GJClass LivePullContextClass = {
     .className = "live pull context",
-    .dLevel    = GJ_LOGNONE,
+    .dLevel    = GJ_LOGDEBUG,
 };
 
 static void pullMessageCallback(GJStreamPull *pull, kStreamPullMessageType messageType, GHandle rtmpPullParm, GHandle messageParm);

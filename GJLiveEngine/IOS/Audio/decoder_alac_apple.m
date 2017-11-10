@@ -64,7 +64,7 @@ void *decoder_alac_create(const char *rtp_fmtp, void *globalUserData) {
     d->magic_cookie = alac_format_parse(rtp_fmtp);
 
     struct alac_specific_config_t config = d->magic_cookie.alac_specific_info.config;
-    [[GJAudioSessionCenter shareSession] requestRecode:YES key:[NSString stringWithFormat:@"%p", d] error:nil];
+    [[GJAudioSessionCenter shareSession] requestPlay:YES key:[NSString stringWithFormat:@"%p", d] error:nil];
 
     AudioStreamBasicDescription in_desc;
     bzero(&in_desc, sizeof(AudioStreamBasicDescription));

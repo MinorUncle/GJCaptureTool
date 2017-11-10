@@ -23,7 +23,7 @@
 //#define TEST
 
 
-#define GRationalMake(num,den) (GRational){(GInt32)(num),(GInt32)(den)}
+#define GRationalMake(num,den)  (GRational){(GInt32)(num),(GInt32)(den)}
 #define GRationalValue(rational) (GFloat32)(rational).num*1.0/(rational).den
 
 typedef struct GStickerParm{

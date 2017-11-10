@@ -20,12 +20,13 @@
 typedef enum _kStreamPushMessageType {
     kStreamPushMessageType_connectSuccess,
     kStreamPushMessageType_closeComplete,
-
+    kStreamPushMessageType_packetSendSignal,  // GJMediaType*
     kStreamPushMessageType_connectError,
     kStreamPushMessageType_urlPraseError,
     kStreamPushMessageType_sendPacketError, //网络错误，发送失败
+    
 } kStreamPushMessageType;
-typedef GVoid (*StreamPushMessageCallback)(GHandle userData, kStreamPushMessageType messageType, GHandle messageParm);
+typedef GVoid (*StreamPushMessageCallback)(GHandle userData, kStreamPushMessageType messageType,const GHandle messageParm);
 
 typedef struct _GJStreamPush GJStreamPush;
 

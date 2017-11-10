@@ -138,8 +138,19 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         _cameraPosition    = AVCaptureDevicePositionBack;
         _outputOrientation = UIInterfaceOrientationPortrait;
         GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, pixelReleaseCallBack, GNULL);
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidEnterBackgroundNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillEnterForegroundNotification object:nil];
+        
     }
     return self;
+}
+
+-(void)receiveNotification:(NSNotification* )notic{
+    if ([notic.name isEqualToString:UIApplicationDidEnterBackgroundNotification]) {
+        self.imageView.disable = YES;
+    }else if ([notic.name isEqualToString:UIApplicationWillEnterForegroundNotification]) {
+        self.imageView.disable = NO;
+    }
 }
 
 -(void)setPixelFormat:(GJPixelFormat)pixelFormat{
@@ -149,6 +160,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 - (void)dealloc {
     GJRetainBufferPool *temPool = _bufferPool;
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         GJRetainBufferPoolClean(temPool, GTrue);
         GJRetainBufferPoolFree(temPool);
@@ -504,6 +516,8 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize, CGSize destSize) {
 - (UIView *)getPreviewView {
     return self.imageView;
 }
+
+
 
 @end
 inline static GBool videoProduceSetup(struct _GJVideoProduceContext *context, VideoFrameOutCallback callback, GHandle userData) {

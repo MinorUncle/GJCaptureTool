@@ -10,6 +10,7 @@
 #import "GJLiveDefine+internal.h"
 #import "GJLog.h"
 #import "GJRetainBufferPool.h"
+#import "GJUtil.h"
 //#define DEFAULT_DELAY  10
 //默认i帧是p帧的I_P_RATE+1倍。越小丢帧时码率降低越大
 
@@ -21,6 +22,7 @@
     GInt32 _dtsDelta;
     GBool  _shouldRestart;
     BOOL   requestFlush;
+    GTime _fristTime;
 }
 @property (nonatomic, assign) VTCompressionSessionRef enCodeSession;
 @property (nonatomic, assign) GJRetainBufferPool *    bufferPool;
@@ -43,6 +45,7 @@
         _entropyMode  = EntropyMode_CABAC;
         _fristPts     = GINT64_MAX;
         _dtsDelta     = 0;
+        _fristTime    = -1;
         [self creatEnCodeSession];
     }
     return self;
@@ -51,6 +54,9 @@
 //编码
 - (BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts {
 
+    if (_fristTime < 0) {
+        _fristTime = GJ_Gettime()/1000;
+    }
     //RETRY:
     {
         //    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount*1000.0/_destFormat.baseFormat.fps, 1000);
@@ -291,36 +297,18 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 
     pushPacket->type = GJMediaType_Video;
     CMTime pts       = CMSampleBufferGetPresentationTimeStamp(sample);
-    CMTime dts       = CMSampleBufferGetDecodeTimeStamp(sample);
 
-    pushPacket->pts = pts.value;
-
-    if (encoder->_allowBFrame) {
-        if (encoder->_fristPts > pushPacket->pts) {
-            encoder->_fristPts = pushPacket->pts;
-            encoder->_dtsDelta = 0;
-        } else if (encoder->_dtsDelta <= 0) {
-            encoder->_dtsDelta = (GInt32)(pushPacket->pts - encoder->_fristPts);
-        }
-        if (dts.value > 0) {
-            pushPacket->dts = dts.value;
-        } else {
-            pushPacket->dts = pushPacket->pts;
-        }
-        pushPacket->dts -= encoder->_dtsDelta;
-        if (pushPacket->dts > pushPacket->pts) {
-            pushPacket->dts = pushPacket->pts;
-        }
-
-    } else {
+#ifdef NETWORK_DELAY
+    pushPacket->dts = GJ_Gettime()/1000;
+#else
+    pushPacket->dts = GJ_Gettime()/1000 - encoder->_fristTime;
+#endif
+    if (pushPacket->dts > pts.value) {
         pushPacket->dts = pts.value;
     }
-//-----------
-//    if (CMTIME_IS_INVALID(dts)) {
-//        pushPacket->dts = pts.value;
-//    }else{
-//        pushPacket->dts = dts.value;
-//    }
+    
+    pushPacket->pts = pts.value;
+
 
 //    printf("encode over pts:%lld dts:%lld data size:%zu\n",pts.value,pushPacket->dts,totalLength);
 
@@ -360,6 +348,8 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     requestFlush = YES;
     _sps         = nil;
     _pps         = nil;
+    _fristPts     = GINT64_MAX;
+
 }
 
 - (void)dealloc {

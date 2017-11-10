@@ -51,6 +51,7 @@ SecKeyRef _crypt_get_private_key() {
     
     CFRelease(items);
     CFRelease(options);
+    CFRelease(key);
     
     return privateKey;
     

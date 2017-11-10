@@ -196,8 +196,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     if (shake > netShake->maxDownShake) {
         netShake->maxDownShake = shake;
 #ifdef NETWORK_DELAY
-        if (NeedTestNetwork) {
-
+        if (NeedTestNetwork && testShake > netShake->preMaxTestDownShake) {
             GJLOG(LOG_DEBUG, GJ_LOGDEBUG, "Current unit MaxDownShake:%lld  current delay:%d",netShake->maxDownShake,delay);
             GTime parm = (GTime)delay;
             player->callback(player->userDate,GJPlayMessage_TestKeyDelayUpdate,&parm);
@@ -210,7 +209,6 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&shake);
 #ifdef NETWORK_DELAY
             if (NeedTestNetwork) {
-
                 player->callback(player->userDate,GJPlayMessage_TestNetShakeUpdate,&testShake);
             }
 #endif
@@ -220,11 +218,17 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     if(shake < 0){
         netShake->collectStartClock = clock;
         netShake->collectStartPts   = pts;
+        if(netShake->maxDownShake > netShake->preMaxDownShake){
+            netShake->preMaxDownShake =  netShake->maxDownShake;
+        }
 #ifdef NETWORK_DELAY
         if (NeedTestNetwork) {
 
             netShake->collectStartDelay = delay;
             netShake->maxTestDownShake = 0;
+            if (netShake->maxTestDownShake > netShake->preMaxTestDownShake) {
+                netShake->preMaxTestDownShake =  netShake->maxTestDownShake;
+            }
         }
 #endif
     }else if (clock - netShake->collectStartClock >= UPDATE_SHAKE_TIME) {
@@ -243,6 +247,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 
             netShake->collectStartDelay = delay;
             netShake->maxTestDownShake = 0;
+            netShake->preMaxTestDownShake   = netShake->maxTestDownShake;
         }
 #endif
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "更新网络抖动收集");
@@ -405,7 +410,7 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer *player) {
             if (_syncControl->speed <= 1.0) {
                 GJLivePlay_StartDewatering(player);
             }
-        } else if (cache < _syncControl->bufferInfo.lowWaterFlag) {
+        } else if (cache < _syncControl->bufferInfo.lowWaterFlag * 1.5) {
             if (_syncControl->speed > 1.0) {
                 GJLivePlay_StopDewatering(player);
             }
@@ -728,7 +733,6 @@ GVoid GJLivePlay_Stop(GJLivePlayer *player) {
     }
 }
 inline static GBool _internal_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
-    GJLivePlay_CheckNetShake(player, videoFrame->pts);
     //    printf("add play video pts:%lld\n",videoFrame->pts);
     if (player->playControl.playVideoThread == GNULL) {
 
@@ -746,6 +750,9 @@ inline static GBool _internal_AddVideoData(GJLivePlayer *player, R_GJPixelFrame 
 
     R_BufferRetain(&videoFrame->retain);
     GBool result = GTrue;
+    if (player->syncControl.syncType != kTimeSYNCAudio) {
+        GJLivePlay_CheckNetShake(player, videoFrame->pts);
+    }
 
 RETRY:
     if (queuePush(player->playControl.imageQueue, videoFrame, 0)) {

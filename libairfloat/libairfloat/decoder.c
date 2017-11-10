@@ -61,6 +61,9 @@ struct decoder_t* decoder_create(const char* type, const char* rtp_fmtp,void* gl
         d->type = decoder_type_alac;
         d->data = decoder_alac_create(rtp_fmtp,globalUserData);
         
+    }else{
+    //格式不支持
+        assert(0);
     }
     
     return d;
