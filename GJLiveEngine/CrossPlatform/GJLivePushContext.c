@@ -19,9 +19,11 @@
 
 #define NET_ADD_STEP_B  1000  //每步增加的码率
 #define NET_ADD_STEP_R  0.1   //每步增加的比例
-#define NET_SENSITIVITY 300   //带宽灵敏度 ms
-#define NET_MIN_CHECK_STEP 5   //带宽灵敏度 ,最少NET_MIN_CHECK_STEP检查
+#define NET_SENSITIVITY 300   //带宽灵敏度 ms，越灵敏，则增速越慢
+#define NET_MIN_CHECK_STEP 5   //带宽灵敏度 ,最少NET_MIN_CHECK_STEP检查,
 #define NET_AVG_DURING 3000   //平均带宽估计所需时间
+#define NET_INCERASE_DURING (NET_AVG_DURING/NET_SENSITIVITY)*2  //网速增加速度
+
 #define MAX_DELAY -1
 #define RESTORE_DROP_RATE  (3/4.0)   //延迟减少到MAX_DELAY *  RESTORE_DROP_RATE后恢复连续丢帧
 #ifdef RVOP
@@ -118,12 +120,13 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
     //同时考虑音频，更加精确
     if(cacheInCount > 0){
         // 一定要清零，不然有积累后，会降低编码率，然后测得的网速普遍在低速，就很难提高了
-        if (context->favorableCount != 0) {
-            for (int i = 0; i < context->netSpeedCheckInterval; i++) {
-                context->netSpeedUnit[i] = -1;
-            }
-        }
+//        if (context->favorableCount != 0) {
+//            for (int i = 0; i < context->netSpeedCheckInterval; i++) {
+//                context->netSpeedUnit[i] = -1;
+//            }
+//        }
         context->favorableCount = 0;
+        context->increaseCount = 0;
     }else{
         context->favorableCount ++;
     }
@@ -164,40 +167,52 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
                 }
                 context->videoNetSpeed /= count;
                 //count越大越准确
-                GJLOG(GNULL, GJ_LOGDEBUG,"busy status, avgRate :%f kB/s currentRate:%f sendCount:%d sendByte:%ld cacheCount:%d cacheTime:%d ms",context->videoNetSpeed / 8.0 / 1024,currentBitRate / 8.0 / 1024, count,sendByte,cacheInCount,cacheInPts);
+                GJLOG(GNULL, GJ_LOGDEBUG,"busy status, avgRate :%f kB/s currentRate:%f sendCount:%d sendByte:%ld cacheCount:%d cacheTime:%d ms speedUnitCount:%d",context->videoNetSpeed / 8.0 / 1024,currentBitRate / 8.0 / 1024, count,sendByte,cacheInCount,cacheInPts,count);
                 GJAssert(context->videoNetSpeed >= 0, "错误");
                 GJAssert(sendTs >= 2, "错误");
                 GJAssert(cacheInPts <= 10000, "错误");
 
                 if (context->videoNetSpeed > context->videoBitrate) {
-                    GJLOG(LOG_DEBUG, GJ_LOGDEBUG,"网速（%f）大于码率（%f），仍然出现缓存上升，警告", context->videoNetSpeed / 8.0 / 1024,context->videoBitrate / 8.0 / 1024);
-                }else{
-                    GInt32 bitrate = context->videoBitrate - (context->videoBitrate - context->videoNetSpeed) * (count*1.0 / context->netSpeedCheckInterval);
-                    //bitrate = bitrate - (GInt32)(context->rateCheckStep - sendCount) * context->pushConfig->mVideoBitrate/context->pushConfig->mFps;
-                    
-                    GJNetworkQuality quality = GJNetworkQualityGood;
-                    GRational videoDropStep = GRationalMake(0, 1);
-                    _GJLivePush_GetQualityInfo(context, &bitrate, &quality, &videoDropStep);
-                    if (quality != context->netQuality) {
-                        context->callback(context->userData, GJLivePush_updateNetQuality, &quality);
-                    }
-                    _GJLivePush_SetCodeBitrate(context, bitrate);
+                    GJLOG(LOG_DEBUG, GJ_LOGDEBUG,"警告:平均网速（%f）大于码率（%f），仍然出现缓存上升,继续降速", context->videoNetSpeed / 8.0 / 1024,context->videoBitrate / 8.0 / 1024);
+                    context->videoNetSpeed = context->videoBitrate;
+                }
+                //减速的目标是比网速小，以减少缓存
+                context->videoNetSpeed -= context->videoBitrate/context->pushConfig->mFps;
+                //发送数量越少降速越快
+                GFloat32 ratio =  context->rateCheckStep - sendCount;
+                //满速发送时间越长，网速越可靠
+                ratio = ( count + ratio ) *1.0 / context->netSpeedCheckInterval;
+                
+                GInt32 bitrate = context->videoBitrate - (context->videoBitrate - context->videoNetSpeed) * ratio;
+                //bitrate = bitrate - (GInt32)(context->rateCheckStep - sendCount) * context->pushConfig->mVideoBitrate/context->pushConfig->mFps;
+                
+                GJNetworkQuality quality = GJNetworkQualityGood;
+                GRational videoDropStep = GRationalMake(0, 1);
+                _GJLivePush_GetQualityInfo(context, &bitrate, &quality, &videoDropStep);
+                if (quality != context->netQuality) {
+                    context->callback(context->userData, GJLivePush_updateNetQuality, &quality);
+                }
+                _GJLivePush_SetCodeBitrate(context, bitrate);
 
-                    if (context->videoDropStep.num != context->videoDropStep.den) {
-                        context->videoDropStep = videoDropStep;
-                    }else{
-                        context->videoDropStepBack = videoDropStep;
-                    }
+                if (context->videoDropStep.num != context->videoDropStep.den) {
+                    context->videoDropStep = videoDropStep;
+                }else{
+                    context->videoDropStepBack = videoDropStep;
                 }
             }
         } else{
-            GJLOG(GNULL, GJ_LOGDEBUG,"free status avg rate :%f kB/s  favorableCount count:%d",context->videoNetSpeed / 8.0 / 1024,context->favorableCount);
+            GJLOG(GNULL, GJ_LOGDEBUG,"favorableCount count:%d",context->favorableCount);
 
-            if (context->favorableCount / (context->rateCheckStep + 1) > 0 && context->videoBitrate < context->pushConfig->mVideoBitrate) {
-                context->favorableCount = 1;
-                context->videoNetSpeed  = context->videoBitrate;
-                
-                GInt32 bitrate = context->videoNetSpeed + context->pushConfig->mVideoBitrate/context->pushConfig->mFps;
+            if (context->favorableCount / context->increaseSpeedStep > context->increaseCount &&
+                context->videoBitrate < context->pushConfig->mVideoBitrate) {
+                context->increaseCount = context->favorableCount / context->increaseSpeedStep;
+                int collectCount = context->collectCount++;
+                for (int i = 0; i < context->increaseCount; i++) {
+                    //因为一直有空闲，所以前面连续空闲的网速一定大于此网速，更新
+                    context->netSpeedUnit[collectCount-- % context->netSpeedCheckInterval] = context->videoBitrate;
+                }
+
+                GInt32 bitrate = context->videoBitrate + context->pushConfig->mVideoBitrate/context->pushConfig->mFps;
                 
                 GJNetworkQuality quality = GJNetworkQualityGood;
                 GRational videoDropStep = GRationalMake(0, 1);
@@ -733,7 +748,9 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
             if (context->rateCheckStep < NET_MIN_CHECK_STEP) {
                 context->rateCheckStep = NET_MIN_CHECK_STEP;
             }
+           
             context->netSpeedCheckInterval = NET_AVG_DURING / NET_SENSITIVITY ;
+            context->increaseSpeedStep = NET_INCERASE_DURING;
             context->collectCount          = 0;
             if (context->netSpeedUnit != GNULL) {
                 context->netSpeedUnit = realloc(context->netSpeedUnit, context->netSpeedCheckInterval * sizeof(GInt32));

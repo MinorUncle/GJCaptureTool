@@ -232,7 +232,8 @@
                    };
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGDEBUG);
-//    RTMP_LogSetLevel(RTMP_LOGERROR);
+    RTMP_LogSetLevel(RTMP_LOGDEBUG);
+    
     _livePush = [[GJLivePush alloc]init];
 
     

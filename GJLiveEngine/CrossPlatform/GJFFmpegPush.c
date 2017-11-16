@@ -171,7 +171,7 @@ static GHandle sendRunloop(GHandle parm) {
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        GJLOG(GNULL,GJ_LOGDEBUG,"send pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
+        GJLOG(GNULL,GJ_LOGALL,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts, packet->dts, packet->dataSize);
 
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
@@ -277,7 +277,11 @@ GBool GJStreamPush_Create(GJStreamPush **sender, StreamPushMessageCallback callb
         push->videoFormat  = (GJVideoStreamFormat *) malloc(sizeof(GJVideoStreamFormat));
         *push->videoFormat = *videoFormat;
     }
-    pthread_mutex_init(&push->mutex, GNULL);
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&push->mutex, &attr);
+    pthread_mutexattr_destroy(&attr);
     *sender = push;
     return GTrue;
 }
