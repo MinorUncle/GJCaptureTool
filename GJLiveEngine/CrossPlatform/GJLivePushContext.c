@@ -22,7 +22,7 @@
 #define NET_SENSITIVITY 300   //带宽灵敏度 ms，越灵敏，则增速越慢
 #define NET_MIN_CHECK_STEP 5   //带宽灵敏度 ,最少NET_MIN_CHECK_STEP检查,
 #define NET_AVG_DURING 3000   //平均带宽估计所需时间
-#define NET_INCERASE_DURING (NET_AVG_DURING/NET_SENSITIVITY)*2  //网速增加速度
+#define NET_INCERASE_DURING (NET_AVG_DURING/NET_SENSITIVITY)*1  //网速增加速度
 
 #define MAX_DELAY -1
 #define RESTORE_DROP_RATE  (3/4.0)   //延迟减少到MAX_DELAY *  RESTORE_DROP_RATE后恢复连续丢帧
