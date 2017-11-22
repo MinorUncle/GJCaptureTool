@@ -34,6 +34,7 @@ static NSString* pushUrl = @"rtmp://10.0.1.65/live/room";
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+//    self.navigationController.navigationBarHidden = YES;
     self.view.backgroundColor = [UIColor whiteColor];
     CGRect rect = CGRectMake(0, 200, 80, 40);
 
@@ -94,7 +95,7 @@ static NSString* pushUrl = @"rtmp://10.0.1.65/live/room";
     if (btn == _arStartBtn) {
         c.isAr = YES;
     }
-    [self presentViewController:c animated:YES completion:nil];
+    [self.navigationController pushViewController:c animated:YES];
 }
 
 - (void)didReceiveMemoryWarning {

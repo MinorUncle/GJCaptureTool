@@ -233,6 +233,19 @@ static GVoid livePushCallback(GHandle               userDate,
     _mixFileNeedToStream = mixFileNeedToStream;
     GJLivePush_ShouldMixAudioToStream(_livePush, mixFileNeedToStream);
 }
+
+-(void)setCameraMirror:(BOOL)cameraMirror{
+    GJLivePush_SetCameraMirror(_livePush, cameraMirror);
+}
+
+-(void)setStreamMirror:(BOOL)streamMirror{
+    GJLivePush_SetStreamMirror(_livePush, streamMirror);
+}
+
+-(void)setPreviewMirror:(BOOL)previewMirror{
+    GJLivePush_SetPreviewMirror(_livePush, previewMirror);
+}
+
 static int restartCount;
 - (void)updateGaterInfo:(NSTimer *)timer {
     GJTrafficStatus vInfo = GJLivePush_GetVideoTrafficStatus(_livePush);
@@ -287,20 +300,25 @@ static int restartCount;
     GJLivePush_StopRecode(_livePush);
 }
 
-static GStickerParm stickerUpdateCallback(const GHandle userDate, GLong index,
+static void stickerUpdateCallback(const GHandle userDate, GLong index,GStickerParm* parm,
                                           GBool *ioFinsh) {
 
-    StickersUpdate      block = (__bridge StickersUpdate)(userDate);
-    GJStickerAttribute *attr  = block(index, (BOOL *) ioFinsh);
-    GStickerParm        parm;
-    parm.frame    = attr.frame;
-    parm.rotation = attr.rotate;
-    parm.image    = (__bridge_retained GHandle)(attr.image);
-    if (*ioFinsh) {
-        id tem = CFBridgingRelease(userDate); //释放
-        tem    = nil;
+    StickersUpdate      block = GNULL;
+    if (userDate != GNULL) {
+        block = (__bridge StickersUpdate)(userDate);
     }
-    return parm;
+    
+    if (block) {
+        GJStickerAttribute *attr = [GJStickerAttribute stickerAttributWithImage:(__bridge_transfer UIImage *)(parm->image) frame:parm->frame rotate:parm->rotation];
+        block(index,attr, (BOOL *) ioFinsh);
+        parm->frame    = attr.frame;
+        parm->rotation = attr.rotate;
+        parm->image    = (__bridge_retained GHandle)(attr.image);
+        if (*ioFinsh) {
+            id tem = CFBridgingRelease(userDate); //释放回调block
+            tem    = nil;
+        }
+    }
 }
 
 - (BOOL)startStickerWithImages:(NSArray<UIImage *> *)images
@@ -310,13 +328,21 @@ static GStickerParm stickerUpdateCallback(const GHandle userDate, GLong index,
     GStickerParm parm;
     parm.frame    = attribure.frame;
     parm.rotation = attribure.rotate;
-    return GJLivePush_StartSticker(_livePush, CFBridgingRetain(images), parm,
+    return GJLivePush_StartSticker(_livePush, (__bridge_retained const GVoid *)(images), parm,
                                    (GInt32) fps, stickerUpdateCallback,
                                    (GVoid*)CFBridgingRetain(updateBlock));
 }
 
 - (void)chanceSticker {
     GJLivePush_StopSticker(_livePush);
+}
+
+- (BOOL)startTrackingImageWithImages:(NSArray<UIImage*>*)images initFrame:(GCRect)frame{
+   return GJLivePush_StartTrackImage(_livePush, (__bridge_retained const GVoid *)(images), frame);
+}
+
+- (void)stopTracking{
+	GJLivePush_StopTrack(_livePush);
 }
 
 - (CGSize)captureSize {

@@ -16,6 +16,7 @@
 		6A0201041F06227800F4255B /* webserverconnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FE1F06227800F4255B /* webserverconnection.h */; };
 		6A0201051F06227800F4255B /* zeroconf.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FF1F06227800F4255B /* zeroconf.h */; };
 		6A0201091F0622D500F4255B /* raopserver.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0201081F0622D500F4255B /* raopserver.h */; };
+		6A0928701FC3B7CD000CC19B /* GJImageTrackImage.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0928561FC3B7CD000CC19B /* GJImageTrackImage.h */; };
 		6A0C84671FA84A00007C7CEA /* Version.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0C84661FA84A00007C7CEA /* Version.h */; };
 		6A1A1B0A1F2ED67A0043595F /* AACEncoderFromPCM_OLD.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */; };
 		6A1A1B111F2F36F10043595F /* IOS_RAOPPlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A9856C41F2B3D2500128480 /* IOS_RAOPPlay.m */; };
@@ -67,8 +68,8 @@
 		6A96CD6A1F258750000DC4FE /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A96CD631F258740000DC4FE /* libavutil.a */; };
 		6A9856C51F2B3D2500128480 /* IOS_RAOPPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */; };
 		6AA453681F146A1A0009FB64 /* GJStreamPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453661F146A1A0009FB64 /* GJStreamPush.h */; };
+		6AA649011FC2C99F00AA3CAC /* LIveStartViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB297E41F4D8A9C00115220 /* LIveStartViewController.m */; };
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
-		6AB297E51F4D8A9C00115220 /* LIveStartViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB297E41F4D8A9C00115220 /* LIveStartViewController.m */; };
 		6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */; };
 		6AB4F4321EF0082200FD4172 /* GJFLVPack.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AB4F4301EF0082200FD4172 /* GJFLVPack.h */; };
 		6AB4F4981EF270D300FD4172 /* GJAudioSessionCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AB4F4971EF270D200FD4172 /* GJAudioSessionCenter.h */; };
@@ -391,6 +392,7 @@
 		6A0200FE1F06227800F4255B /* webserverconnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = webserverconnection.h; path = libairfloat/libairfloat/webserverconnection.h; sourceTree = SOURCE_ROOT; };
 		6A0200FF1F06227800F4255B /* zeroconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zeroconf.h; path = libairfloat/libairfloat/zeroconf.h; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		6A0201081F0622D500F4255B /* raopserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = raopserver.h; path = libairfloat/libairfloat/raopserver.h; sourceTree = SOURCE_ROOT; };
+		6A0928561FC3B7CD000CC19B /* GJImageTrackImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImageTrackImage.h; sourceTree = "<group>"; };
 		6A0C84661FA84A00007C7CEA /* Version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Version.h; sourceTree = "<group>"; };
 		6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RtmpCode.xcodeproj; path = ../rtmpAndOpenssl/RtmpCode.xcodeproj; sourceTree = "<group>"; };
 		6A0E86F61E84E881002A2A2D /* amf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = amf.h; sourceTree = "<group>"; };
@@ -896,6 +898,7 @@
 		04D15EC81E7E69C9005F6DDD /* GJImageFilters */ = {
 			isa = PBXGroup;
 			children = (
+				6A0928561FC3B7CD000CC19B /* GJImageTrackImage.h */,
 				6AF9DD8F1FA970AB00F6B4F7 /* GJImageARCapture.h */,
 				6A34887B1F45468F008223AA /* GJImageBeautifyFilter.h */,
 				6A34887C1F45468F008223AA /* GJImageFilters.h */,
@@ -1709,6 +1712,7 @@
 				6A3488871F45468F008223AA /* GJImageView.h in Headers */,
 				6A3488881F45468F008223AA /* GJImageYUVDataInput.h in Headers */,
 				6AE37BD51ED5956800B049EB /* GJLivePlayer.h in Headers */,
+				6A0928701FC3B7CD000CC19B /* GJImageTrackImage.h in Headers */,
 				6A0201001F06227800F4255B /* raopsession.h in Headers */,
 				6ABF33511F0E5F7000721DB3 /* x264_config.h in Headers */,
 				6ABF2B1C1F0B413600721DB3 /* IOS_AACEncode.h in Headers */,
@@ -2119,6 +2123,7 @@
 				AE70A53C1ECB4DFE0009E49A /* GJLivePush.m in Sources */,
 				6AE37BD81ED5956800B049EB /* GJLivePushContext.c in Sources */,
 				6ABF2B231F0B413600721DB3 /* IOS_H264Decode.m in Sources */,
+				6AA649011FC2C99F00AA3CAC /* LIveStartViewController.m in Sources */,
 				AE70A5281ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m in Sources */,
 				6ABF2B271F0B413600721DB3 /* IOS_PictureDisplay.m in Sources */,
 				6A435CCE1F2883D30046CEA3 /* IOS_Recoder.m in Sources */,
@@ -2140,7 +2145,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6AB297E51F4D8A9C00115220 /* LIveStartViewController.m in Sources */,
 				C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */,
 				6AF9DDB91FA976A100F6B4F7 /* GJSunSystemARScene.m in Sources */,
 				C561ACB51D51D3DC00113453 /* main.m in Sources */,

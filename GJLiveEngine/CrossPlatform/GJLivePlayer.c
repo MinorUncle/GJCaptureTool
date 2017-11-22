@@ -145,9 +145,13 @@ static GVoid GJLivePlay_StopBuffering(GJLivePlayer *player) {
     if (player->playControl.status == kPlayStatusBuffering) {
         player->playControl.status = kPlayStatusRunning;
         queueSetMinCacheSize(player->playControl.imageQueue, 0);
-        queueBroadcastPop(player->playControl.imageQueue);
+        if (queueGetLength(player->playControl.imageQueue) > 0) {
+            queueBroadcastPop(player->playControl.imageQueue);
+        }
         queueSetMinCacheSize(player->playControl.audioQueue, 0);
-        queueBroadcastPop(player->playControl.audioQueue);
+        if (queueGetLength(player->playControl.audioQueue) > 0) {
+            queueBroadcastPop(player->playControl.audioQueue);
+        }
         if (player->syncControl.bufferInfo.lastPauseFlag != 0) {
             player->syncControl.bufferInfo.lastBufferDuration = GJ_Gettime() / 1000 - player->syncControl.bufferInfo.lastPauseFlag;
             player->syncControl.bufferInfo.bufferTotalDuration += player->syncControl.bufferInfo.lastBufferDuration;
@@ -788,32 +792,32 @@ RETRY:
 }
 GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
 
-    GJLOG(GNULL, GJ_LOGALL, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts,videoFrame->dts);
+    GJLOG(LOG_ALL, GJ_LOGALL, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts,videoFrame->dts);
 
     if (videoFrame->dts < player->syncControl.videoInfo.inDtsSeries) {
 
         pthread_mutex_lock(&player->playControl.oLock);
         GInt32 length = queueGetLength(player->playControl.imageQueue);
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频dts不递增，抛弃之前的视频帧：%ld帧", length);
-        R_GJPixelFrame **imageBuffer = (R_GJPixelFrame **) malloc(length * sizeof(R_GJPixelFrame *));
-        queueBroadcastPop(player->playControl.imageQueue); //other lock
-
-        if (queueClean(player->playControl.imageQueue, (GHandle *) imageBuffer, &length)) {
-            for (GUInt32 i = 0; i < length; i++) {
-                R_BufferUnRetain(&imageBuffer[i]->retain);
+        if(length > 1){
+            queueEnablePop(player->playControl.imageQueue, GFalse);
+            R_GJPixelFrame **imageBuffer = (R_GJPixelFrame **) malloc(length * sizeof(R_GJPixelFrame *));
+            if (queueClean(player->playControl.imageQueue, (GHandle *) imageBuffer, &length)) {
+                for (GUInt32 i = 0; i < length; i++) {
+                    R_BufferUnRetain(&imageBuffer[i]->retain);
+                }
             }
+            if (imageBuffer) {
+                free(imageBuffer);
+            }
+            queueEnablePop(player->playControl.imageQueue, GTrue);
         }
-
-        if (imageBuffer) {
-            free(imageBuffer);
-        }
-
+       
         for (int i = player->sortIndex - 1; i >= 0; i--) {
             R_GJPixelFrame *pixelFrame = player->sortQueue[i];
             R_BufferUnRetain(&pixelFrame->retain);
         }
         player->sortIndex = 0;
-
         player->syncControl.videoInfo.trafficStatus.leave.ts = (GLong) videoFrame->pts;
         player->syncControl.videoInfo.inDtsSeries            = -GINT32_MAX;
         pthread_mutex_unlock(&player->playControl.oLock);
@@ -846,7 +850,7 @@ GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) 
 }
 GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
 
-    GJLOG(GNULL, GJ_LOGALL, "收到音频 PTS:%lld DTS:%lld\n",audioFrame->pts,audioFrame->dts);
+    GJLOG(LOG_ALL, GJ_LOGALL, "收到音频 PTS:%lld DTS:%lld\n",audioFrame->pts,audioFrame->dts);
     GJPlayControl *_playControl = &(player->playControl);
     GJSyncControl *_syncControl = &(player->syncControl);
     GBool          result       = GTrue;
@@ -857,10 +861,10 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
         pthread_mutex_lock(&_playControl->oLock);
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "音频dts不递增，抛弃之前的音频帧：%ld帧", queueGetLength(_playControl->audioQueue));
 
-        queueBroadcastPop(_playControl->audioQueue); //other lock
         GInt32 qLength = queueGetLength(_playControl->audioQueue);
 
-        if (qLength > 0) {
+        if (qLength > 1) {
+            queueEnablePop(_playControl->audioQueue, GFalse);
             R_GJPCMFrame **audioBuffer = (R_GJPCMFrame **) malloc(qLength * sizeof(R_GJPCMFrame *));
             queueClean(_playControl->audioQueue, (GVoid **) audioBuffer, &qLength); //用clean，防止播放断同时也在读
             for (GUInt32 i = 0; i < qLength; i++) {
@@ -869,6 +873,7 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
                 R_BufferUnRetain(&audioBuffer[i]->retain);
             }
             free(audioBuffer);
+            queueEnablePop(_playControl->audioQueue, GTrue);
         }
 
         _syncControl->audioInfo.inDtsSeries            = -GINT32_MAX;

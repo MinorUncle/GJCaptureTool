@@ -924,6 +924,28 @@ GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat32 gain) {
     return GJCheckBool(context->audioProducer->setInputGain(context->audioProducer, gain), "setInputGain");
 }
 
+GBool GJLivePush_SetCameraMirror(GJLivePushContext *context, GBool mirror){
+    GBool result = GFalse;
+    pthread_mutex_lock(&context->lock);
+    result = context->videoProducer->setHorizontallyMirror(context->videoProducer, mirror);
+    pthread_mutex_unlock(&context->lock);
+    return result;
+}
+GBool GJLivePush_SetStreamMirror(GJLivePushContext *context, GBool mirror){
+    GBool result = GFalse;
+    pthread_mutex_lock(&context->lock);
+    result = context->videoProducer->setStreamMirror(context->videoProducer, mirror);
+    pthread_mutex_unlock(&context->lock);
+    return result;
+}
+GBool GJLivePush_SetPreviewMirror(GJLivePushContext *context, GBool mirror){
+    GBool result = GFalse;
+    pthread_mutex_lock(&context->lock);
+    result = context->videoProducer->setPreviewMirror(context->videoProducer, mirror);
+    pthread_mutex_unlock(&context->lock);
+    return result;
+}
+
 GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext *context, GBool enable) {
     
     GBool result = GFalse;
@@ -1121,6 +1143,24 @@ GVoid GJLivePush_StopSticker(GJLivePushContext *context) {
     pthread_mutex_lock(&context->lock);
     if (context->videoProducer) {
         context->videoProducer->chanceSticker(context->videoProducer);
+    }
+    pthread_mutex_unlock(&context->lock);
+}
+
+GBool GJLivePush_StartTrackImage(GJLivePushContext *context, const GVoid *images, GCRect initFrame){
+    GBool result = GFalse;
+    pthread_mutex_lock(&context->lock);
+    if (context->videoProducer) {
+        result = context->videoProducer->startTrackImage(context->videoProducer,images,initFrame);
+    }
+    pthread_mutex_unlock(&context->lock);
+    return result;
+}
+
+GVoid GJLivePush_StopTrack(GJLivePushContext *context){
+    pthread_mutex_lock(&context->lock);
+    if (context->videoProducer) {
+        context->videoProducer->stopTrackImage(context->videoProducer);
     }
     pthread_mutex_unlock(&context->lock);
 }

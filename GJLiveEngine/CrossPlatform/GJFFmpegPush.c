@@ -171,7 +171,7 @@ static GHandle sendRunloop(GHandle parm) {
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        GJLOG(GNULL,GJ_LOGALL,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts, packet->dts, packet->dataSize);
+        GJLOG(LOG_ALL,GJ_LOGALL,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts, packet->dts, packet->dataSize);
 
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {

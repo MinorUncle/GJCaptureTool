@@ -19,9 +19,20 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
+    
+    
     LIveStartViewController* controller = [[LIveStartViewController alloc]init];
 //    ViewController * controller = [[ViewController alloc]init];
-    self.window.rootViewController = controller;
+    UINavigationController* nav = [[UINavigationController alloc]initWithRootViewController:controller];
+    nav.navigationBarHidden = YES;
+    //设置背景透明图片
+//    [nav.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+//    //去掉 bar 下面有一条黑色的线
+//    [nav.navigationBar setShadowImage:[UIImage new]];
+//    nav.navigationBar.userInteractionEnabled = NO;
+//    nav.navigationBar.translucent = true;
+//    [[[nav.navigationBar subviews] objectAtIndex:0] setAlpha:0];
+    self.window.rootViewController = nav;
     [self.window makeKeyAndVisible];
     return YES;
 }

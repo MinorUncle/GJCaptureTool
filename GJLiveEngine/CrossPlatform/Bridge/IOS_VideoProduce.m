@@ -10,6 +10,7 @@
 #import "GJBufferPool.h"
 #import "GJImageBeautifyFilter.h"
 #import "GJImagePictureOverlay.h"
+#import "GJImageTrackImage.h"
 #import "GJImageView.h"
 #import "GJLiveDefine.h"
 #import "GJLog.h"
@@ -19,6 +20,7 @@
 typedef enum { //filter深度
     kFilterCamera = 0,
     kFilterBeauty,
+    kFilterTrack,
     kFilterSticker,
 } GJFilterDeep;
 typedef void (^VideoRecodeCallback)(R_GJPixelFrame *frame);
@@ -117,12 +119,15 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property (nonatomic, assign) UIInterfaceOrientation  outputOrientation;
 @property (nonatomic, assign) CGSize                  destSize;
 @property (nonatomic, assign) BOOL                    horizontallyMirror;
+@property (nonatomic, assign) BOOL                    streamMirror;
+@property (nonatomic, assign) BOOL                    previewMirror;
 @property (nonatomic, assign) CGSize                  captureSize;
 @property (nonatomic, assign) int                     frameRate;
 @property (nonatomic, assign) GJPixelFormat           pixelFormat;
 @property (nonatomic, assign) GJRetainBufferPool *    bufferPool;
 @property (nonatomic, strong) GJImagePictureOverlay * sticker;
-@property (nonatomic, strong) id<GJImageARScene> scene;
+@property (nonatomic, strong) GJImageTrackImage *     trackImage;
+@property (nonatomic, strong) id<GJImageARScene>      scene;
 
 
 @property (nonatomic, copy) VideoRecodeCallback callback;
@@ -204,6 +209,9 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         @synchronized(self) {
             if (_imageView == nil) {
                 _imageView = [[GJImageView alloc] init];
+                if (_previewMirror) {
+                    [self setPreviewMirror:_previewMirror];
+                }
             }
         }
     }
@@ -218,7 +226,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 /**
- 获取deep对应的filter，如果不存在则获取父filter,deepfang'h，直到获取到为止
+ 获取deep对应的filter，如果不存在则获取父filter,则递归继续向上，直到获取到为止
 
  @param deep deep放回获取到的层次
  @return return value description
@@ -227,6 +235,11 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     GPUImageOutput *outFiter = nil;
     switch (deep) {
         case kFilterSticker:
+            if(_trackImage){
+                outFiter = _trackImage;
+                break;
+            }
+        case kFilterTrack:
             if (_beautifyFilter) {
                 outFiter = _beautifyFilter;
                 break;
@@ -247,6 +260,9 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         case kFilterSticker:
             outFiter = _sticker;
             break;
+        case kFilterTrack:
+            outFiter = _trackImage;
+            break;
         case kFilterBeauty:
             outFiter = _beautifyFilter;
             break;
@@ -260,6 +276,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return outFiter;
 }
 
+//一直获取子滤镜，直到获取到为止
 - (GPUImageOutput *)getSonFilterWithDeep:(GJFilterDeep)deep {
     GPUImageOutput *outFiter = nil;
     switch (deep) {
@@ -268,13 +285,17 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
                 outFiter = _beautifyFilter;
                 break;
             }
-            
         case kFilterBeauty:
-            if (_sticker) {
-                deep    = kFilterSticker;
+            if (_trackImage) {
+                outFiter    = _trackImage;
                 break;
             }
-            break;
+        case kFilterTrack:
+            if (_sticker) {
+                outFiter    = _sticker;
+                break;
+            }
+            break;//可能为空
         default:
             GJAssert(0, "错误");
             break;
@@ -323,8 +344,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
                 [newSticker startOverlaysWithImages:images
                                               frame:attribure.frame
                                                 fps:fps
-                                        updateBlock:^GJOverlayAttribute *(NSInteger index, BOOL *ioFinish) {
-                                            return updateBlock(index, ioFinish);
+                                        updateBlock:^void(NSInteger index,GJOverlayAttribute* ioAttr, BOOL *ioFinish) {
+                                             updateBlock(index,ioAttr, ioFinish);
                                         }];
             } else {
                 [newSticker startOverlaysWithImages:images frame:attribure.frame fps:fps updateBlock:nil];
@@ -341,12 +362,41 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     runSynchronouslyOnVideoProcessingQueue(^{
         if (self.sticker == nil) { return; }
         [self removeFilterWithdeep:kFilterSticker];
+        [self.sticker stop];
         self.sticker = nil;
     });
 }
+
+- (BOOL)startTrackingImageWithImages:(NSArray<UIImage*>*)images frame:(CGRect)rect{
+    if (_camera == nil) {
+        return NO;
+    }
+    
+    runAsynchronouslyOnVideoProcessingQueue(^{
+        GJImageTrackImage *newTrack = [[GJImageTrackImage alloc] init];
+        [self addFilter:newTrack deep:kFilterTrack];
+        self.trackImage = newTrack;
+        [newTrack startOverlaysWithImages:images frame:rect fps:-1 updateBlock:nil];
+
+    });
+    return YES;
+}
+
+- (void)stopTracking{
+    runSynchronouslyOnVideoProcessingQueue(^{
+        if (self.trackImage == nil) { return; }
+        [self removeFilterWithdeep:kFilterTrack];
+        [self.trackImage stop];
+        self.trackImage = nil;
+    });
+}
+
 - (GPUImageCropFilter *)cropFilter {
     if (_cropFilter == nil) {
         _cropFilter = [[GPUImageCropFilter alloc] init];
+        if (_streamMirror) {
+            [self setStreamMirror:_streamMirror];
+        }
     }
     return _cropFilter;
 }
@@ -464,6 +514,20 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize, CGSize destSize) {
     _horizontallyMirror                            = horizontallyMirror;
     if (_camera) {
         self.camera.horizontallyMirrorRearFacingCamera = self.camera.horizontallyMirrorFrontFacingCamera = _horizontallyMirror;
+    }
+}
+
+- (void)setPreviewMirror:(BOOL)previewMirror{
+    _previewMirror                            = previewMirror;
+    if (_imageView) {
+        [_imageView setInputRotation:kGPUImageFlipHorizonal atIndex:0];
+    }
+}
+
+-(void)setStreamMirror:(BOOL)streamMirror{
+    _streamMirror = streamMirror;
+    if (_cropFilter) {
+        [_cropFilter setInputRotation:kGPUImageFlipHorizonal atIndex:0];
     }
 }
 
@@ -619,6 +683,17 @@ inline static GBool videoProduceSetHorizontallyMirror(struct _GJVideoProduceCont
     return GTrue;
 }
 
+inline static GBool setPreviewMirror (struct _GJVideoProduceContext* context, GBool mirror){
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    recode.previewMirror = mirror;
+    return recode.previewMirror == mirror;
+}
+inline static GBool setStreamMirror (struct _GJVideoProduceContext* context, GBool mirror){
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    recode.streamMirror = mirror;
+    return recode.streamMirror == mirror;
+}
+
 inline static GBool videoProduceSetFrameRate(struct _GJVideoProduceContext *context, GInt32 fps) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
     [recode setFrameRate:fps];
@@ -639,15 +714,20 @@ inline static GBool addSticker(struct _GJVideoProduceContext *context, const GVo
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
     CGRect            rect   = CGRectMake(parm.frame.center.x, parm.frame.center.y, parm.frame.size.width, parm.frame.size.height);
     if (callback == GNULL) {
-        [recode startStickerWithImages:(__bridge NSArray<UIImage *> *)(images) attribure:[GJOverlayAttribute overlayAttributeWithImage:nil frame:rect rotate:parm.rotation] fps:fps updateBlock:nil];
+        [recode startStickerWithImages:(__bridge_transfer NSArray<UIImage *> *)(images) attribure:[GJOverlayAttribute overlayAttributeWithImage:nil frame:rect rotate:parm.rotation] fps:fps updateBlock:nil];
     } else {
-        [recode startStickerWithImages:(__bridge NSArray<UIImage *> *)(images)
+        [recode startStickerWithImages:(__bridge_transfer NSArray<UIImage *> *)(images)
                              attribure:[GJOverlayAttribute overlayAttributeWithImage:nil frame:rect rotate:parm.rotation]
                                    fps:fps
-                           updateBlock:^GJOverlayAttribute *(NSInteger index, BOOL *ioFinish) {
-                               GStickerParm rParm = callback((GHandle) userData, index, (GBool *) ioFinish);
-                               CGRect       rRect = CGRectMake(rParm.frame.center.x, rParm.frame.center.y, rParm.frame.size.width, rParm.frame.size.height);
-                               return [GJOverlayAttribute overlayAttributeWithImage:(__bridge_transfer UIImage *)(rParm.image) frame:rRect rotate:rParm.rotation];
+                           updateBlock:^void (NSInteger index,GJOverlayAttribute* ioAttr, BOOL *ioFinish) {
+                               GStickerParm rParm ;
+                               rParm.frame = makeCGRectToGCRect(ioAttr.frame);
+                               rParm.image = (__bridge_retained GHandle)(ioAttr.image);
+                               rParm.rotation = ioAttr.rotate;
+                               callback((GHandle) userData, index,&rParm, (GBool *) ioFinish);
+                               ioAttr.frame = makeGCRectToCGRect(rParm.frame);
+                               ioAttr.image = (__bridge_transfer UIImage *)(rParm.image);
+                               ioAttr.rotate = rParm.rotation;
                            }];
     }
     return GTrue;
@@ -656,6 +736,18 @@ inline static GBool addSticker(struct _GJVideoProduceContext *context, const GVo
 inline static GVoid chanceSticker(struct _GJVideoProduceContext *context) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
     [recode chanceSticker];
+}
+
+inline static GBool startTrackImage(struct _GJVideoProduceContext *context, const GVoid *images, GCRect frame) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    CGRect            rect   = CGRectMake(frame.center.x, frame.center.y, frame.size.width, frame.size.height);
+    BOOL result =  [recode startTrackingImageWithImages:(__bridge NSArray<UIImage *> *)(images) frame:rect];
+    return result;
+}
+
+inline static GVoid stopTrackImage(struct _GJVideoProduceContext *context) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    [recode stopTracking];
 }
 
 inline static GSize getCaptureSize(struct _GJVideoProduceContext *context) {
@@ -681,6 +773,8 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     context->setCameraPosition     = videoProduceSetCameraPosition;
     context->setOrientation        = videoProduceSetOutputOrientation;
     context->setHorizontallyMirror = videoProduceSetHorizontallyMirror;
+    context->setPreviewMirror      = setPreviewMirror;
+    context->setStreamMirror       = setStreamMirror;
     context->getRenderView         = videoProduceGetRenderView;
     context->getCaptureSize        = getCaptureSize;
     context->setFrameRate          = videoProduceSetFrameRate;
@@ -688,6 +782,8 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     context->chanceSticker         = chanceSticker;
     context->setARScene            = videoProduceSetARScene;
     context->setVideoFormat        = videoProduceSetVideoFormat;
+    context->startTrackImage       = startTrackImage;
+    context->stopTrackImage        = stopTrackImage;
 }
 
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {

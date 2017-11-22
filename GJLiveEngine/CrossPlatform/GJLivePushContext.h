@@ -114,11 +114,19 @@ GBool GJLivePush_SetMixVolume(GJLivePushContext *context, GFloat32 volume);
 GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext *context, GBool should);
 GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat32 volume);
 GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat32 gain);
-GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps, const GChar *fileUrl);
 
+GBool GJLivePush_SetCameraMirror(GJLivePushContext *context, GBool mirror);
+GBool GJLivePush_SetStreamMirror(GJLivePushContext *context, GBool mirror);
+GBool GJLivePush_SetPreviewMirror(GJLivePushContext *context, GBool mirror);
+
+GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps, const GChar *fileUrl);
 GVoid GJLivePush_StopRecode(GJLivePushContext *context);
 GBool GJLivePush_StartSticker(GJLivePushContext *context, const GVoid *images, GStickerParm parm, GInt32 fps, GJStickerUpdateCallback callback, const GHandle userData);
 GVoid GJLivePush_StopSticker(GJLivePushContext *context);
+
+GBool GJLivePush_StartTrackImage(GJLivePushContext *context, const GVoid *images, GCRect initFrame);
+GVoid GJLivePush_StopTrack(GJLivePushContext *context);
+
 GSize GJLivePush_GetCaptureSize(GJLivePushContext *context);
 
 GBool GJLivePush_SetMeasurementMode(GJLivePushContext *context, GBool measurementMode);

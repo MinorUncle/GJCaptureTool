@@ -60,12 +60,18 @@ typedef void(^ARUpdateBlock)();
 
 +(instancetype)stickerAttributWithImage:(UIImage*)image frame:(GCRect)frame rotate:(CGFloat)rotate;
 @end
-typedef GJStickerAttribute*(^StickersUpdate)(NSInteger index,BOOL* ioFinish);
+typedef void(^StickersUpdate)(NSInteger index,GJStickerAttribute* ioAttr,BOOL* ioFinish);
 
 
 
 @interface GJLivePush : NSObject
 @property (nonatomic,assign         ) GJCameraPosition       cameraPosition;
+
+@property (nonatomic,assign         ) BOOL       previewMirror;//预览镜像，不镜像流
+
+@property (nonatomic,assign         ) BOOL       streamMirror;//流镜像，不影响预览
+
+@property (nonatomic,assign         ) BOOL       cameraMirror;//相机镜像，影响预览和流
 
 @property (nonatomic,assign         ) GJInterfaceOrientation outOrientation;
 
@@ -136,6 +142,10 @@ typedef GJStickerAttribute*(^StickersUpdate)(NSInteger index,BOOL* ioFinish);
  主动停止贴图。也可以通过addStickerWithImages的updateBlock，赋值ioFinish true来停止，不过该方法只能在更新的时候使用，可能会有延迟，fps越小延迟越大。
  */
 - (void)chanceSticker;
+
+- (BOOL)startTrackingImageWithImages:(NSArray<UIImage*>*)images initFrame:(GCRect)frame;
+
+- (void)stopTracking;
 
 //- (void)videoRecodeWithPath:(NSString*)path;
 

@@ -31,6 +31,9 @@ typedef struct GCRect {
     GPoint center;
     GSize size;
 }GCRect;
+#define makeGCRectToCGRect(gc) ((CGRect){(gc).center.x,(gc).center.y,(gc).size.width,(gc).size.height})
+#define makeCGRectToGCRect(cg) ((GCRect){(cg).origin.x,(cg).origin.y,(cg).size.width,(cg).size.height})
+
 typedef struct GRect {
     GPoint origin;
     GSize size;

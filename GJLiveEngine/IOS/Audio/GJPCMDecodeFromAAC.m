@@ -70,13 +70,13 @@ static int stopCount;
 }
 
 - (void)start {
-    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AACDecode Start:%p", self);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AACDecode Start:%p", self);
     _running = YES;
     [self _createEncodeConverter];
     startCount++;
 }
 - (void)stop {
-    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AACDecode stop:%p", self);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AACDecode stop:%p", self);
     _running = NO;
     stopCount++;
     queueEnablePop(_resumeQueue, GFalse);

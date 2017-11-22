@@ -23,6 +23,7 @@
     GBool  _shouldRestart;
     BOOL   requestFlush;
     GTime _fristTime;
+    GTime _preDTS;
 }
 @property (nonatomic, assign) VTCompressionSessionRef enCodeSession;
 @property (nonatomic, assign) GJRetainBufferPool *    bufferPool;
@@ -46,6 +47,7 @@
         _fristPts     = GINT64_MAX;
         _dtsDelta     = 0;
         _fristTime    = -1;
+        _preDTS     = -1;
         [self creatEnCodeSession];
     }
     return self;
@@ -299,18 +301,24 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     CMTime pts       = CMSampleBufferGetPresentationTimeStamp(sample);
 
 #ifdef NETWORK_DELAY
-//    pushPacket->dts = GJ_Gettime()/1000 
-    pushPacket->dts = GJ_Gettime()/1000 - encoder->_fristTime;
+    pushPacket->dts = GJ_Gettime()/1000
+//    pushPacket->dts = GJ_Gettime()/1000 - encoder->_fristTime;
 //    NSLog(@"decode Dur:%lld size:%d",pushPacket->dts - pts.value,pushPacket->dataSize);
 
 #else
     pushPacket->dts = GJ_Gettime()/1000 - encoder->_fristTime;
 #endif
     if (pushPacket->dts > pts.value) {
-        pushPacket->dts = pts.value;
+        if (encoder->_preDTS > pts.value) {
+            //如果比上一次解dts还要早，则直接推迟pts到dts
+            pts.value = encoder->_preDTS;
+        }
+        //dt则直接采用上次dts
+        pushPacket->dts = encoder->_preDTS;
     }
     
     pushPacket->pts = pts.value;
+    encoder->_preDTS = pushPacket->dts;
 
 
 //    printf("encode over pts:%lld dts:%lld data size:%zu\n",pts.value,pushPacket->dts,totalLength);
@@ -351,8 +359,9 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     requestFlush = YES;
     _sps         = nil;
     _pps         = nil;
-    _fristPts     = GINT64_MAX;
-
+    _fristPts    = GINT64_MAX;
+    _fristTime   = -1;
+    _preDTS    = -1;
 }
 
 - (void)dealloc {
