@@ -314,7 +314,9 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     pushPacket->dts = GJ_Gettime()/1000 - encoder->_fristTime;
 #endif
     if (pushPacket->dts > pts.value) {
-        if (encoder->_preDTS > pts.value) {
+        if (encoder->_preDTS <= 0) {
+            encoder->_preDTS = pts.value;
+        }else if (encoder->_preDTS > pts.value) {
             //如果比上一次解dts还要早，则直接推迟pts到dts
             pts.value = encoder->_preDTS;
         }

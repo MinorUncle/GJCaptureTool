@@ -16,6 +16,7 @@
     R_GJPCMFrame *_alignCacheFrame;
     GInt32        _sizePerPacket;
     float         _durPerSize;
+    NSMutableDictionary<id,id<AEAudioPlayable>>* _mixPlayers;
 }
 @end
 
@@ -29,6 +30,7 @@
     if (self) {
         NSError *error;
         _mixToSream = YES;
+        _mixPlayers = [NSMutableDictionary dictionaryWithCapacity:2];
         if (audioFormat.mFramesPerPacket > 1) {
             _sizePerPacket               = audioFormat.mFramesPerPacket * audioFormat.mBytesPerFrame;
             audioFormat.mFramesPerPacket = 0;
@@ -97,6 +99,26 @@
     }
 }
 
+-(void)addMixPlayer:(id<AEAudioPlayable>)player key:(id <NSCopying>)key{
+    if (![_mixPlayers.allKeys containsObject:key]) {
+        [_mixPlayers setObject:player forKey:key];
+        [_audioController addChannels:@[player]];
+        if (_mixPlayers.count == 1) {
+            [_audioController addOutputReceiver:_audioMixer];
+        }
+    }
+}
+-(void)removeMixPlayerWithkey:(id <NSCopying>)key{
+    if ([_mixPlayers.allKeys containsObject:key]) {
+        id<AEAudioPlayable> player = _mixPlayers[key];
+        [_mixPlayers removeObjectForKey:key];
+        if (_mixPlayers.count == 0) {
+            [_audioController removeOutputReceiver:_audioMixer];
+        }
+        [_audioController removeChannels:@[player]];
+    }
+}
+
 - (BOOL)startRecode:(NSError **)error {
     GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc, GNULL, GNULL);
     _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
@@ -154,10 +176,13 @@
 
 - (BOOL)enableAudioInEarMonitoring:(BOOL)enable {
     if (enable) {
+        //关闭麦克风接受，打开播放接受
+        [_audioController removeInputReceiver:_audioMixer];
         [_audioController addInputReceiver:self.playthrough];
-        [_audioController addChannels:@[ self.playthrough ]];
+        [self addMixPlayer:self.playthrough key:self.playthrough.description];
     } else {
-        [_audioController removeChannels:@[ self.playthrough ]];
+        [self removeMixPlayerWithkey:self.playthrough.description];
+        [_audioController addInputReceiver:_audioMixer];
         [_audioController removeInputReceiver:self.playthrough];
     }
     return GTrue;
@@ -191,7 +216,7 @@
 - (BOOL)setMixFile:(NSURL*)file finish:(MixFinishBlock)finishBlock {
     if (_mixfilePlay != nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
-        [_audioController removeChannels:@[ _mixfilePlay ]];
+        [self removeMixPlayerWithkey:_mixfilePlay];
         _mixfilePlay = nil;
     }
     NSError *error;
@@ -210,8 +235,7 @@
             }
             wkSelf.mixfilePlay.completionBlock = nil;
         };
-        [_audioController addChannels:@[ _mixfilePlay ]];
-        [_audioController addOutputReceiver:_audioMixer];
+        [self addMixPlayer:_mixfilePlay key:_mixfilePlay.description];
         return GTrue;
     }
 }
@@ -228,24 +252,16 @@
     if (_mixfilePlay == nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "重复stop mix");
     } else {
-        [_audioController removeChannels:@[ _mixfilePlay ]];
-        [_audioController removeOutputReceiver:_audioMixer];
+        [self removeMixPlayerWithkey:_mixfilePlay.description];
         _mixfilePlay = nil;
     }
 }
 - (void)dealloc {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJAudioManager dealloc");
+    if (_bufferPool) {
+        [self stopRecode];
+    }
     [_audioController removeInputReceiver:_audioMixer];
-    NSMutableArray *play = [NSMutableArray arrayWithCapacity:2];
-
-    if (_mixfilePlay) {
-        [play addObject:_mixfilePlay];
-        [_audioController removeOutputReceiver:_audioMixer];
-    }
-    if (_playthrough) {
-        [play addObject:_playthrough];
-        [_audioController removeInputReceiver:_playthrough];
-    }
-    [_audioController removeChannels:play];
+    [_audioController removeChannels:_mixPlayers.allValues];
 }
 @end

@@ -59,4 +59,7 @@ typedef void(^MixFinishBlock)(GBool finish);
 -(BOOL)enableReverb:(BOOL)enable;
 -(BOOL)startRecode:(NSError**)error;
 -(void)stopRecode;
+-(void)addMixPlayer:(id<AEAudioPlayable>)player key:(id)key;
+-(void)removeMixPlayerWithkey:(id)key;
+
 @end

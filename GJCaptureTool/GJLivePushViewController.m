@@ -100,6 +100,7 @@
     [self.view addSubview:_timeLab];
     
     UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+    tap.numberOfTapsRequired = 2;
     [_view addGestureRecognizer:tap];
     
     _livePush.previewView.contentMode = UIViewContentModeScaleAspectFit;
@@ -748,6 +749,7 @@
     [_view addSubview:[_pull getPreviewView]];
 
     UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+    tap.numberOfTapsRequired = 2;
     [_view addGestureRecognizer:tap];
     
     _pullBtn = [UIButton buttonWithType:UIButtonTypeSystem];
@@ -961,7 +963,7 @@
 
 -(void)livePull:(GJLivePull *)livePull networkDelay:(long)delay{
     dispatch_async(dispatch_get_main_queue(), ^{
-        _netDelay.text = [NSString stringWithFormat:@"Avg NetDelay Measure:%ld ms",delay];
+        _netDelay.text = [NSString stringWithFormat:@"Avg display delay Measure:%ld ms",delay];
     });
 }
 

@@ -152,14 +152,13 @@ void audio_output_start(struct audio_output_t *ao) {
 
     GJAudioManager *manager = (__bridge GJAudioManager *) (ao->audioManager);
 
-    [manager.audioController addChannels:@[ channel ]];
+    [manager addMixPlayer:channel key:channel.description];
 }
 
 void audio_output_stop(struct audio_output_t *ao) {
 
     GJAudioManager *manager = (__bridge GJAudioManager *) (ao->audioManager);
-
-    [manager.audioController removeChannels:@[ (__bridge AEBlockChannel *) ao->blockChannel ]];
+    [manager removeMixPlayerWithkey:((__bridge AEBlockChannel *) ao->blockChannel).description];
 }
 
 void audio_output_flush(struct audio_output_t *ao) {

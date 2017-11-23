@@ -164,6 +164,15 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (void)dealloc {
+    if (_sticker) {
+        [_sticker stop];
+    }
+    if (_trackImage) {
+        [_trackImage stop];
+    }
+    if (_camera) {
+        [_camera stopCameraCapture];
+    }
     GJRetainBufferPool *temPool = _bufferPool;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
     dispatch_async(dispatch_get_global_queue(0, 0), ^{

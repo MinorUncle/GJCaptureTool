@@ -124,6 +124,7 @@ GHandle GJLivePlay_GetVideoDisplayView(GJLivePlayer *player);
 GJTrafficStatus GJLivePlay_GetVideoCacheInfo(GJLivePlayer *player);
 GJTrafficStatus GJLivePlay_GetAudioCacheInfo(GJLivePlayer *player);
 #ifdef NETWORK_DELAY
+//采集到显示的延迟
 GLong GJLivePlay_GetNetWorkDelay(GJLivePlayer *player);
 #endif
 
