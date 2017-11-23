@@ -1130,11 +1130,11 @@ GVoid GJLivePush_StopRecode(GJLivePushContext *context) {
     }
     pthread_mutex_unlock(&context->lock);
 }
-GBool GJLivePush_StartSticker(GJLivePushContext *context, const GVoid *images, GStickerParm parm, GInt32 fps, GJStickerUpdateCallback callback, const GHandle userData) {
+GBool GJLivePush_StartSticker(GJLivePushContext *context, const GVoid *images, GInt32 fps, GJStickerUpdateCallback callback, const GHandle userData) {
     GBool result = GFalse;
     pthread_mutex_lock(&context->lock);
     if (context->videoProducer) {
-        result = context->videoProducer->addSticker(context->videoProducer, images, parm, fps, callback, userData);
+        result = context->videoProducer->addSticker(context->videoProducer, images, fps, callback, userData);
     }
     pthread_mutex_unlock(&context->lock);
     return result;

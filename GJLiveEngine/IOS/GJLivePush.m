@@ -19,23 +19,23 @@
     GJTrafficStatus     _audioInfo;
     GJTrafficStatus     _videoInfo;
     NSString *          _pushUrl;
-    ;
+    GHandle             _stickerCallback;
 }
 @property (assign, nonatomic) float gaterFrequency;
 
 @end
 
-@implementation GJStickerAttribute
-
-+(instancetype)stickerAttributWithImage:(UIImage*)image frame:(GCRect)frame rotate:(CGFloat)rotate{
-    GJStickerAttribute *attribute = [[GJStickerAttribute alloc] init];
-    attribute.frame               = frame;
-    attribute.rotate              = rotate;
-    attribute.image               = image;
-    return attribute;
-}
-
-@end
+//@implementation GJStickerAttribute
+//
+//+(instancetype)stickerAttributWithImage:(UIImage*)image frame:(GCRect)frame rotate:(CGFloat)rotate{
+//    GJStickerAttribute *attribute = [[GJStickerAttribute alloc] init];
+//    attribute.frame               = frame;
+//    attribute.rotate              = rotate;
+//    attribute.image               = image;
+//    return attribute;
+//}
+//
+//@end
 
 @implementation GJLivePush
 @synthesize     previewView = _previewView;
@@ -300,20 +300,17 @@ static int restartCount;
     GJLivePush_StopRecode(_livePush);
 }
 
-static void stickerUpdateCallback(const GHandle userDate, GLong index,GStickerParm* parm,
+static void stickerUpdateCallback(const GHandle userDate, GLong index,const GHandle parm,
                                           GBool *ioFinsh) {
 
-    StickersUpdate      block = GNULL;
+    OverlaysUpdate      block = GNULL;
     if (userDate != GNULL) {
-        block = (__bridge StickersUpdate)(userDate);
+        block = (__bridge OverlaysUpdate)(userDate);
     }
     
     if (block) {
-        GJStickerAttribute *attr = [GJStickerAttribute stickerAttributWithImage:(__bridge_transfer UIImage *)(parm->image) frame:parm->frame rotate:parm->rotation];
+        const GJOverlayAttribute* attr = (__bridge const GJOverlayAttribute*)parm;
         block(index,attr, (BOOL *) ioFinsh);
-        parm->frame    = attr.frame;
-        parm->rotation = attr.rotate;
-        parm->image    = (__bridge_retained GHandle)(attr.image);
         if (*ioFinsh) {
             id tem = CFBridgingRelease(userDate); //释放回调block
             tem    = nil;
@@ -321,16 +318,13 @@ static void stickerUpdateCallback(const GHandle userDate, GLong index,GStickerPa
     }
 }
 
-- (BOOL)startStickerWithImages:(NSArray<UIImage *> *)images
-                     attribure:(GJStickerAttribute *)attribure
+- (BOOL)startStickerWithImages:(NSArray<GJOverlayAttribute *> *)images
                            fps:(NSInteger)fps
-                   updateBlock:(StickersUpdate)updateBlock {
-    GStickerParm parm;
-    parm.frame    = attribure.frame;
-    parm.rotation = attribure.rotate;
-    return GJLivePush_StartSticker(_livePush, (__bridge_retained const GVoid *)(images), parm,
+                   updateBlock:(OverlaysUpdate)updateBlock {
+    _stickerCallback = (void*)CFBridgingRetain(updateBlock);
+    return GJLivePush_StartSticker(_livePush, (__bridge_retained const GVoid *)(images),
                                    (GInt32) fps, stickerUpdateCallback,
-                                   (GVoid*)CFBridgingRetain(updateBlock));
+                                   _stickerCallback);
 }
 
 - (void)chanceSticker {
@@ -343,6 +337,9 @@ static void stickerUpdateCallback(const GHandle userDate, GLong index,GStickerPa
 
 - (void)stopTracking{
 	GJLivePush_StopTrack(_livePush);
+    id tem = CFBridgingRelease(_stickerCallback); //释放回调block
+    tem    = nil;
+    _stickerCallback = GNULL;
 }
 
 - (CGSize)captureSize {

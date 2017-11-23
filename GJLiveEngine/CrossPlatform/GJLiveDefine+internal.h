@@ -26,11 +26,11 @@
 #define GRationalMake(num,den)  (GRational){(GInt32)(num),(GInt32)(den)}
 #define GRationalValue(rational) (GFloat32)(rational).num*1.0/(rational).den
 
-typedef struct GStickerParm{
-    GCRect frame;
-    GFloat32 rotation;
-    GHandle image;
-} GStickerParm;
+//typedef struct GStickerParm{
+//    GCRect frame;
+//    GFloat32 rotation;
+//    GHandle image;
+//} GStickerParm;
 typedef struct TrafficUnit{
     GLong ts;//ms
 //    GLong dts;//dts只能单调上升，否则重新开始计算

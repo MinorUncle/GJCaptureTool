@@ -333,7 +333,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     }
 }
 
-- (BOOL)startStickerWithImages:(NSArray<UIImage *> *)images attribure:(GJOverlayAttribute *)attribure fps:(NSInteger)fps updateBlock:(OverlaysUpdate)updateBlock {
+- (BOOL)startStickerWithImages:(NSArray<GJOverlayAttribute *> *)images fps:(NSInteger)fps updateBlock:(OverlaysUpdate)updateBlock {
     
     if (_camera != nil) {
         runAsynchronouslyOnVideoProcessingQueue(^{
@@ -341,14 +341,12 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             [self addFilter:newSticker deep:kFilterSticker];
             self.sticker = newSticker;
             if (updateBlock) {
-                [newSticker startOverlaysWithImages:images
-                                              frame:attribure.frame
-                                                fps:fps
-                                        updateBlock:^void(NSInteger index,GJOverlayAttribute* ioAttr, BOOL *ioFinish) {
-                                             updateBlock(index,ioAttr, ioFinish);
-                                        }];
+                [newSticker startOverlaysWithImages:images fps:fps updateBlock:^(NSInteger index, GJOverlayAttribute * _Nonnull ioAttr, BOOL * _Nonnull ioFinish) {
+                    updateBlock(index,ioAttr, ioFinish);
+                }];
+      
             } else {
-                [newSticker startOverlaysWithImages:images frame:attribure.frame fps:fps updateBlock:nil];
+                [newSticker startOverlaysWithImages:images fps:fps updateBlock:nil];
             }
         });
         return YES;
@@ -367,7 +365,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     });
 }
 
-- (BOOL)startTrackingImageWithImages:(NSArray<UIImage*>*)images frame:(CGRect)rect{
+- (BOOL)startTrackingImageWithImages:(NSArray<GJOverlayAttribute*>*)images{
     if (_camera == nil) {
         return NO;
     }
@@ -376,7 +374,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         GJImageTrackImage *newTrack = [[GJImageTrackImage alloc] init];
         [self addFilter:newTrack deep:kFilterTrack];
         self.trackImage = newTrack;
-        [newTrack startOverlaysWithImages:images frame:rect fps:-1 updateBlock:nil];
+        [newTrack startOverlaysWithImages:images fps:-1 updateBlock:nil];
 
     });
     return YES;
@@ -710,25 +708,15 @@ inline static GVoid videoProduceStopPreview(struct _GJVideoProduceContext *conte
     [recode stopPreview];
 }
 
-inline static GBool addSticker(struct _GJVideoProduceContext *context, const GVoid *images, GStickerParm parm, GInt32 fps, GJStickerUpdateCallback callback, const GVoid *userData) {
+inline static GBool addSticker(struct _GJVideoProduceContext *context, const GVoid *overlays,  GInt32 fps, GJStickerUpdateCallback callback, const GVoid *userData) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    CGRect            rect   = CGRectMake(parm.frame.center.x, parm.frame.center.y, parm.frame.size.width, parm.frame.size.height);
+    
     if (callback == GNULL) {
-        [recode startStickerWithImages:(__bridge_transfer NSArray<UIImage *> *)(images) attribure:[GJOverlayAttribute overlayAttributeWithImage:nil frame:rect rotate:parm.rotation] fps:fps updateBlock:nil];
+        [recode startStickerWithImages:(__bridge_transfer NSArray<GJOverlayAttribute *> *)(overlays) fps:fps updateBlock:nil];
     } else {
-        [recode startStickerWithImages:(__bridge_transfer NSArray<UIImage *> *)(images)
-                             attribure:[GJOverlayAttribute overlayAttributeWithImage:nil frame:rect rotate:parm.rotation]
-                                   fps:fps
-                           updateBlock:^void (NSInteger index,GJOverlayAttribute* ioAttr, BOOL *ioFinish) {
-                               GStickerParm rParm ;
-                               rParm.frame = makeCGRectToGCRect(ioAttr.frame);
-                               rParm.image = (__bridge_retained GHandle)(ioAttr.image);
-                               rParm.rotation = ioAttr.rotate;
-                               callback((GHandle) userData, index,&rParm, (GBool *) ioFinish);
-                               ioAttr.frame = makeGCRectToCGRect(rParm.frame);
-                               ioAttr.image = (__bridge_transfer UIImage *)(rParm.image);
-                               ioAttr.rotate = rParm.rotation;
-                           }];
+        [recode startStickerWithImages:(__bridge_transfer NSArray<GJOverlayAttribute *> *)(overlays) fps:fps updateBlock:^(NSInteger index, GJOverlayAttribute * _Nonnull ioAttr, BOOL * _Nonnull ioFinish) {
+            callback((GHandle) userData, index,(__bridge GHandle)(ioAttr), (GBool *) ioFinish);
+        }];
     }
     return GTrue;
 }
@@ -740,8 +728,12 @@ inline static GVoid chanceSticker(struct _GJVideoProduceContext *context) {
 
 inline static GBool startTrackImage(struct _GJVideoProduceContext *context, const GVoid *images, GCRect frame) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    CGRect            rect   = CGRectMake(frame.center.x, frame.center.y, frame.size.width, frame.size.height);
-    BOOL result =  [recode startTrackingImageWithImages:(__bridge NSArray<UIImage *> *)(images) frame:rect];
+    NSArray<UIImage *> * imageArry = (__bridge_transfer NSArray<UIImage *> *)(images);
+    NSMutableArray* overlays = [NSMutableArray arrayWithCapacity:imageArry.count];
+    for (UIImage* image in imageArry) {
+        [overlays addObject:[GJOverlayAttribute overlayAttributeWithImage:image frame:makeGCRectToCGRect(frame) rotate:0]];
+    }
+    BOOL result =  [recode startTrackingImageWithImages:overlays];
     return result;
 }
 

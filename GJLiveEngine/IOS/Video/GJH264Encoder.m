@@ -301,7 +301,12 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     CMTime pts       = CMSampleBufferGetPresentationTimeStamp(sample);
 
 #ifdef NETWORK_DELAY
-    pushPacket->dts = GJ_Gettime()/1000
+    pushPacket->dts = GJ_Gettime()/1000;
+    static int dDP ;
+    if (dDP == 0) {
+        dDP = (int)(pushPacket->dts - pts.value);
+    }
+    pushPacket->dts -= 2*dDP;
 //    pushPacket->dts = GJ_Gettime()/1000 - encoder->_fristTime;
 //    NSLog(@"decode Dur:%lld size:%d",pushPacket->dts - pts.value,pushPacket->dataSize);
 

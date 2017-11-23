@@ -19,10 +19,10 @@
 typedef void(^ARUpdateBlock)();
 @protocol GJImageARScene <NSObject>
 @required
-@property(nonatomic,retain,readonly) ARSCNView* scene;
+@property(nonatomic,retain,readonly) ARSCNView* _Nullable scene;
 @property(nonatomic,assign) NSInteger updateFps;
 @property(readonly, nonatomic) BOOL isRunning;
-@property(nonatomic,assign) ARUpdateBlock updateBlock;
+@property(nonatomic,assign) ARUpdateBlock _Nullable updateBlock;
 
 - (AVCaptureDevicePosition)cameraPosition;
 - (void)rotateCamera;
@@ -36,13 +36,13 @@ typedef void(^ARUpdateBlock)();
 @protocol GJLivePushDelegate <NSObject>
 @required
 
--(void)livePush:(GJLivePush*)livePush mixFileFinish:(NSString*)path;
--(void)livePush:(GJLivePush*)livePush updatePushStatus:(GJPushSessionStatus*)status;
--(void)livePush:(GJLivePush*)livePush closeConnent:(GJPushSessionInfo*)info resion:(GJConnentCloceReason)reason;
--(void)livePush:(GJLivePush*)livePush connentSuccessWithElapsed:(GLong)elapsed;
--(void)livePush:(GJLivePush*)livePush dynamicVideoUpdate:(VideoDynamicInfo*)elapsed;
--(void)livePush:(GJLivePush*)livePush UIRecodeFinish:(NSError*)error;
--(void)livePush:(GJLivePush*)livePush errorType:(GJLiveErrorType)type infoDesc:(NSString*)info;
+-(void)livePush:(GJLivePush*_Nonnull)livePush mixFileFinish:(NSString*_Nonnull)path;
+-(void)livePush:(GJLivePush*_Nonnull)livePush updatePushStatus:(GJPushSessionStatus*_Nonnull)status;
+-(void)livePush:(GJLivePush*_Nonnull)livePush closeConnent:(GJPushSessionInfo*_Nonnull)info resion:(GJConnentCloceReason)reason;
+-(void)livePush:(GJLivePush*_Nonnull)livePush connentSuccessWithElapsed:(GLong)elapsed;
+-(void)livePush:(GJLivePush*_Nonnull)livePush dynamicVideoUpdate:(VideoDynamicInfo*_Nonnull)elapsed;
+-(void)livePush:(GJLivePush*_Nonnull)livePush UIRecodeFinish:(NSError*_Nonnull)error;
+-(void)livePush:(GJLivePush*_Nonnull)livePush errorType:(GJLiveErrorType)type infoDesc:(NSString*_Nonnull)info;
 //-(void)livePush:(GJLivePush*)livePush pushPacket:(R_GJH264Packet*)packet;
 //-(void)livePush:(GJLivePush*)livePush pushImagebuffer:(CVImageBufferRef)packet pts:(CMTime)pts;
 
@@ -53,14 +53,16 @@ typedef void(^ARUpdateBlock)();
 
 
 
-@interface GJStickerAttribute : NSObject
-@property (assign,nonatomic) GCRect  frame;
-@property (assign,nonatomic) CGFloat rotate;//绕frame的center旋转,0-360
-@property (retain,nonatomic) UIImage* image;//nil表示不更新。
+@interface GJOverlayAttribute : NSObject
+//注意，frame的origin是中点
+@property(assign,nonatomic)CGRect frame;
+@property(assign,nonatomic)CGFloat rotate;
+//注意image更新后，每次该index循环都是更新后的图片
+@property(retain,nonatomic) UIImage* _Nonnull  image;
 
-+(instancetype)stickerAttributWithImage:(UIImage*)image frame:(GCRect)frame rotate:(CGFloat)rotate;
++(instancetype _Nonnull )overlayAttributeWithImage:(UIImage* _Nonnull)image frame:(CGRect)frame rotate:(CGFloat)rotate;
 @end
-typedef void(^StickersUpdate)(NSInteger index,GJStickerAttribute* ioAttr,BOOL* ioFinish);
+typedef void(^OverlaysUpdate)(NSInteger index,const GJOverlayAttribute* _Nullable ioAttr,BOOL* _Nonnull ioFinish);
 
 
 
@@ -78,21 +80,21 @@ typedef void(^StickersUpdate)(NSInteger index,GJStickerAttribute* ioAttr,BOOL* i
 @property (nonatomic,assign         ) BOOL                   mixFileNeedToStream;
 
 
-@property (nonatomic,strong,readonly) UIView                 * previewView;
+@property (nonatomic,strong,readonly) UIView                 * _Nonnull previewView;
 
 @property (nonatomic,assign,readonly) GJPushConfig           pushConfig;
 
 //只读，根据pushConfig中的push size自动选择最优.outOrientation 和 pushsize会改变改值，
 @property (nonatomic,assign,readonly) CGSize                 captureSize;
 
-@property (nonatomic,weak           ) id<GJLivePushDelegate> delegate;
+@property (nonatomic,weak           ) id  <GJLivePushDelegate> _Nullable delegate;
 
 @property (nonatomic,assign         ) BOOL                   videoMute;
 @property (nonatomic,assign         ) BOOL                   audioMute;
 @property (nonatomic,assign         ) BOOL                   measurementMode;
 
 //配置ar场景，开启ar模式，预览和推流前配置。scene= nil表示取消;
-@property (nonatomic,retain         ) id<GJImageARScene>                     ARScene;
+@property (nonatomic,retain         ) id  <GJImageARScene> _Nullable                    ARScene;
 
 //- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
 
@@ -103,7 +105,7 @@ typedef void(^StickersUpdate)(NSInteger index,GJStickerAttribute* ioAttr,BOOL* i
 
 - (void)stopPreview;
 
-- (bool)startStreamPushWithUrl:(NSString *)url;
+- (bool)startStreamPushWithUrl:(NSString *_Nonnull)url;
 
 - (void)setPushConfig:(GJPushConfig)pushConfig;
 
@@ -113,7 +115,7 @@ typedef void(^StickersUpdate)(NSInteger index,GJStickerAttribute* ioAttr,BOOL* i
 
 - (BOOL)enableReverb:(BOOL)enable;
 
-- (BOOL)startAudioMixWithFile:(NSURL*)fileUrl;
+- (BOOL)startAudioMixWithFile:(NSURL*_Nonnull)fileUrl;
 
 - (void)stopAudioMix;
 
@@ -123,7 +125,7 @@ typedef void(^StickersUpdate)(NSInteger index,GJStickerAttribute* ioAttr,BOOL* i
 
 - (void)setMasterOutVolume:(float)volume;
 
-- (BOOL)startUIRecodeWithRootView:(UIView*)view fps:(NSInteger)fps filePath:(NSURL*)file;
+- (BOOL)startUIRecodeWithRootView:(UIView*_Nonnull)view fps:(NSInteger)fps filePath:(NSURL*_Nonnull)file;
 
 - (void)stopUIRecode;
 
@@ -131,19 +133,18 @@ typedef void(^StickersUpdate)(NSInteger index,GJStickerAttribute* ioAttr,BOOL* i
  贴图，如果存在则取消已存在的
 
  @param images 需要贴的图片集合
- @param attribure 用于整体的的属性，每帧可以通过updateBlock更新
  @param fps 贴图更新的帧率
  @param updateBlock 每次更新的回调，index表示当前更新的图片，ioFinish表示是否结束，输入输出值。
  @return 是否成功
  */
-- (BOOL)startStickerWithImages:(NSArray<UIImage*>*)images attribure:(GJStickerAttribute*)attribure fps:(NSInteger)fps updateBlock:(StickersUpdate)updateBlock;
+- (BOOL)startStickerWithImages:(NSArray<GJOverlayAttribute*>* _Nonnull)images fps:(NSInteger)fps updateBlock:(OverlaysUpdate _Nullable )updateBlock;
 
 /**
  主动停止贴图。也可以通过addStickerWithImages的updateBlock，赋值ioFinish true来停止，不过该方法只能在更新的时候使用，可能会有延迟，fps越小延迟越大。
  */
 - (void)chanceSticker;
 
-- (BOOL)startTrackingImageWithImages:(NSArray<UIImage*>*)images initFrame:(GCRect)frame;
+- (BOOL)startTrackingImageWithImages:(NSArray<UIImage*>*_Nonnull)images initFrame:(GCRect)frame;
 
 - (void)stopTracking;
 

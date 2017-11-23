@@ -681,6 +681,8 @@ GVoid GJLivePlay_Stop(GJLivePlayer *player) {
         player->playControl.status = kPlayStatusStop;
         queueEnablePush(player->playControl.audioQueue, GFalse);
         queueEnablePush(player->playControl.imageQueue, GFalse);
+        queueEnablePop(player->playControl.audioQueue, GFalse);
+        queueEnablePop(player->playControl.imageQueue, GFalse);
 
         queueBroadcastPop(player->playControl.imageQueue);
         queueBroadcastPop(player->playControl.audioQueue);

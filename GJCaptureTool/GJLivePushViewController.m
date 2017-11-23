@@ -462,15 +462,13 @@
             _timeLab.textAlignment = NSTextAlignmentCenter;
             _timeLab.textColor = [UIColor blackColor];
             _timeLab.font = [UIFont systemFontOfSize:26];
-            NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
-            images[0] = [self getSnapshotImageWithSize:rect.size];
-            GCRect frame = {_livePush.captureSize.width*0.5,_livePush.captureSize.height*0.5,rect.size.width,rect.size.height};
-            GJStickerAttribute* attr = [GJStickerAttribute stickerAttributWithImage:images[0] frame:frame rotate:0];
-            [_livePush startStickerWithImages:images attribure:attr fps:15 updateBlock:^ void(NSInteger index,GJStickerAttribute* ioAttr, BOOL *ioFinish) {
-                GCRect re = frame;
-                re.size.width = images[index].size.width;
-                re.size.height = images[index].size.height;
-                ioAttr.frame = frame;
+            NSMutableArray<GJOverlayAttribute*>* overlays = [NSMutableArray arrayWithCapacity:6];
+            CGRect frame = {_livePush.captureSize.width*0.5,_livePush.captureSize.height*0.5,rect.size.width,rect.size.height};
+            for (int i = 0; i< 1; i++) {
+                overlays[0] = [GJOverlayAttribute overlayAttributeWithImage:[self getSnapshotImageWithSize:rect.size] frame:frame rotate:0];
+            }
+            [_livePush startStickerWithImages:overlays fps:15 updateBlock:^ void(NSInteger index,const GJOverlayAttribute* ioAttr, BOOL *ioFinish) {
+
                 *ioFinish = NO;
                 if (*ioFinish) {
                     btn.selected = NO;
@@ -483,7 +481,6 @@
                 }
                 dispatch_async(dispatch_get_main_queue(), ^{
                     image = [self getSnapshotImageWithSize:rect.size];
-                    
                 });
                 
                 ioAttr.rotate = r;

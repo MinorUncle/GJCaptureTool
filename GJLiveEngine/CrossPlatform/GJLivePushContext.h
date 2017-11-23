@@ -121,7 +121,7 @@ GBool GJLivePush_SetPreviewMirror(GJLivePushContext *context, GBool mirror);
 
 GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps, const GChar *fileUrl);
 GVoid GJLivePush_StopRecode(GJLivePushContext *context);
-GBool GJLivePush_StartSticker(GJLivePushContext *context, const GVoid *images, GStickerParm parm, GInt32 fps, GJStickerUpdateCallback callback, const GHandle userData);
+GBool GJLivePush_StartSticker(GJLivePushContext *context, const GVoid *images, GInt32 fps, GJStickerUpdateCallback callback, const GHandle userData);
 GVoid GJLivePush_StopSticker(GJLivePushContext *context);
 
 GBool GJLivePush_StartTrackImage(GJLivePushContext *context, const GVoid *images, GCRect initFrame);
