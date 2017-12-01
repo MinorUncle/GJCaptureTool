@@ -100,7 +100,6 @@
     [self.view addSubview:_timeLab];
     
     UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
-    tap.numberOfTapsRequired = 2;
     [_view addGestureRecognizer:tap];
     
     _livePush.previewView.contentMode = UIViewContentModeScaleAspectFit;
@@ -749,7 +748,6 @@
     [_view addSubview:[_pull getPreviewView]];
 
     UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
-    tap.numberOfTapsRequired = 2;
     [_view addGestureRecognizer:tap];
     
     _pullBtn = [UIButton buttonWithType:UIButtonTypeSystem];

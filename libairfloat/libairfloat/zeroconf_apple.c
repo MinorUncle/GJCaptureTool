@@ -94,19 +94,19 @@ void _zeroconf_raop_ad_run_loop_thread(void* ctx) {
     CFNetServiceClientContext context = { 0, za, NULL, NULL, NULL };
     
     CFNetServiceSetClient(za->service, _zeroconf_raop_ad_callback, &context);    
-    CFNetServiceScheduleWithRunLoop(za->service, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+    CFNetServiceScheduleWithRunLoop(za->service, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
     CFNetServiceRegisterWithOptions(za->service, kCFNetServiceFlagNoAutoRename, NULL);
     
     za->run_loop = CFRunLoopGetCurrent();
     
-//    CFRunLoopTimerContext timer_context = { 0, za, NULL, NULL, NULL };
-//    CFRunLoopTimerRef timer = CFRunLoopTimerCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + .2, 0, 0, 0, _zeroconf_raop_ad_run_loop_ready, &timer_context);
-//    CFRunLoopAddTimer(za->run_loop, timer, kCFRunLoopCommonModes);
-//    CFRelease(timer);
+    CFRunLoopTimerContext timer_context = { 0, za, NULL, NULL, NULL };
+    CFRunLoopTimerRef timer = CFRunLoopTimerCreate(kCFAllocatorDefault, CFAbsoluteTimeGetCurrent() + .2, 0, 0, 0, _zeroconf_raop_ad_run_loop_ready, &timer_context);
+    CFRunLoopAddTimer(za->run_loop, timer, kCFRunLoopDefaultMode);
+    CFRelease(timer);
     
     CFRunLoopRun();
     
-    CFNetServiceUnscheduleFromRunLoop(za->service, CFRunLoopGetCurrent(), kCFRunLoopCommonModes);
+    CFNetServiceUnscheduleFromRunLoop(za->service, CFRunLoopGetCurrent(), kCFRunLoopDefaultMode);
     CFNetServiceSetClient(za->service, NULL, NULL);
     CFNetServiceCancel(za->service);
     
@@ -133,7 +133,7 @@ zeroconf_rvop_ad_p zeroconf_rvop_ad_create(uint16_t port, const char* name){
     CFRelease(puuid);
     
     CFStringRef keys[] = { CFSTR("vv"), CFSTR("model"), CFSTR("srcvers"), CFSTR("flags"),CFSTR("features"), CFSTR("pi"), CFSTR("pk"),CFSTR("deviceid")};
-    CFStringRef values[] = { CFSTR("2"), CFSTR("AppleTV3,2"), CFSTR("220.68"), CFSTR("0x44"), CFSTR("0x5A7FFFF7,0xE"), uuidString, CFSTR("dd820b76333c9ccee0ed42d2abbba6de59025ed432e22727422ccbd604147b18"),hardware_identifier};
+    CFStringRef values[] = { CFSTR("2"), CFSTR("AppleTV5,3"), CFSTR("220.68"), CFSTR("0x44"), CFSTR("0x527FFFF7,0xE"), uuidString, CFSTR("dd820b76333c9ccee0ed42d2abbba6de59025ed432e22727422ccbd604147b18"),hardware_identifier};
     
     CFDictionaryRef txt_dictionary = CFDictionaryCreate(kCFAllocatorDefault, (const void**)&keys, (const void**)&values, 8, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
     CFDataRef txt_data = CFNetServiceCreateTXTDataWithDictionary(kCFAllocatorDefault, txt_dictionary);

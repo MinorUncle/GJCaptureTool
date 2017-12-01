@@ -143,7 +143,7 @@ ssize_t web_request_parse(struct web_request_t* wr, const void* data, size_t dat
             web_headers_destroy(wr->headers);
             wr->headers = headers;
             
-            log_message(LOG_INFO, "Req: %s %s (%d bytes)", wr->method, wr->path, content_length);
+//            log_message(LOG_INFO, "Req: %s %s (%d bytes)", wr->method, wr->path, content_length);
             
             web_request_set_content(wr, (void*)content_start, content_length);
             

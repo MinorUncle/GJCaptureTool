@@ -93,6 +93,22 @@ GVoid GJLivePull_StopPull(GJLivePullContext *context) {
     context->audioDecoder->decodeUnSetup(context->audioDecoder);
     pthread_mutex_unlock(&context->lock);
 }
+
+GVoid GJLivePull_Pause(GJLivePullContext *context){
+    GJAssert(context != GNULL, "GJLivePullContext nil");
+    pthread_mutex_lock(&context->lock);
+    GJLivePlay_Pause(context->player);
+    pthread_mutex_unlock(&context->lock);
+
+}
+
+GVoid GJLivePull_Resume(GJLivePullContext *context){
+    GJAssert(context != GNULL, "GJLivePullContext nil");
+    pthread_mutex_lock(&context->lock);
+    GJLivePlay_Resume(context->player);
+    pthread_mutex_unlock(&context->lock);
+}
+
 GJTrafficStatus GJLivePull_GetVideoTrafficStatus(GJLivePullContext *context) {
     GJTrafficStatus status = GJLivePlay_GetVideoCacheInfo(context->player);
     status.enter.byte      = context->videoUnDecodeByte;

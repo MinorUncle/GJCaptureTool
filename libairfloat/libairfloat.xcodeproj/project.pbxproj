@@ -12,6 +12,7 @@
 		6A0200F61F06224500F4255B /* rtpsocket.h in Copy Files */ = {isa = PBXBuildFile; fileRef = A1D490C016D4EB000082AFDD /* rtpsocket.h */; };
 		6A0200F71F06224500F4255B /* rtprecorder.h in Copy Files */ = {isa = PBXBuildFile; fileRef = A150075816E94BEF00B1A877 /* rtprecorder.h */; };
 		6A0200F81F06224500F4255B /* raopserver.c in Copy Files */ = {isa = PBXBuildFile; fileRef = A150074916E8E87B00B1A877 /* raopserver.c */; };
+		6A942F941FC7EF320007576F /* rvopsession.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A942F931FC7EF320007576F /* rvopsession.c */; };
 		6ABF2B8C1F0B7E1D00721DB3 /* rvopserver.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B8A1F0B7E1D00721DB3 /* rvopserver.c */; };
 		A12364281B7C111100E1605D /* hex.c in Sources */ = {isa = PBXBuildFile; fileRef = A12364261B7C111100E1605D /* hex.c */; };
 		A123642C1B7C15FC00E1605D /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = A1CF856416F3C02B009114B2 /* libcrypto.a */; };
@@ -74,6 +75,8 @@
 /* Begin PBXFileReference section */
 		4898F9F213CDAAD1006EC97E /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		4898F9F413CDAAD1006EC97E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		6A942F921FC7EF310007576F /* rvopsession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rvopsession.h; sourceTree = "<group>"; };
+		6A942F931FC7EF320007576F /* rvopsession.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rvopsession.c; sourceTree = "<group>"; };
 		6ABAA98F1F0628AE000AA764 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
 		6ABF2B8A1F0B7E1D00721DB3 /* rvopserver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rvopserver.c; sourceTree = "<group>"; };
 		6ABF2B8B1F0B7E1D00721DB3 /* rvopserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rvopserver.h; sourceTree = "<group>"; };
@@ -326,6 +329,8 @@
 				A150075916E94BFA00B1A877 /* rtprecorder.c */,
 				A150075116E9359700B1A877 /* raopsession.h */,
 				A150075216E935A500B1A877 /* raopsession.c */,
+				6A942F931FC7EF320007576F /* rvopsession.c */,
+				6A942F921FC7EF310007576F /* rvopsession.h */,
 				A150074816E8E86C00B1A877 /* raopserver.h */,
 				A150074916E8E87B00B1A877 /* raopserver.c */,
 				6ABF2B8A1F0B7E1D00721DB3 /* rvopserver.c */,
@@ -505,6 +510,7 @@
 				AE3634121F08110700E3C0AD /* decoder.c in Sources */,
 				A1D0DC9019503833004717F5 /* socket.c in Sources */,
 				A1D0DCA11950384F004717F5 /* raopsession.c in Sources */,
+				6A942F941FC7EF320007576F /* rvopsession.c in Sources */,
 				A1D0DC971950383D004717F5 /* webresponse.c in Sources */,
 				A1D0DCA21950384F004717F5 /* raopserver.c in Sources */,
 				A1D0DC9119503833004717F5 /* sockaddr.c in Sources */,

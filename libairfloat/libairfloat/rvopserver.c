@@ -38,7 +38,7 @@
 #include "zeroconf.h"
 #include "settings.h"
 #include "webserver.h"
-//#include "rvopsession.h"
+#include "rvopsession.h"
 #include "rvopserver.h"
 
 struct rvop_server_t {
@@ -73,20 +73,20 @@ bool _rvop_server_web_connection_accept_callback(web_server_p server, web_server
 #if (!defined(ALLOW_LOCALHOST))
     if (!sockaddr_equals_host(web_server_connection_get_local_end_point(connection), web_server_connection_get_remote_end_point(connection))) {
 #endif
-//        rvop_session_p new_session = rvop_session_create(rs, connection, rs->settings);
-//        
-//        mutex_lock(rs->mutex);
-//        
-//        rs->sessions = (rvop_session_p*)realloc(rs->sessions, sizeof(rvop_session_p) * (rs->sessions_count + 1));
-//        rs->sessions[rs->sessions_count] = new_session;
-//        rs->sessions_count++;
-//        
-//        mutex_unlock(rs->mutex);
-//        
-//        rvop_session_start(new_session);
-//        
-//        if (rs->new_session_callback != NULL)
-//            rs->new_session_callback(rs, new_session, rs->new_session_ctx);
+        rvop_session_p new_session = rvop_session_create(rs, connection, rs->settings,NULL);
+        
+        mutex_lock(rs->mutex);
+        
+        rs->sessions = (rvop_session_p*)realloc(rs->sessions, sizeof(rvop_session_p) * (rs->sessions_count + 1));
+        rs->sessions[rs->sessions_count] = new_session;
+        rs->sessions_count++;
+        
+        mutex_unlock(rs->mutex);
+        
+        rvop_session_start(new_session);
+        
+        if (rs->new_session_callback != NULL)
+            rs->new_session_callback(rs, new_session, rs->new_session_ctx);
         
         return true;
 #if (!defined(ALLOW_LOCALHOST))
@@ -105,7 +105,7 @@ struct rvop_server_t* rvop_server_create(struct rvop_server_settings_t settings)
     
     rs->mutex = mutex_create();
     
-    rs->server = web_server_create((sockaddr_type)( sockaddr_type_inet_6));
+    rs->server = web_server_create((sockaddr_type)( sockaddr_type_inet_6 | sockaddr_type_inet_4));
     web_server_set_accept_callback(rs->server, _rvop_server_web_connection_accept_callback, rs);
     
     return rs;
@@ -160,11 +160,11 @@ bool rvop_server_is_recording(struct rvop_server_t* rs) {
     uint32_t count = rs->sessions_count;
     mutex_unlock(rs->mutex);
     
-//    for (uint32_t i = 0 ; i < count ; i++)
-//        if (rvop_session_is_recording(rs->sessions[i])) {
-//            ret = true;
-//            break;
-//        }
+    for (uint32_t i = 0 ; i < count ; i++)
+        if (rvop_session_is_recording(rs->sessions[i])) {
+            ret = true;
+            break;
+        }
     
     return ret;
     
@@ -211,7 +211,7 @@ void rvop_server_stop(struct rvop_server_t* rs) {
         
         while (rs->sessions_count > 0) {
             mutex_unlock(rs->mutex);
-//            rvop_session_destroy(rs->sessions[0]);
+            rvop_session_destroy(rs->sessions[0]);
             mutex_lock(rs->mutex);
         }
         
@@ -249,13 +249,13 @@ void rvop_server_session_ended(struct rvop_server_t* rs, rvop_session_p session)
     mutex_lock(rs->mutex);
     
     for (uint32_t i = 0 ; i < rs->sessions_count ; i++)
-//        if (rs->sessions[i] == session) {
-//            rvop_session_destroy(rs->sessions[i]);
-//            for (uint32_t a = i + 1 ; a < rs->sessions_count ; a++)
-//                rs->sessions[a - 1] = rs->sessions[a];
-//            rs->sessions_count--;
-//            break;
-//        }
+        if (rs->sessions[i] == session) {
+            rvop_session_destroy(rs->sessions[i]);
+            for (uint32_t a = i + 1 ; a < rs->sessions_count ; a++)
+                rs->sessions[a - 1] = rs->sessions[a];
+            rs->sessions_count--;
+            break;
+        }
     
     mutex_unlock(rs->mutex);
     

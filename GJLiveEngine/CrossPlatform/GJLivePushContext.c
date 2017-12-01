@@ -593,7 +593,7 @@ static void _GJLivePush_GetQualityInfo(GJLivePushContext *context, GInt32* ioBit
 //}
 
 static void *thread_pthread_head(void *ctx) {
-
+    pthread_setname_np("RAOP RUN THREAD");
 #ifdef RAOP
     struct raop_server_settings_t setting;
     setting.name                 = GNULL;
@@ -637,6 +637,7 @@ static void *thread_pthread_head(void *ctx) {
     }
     if (requestStopServer) {
         rvop_server_stop(rvopserver);
+        rvopserver = NULL;
     }
 #endif
     serverThread = GNULL;
@@ -1037,6 +1038,7 @@ GVoid GJLivePush_Dealloc(GJLivePushContext **pushContext) {
 #ifdef RVOP
             rvop_server_stop(rvopserver);
             rvop_server_destroy(rvopserver);
+            rvopserver = NULL;
 #endif
         } else {
             requestStopServer    = GTrue;

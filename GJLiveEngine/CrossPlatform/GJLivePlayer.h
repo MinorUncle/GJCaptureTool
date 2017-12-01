@@ -114,6 +114,8 @@ GBool GJLivePlay_Create(GJLivePlayer **player, GJLivePlayCallback callback, GHan
 GVoid GJLivePlay_Dealloc(GJLivePlayer **player);
 GBool GJLivePlay_Start(GJLivePlayer *player);
 GVoid GJLivePlay_Stop(GJLivePlayer *player);
+GBool GJLivePlay_Pause(GJLivePlayer *player);
+GVoid GJLivePlay_Resume(GJLivePlayer *player);
 GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame);
 GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame);
 GVoid GJLivePlay_SetAudioFormat(GJLivePlayer *player, GJAudioFormat audioFormat);

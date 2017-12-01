@@ -155,6 +155,12 @@
 }
 
 - (BOOL)start {
+    if (![NSThread isMainThread]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self start];
+        });
+        return YES;
+    }
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AudioQueueStart");
     if (_status != kPlayARunningStatus) {
         _status = kPlayARunningStatus;

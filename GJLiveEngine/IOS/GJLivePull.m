@@ -162,7 +162,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
         memset(&_videoTraffic, 0, sizeof(_videoTraffic));
         memset(&_audioTraffic, 0, sizeof(_audioTraffic));
         memset(&_pullSessionStatus, 0, sizeof(_pullSessionStatus));
-        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(audioSessionInterrupt:) name:AVAudioSessionInterruptionNotification object:nil];
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotic:) name:AVAudioSessionInterruptionNotification object:nil];
         return GJLivePull_StartPull(_pullContext, url.UTF8String);
     }
 }
@@ -193,22 +193,35 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
     if (_pullContext) {
         GJLivePull_Dealloc(&(_pullContext));
     }
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
-- (void)audioSessionInterrupt:(NSNotification *)notification{
-    int reason = [[[notification userInfo] valueForKey:AVAudioSessionInterruptionTypeKey] intValue];
-    switch (reason) {
-        case AVAudioSessionInterruptionTypeBegan: {
-            if (_timer != nil) {
-                _shouldResume = YES;
-                [self stopStreamPull];
+
+-(void)receiveNotic:(NSNotification*)notic{
+    if ([notic.name isEqualToString:AVAudioSessionInterruptionNotification]) {
+        AVAudioSessionInterruptionType type = [notic.userInfo[AVAudioSessionInterruptionTypeKey] integerValue];
+        AVAudioSessionInterruptionOptions option = [notic.userInfo[AVAudioSessionInterruptionOptionKey] integerValue];
+        switch (type) {
+            case AVAudioSessionInterruptionTypeBegan:{
+                if (_timer != nil) {
+                    _shouldResume = YES;
+                    GJLivePull_Pause(_pullContext);
+                }
+                GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeBegan should resulme:%d",_shouldResume);
+                break;
             }
-            break;
+                break;
+            case AVAudioSessionInterruptionTypeEnded:
+                if (_shouldResume && _timer == nil) {
+                    GJLivePull_Resume(_pullContext);
+                }
+                GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeBegan should resulme:%d",_shouldResume);
+                break;
+                
+            default:
+                break;
         }
-        case AVAudioSessionInterruptionTypeEnded: {
-            
-            break;
-        }
+        
     }
-    
 }
+
 @end

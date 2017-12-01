@@ -60,7 +60,7 @@ static GHandle pullRunloop(GHandle parm) {
 
     GInt32 result = avformat_open_input(&pull->formatContext, (const GChar*)pull->pullUrl, GNULL, GNULL);
     if (result < 0) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avformat_open_input error");
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avformat_open_input error,url:%s",pull->pullUrl);
         message = kStreamPullMessageType_connectError;
         goto END;
     }
