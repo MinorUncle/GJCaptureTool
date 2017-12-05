@@ -796,7 +796,7 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
                 context->videoEncoder->encodeSetup(context->videoEncoder, vFormat, h264PacketOutCallback, context);
             }
             context->videoEncoder->encodeSetProfile(context->videoEncoder, profileLevelMain);
-            context->videoEncoder->encodeSetGop(context->videoEncoder, context->pushConfig->mFps);
+            context->videoEncoder->encodeSetGop(context->videoEncoder, context->pushConfig->mFps*4);
             context->videoEncoder->encodeAllowBFrame(context->videoEncoder, GTrue);
             context->videoEncoder->encodeSetEntropy(context->videoEncoder, EntropyMode_CABAC);
             context->videoEncoder->encodeSetBitrate(context->videoEncoder, context->pushConfig->mVideoBitrate);

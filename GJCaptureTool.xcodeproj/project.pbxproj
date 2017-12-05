@@ -1582,9 +1582,9 @@
 		C54FA89F1D21006000A0D3C3 = {
 			isa = PBXGroup;
 			children = (
+				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
 				6A34882A1F453803008223AA /* Image */,
 				6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */,
-				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
 				6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */,
 				6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */,
 				6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */,

@@ -19,11 +19,13 @@
 
 @interface GJH264Encoder () {
     GInt64 _fristPts;
-    GInt32 _dtsDelta;
     GBool  _shouldRestart;
     BOOL   requestFlush;
     GTime _fristTime;
     GTime _preDTS;
+#ifdef NETWORK_DELAY
+    GTime _dtsDelta;
+#endif
 }
 @property (nonatomic, assign) VTCompressionSessionRef enCodeSession;
 @property (nonatomic, assign) GJRetainBufferPool *    bufferPool;
@@ -302,11 +304,10 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 
 #ifdef NETWORK_DELAY
     pushPacket->dts = GJ_Gettime()/1000;
-    static int dDP ;
-    if (dDP == 0) {
-        dDP = (int)(pushPacket->dts - pts.value);
+    if (encoder->_dtsDelta == 0) {
+        encoder->_dtsDelta = (int)GMAX(1000,(pushPacket->dts - pts.value)*4);
     }
-    pushPacket->dts -= 2*dDP;
+    pushPacket->dts -= encoder->_dtsDelta;
 //    pushPacket->dts = GJ_Gettime()/1000 - encoder->_fristTime;
 //    NSLog(@"decode Dur:%lld size:%d",pushPacket->dts - pts.value,pushPacket->dataSize);
 
@@ -315,13 +316,15 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 #endif
     if (pushPacket->dts > pts.value) {
         if (encoder->_preDTS <= 0) {
-            encoder->_preDTS = pts.value;
-        }else if (encoder->_preDTS > pts.value) {
+            encoder->_preDTS = pts.value-2;
+        }else if (encoder->_preDTS + 1 >= pts.value) {
             //如果比上一次解dts还要早，则直接推迟pts到dts
-            pts.value = encoder->_preDTS;
+            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "pts:%d小于preDts:%d，修改pts为：%d",pts.value,encoder->_preDTS,encoder->_preDTS + 2);
+            pts.value = encoder->_preDTS+2;
+
         }
         //dt则直接采用上次dts
-        pushPacket->dts = encoder->_preDTS;
+        pushPacket->dts = encoder->_preDTS+1;
     }
     
     pushPacket->pts = pts.value;

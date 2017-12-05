@@ -79,10 +79,10 @@
         GJPushConfig config = {0};
         config.mAudioChannel = 2;
         config.mAudioSampleRate = 44100;
-        config.mPushSize = (GSize){360, 640};
+        config.mPushSize = (GSize){480, 640};
         config.mVideoBitrate = 8*80*1024;
         config.mFps = 15;
-        config.mAudioBitrate = 0;
+        config.mAudioBitrate = 128*1000;
         _livePush = [[GJLivePush alloc]init];
         [_livePush setPushConfig:config];
         

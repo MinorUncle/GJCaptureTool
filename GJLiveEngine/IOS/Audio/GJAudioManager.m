@@ -216,7 +216,7 @@
 - (BOOL)setMixFile:(NSURL*)file finish:(MixFinishBlock)finishBlock {
     if (_mixfilePlay != nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
-        [self removeMixPlayerWithkey:_mixfilePlay];
+        [self removeMixPlayerWithkey:_mixfilePlay.description];
         _mixfilePlay = nil;
     }
     NSError *error;
@@ -225,14 +225,12 @@
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "AEAudioFilePlayer alloc error:%s", error.localizedDescription.UTF8String);
         return GFalse;
     } else {
-        __weak AEAudioController *wkAE = _audioController;
-        __weak id<AEAudioReceiver> wkM = _audioMixer;
         __weak GJAudioManager* wkSelf = self;
         _mixfilePlay.completionBlock   = ^{
-            [wkAE removeOutputReceiver:wkM];
             if (finishBlock) {
                 finishBlock(GTrue);
             }
+            [wkSelf removeMixPlayerWithkey:wkSelf.mixfilePlay.description];
             wkSelf.mixfilePlay.completionBlock = nil;
         };
         [self addMixPlayer:_mixfilePlay key:_mixfilePlay.description];

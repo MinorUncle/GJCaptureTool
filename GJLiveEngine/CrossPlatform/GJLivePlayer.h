@@ -63,6 +63,7 @@ typedef struct PlayControl {
     //视频出队列等待时间(因为需要知道是否没有数据了，主动去缓存。也可以修改为还剩1帧时去缓存，就可以一直等待了)，音频不等待
 } GJPlayControl;
 typedef struct _GJNetShakeInfo {
+    GInt32 collectUpdateDur;
     GTime collectStartClock;
     GTime collectStartPts;
     GTime maxDownShake;
@@ -78,8 +79,8 @@ typedef struct _GJNetShakeInfo {
 #endif
 } GJNetShakeInfo;
 typedef struct _SyncInfo {
-    GTime           clock;
-    GTime           cPTS;
+//    GTime           clock;
+//    GTime           cPTS;
     GTime           startTime;
     GTime           startPts;
     GLong           inDtsSeries;
