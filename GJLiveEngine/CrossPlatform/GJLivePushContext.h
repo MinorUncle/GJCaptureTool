@@ -59,8 +59,7 @@ typedef struct _GJLivePushContext {
 
     GJPushConfig *   pushConfig;
     GJNetworkQuality netQuality;
-    GJTrafficStatus  preVideoTraffic;
-    GTime            preCheckTime;
+    GJTrafficStatus  preCheckVideoTraffic;
     // 网速检查速率单元，默认等于fps，表示1s检查一次。（越大越准确，但是越迟钝，越小越敏感）
     GInt32 rateCheckStep;
 

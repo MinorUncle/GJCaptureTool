@@ -171,7 +171,7 @@ static GHandle sendRunloop(GHandle parm) {
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        GJLOG(GNULL,GJ_LOGALL,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts, packet->dts, packet->dataSize);
+        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts, packet->dts, packet->dataSize);
 
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
@@ -181,13 +181,14 @@ static GHandle sendRunloop(GHandle parm) {
                 push->videoStatus.leave.byte += packet->dataSize;
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.ts = (GLong) packet->dts;
+                push->videoStatus.leave.clock = GJ_Gettime()/1000;
             } else {
 
                 GJLOG(GNULL,GJ_LOGALL,"send audio pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
                 push->audioStatus.leave.byte += packet->dataSize;
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.ts = (GLong) packet->dts;
-
+                push->audioStatus.leave.clock = GJ_Gettime()/1000;
             }
 
             pthread_mutex_lock(&push->mutex);
@@ -440,6 +441,7 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
         push->videoStatus.enter.ts = (GLong) packet->dts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
+        push->videoStatus.enter.clock = GJ_Gettime()/1000;
 
     } else {
         R_BufferUnRetain(&packet->retain);
