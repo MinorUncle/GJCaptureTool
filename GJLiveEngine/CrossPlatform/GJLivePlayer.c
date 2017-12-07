@@ -100,6 +100,10 @@ static GBool GJLivePlay_StartDewatering(GJLivePlayer *player) {
             player->syncControl.speed = 1.2;
             player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.2);
         }
+        //减小最大抖动更新间隔
+        player->syncControl.netShake.collectUpdateDur -= UPDATE_SHAKE_TIME/2;
+        player->syncControl.netShake.collectUpdateDur = GMIN(player->syncControl.netShake.collectUpdateDur, UPDATE_SHAKE_TIME);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "reduce collectUpdateDur to:%d",player->syncControl.netShake.collectUpdateDur);
     }
     pthread_mutex_unlock(&player->playControl.oLock);
     return GTrue;
@@ -133,6 +137,9 @@ static GBool GJLivePlay_StartBuffering(GJLivePlayer *player) {
         player->callback(player->userDate, GJPlayMessage_BufferStart, GNULL);
         queueSetMinCacheSize(player->playControl.imageQueue, VIDEO_MAX_CACHE_COUNT);
         queueSetMinCacheSize(player->playControl.audioQueue, AUDIO_MAX_CACHE_COUNT);
+        //每次缓冲时增大最大抖动更新间隔
+        player->syncControl.netShake.collectUpdateDur += UPDATE_SHAKE_TIME;
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "add collectUpdateDur to:%d",player->syncControl.netShake.collectUpdateDur);
     } else {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "buffer when status not in running");
     }
@@ -241,6 +248,12 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             updateWater(_syncControl,netShake->maxDownShake);
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&netShake->maxDownShake);
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update max:%lld ,preMax:%lld", netShake->maxDownShake, netShake->preMaxDownShake);
+#ifdef NETWORK_DELAY
+            GJAssert(testShake == shake, "测量值与真实值不相等");
+            if (NeedTestNetwork) {
+                player->callback(player->userDate,GJPlayMessage_TestNetShakeUpdate,&testShake);
+            }
+#endif
         }
         netShake->preMaxDownShake   = netShake->maxDownShake;
         netShake->maxDownShake      = 0;

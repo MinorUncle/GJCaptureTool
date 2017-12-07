@@ -191,6 +191,9 @@ static GHandle pullRunloop(GHandle parm) {
             h264Packet->dts      = pkt.dts;
             h264Packet->type     = GJMediaType_Video;
             h264Packet->flag = ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY);
+            pull->videoPullInfo.byte += pkt.size;
+            pull->videoPullInfo.count ++;
+            pull->videoPullInfo.ts = pkt.pts;
             if(!pull->hasVideoKey && ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY)){
                 pull->hasVideoKey = GTrue;
             }
@@ -220,6 +223,9 @@ static GHandle pullRunloop(GHandle parm) {
             aacPacket->dts      = pkt.dts;
             aacPacket->extendDataOffset = aacPacket->extendDataSize = 0;
             aacPacket->type     = GJMediaType_Audio;
+            pull->audioPullInfo.byte += pkt.size;
+            pull->audioPullInfo.count ++;
+            pull->audioPullInfo.ts = pkt.pts;
             //            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
             //            printf("receive packet pts:%lld size:%d  last data:%d\n",aacPacket->pts,aacPacket->dataSize,(aacPacket->retain.data + aacPacket->dataOffset + aacPacket->dataSize -1)[0]);
             pthread_mutex_lock(&pull->mutex);
