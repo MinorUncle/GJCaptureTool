@@ -165,6 +165,7 @@ static GHandle pullRunloop(GHandle parm) {
     while (!pull->stopRequest) {
         GInt32 ret = av_read_frame(pull->formatContext, &pkt);
         if (ret < 0) {
+            GJLOG(GNULL,GJ_LOGERROR,"av_read_frame error:%s\n", av_err2str(ret));
             message = kStreamPullMessageType_receivePacketError;
             goto END;
         }

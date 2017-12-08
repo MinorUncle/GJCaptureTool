@@ -10,7 +10,7 @@
 #define GJLivePushContext_h
 #include "webserver.h"
 //#define RAOP
-#define RVOP
+//#define RVOP
 
 #ifdef RAOP
 #include "raopserver.h"

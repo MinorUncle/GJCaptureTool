@@ -21,7 +21,8 @@ struct _GJStreamPush {
     GJVideoStreamFormat *videoFormat;
 
     GJQueue *sendBufferQueue;
-    char     pushUrl[100];
+#define MAX_URL_LENGTH 200
+    char     pushUrl[MAX_URL_LENGTH];
 
     pthread_t       sendThread;
     pthread_mutex_t mutex;
@@ -171,7 +172,7 @@ static GHandle sendRunloop(GHandle parm) {
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts, packet->dts, packet->dataSize);
+        GJLOG(GNULL,GJ_LOGALL,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts, packet->dts, packet->dataSize);
 
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
@@ -297,7 +298,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
     size_t length = strlen(sendUrl);
     memset(&push->videoStatus, 0, sizeof(GJTrafficStatus));
     memset(&push->audioStatus, 0, sizeof(GJTrafficStatus));
-    GJAssert(length <= 100 - 1, "sendURL 长度不能大于：%d", 100 - 1);
+    GJAssert(length <= MAX_URL_LENGTH - 1, "sendURL 长度不能大于：%d", 100 - 1);
     memcpy(push->pushUrl, sendUrl, length + 1);
     if (push->sendThread) {
         GJLOG(STREAM_PUSH_LOG, GJ_LOGWARNING, "上一个push没有释放，开始释放并等待");

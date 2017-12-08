@@ -16,8 +16,8 @@ static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/73257119.flv";
 //static NSString* url = @"rtsp://10.0.23.65/sample_100kbit.mp4";
 
 
-static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务器地址
-//static NSString* pushUrl = @"rtmp://10.0.1.65/live/room";
+//static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务器地址
+static NSString* pushUrl = @"rtmp://10.0.1.65/live/room";
 
 @interface LIveStartViewController ()
 {
@@ -87,14 +87,17 @@ static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务
     if (!pull || !pull) {
         return;
     }
-    
+    NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
+    path = [path stringByAppendingPathComponent:@"demo.flv"];
 
     GJLivePushViewController* c = [[GJLivePushViewController alloc]init];
-    c.pullAddr = pull;
-    c.pushAddr = push;
+    c.pullAddr = path;
+    c.pushAddr = path;
+    
     if (btn == _arStartBtn) {
         c.isAr = YES;
     }
+    
     [self.navigationController pushViewController:c animated:YES];
 }
 

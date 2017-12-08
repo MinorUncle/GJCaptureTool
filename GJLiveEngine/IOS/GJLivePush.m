@@ -323,14 +323,26 @@ static void stickerUpdateCallback(const GHandle userDate, GLong index,const GHan
 - (BOOL)startStickerWithImages:(NSArray<GJOverlayAttribute *> *)images
                            fps:(NSInteger)fps
                    updateBlock:(OverlaysUpdate)updateBlock {
-    _stickerCallback = (void*)CFBridgingRetain(updateBlock);
-    return GJLivePush_StartSticker(_livePush, (__bridge_retained const GVoid *)(images),
-                                   (GInt32) fps, stickerUpdateCallback,
-                                   _stickerCallback);
+    @synchronized (self) {
+        if (_stickerCallback != GNULL) {
+            [self chanceSticker];
+        }
+        _stickerCallback = (void*)CFBridgingRetain(updateBlock);
+        return GJLivePush_StartSticker(_livePush, (__bridge_retained const GVoid *)(images),
+                                       (GInt32) fps, stickerUpdateCallback,
+                                       _stickerCallback);
+    }
 }
 
 - (void)chanceSticker {
-    GJLivePush_StopSticker(_livePush);
+    @synchronized (self) {
+        GJLivePush_StopSticker(_livePush);
+        if(_stickerCallback){
+            id tem = CFBridgingRelease(_stickerCallback); //释放回调block
+            tem    = nil;
+            _stickerCallback = GNULL;
+        }
+    }
 }
 
 - (BOOL)startTrackingImageWithImages:(NSArray<UIImage*>*)images initFrame:(GCRect)frame{
@@ -339,9 +351,7 @@ static void stickerUpdateCallback(const GHandle userDate, GLong index,const GHan
 
 - (void)stopTracking{
 	GJLivePush_StopTrack(_livePush);
-    id tem = CFBridgingRelease(_stickerCallback); //释放回调block
-    tem    = nil;
-    _stickerCallback = GNULL;
+
 }
 
 - (CGSize)captureSize {
@@ -353,6 +363,11 @@ static void stickerUpdateCallback(const GHandle userDate, GLong index,const GHan
 #pragma mark delegate
 
 - (void)dealloc {
+    @synchronized (self) {
+        if (_stickerCallback) {
+            [self chanceSticker];
+        }
+    }
     if (_livePush) {
         GJLivePush_Dealloc(&_livePush);
     }

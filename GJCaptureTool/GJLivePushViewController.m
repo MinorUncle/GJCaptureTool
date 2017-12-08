@@ -77,7 +77,7 @@
                        };
         
         GJPushConfig config = {0};
-        config.mAudioChannel = 2;
+        config.mAudioChannel = 1;
         config.mAudioSampleRate = 44100;
         config.mPushSize = (GSize){480, 640};
         config.mVideoBitrate = 8*80*1024;
@@ -88,6 +88,7 @@
         
         _livePush.delegate = self;
         _livePush.cameraPosition = GJCameraPositionFront;
+    
         
         [self buildUI];
         

@@ -24,7 +24,7 @@ typedef struct _GJStreamPull GJStreamPull;
 typedef GVoid (*StreamPullMessageCallback)(GJStreamPull *StreamPull, kStreamPullMessageType messageType, GHandle StreamPullParm, GHandle messageParm);
 typedef GVoid (*StreamPullDataCallback)(GJStreamPull *StreamPull, R_GJPacket *packet, GHandle StreamPullParm);
 
-#define MAX_URL_LENGTH 100
+#define MAX_URL_LENGTH 200
 
 //所有不阻塞
 GBool GJStreamPull_Create(GJStreamPull **pull, StreamPullMessageCallback callback, GHandle StreamPullParm);

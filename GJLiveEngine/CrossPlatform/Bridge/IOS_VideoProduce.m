@@ -170,7 +170,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     if (_trackImage) {
         [_trackImage stop];
     }
-    if (_camera) {
+    if (_camera && _camera.isRunning) {
         [_camera stopCameraCapture];
     }
     GJRetainBufferPool *temPool = _bufferPool;
@@ -390,10 +390,10 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (void)stopTracking{
+    [self.trackImage stop];
     runSynchronouslyOnVideoProcessingQueue(^{
         if (self.trackImage == nil) { return; }
         [self removeFilterWithdeep:kFilterTrack];
-        [self.trackImage stop];
         self.trackImage = nil;
     });
 }
@@ -460,15 +460,17 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize, CGSize destSize) {
 }
 
 - (void)stopProduce {
+    GPUImageOutput *parentFilter = _sticker;
+    if (parentFilter == nil) {
+        parentFilter = [self getParentFilterWithDeep:kFilterSticker];
+    }
+    if (![parentFilter.targets containsObject:_imageView]) {
+        [_camera stopCameraCapture];
+        if (_trackImage) {
+            [self stopTracking];
+        }
+    }
     runAsynchronouslyOnVideoProcessingQueue(^{
-        GPUImageOutput *parentFilter = _sticker;
-        if (parentFilter == nil) {
-            parentFilter = [self getParentFilterWithDeep:kFilterSticker];
-        }
-        if (![parentFilter.targets containsObject:_imageView]) {
-            [_camera stopCameraCapture];
-        }
-
         [parentFilter removeTarget:_cropFilter];
         _cropFilter.frameProcessingCompletionBlock = nil;
     });
@@ -568,12 +570,13 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize, CGSize destSize) {
     return YES;
 }
 - (void)stopPreview {
-
-    runAsynchronouslyOnVideoProcessingQueue(^{
-        if (_cropFilter.frameProcessingCompletionBlock == nil && [_camera isRunning]) {
-            [_camera stopCameraCapture];
+    if (_cropFilter.frameProcessingCompletionBlock == nil && [_camera isRunning]) {
+        [_camera stopCameraCapture];
+        if (_trackImage) {
+            [self stopTracking];
         }
-
+    }
+    runAsynchronouslyOnVideoProcessingQueue(^{
         GPUImageOutput *parentFilter = _sticker;
         if (parentFilter == nil) {
             parentFilter = [self getParentFilterWithDeep:kFilterSticker];
