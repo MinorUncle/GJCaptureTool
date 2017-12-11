@@ -142,6 +142,9 @@ static GHandle sendRunloop(GHandle parm) {
         errType = kStreamPushMessageType_connectError;
         goto END;
     }
+    for (int i = 0; i < push->formatContext->nb_streams; i++) {
+        av_dump_format(push->formatContext, i, push->pushUrl, GTrue);
+    }
     AVPacket *sendPacket = av_mallocz(sizeof(AVPacket));
     errType              = kStreamPushMessageType_closeComplete;
 
@@ -172,7 +175,7 @@ static GHandle sendRunloop(GHandle parm) {
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        GJLOG(GNULL,GJ_LOGALL,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts, packet->dts, packet->dataSize);
+        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts, packet->dts, packet->dataSize);
 
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
@@ -310,8 +313,14 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
 
     queueEnablePush(push->sendBufferQueue, GTrue);
     queueEnablePop(push->sendBufferQueue, GTrue);
-
-    GInt32 ret = avformat_alloc_output_context2(&push->formatContext, GNULL, "flv", sendUrl);
+    char *format = GNULL;
+    char preUrl[5];
+    memcpy(preUrl, sendUrl, 4);
+    preUrl[4] = 0;
+    if (strcasecmp(preUrl, "rtmp") == 0) {
+        format = "flv";
+    }
+    GInt32 ret = avformat_alloc_output_context2(&push->formatContext, GNULL, format, sendUrl);
     if (ret < 0) {
         GJLOG(STREAM_PUSH_LOG, GJ_LOGFORBID, "ffmpeg 不知道该封装格式");
         return GFalse;
@@ -393,7 +402,8 @@ GVoid GJStreamPush_Delloc(GJStreamPush *push) {
     _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
         avcodec_close(push->vStream->codec);
     avcodec_close(push->aStream->codec);
-    _Pragma("GCC diagnostic warning \"-Wdeprecated-declarations\"") if (push->formatContext) {
+    _Pragma("GCC diagnostic warning \"-Wdeprecated-declarations\"")
+    if (push->formatContext) {
         avformat_free_context(push->formatContext);
     }
     if (push->videoFormat) free(push->videoFormat);

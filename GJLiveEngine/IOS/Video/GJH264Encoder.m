@@ -314,12 +314,17 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 #else
     pushPacket->dts = GJ_Gettime()/1000 - encoder->_fristTime;
 #endif
+//    assert(pushPacket->dts != encoder->_preDTS);
+
+    if (pushPacket->dts == encoder->_preDTS) {
+        pushPacket->dts = encoder->_preDTS + 1;
+    }
     if (pushPacket->dts > pts.value) {
         if (encoder->_preDTS <= 0) {
             encoder->_preDTS = pts.value-2;
         }else if (encoder->_preDTS + 1 >= pts.value) {
             //如果比上一次解dts还要早，则直接推迟pts到dts
-            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "pts:%d小于preDts:%d，修改pts为：%d",pts.value,encoder->_preDTS,encoder->_preDTS + 2);
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pts:%d小于preDts:%d，修改pts为：%d",pts.value,encoder->_preDTS,encoder->_preDTS + 2);
             pts.value = encoder->_preDTS+2;
 
         }

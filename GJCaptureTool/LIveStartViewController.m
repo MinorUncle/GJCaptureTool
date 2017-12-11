@@ -87,12 +87,12 @@ static NSString* pushUrl = @"rtmp://10.0.1.65/live/room";
     if (!pull || !pull) {
         return;
     }
-    NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
-    path = [path stringByAppendingPathComponent:@"demo.flv"];
-
+//    NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
+////    path = [path stringByAppendingPathComponent:@"demo.mp4"];
+////
     GJLivePushViewController* c = [[GJLivePushViewController alloc]init];
-    c.pullAddr = path;
-    c.pushAddr = path;
+    c.pullAddr = pull;
+    c.pushAddr = push;
     
     if (btn == _arStartBtn) {
         c.isAr = YES;
