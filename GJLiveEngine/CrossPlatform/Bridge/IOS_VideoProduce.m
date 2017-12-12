@@ -408,27 +408,82 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return _cropFilter;
 }
 
-CGRect getCropRectWithSourceSize(CGSize sourceSize, CGSize destSize) {
-    //裁剪，
-    CGSize targetSize = sourceSize;
-    float  scaleX     = targetSize.width / destSize.width;
-    float  scaleY     = targetSize.height / destSize.height;
-    CGRect region     = CGRectZero;
-    if (scaleX <= scaleY) {
-        float  scale       = scaleX;
-        CGSize scaleSize   = CGSizeMake(destSize.width * scale, destSize.height * scale);
-        region.origin.x    = 0;
-        region.size.width  = 1.0;
-        region.origin.y    = (targetSize.height - scaleSize.height) * 0.5 / targetSize.height;
-        region.size.height = 1 - 2 * region.origin.y;
-    } else {
-        float  scale       = scaleY;
-        CGSize scaleSize   = CGSizeMake(destSize.width * scale, destSize.height * scale);
-        region.origin.y    = 0;
-        region.size.height = 1.0;
-        region.origin.x    = (targetSize.width - scaleSize.width) * 0.5 / targetSize.width;
-        region.size.width  = 1 - 2 * region.origin.x;
+/**
+ 根据原图片大小，限制在imageview的比例之内，再缩放到targetSize，保证获得的图片一定全部限制在显示视图的中间上，
+
+ @param originSize 原图片大小
+ @param targetSize 目标图片大小
+ @return 裁剪的比例
+ */
+-(CGRect) getCropRectWithSourceSize:(CGSize) originSize target:(CGSize)targetSize {
+    CGSize sourceSize = originSize;
+    CGSize previewSize = _imageView.bounds.size;
+    CGRect region =CGRectZero;
+    
+    if (_imageView.superview != nil) {
+        switch (_imageView.contentMode) {
+            case UIViewContentModeScaleAspectFill://显示在显示视图内
+            {
+                float scaleX =  sourceSize.width / previewSize.width;
+                float scaleY =  sourceSize.height / previewSize.height;
+                if (scaleX <= scaleY) {
+                    float scale = scaleX;
+                    CGSize scaleSize = CGSizeMake(previewSize.width * scale, previewSize.height * scale);
+                    region.origin.x = 0;
+                    region.origin.y = (sourceSize.height - scaleSize.height)/2;
+                    sourceSize.height -= region.origin.y*2;
+                }else{
+                    float scale = scaleY;
+                    CGSize scaleSize = CGSizeMake(previewSize.width * scale, previewSize.height * scale);
+                    region.origin.x = (sourceSize.width - scaleSize.width)/2;
+                    region.origin.y = 0;
+                    sourceSize.width -= region.origin.x*2;
+                }
+            }
+                break;
+                
+            default:
+                break;
+        }
     }
+
+    
+    float scaleX =  sourceSize.width / targetSize.width;
+    float scaleY =  sourceSize.height / targetSize.height;
+    if (scaleX <= scaleY) {
+        float scale = scaleX;
+        CGSize scaleSize = CGSizeMake(targetSize.width * scale, targetSize.height * scale);
+        region.origin.y += (sourceSize.height - scaleSize.height)/2;
+    }else{
+        float scale = scaleY;
+        CGSize scaleSize = CGSizeMake(targetSize.width * scale, targetSize.height * scale);
+        region.origin.x += (sourceSize.width - scaleSize.width)/2;
+    }
+    region.origin.x /= originSize.width;
+    region.origin.y /= originSize.height;
+    region.size.width = 1-2*region.origin.x;
+    region.size.height = 1-2*region.origin.y;
+    
+//    //裁剪，
+//    CGSize targetSize = sourceSize;
+//    float  scaleX     = targetSize.width / destSize.width;
+//    float  scaleY     = targetSize.height / destSize.height;
+//    CGRect region     = CGRectZero;
+//    if (scaleX <= scaleY) {
+//        float  scale       = scaleX;
+//        CGSize scaleSize   = CGSizeMake(destSize.width * scale, destSize.height * scale);
+//        region.origin.x    = 0;
+//        region.size.width  = 1.0;
+//        region.origin.y    = (targetSize.height - scaleSize.height) * 0.5 / targetSize.height;
+//        region.size.height = 1 - 2 * region.origin.y;
+//    } else {
+//        float  scale       = scaleY;
+//        CGSize scaleSize   = CGSizeMake(destSize.width * scale, destSize.height * scale);
+//        region.origin.y    = 0;
+//        region.size.height = 1.0;
+//        region.origin.x    = (targetSize.width - scaleSize.width) * 0.5 / targetSize.width;
+//        region.size.width  = 1 - 2 * region.origin.x;
+//    }
 
     return region;
 }
@@ -506,7 +561,7 @@ CGRect getCropRectWithSourceSize(CGSize sourceSize, CGSize destSize) {
         capture.height = capture.height - capture.width;
     }
     _captureSize               = capture;
-    CGRect region              = getCropRectWithSourceSize(capture, _destSize);
+    CGRect region              = [self getCropRectWithSourceSize:capture target:_destSize];
     self.cropFilter.cropRegion = region;
     [_cropFilter forceProcessingAtSize:_destSize];
 }

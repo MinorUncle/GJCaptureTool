@@ -8,8 +8,8 @@
 
 #import "LIveStartViewController.h"
 #import "GJLivePushViewController.h"
-//static NSString* pullUlr = @"rtmp://10.0.1.65/live/room";
-static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/73257119.flv";
+static NSString* pullUlr = @"rtmp://10.0.1.65/live/room";
+//static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/73257119.flv";
 //static NSString* url = @"rtmp://192.168.199.187/live/room";
 //static NSString* url = @"rtmp://192.168.199.187/live/room";
 //static NSString* url = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";

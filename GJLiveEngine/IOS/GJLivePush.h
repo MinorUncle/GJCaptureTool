@@ -129,6 +129,8 @@ typedef void(^OverlaysUpdate)(NSInteger index,const GJOverlayAttribute* _Nullabl
 
 - (void)stopUIRecode;
 
+
+
 /**
  贴图，如果存在则取消已存在的
 

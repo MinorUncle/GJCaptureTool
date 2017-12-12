@@ -1072,6 +1072,7 @@
 //}
 -(void)btnSelect:(UIButton*)btn{
     if (btn == _exitBtn) {
+        [_pushManager.livePush chanceSticker];
         [self.navigationController popViewControllerAnimated:YES];
     }
 }
