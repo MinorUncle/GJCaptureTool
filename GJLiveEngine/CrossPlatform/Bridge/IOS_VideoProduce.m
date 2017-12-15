@@ -646,6 +646,9 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return self.imageView;
 }
 
+-(UIImage*)getFreshDisplayImage{
+    return [((GJImageView*)self.imageView) captureFreshImage];
+}
 
 
 @end
@@ -775,6 +778,11 @@ inline static GVoid videoProduceStopPreview(struct _GJVideoProduceContext *conte
     [recode stopPreview];
 }
 
+inline static GHandle getFreshDisplayImage(struct _GJVideoProduceContext *context) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    return CFBridgingRetain([recode getFreshDisplayImage]);
+}
+
 inline static GBool addSticker(struct _GJVideoProduceContext *context, const GVoid *overlays,  GInt32 fps, GJStickerUpdateCallback callback, const GVoid *userData) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
     
@@ -843,6 +851,7 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     context->setVideoFormat        = videoProduceSetVideoFormat;
     context->startTrackImage       = startTrackImage;
     context->stopTrackImage        = stopTrackImage;
+    context->getFreshDisplayImage   = getFreshDisplayImage;
 }
 
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {

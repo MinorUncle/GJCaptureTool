@@ -30,6 +30,7 @@ typedef struct _GJRecodeContext{
     GVoid   (*sendAudioSourcePacket)  (struct _GJRecodeContext* context, R_GJPCMFrame* packet);
     GBool   (*startRecode)            (struct _GJRecodeContext* context);
     GVoid   (*stopRecode)             (struct _GJRecodeContext* context);
+
 }GJRecodeContext;
 
 typedef struct _GJPictureDisplayContext{
@@ -60,7 +61,7 @@ typedef struct _GJVideoProduceContext{
 
     GBool   (*setFrameRate)           (struct _GJVideoProduceContext* context, GInt32 fps);
     GBool   (*setVideoFormat)         (struct _GJVideoProduceContext* context, GJPixelFormat format);
-
+    GHandle (*getFreshDisplayImage)   (struct _GJVideoProduceContext* context);
     
     GBool   (*addSticker)             (struct _GJVideoProduceContext *context, const GVoid *overlays,  GInt32 fps, GJStickerUpdateCallback callback, const GVoid *userData);
     GVoid   (*chanceSticker)          (struct _GJVideoProduceContext* context);

@@ -434,6 +434,19 @@
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;
     if (btn == _trackImage) {
+        {
+            static UIImageView* showView;
+            if (showView == nil) {
+                showView = [[UIImageView alloc]initWithFrame:CGRectMake(50, 100, 100, 100)];
+                [self.view addSubview:showView];
+            }
+            UIImage* image = [_livePush captureFreshDisplayImage];
+            NSTimer* timer = [NSTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
+                showView.image =image;// [_livePush captureFreshDisplayImage];
+                [showView setNeedsDisplay];
+            }];
+            return;
+        }
         if (btn.selected) {
             NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
             images[0] = [UIImage imageNamed:[NSString stringWithFormat:@"%d.png",1]];

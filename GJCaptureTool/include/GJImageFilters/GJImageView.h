@@ -10,4 +10,5 @@
 
 @interface GJImageView : GPUImageView
 @property(assign,nonatomic)BOOL disable;
+-(UIImage*)captureFreshImage;
 @end
