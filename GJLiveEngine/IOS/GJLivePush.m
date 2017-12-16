@@ -204,6 +204,12 @@ static GVoid livePushCallback(GHandle               userDate,
     GJLivePush_StopAudioMix(_livePush);
 }
 
+-(void)setEnableAec:(BOOL)enableAec{
+    if (GJLivePush_EnableAudioEchoCancellation(_livePush, enableAec)) {
+        _enableAec = enableAec;
+    }
+}
+
 - (void)setInputVolume:(float)volume {
     GJLivePush_SetInputGain(_livePush, volume);
 }

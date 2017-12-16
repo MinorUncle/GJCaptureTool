@@ -22,23 +22,9 @@
 #import "GJAudioManager.h"
 #endif
 
-inline static GBool audioProduceSetup(struct _GJAudioProduceContext *context, GJAudioFormat format, AudioFrameOutCallback callback, GHandle userData) {
+inline static GBool audioProduceSetup(struct _GJAudioProduceContext *context, AudioFrameOutCallback callback, GHandle userData) {
     GJAssert(context->obaque == GNULL, "上一个音频生产器没有释放");
-    if (format.mType != GJAudioType_PCM) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码音频源格式不支持");
-        return GFalse;
-    }
-    UInt32 formatid = 0;
-    switch (format.mType) {
-        case GJAudioType_PCM:
-            formatid = kAudioFormatLinearPCM;
-            break;
-        default: {
-            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码音频源格式不支持");
-            return GFalse;
-            break;
-        }
-    }
+  
     if (callback == GNULL) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "回调函数不能为空");
         return GFalse;
@@ -52,17 +38,8 @@ inline static GBool audioProduceSetup(struct _GJAudioProduceContext *context, GJ
 #endif
 
 #ifdef AMAZING_AUDIO_ENGINE
-    AudioStreamBasicDescription audioFormat = {0};
-    audioFormat.mSampleRate                 = format.mSampleRate;       // 3
-    audioFormat.mChannelsPerFrame           = format.mChannelsPerFrame; // 4
-    audioFormat.mFramesPerPacket            = 1;                        // 7
-    audioFormat.mBitsPerChannel             = 16;                       // 5
-    audioFormat.mBytesPerFrame              = audioFormat.mChannelsPerFrame * audioFormat.mBitsPerChannel / 8;
-    audioFormat.mBytesPerPacket             = audioFormat.mBytesPerFrame * audioFormat.mFramesPerPacket;
-    audioFormat.mFormatFlags                = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
-    audioFormat.mFormatID                   = kAudioFormatLinearPCM;
 
-    GJAudioManager *manager = [[GJAudioManager alloc] initWithFormat:audioFormat];
+    GJAudioManager *manager = [[GJAudioManager alloc] init];
     manager.audioCallback   = ^(R_GJPCMFrame *frame) {
         callback(userData, frame);
     };
@@ -91,6 +68,44 @@ inline static GVoid audioProduceUnSetup(struct _GJAudioProduceContext *context) 
 #endif
     }
 }
+
+inline static GBool setAudioFormat(struct _GJAudioProduceContext *context, GJAudioFormat format) {
+    if(context->obaque == GNULL){
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "GJAudioManager not setup");
+        return GFalse;
+    }
+    if (format.mType != GJAudioType_PCM) {
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码音频源格式不支持");
+        return GFalse;
+    }
+    UInt32 formatid = 0;
+    switch (format.mType) {
+        case GJAudioType_PCM:
+            formatid = kAudioFormatLinearPCM;
+            break;
+        default: {
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码音频源格式不支持");
+            return GFalse;
+            break;
+        }
+    }
+#ifdef AMAZING_AUDIO_ENGINE
+    GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
+
+    AudioStreamBasicDescription audioFormat = {0};
+    audioFormat.mSampleRate                 = format.mSampleRate;       // 3
+    audioFormat.mChannelsPerFrame           = format.mChannelsPerFrame; // 4
+    audioFormat.mFramesPerPacket            = 1;                        // 7
+    audioFormat.mBitsPerChannel             = 16;                       // 5
+    audioFormat.mBytesPerFrame              = audioFormat.mChannelsPerFrame * audioFormat.mBitsPerChannel / 8;
+    audioFormat.mBytesPerPacket             = audioFormat.mBytesPerFrame * audioFormat.mFramesPerPacket;
+    audioFormat.mFormatFlags                = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
+    audioFormat.mFormatID                   = kAudioFormatLinearPCM;
+    manager.audioFormat = audioFormat;
+    
+#endif
+    return GTrue;
+}
 inline static GBool audioProduceStart(struct _GJAudioProduceContext *context) {
     __block GBool result = GTrue;
 #ifdef AUDIO_QUEUE_RECODE
@@ -98,7 +113,7 @@ inline static GBool audioProduceStart(struct _GJAudioProduceContext *context) {
     result                      = [recode startRecodeAudio];
 #endif
 #ifdef AMAZING_AUDIO_ENGINE
-    if (/* DISABLES CODE */ (1)) {
+    if ([NSThread isMainThread]) {
         NSError *       error;
         GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
         if (![manager startRecode:&error]) {
@@ -106,7 +121,7 @@ inline static GBool audioProduceStart(struct _GJAudioProduceContext *context) {
             result = GFalse;
         }
     } else {
-        dispatch_sync(dispatch_get_main_queue(), ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
             NSError *       error;
             GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
             if (![manager startRecode:&error]) {
@@ -140,7 +155,17 @@ inline static GVoid audioProduceStop(struct _GJAudioProduceContext *context) {
 GBool enableReverb(struct _GJAudioProduceContext *context, GBool enable) {
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
-    return [manager enableReverb:enable];
+    manager.enableReverb = enable;
+    return manager.enableReverb == enable;
+#endif
+    return GFalse;
+}
+
+GBool enableAudioEchoCancellation(struct _GJAudioProduceContext *context, GBool enable) {
+#ifdef AMAZING_AUDIO_ENGINE
+    GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
+    [manager setAce:enable];
+    return manager.ace == enable;
 #endif
     return GFalse;
 }
@@ -148,8 +173,8 @@ GBool enableReverb(struct _GJAudioProduceContext *context, GBool enable) {
 GBool enableMeasurementMode(struct _GJAudioProduceContext *context, GBool enable) {
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
-    [manager.audioController setUseMeasurementMode:YES];
-    return manager.audioController.useMeasurementMode == enable;
+    [manager setUseMeasurementMode:enable];
+    return manager.useMeasurementMode == enable;
 #endif
     return GFalse;
 }
@@ -157,7 +182,8 @@ GBool enableMeasurementMode(struct _GJAudioProduceContext *context, GBool enable
 GBool enableAudioInEarMonitoring(struct _GJAudioProduceContext *context, GBool enable) {
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
-    return [manager enableAudioInEarMonitoring:enable];
+    manager.audioInEarMonitoring = enable;
+    return manager.audioInEarMonitoring == enable;
 #endif
     return GFalse;
 }
@@ -227,6 +253,7 @@ GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext **recodeContext) {
     GJAudioProduceContext *context = *recodeContext;
     context->audioProduceSetup     = audioProduceSetup;
     context->audioProduceUnSetup   = audioProduceUnSetup;
+    context->setAudioFormat        = setAudioFormat;
     context->audioProduceStart     = audioProduceStart;
     context->audioProduceStop      = audioProduceStop;
 
@@ -241,6 +268,7 @@ GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext **recodeContext) {
     context->setMixToStream        = setMixToStream;
     context->enableReverb          = enableReverb;
     context->enableMeasurementMode = enableMeasurementMode;
+    context->enableAudioEchoCancellation = enableAudioEchoCancellation;
 }
 GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext **context) {
     if ((*context)->obaque) {

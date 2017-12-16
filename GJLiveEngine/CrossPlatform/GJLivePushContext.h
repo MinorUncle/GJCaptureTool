@@ -97,15 +97,15 @@ GVoid GJLivePush_StopPreview(GJLivePushContext *context);
 GBool GJLivePush_SetAudioMute(GJLivePushContext *context, GBool mute);
 GBool GJLivePush_SetVideoMute(GJLivePushContext *context, GBool mute);
 
-GVoid GJLivePush_SetCameraPosition(GJLivePushContext *context, GJCameraPosition position);
-GVoid GJLivePush_SetOutOrientation(GJLivePushContext *context, GJInterfaceOrientation orientation);
-GVoid GJLivePush_SetPreviewHMirror(GJLivePushContext *context, GBool preViewMirror);
+
 
 GVoid GJLivePush_Dealloc(GJLivePushContext **context);
 GJTrafficStatus GJLivePush_GetVideoTrafficStatus(GJLivePushContext *context);
 GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext *context);
 GHandle GJLivePush_GetDisplayView(GJLivePushContext *context);
 
+#pragma mark 音频
+GBool GJLivePush_EnableAudioEchoCancellation(GJLivePushContext *context, GBool enable);
 GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext *context, GBool enable);
 GBool GJLivePush_EnableReverb(GJLivePushContext *context, GBool enable);
 GVoid GJLivePush_StopAudioMix(GJLivePushContext *context);
@@ -115,6 +115,10 @@ GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext *context, GBool should
 GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat32 volume);
 GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat32 gain);
 
+#pragma mark 视频
+GVoid GJLivePush_SetCameraPosition(GJLivePushContext *context, GJCameraPosition position);
+GVoid GJLivePush_SetOutOrientation(GJLivePushContext *context, GJInterfaceOrientation orientation);
+GVoid GJLivePush_SetPreviewHMirror(GJLivePushContext *context, GBool preViewMirror);
 GBool GJLivePush_SetCameraMirror(GJLivePushContext *context, GBool mirror);
 GBool GJLivePush_SetStreamMirror(GJLivePushContext *context, GBool mirror);
 GBool GJLivePush_SetPreviewMirror(GJLivePushContext *context, GBool mirror);

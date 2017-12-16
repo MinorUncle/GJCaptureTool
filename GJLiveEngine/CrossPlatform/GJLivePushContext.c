@@ -655,6 +655,7 @@ GBool GJLivePush_Create(GJLivePushContext **pushContext, GJLivePushCallback call
         context->videoProducer->videoProduceSetup(context->videoProducer, videoCaptureFrameOutCallback, context);
         
         GJ_AudioProduceContextCreate(&context->audioProducer);
+        context->audioProducer->audioProduceSetup(context->audioProducer, audioCaptureFrameOutCallback, context);
         pthread_mutex_init(&context->lock, GNULL);
         context->maxVideoDelay = MAX_DELAY;
         
@@ -708,6 +709,14 @@ GVoid GJLivePush_SetConfig(GJLivePushContext *context, const GJPushConfig *confi
         context->videoProducer->setVideoFormat(context->videoProducer,format);
         context->videoProducer->setFrameRate(context->videoProducer,config->mFps);
 
+        GJAudioFormat aFormat     = {0};
+        aFormat.mBitsPerChannel   = 16;
+        aFormat.mType             = GJAudioType_PCM;
+        aFormat.mFramePerPacket   = 1;
+        aFormat.mSampleRate       = config->mAudioSampleRate;
+        aFormat.mChannelsPerFrame = config->mAudioChannel;
+        context->audioProducer->setAudioFormat(context->audioProducer,aFormat);
+        
         *(context->pushConfig) = *config;
     }
     pthread_mutex_unlock(&context->lock);
@@ -752,16 +761,6 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
             }
             for (int i = 0; i<context->netSpeedCheckInterval; i++) {
                 context->netSpeedUnit[i] = -1;
-            }
-
-            if (context->audioProducer->obaque == GNULL) {
-                GJAudioFormat aFormat     = {0};
-                aFormat.mBitsPerChannel   = 16;
-                aFormat.mType             = GJAudioType_PCM;
-                aFormat.mFramePerPacket   = 1;
-                aFormat.mSampleRate       = context->pushConfig->mAudioSampleRate;
-                aFormat.mChannelsPerFrame = context->pushConfig->mAudioChannel;
-                context->audioProducer->audioProduceSetup(context->audioProducer, aFormat, audioCaptureFrameOutCallback, context);
             }
 
             GJAudioFormat aFormat     = {0};
@@ -936,6 +935,20 @@ GBool GJLivePush_SetPreviewMirror(GJLivePushContext *context, GBool mirror){
     pthread_mutex_lock(&context->lock);
     result = context->videoProducer->setPreviewMirror(context->videoProducer, mirror);
     pthread_mutex_unlock(&context->lock);
+    return result;
+}
+
+GBool GJLivePush_EnableAudioEchoCancellation(GJLivePushContext *context, GBool enable){
+    GBool result = GFalse;
+    
+    pthread_mutex_lock(&context->lock);
+    if (context->audioProducer->obaque == GNULL) {
+        result = GFalse;
+    } else {
+        result = context->audioProducer->enableAudioEchoCancellation(context->audioProducer, enable);
+    }
+    pthread_mutex_unlock(&context->lock);
+    
     return result;
 }
 

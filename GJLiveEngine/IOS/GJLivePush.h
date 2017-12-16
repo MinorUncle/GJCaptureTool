@@ -89,9 +89,11 @@ typedef void(^OverlaysUpdate)(NSInteger index,const GJOverlayAttribute* _Nullabl
 
 @property (nonatomic,weak           ) id  <GJLivePushDelegate> _Nullable delegate;
 
+
 @property (nonatomic,assign         ) BOOL                   videoMute;
 @property (nonatomic,assign         ) BOOL                   audioMute;
 @property (nonatomic,assign         ) BOOL                   measurementMode;
+@property (nonatomic,assign         ) BOOL                   enableAec;//default NO
 
 //配置ar场景，开启ar模式，预览和推流前配置。scene= nil表示取消;
 @property (nonatomic,retain         ) id  <GJImageARScene> _Nullable                    ARScene;

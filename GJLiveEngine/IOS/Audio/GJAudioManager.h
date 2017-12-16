@@ -32,7 +32,12 @@
 }
 
 typedef void(^MixFinishBlock)(GBool finish);
-@property (nonatomic, assign)BOOL mixToSream;
+@property (nonatomic, assign)BOOL mixToSream;//default yes
+@property (nonatomic, assign)BOOL audioInEarMonitoring;//default false
+@property (nonatomic, assign)BOOL enableReverb;//default false
+@property (nonatomic, assign)BOOL ace;//default false
+@property (nonatomic, assign)BOOL useMeasurementMode;//default false
+
 @property (nonatomic, retain)AEPlaythroughChannel* playthrough;
 @property (nonatomic, retain)AEAudioFilePlayer* mixfilePlay;
 @property (nonatomic, retain)AEAudioController *audioController;
@@ -48,15 +53,14 @@ typedef void(^MixFinishBlock)(GBool finish);
 @property (nonatomic, readonly) AEAudioReceiverCallback receiverCallback;
 
 @property (nonatomic, copy)void(^audioCallback)(R_GJPCMFrame* frame);
+@property (nonatomic, assign)AudioStreamBasicDescription audioFormat;
 
 //+(GJAudioManager*)shareAudioManager;
--(instancetype)initWithFormat:(AudioStreamBasicDescription )audioFormat;
+//-(instancetype)initWithFormat:(AudioStreamBasicDescription )audioFormat;
 -(void)stopMix;
 -(BOOL)mixFilePlayAtTime:(uint64_t)time;
 -(BOOL)setMixFile:(NSURL*)file finish:(MixFinishBlock)finishBlock ;
 -(void)setMixToSream:(BOOL)mixToSream;
--(BOOL)enableAudioInEarMonitoring:(BOOL)enable;
--(BOOL)enableReverb:(BOOL)enable;
 -(BOOL)startRecode:(NSError**)error;
 -(void)stopRecode;
 -(void)addMixPlayer:(id<AEAudioPlayable>)player key:(id)key;

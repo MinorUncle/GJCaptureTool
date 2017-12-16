@@ -986,7 +986,8 @@ static OSStatus ioUnitRenderNotifyCallback(void *inRefCon, AudioUnitRenderAction
 }
 
 - (void)dealloc {
-    
+    NSLog(@"TAAE: Warning: AEAudioController dealloc");
+
     __AEAllocated = NO;
     
 #if TARGET_OS_IPHONE

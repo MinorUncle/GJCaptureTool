@@ -7,6 +7,7 @@
 //
 
 #import "GJAudioManager.h"
+#import <AVFoundation/AVFoundation.h>
 #import "GJLog.h"
 
 #define PCM_FRAME_COUNT 1024
@@ -17,6 +18,7 @@
     GInt32        _sizePerPacket;
     float         _durPerSize;
     NSMutableDictionary<id,id<AEAudioPlayable>>* _mixPlayers;
+    BOOL          _needResumeEarMonitoring;
 }
 @end
 
@@ -24,40 +26,54 @@
 //+(GJAudioManager*)shareAudioManager{
 //    return nil;
 //};
+- (instancetype)init
+{
+    self = [super init];
+    if (self) {
+        _mixToSream = YES;
+        _mixPlayers = [NSMutableDictionary dictionaryWithCapacity:2];
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotific:) name:AVAudioSessionRouteChangeNotification object:nil];
+    }
+    return self;
+}
+
+-(void)receiveNotific:(NSNotification*)notific{
+    if ([notific.name isEqualToString:AVAudioSessionRouteChangeNotification]) {
+        AVAudioSessionRouteChangeReason reson = [notific.userInfo[AVAudioSessionRouteChangeReasonKey] unsignedIntegerValue];
+        switch (reson) {
+            case AVAudioSessionRouteChangeReasonNewDeviceAvailable:
+                //插入耳机
+                if (self.audioInEarMonitoring) {
+                    [self setAudioInEarMonitoring:NO];
+                    _needResumeEarMonitoring = YES;
+                }
+                break;
+            case AVAudioSessionRouteChangeReasonOldDeviceUnavailable:{
+                if (_needResumeEarMonitoring) {
+                    [self setAudioInEarMonitoring:YES];
+                }
+                break;
+            }
+            default:
+            {
+                
+                if ([AVAudioSession sharedInstance].currentRoute.outputs.count > 0 &&
+                    [[AVAudioSession sharedInstance].currentRoute.outputs[0].portType isEqualToString:AVAudioSessionPortBuiltInReceiver]) {
+                    GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "Fource AVAudioSessionPortBuiltInReceiver to AVAudioSessionPortOverrideSpeaker");
+                    [[AVAudioSession sharedInstance] overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
+                }
+            }
+                break;
+        }
+    }
+    
+}
 
 - (instancetype)initWithFormat:(AudioStreamBasicDescription)audioFormat {
     self = [super init];
     if (self) {
-        NSError *error;
-        _mixToSream = YES;
-        _mixPlayers = [NSMutableDictionary dictionaryWithCapacity:2];
-        if (audioFormat.mFramesPerPacket > 1) {
-            _sizePerPacket               = audioFormat.mFramesPerPacket * audioFormat.mBytesPerFrame;
-            audioFormat.mFramesPerPacket = 0;
-        } else {
-            _sizePerPacket = PCM_FRAME_COUNT * audioFormat.mBytesPerFrame;
-        }
-        [[GJAudioSessionCenter shareSession] setPrefferSampleRate:audioFormat.mSampleRate error:&error];
 
-        if (error != nil) {
-            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "setPrefferSampleRate error:%s", error.description.UTF8String);
-        }
-
-        _audioController                    = [[AEAudioController alloc] initWithAudioDescription:audioFormat inputEnabled:YES];
-        _audioController.useMeasurementMode = YES;
-        //        [_audioController setPreferredBufferDuration:0.023];
-
-        _durPerSize = 1000.0 / _audioController.audioDescription.mSampleRate / _audioController.audioDescription.mBytesPerFrame;
-#ifdef AUDIO_SEND_TEST
-        _audioMixer = [[AEAudioSender alloc] init];
-
-#else
-        _audioMixer = [[GJAudioMixer alloc] init];
-#endif
-        _audioMixer.delegate = self;
-        [_audioController addInputReceiver:_audioMixer];
-        //        _staticManager = self;
-        self.mixToSream = YES;
+    
 
         //        _blockPlay = [AEBlockChannel channelWithBlock:^(const AudioTimeStamp *time, UInt32 frames, AudioBufferList *audio) {
         //            for (int i = 0 ; i<audio->mNumberBuffers; i++) {
@@ -68,6 +84,40 @@
         //        [_audioController addChannels:@[_blockPlay]];
     }
     return self;
+}
+
+-(void)setAudioFormat:(AudioStreamBasicDescription)audioFormat{
+    if (_audioController && _audioController.running) {
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "运行状态无法修改格式");
+        return;
+    }
+    if ((int64_t)audioFormat.mSampleRate == (int64_t)_audioFormat.mSampleRate &&
+        audioFormat.mChannelsPerFrame == _audioFormat.mChannelsPerFrame &&
+        audioFormat.mFormatID == _audioFormat.mFormatID &&
+        audioFormat.mBytesPerFrame == _audioFormat.mBytesPerFrame &&
+        audioFormat.mFormatFlags == _audioFormat.mFormatFlags &&
+        audioFormat.mBitsPerChannel == _audioFormat.mBitsPerChannel &&
+        audioFormat.mBytesPerPacket == _audioFormat.mBytesPerPacket &&
+        audioFormat.mFramesPerPacket == _audioFormat.mFramesPerPacket
+        ) {
+        //无需修改
+        return;
+    }
+    _audioFormat = audioFormat;
+    NSError* error;
+    [_audioController setAudioDescription:_audioFormat error:&error];
+    if (error) {
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "setAudioDescription error");
+    }else{
+        _audioFormat = audioFormat;
+    }
+    if (_audioFormat.mFramesPerPacket > 100) {
+        _sizePerPacket               = _audioFormat.mFramesPerPacket * _audioFormat.mBytesPerFrame;
+    } else {
+        _sizePerPacket = PCM_FRAME_COUNT * audioFormat.mBytesPerFrame;
+        _audioFormat.mFramesPerPacket = PCM_FRAME_COUNT;
+    }
+ 
 }
 
 - (void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time {
@@ -108,6 +158,7 @@
         }
     }
 }
+
 -(void)removeMixPlayerWithkey:(id <NSCopying>)key{
     if ([_mixPlayers.allKeys containsObject:key]) {
         id<AEAudioPlayable> player = _mixPlayers[key];
@@ -133,15 +184,58 @@
     if (configError) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%@", configError.description.UTF8String);
     }
+    
+    if([AVAudioSession sharedInstance].preferredSampleRate != _audioFormat.mSampleRate){
+        [[AVAudioSession sharedInstance] setPreferredSampleRate:_audioFormat.mSampleRate error:error];
+    }
+    if (error != nil) {
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "setPrefferSampleRate error:%s to:%f", (*error).description.UTF8String, _audioFormat.mSampleRate);
+    }else{
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setPrefferSampleRate to :%f", _audioFormat.mSampleRate);
+    }
+    
+#ifdef AUDIO_SEND_TEST
+    _audioMixer = [[AEAudioSender alloc] init];
+    
+#else
+    if (_audioMixer == nil) {
+        _audioMixer = [[GJAudioMixer alloc] init];
+        _audioMixer.delegate = self;
+    }
+#endif
+    if(_audioController == nil){
+        //第一次需要的时候才申请，并初始化所有参数
+        _audioController                    = [[AEAudioController alloc] initWithAudioDescription:_audioFormat inputEnabled:YES];
+        [_audioController addInputReceiver:_audioMixer];
+        [self setAudioInEarMonitoring:_audioInEarMonitoring];
+        [self setMixToSream:_mixToSream];
+        [self setEnableReverb:_enableReverb];
+        [self setAce:_ace];
+        [self setUseMeasurementMode:_useMeasurementMode];
+    }else{
+        //其他的每次配置参数的时候已经应用了,无需再配置
+    }
+    NSTimeInterval preferredBufferDuration = _sizePerPacket/_audioFormat.mBytesPerFrame/_audioFormat.mSampleRate;
+    if (preferredBufferDuration - _audioController.preferredBufferDuration > 0.01 || preferredBufferDuration - _audioController.preferredBufferDuration < -0.01) {
+        [_audioController setPreferredBufferDuration:preferredBufferDuration];
+    }
+    _durPerSize = 1000.0 / _audioController.audioDescription.mSampleRate / _audioController.audioDescription.mBytesPerFrame;
+
+    
     if (![_audioController start:error]) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "AEAudioController start error:%@", (*error).description.UTF8String);
     }
 
     return *error == nil;
 }
+
 - (void)stopRecode {
 
+    if (_mixfilePlay) {
+        [self stopMix];
+    }
     [_audioController stop];
+
     NSError *configError;
     [[GJAudioSessionCenter shareSession] lockBeginConfig];
     [[GJAudioSessionCenter shareSession] requestPlay:NO key:self.description error:nil];
@@ -174,51 +268,107 @@
     return _playthrough;
 }
 
-- (BOOL)enableAudioInEarMonitoring:(BOOL)enable {
-    if (enable) {
-        //关闭麦克风接受，打开播放接受
-        [_audioController removeInputReceiver:_audioMixer];
-        [_audioController addInputReceiver:self.playthrough];
-        [self addMixPlayer:self.playthrough key:self.playthrough.description];
-    } else {
-        [self removeMixPlayerWithkey:self.playthrough.description];
-        [_audioController addInputReceiver:_audioMixer];
-        [_audioController removeInputReceiver:self.playthrough];
-    }
-    return GTrue;
-}
-
-- (BOOL)enableReverb:(BOOL)enable {
-    if (_reverb == nil) {
-        _reverb           = [[AEReverbFilter alloc] init];
-        _reverb.dryWetMix = 80;
-    }
-
-    if (enable) {
-        [_audioController addFilter:_reverb];
-    }
-    {
-        [_audioController removeFilter:_reverb];
+-(BOOL)isHeadphones{
+    AVAudioSessionRouteDescription* route = [[AVAudioSession sharedInstance] currentRoute];
+    for (AVAudioSessionPortDescription* desc in [route outputs]) {
+        if ([[desc portType] isEqualToString:AVAudioSessionPortHeadphones])
+            return YES;
     }
     return NO;
 }
 
+-(void)setUseMeasurementMode:(BOOL)useMeasurementMode{
+    _useMeasurementMode = useMeasurementMode;
+    if (_audioController) {
+        if (_audioController.useMeasurementMode != useMeasurementMode) {
+            _audioController.useMeasurementMode = useMeasurementMode;
+        }
+    }
+}
+
+-(void)setAce:(BOOL)ace{
+    _ace = ace;
+    if (_audioController) {
+        if (_audioController.voiceProcessingEnabled != ace) {
+            [_audioController setVoiceProcessingEnabled:ace];
+        }
+    }
+}
+
+-(void)setAudioInEarMonitoring:(BOOL)audioInEarMonitoring{
+    if (![self isHeadphones]) {
+        _needResumeEarMonitoring = audioInEarMonitoring;
+        
+    }else{
+        _needResumeEarMonitoring = NO;
+        [self _setAudioInEarMonitoring:audioInEarMonitoring];
+    }
+}
+
+-(void)_setAudioInEarMonitoring:(BOOL)audioInEarMonitoring{
+    _audioInEarMonitoring = audioInEarMonitoring;
+    if (_audioController == nil) {
+        return;
+    }
+    if (audioInEarMonitoring) {
+        //关闭麦克风接受，打开播放接受
+        [_audioController removeInputReceiver:_audioMixer];
+        if (![_audioController.inputReceivers containsObject:self.playthrough]) {
+            [_audioController addInputReceiver:self.playthrough];
+        }
+        [self addMixPlayer:self.playthrough key:self.playthrough.description];
+    } else {
+        [self removeMixPlayerWithkey:self.playthrough.description];
+        if (![_audioController.inputReceivers containsObject:_audioMixer]) {
+            [_audioController addInputReceiver:_audioMixer];
+        }
+        [_audioController removeInputReceiver:self.playthrough];
+    }
+}
+
+-(void)setEnableReverb:(BOOL)enable{
+    _enableReverb = enable;
+    if (_reverb == nil) {
+        _reverb           = [[AEReverbFilter alloc] init];
+        _reverb.dryWetMix = 80;
+    }
+    if(_audioController){
+        if (enable) {
+            if (![_audioController.filters containsObject:_reverb] && _reverb) {
+                [_audioController addFilter:_reverb];
+            }
+        }else{
+            [_audioController removeFilter:_reverb];
+        }
+    }
+}
+
 - (void)setMixToSream:(BOOL)mixToSream {
     _mixToSream = mixToSream;
+    
+    if(_audioMixer){
 #ifndef AUDIO_SEND_TEST
-    if (_mixToSream) {
-        [_audioMixer removeIgnoreSource:_audioController.topGroup];
-    } else {
-        [_audioMixer addIgnoreSource:_audioController.topGroup];
-    }
+        if (_mixToSream) {
+            [_audioMixer removeIgnoreSource:_audioController.topGroup];
+        } else {
+            [_audioMixer addIgnoreSource:_audioController.topGroup];
+        }
 #endif
+    }
+
 }
+
 - (BOOL)setMixFile:(NSURL*)file finish:(MixFinishBlock)finishBlock {
     if (_mixfilePlay != nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
         [self removeMixPlayerWithkey:_mixfilePlay.description];
         _mixfilePlay = nil;
     }
+    
+    if (_audioController == nil) {
+        return NO;
+    }
+    
     NSError *error;
     _mixfilePlay = [[AEAudioFilePlayer alloc] initWithURL:file error:&error];
     if (_mixfilePlay == nil) {
@@ -232,11 +382,13 @@
             }
             [wkSelf removeMixPlayerWithkey:wkSelf.mixfilePlay.description];
             wkSelf.mixfilePlay.completionBlock = nil;
+            wkSelf.mixfilePlay = nil;
         };
         [self addMixPlayer:_mixfilePlay key:_mixfilePlay.description];
         return GTrue;
     }
 }
+
 - (BOOL)mixFilePlayAtTime:(uint64_t)time {
     if (_mixfilePlay) {
         [_mixfilePlay playAtTime:time];
@@ -246,14 +398,18 @@
         return NO;
     }
 }
+
 - (void)stopMix {
     if (_mixfilePlay == nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "重复stop mix");
     } else {
         [self removeMixPlayerWithkey:_mixfilePlay.description];
+        _mixfilePlay.completionBlock();
+        _mixfilePlay.completionBlock = nil;
         _mixfilePlay = nil;
     }
 }
+
 - (void)dealloc {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJAudioManager dealloc");
     if (_bufferPool) {

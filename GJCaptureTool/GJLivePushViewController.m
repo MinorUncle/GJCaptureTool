@@ -85,7 +85,7 @@
         config.mAudioBitrate = 128*1000;
         _livePush = [[GJLivePush alloc]init];
         [_livePush setPushConfig:config];
-        
+        _livePush.enableAec = YES;
         _livePush.delegate = self;
         _livePush.cameraPosition = GJCameraPositionFront;
     
