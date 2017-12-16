@@ -1137,6 +1137,17 @@ GVoid GJLivePush_StopRecode(GJLivePushContext *context) {
     }
     pthread_mutex_unlock(&context->lock);
 }
+
+GHandle GJLivePush_CaptureFreshDisplayImage(GJLivePushContext *context){
+    GHandle image = GNULL;
+    pthread_mutex_lock(&context->lock);
+    if (context->videoProducer) {
+        image = context->videoProducer->getFreshDisplayImage(context->videoProducer);
+    }
+    pthread_mutex_unlock(&context->lock);
+    return image;
+}
+
 GBool GJLivePush_StartSticker(GJLivePushContext *context, const GVoid *images, GInt32 fps, GJStickerUpdateCallback callback, const GHandle userData) {
     GBool result = GFalse;
     pthread_mutex_lock(&context->lock);

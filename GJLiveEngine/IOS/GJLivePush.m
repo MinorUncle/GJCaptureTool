@@ -308,6 +308,10 @@ static int restartCount;
     GJLivePush_StopRecode(_livePush);
 }
 
+- (UIImage*_Nullable)captureFreshDisplayImage{
+    return CFBridgingRelease(GJLivePush_CaptureFreshDisplayImage(_livePush));
+}
+
 static void stickerUpdateCallback(const GHandle userDate, GLong index,const GHandle parm,
                                           GBool *ioFinsh) {
 
