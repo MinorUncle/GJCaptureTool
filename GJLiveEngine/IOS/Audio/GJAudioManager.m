@@ -105,19 +105,15 @@
     }
     _audioFormat = audioFormat;
     NSError* error;
-    [_audioController setAudioDescription:_audioFormat error:&error];
-    if (error) {
-        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "setAudioDescription error");
-    }else{
-        _audioFormat = audioFormat;
+    if (_audioController) {
+        [_audioController setAudioDescription:_audioFormat error:&error];
+        if (error) {
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "setAudioDescription error");
+        }else{
+            _audioFormat = audioFormat;
+        }
     }
-    if (_audioFormat.mFramesPerPacket > 100) {
-        _sizePerPacket               = _audioFormat.mFramesPerPacket * _audioFormat.mBytesPerFrame;
-    } else {
-        _sizePerPacket = PCM_FRAME_COUNT * audioFormat.mBytesPerFrame;
-        _audioFormat.mFramesPerPacket = PCM_FRAME_COUNT;
-    }
- 
+    _sizePerPacket = PCM_FRAME_COUNT * audioFormat.mBytesPerFrame;
 }
 
 - (void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time {
@@ -183,15 +179,6 @@
     [[GJAudioSessionCenter shareSession] unLockApplyConfig:&configError];
     if (configError) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%@", configError.description.UTF8String);
-    }
-    
-    if([AVAudioSession sharedInstance].preferredSampleRate != _audioFormat.mSampleRate){
-        [[AVAudioSession sharedInstance] setPreferredSampleRate:_audioFormat.mSampleRate error:error];
-    }
-    if (error != nil) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "setPrefferSampleRate error:%s to:%f", (*error).description.UTF8String, _audioFormat.mSampleRate);
-    }else{
-        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setPrefferSampleRate to :%f", _audioFormat.mSampleRate);
     }
     
 #ifdef AUDIO_SEND_TEST
