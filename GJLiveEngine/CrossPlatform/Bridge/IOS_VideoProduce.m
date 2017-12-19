@@ -460,6 +460,16 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         CGSize scaleSize = CGSizeMake(targetSize.width * scale, targetSize.height * scale);
         region.origin.x += (sourceSize.width - scaleSize.width)/2;
     }
+    if (region.origin.y < 0) {
+        if (region.origin.y > -0.0001) {
+            region.origin.y = 0;
+        }
+    }
+    if (region.origin.x < 0) {
+        if (region.origin.x > -0.0001) {
+            region.origin.x = 0;
+        }
+    }
     region.origin.x /= originSize.width;
     region.origin.y /= originSize.height;
     region.size.width = 1-2*region.origin.x;

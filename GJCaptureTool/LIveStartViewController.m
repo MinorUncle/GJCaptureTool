@@ -17,9 +17,9 @@ static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/132399872.flv";
 //static NSString* url = @"rtsp://10.0.23.65/sample_100kbit.mp4";
 
 
-//static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务器地址
+static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务器地址
 //static NSString* pushUrl = @"rtmp://192.168.199.187/live/room";
-static NSString* pushUrl = @"rtmp://10.0.17.213/live/room";
+//static NSString* pushUrl = @"rtmp://10.0.17.213/live/room";
 
 @interface LIveStartViewController ()
 {

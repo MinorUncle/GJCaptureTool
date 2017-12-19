@@ -73,6 +73,7 @@
         _pushAddr = url;
         _videoSize = @{@"360*640":[NSValue valueWithCGSize:CGSizeMake(360, 640)],
                        @"480*640":[NSValue valueWithCGSize:CGSizeMake(480, 640)],
+                       @"540*960":[NSValue valueWithCGSize:CGSizeMake(540, 960)],
                        @"720*1280":[NSValue valueWithCGSize:CGSizeMake(720, 1280)]
                        };
         
