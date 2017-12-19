@@ -24,11 +24,11 @@
     LIveStartViewController* controller = [[LIveStartViewController alloc]init];
 //    ViewController * controller = [[ViewController alloc]init];
     UINavigationController* nav = [[UINavigationController alloc]initWithRootViewController:controller];
-    nav.navigationBarHidden = YES;
+//    nav.navigationBarHidden = YES;
     //设置背景透明图片
-//    [nav.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
+    [nav.navigationBar setBackgroundImage:[UIImage new] forBarMetrics:UIBarMetricsDefault];
 //    //去掉 bar 下面有一条黑色的线
-//    [nav.navigationBar setShadowImage:[UIImage new]];
+    [nav.navigationBar setShadowImage:[UIImage new]];
 //    nav.navigationBar.userInteractionEnabled = NO;
 //    nav.navigationBar.translucent = true;
 //    [[[nav.navigationBar subviews] objectAtIndex:0] setAlpha:0];

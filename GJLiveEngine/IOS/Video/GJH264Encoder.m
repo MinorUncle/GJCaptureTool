@@ -47,7 +47,9 @@
         _profileLevel = profileLevelMain;
         _entropyMode  = EntropyMode_CABAC;
         _fristPts     = GINT64_MAX;
+#ifdef NETWORK_DELAY
         _dtsDelta     = 0;
+#endif
         _fristTime    = -1;
         _preDTS     = -1;
         [self creatEnCodeSession];

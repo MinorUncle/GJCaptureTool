@@ -85,7 +85,7 @@
         config.mAudioBitrate = 128*1000;
         _livePush = [[GJLivePush alloc]init];
         [_livePush setPushConfig:config];
-        _livePush.enableAec = YES;
+//        _livePush.enableAec = YES;
         _livePush.delegate = self;
         _livePush.cameraPosition = GJCameraPositionFront;
     
@@ -308,7 +308,17 @@
     
 
 }
-
+- (UIViewController *)findViewController:(UIView *)sourceView
+{
+    id target=sourceView;
+    while (target) {
+        target = ((UIResponder *)target).nextResponder;
+        if ([target isKindOfClass:[UIViewController class]]) {
+            break;
+        }
+    }
+    return target;
+}
 -(void)setFrame:(CGRect )frame{
     _frame = frame;
     self.view.frame = frame;
@@ -316,9 +326,10 @@
     CGRect rect = self.view.bounds;
     _livePush.previewView.frame = rect;
     
+    CGFloat hOffset = CGRectGetMaxY([self findViewController:self.view].navigationController.navigationBar.frame);
     int leftCount = 6;
-    rect.origin = CGPointMake(0, 20);
-    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.view.bounds.size.height-30) / leftCount);
+    rect.origin = CGPointMake(0, hOffset);
+    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.view.bounds.size.height-hOffset) / leftCount);
     _pushStateLab.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
@@ -337,7 +348,7 @@
     _currentV.frame = rect;
     
     int rightCount = 16;
-    rect.origin = CGPointMake(self.view.bounds.size.width*0.5, 20);
+    rect.origin = CGPointMake(self.view.bounds.size.width*0.5, hOffset);
     rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.view.bounds.size.height-30) / rightCount);
     _pushStartBtn.frame = rect;
     
@@ -426,7 +437,6 @@
             self.frame = [UIScreen mainScreen].bounds;
         }else{
             self.frame = _beforeFullframe;
-            [_view.superview sendSubviewToBack:_view];
         }
     }];
 }
@@ -441,7 +451,7 @@
                 [self.view addSubview:showView];
             }
             UIImage* image = [_livePush captureFreshDisplayImage];
-            NSTimer* timer = [NSTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
+            [NSTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
                 showView.image =image;// [_livePush captureFreshDisplayImage];
                 [showView setNeedsDisplay];
             }];
@@ -992,19 +1002,25 @@
 
 }
 @property (strong, nonatomic) UIView *bottomView;
-
-
-@property (strong, nonatomic) UIButton *exitBtn;
 @property(strong,nonatomic)NSMutableArray<PullManager*>* pulls;
 
 @end
 
 @implementation GJLivePushViewController
 
+
+-(void)barItemTap:(UIBarButtonItem*)item{
+    if (item == self.navigationItem.leftBarButtonItem) {
+        [self.navigationController popViewControllerAnimated:YES];
+    }else if(item == self.navigationItem.rightBarButtonItem){
+        
+    }
+}
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.title = @"直播间";
-
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithTitle:@"返回" style:UIBarButtonItemStylePlain target:self action:@selector(barItemTap:)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(barItemTap:)];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGDEBUG);
 //    RTMP_LogSetLevel(RTMP_LOGDEBUG);
@@ -1048,19 +1064,6 @@
         [_pulls addObject:pullManager];
         [self.view addSubview:pullManager.view];
     }
-    
-    _exitBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-//    [_exitBtn setBackgroundImage:[self backImageWithSize:CGSizeMake(50, 50) color:[UIColor redColor]] forState:UIControlStateNormal];
-    [_exitBtn setBackgroundColor:[UIColor whiteColor]];
-    [_exitBtn setTitle:@"返回" forState:UIControlStateNormal];
-    [_exitBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
-    _exitBtn.layer.cornerRadius = 5;
-    _exitBtn.layer.borderColor = [UIColor blackColor].CGColor;
-    _exitBtn.layer.borderWidth = 1;
-    [_exitBtn addTarget:self action:@selector(btnSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _exitBtn.frame = CGRectMake(10, 10, 60, 30);
-    [self.view addSubview:_exitBtn];
-
 }
 //-(UIImage*)backImageWithSize:(CGSize)size color:(UIColor*)color{
 //    UIGraphicsBeginImageContext(size);
@@ -1083,12 +1086,8 @@
 //    UIGraphicsEndImageContext();
 //    return image;
 //}
--(void)btnSelect:(UIButton*)btn{
-    if (btn == _exitBtn) {
-        [_pushManager.livePush chanceSticker];
-        [self.navigationController popViewControllerAnimated:YES];
-    }
-}
+
+
 -(void)updateFrame{
     CGRect rect = self.view.bounds;
     rect.size.height *= 0.5;
@@ -1225,6 +1224,8 @@ static OSStatus CreateCGImageFromCVPixelBuffer(CVPixelBufferRef pixelBuffer, CGI
         GJBufferPoolClean(defauleBufferPool(),false);
     }
 }
+
+
 -(void)dealloc{
 
     NSLog(@"dealloc:%@",self);
