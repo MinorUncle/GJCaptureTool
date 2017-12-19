@@ -8,7 +8,7 @@
 
 #import "LIveStartViewController.h"
 #import "GJLivePushViewController.h"
-static NSString* pullUlr = @"rtmp://10.0.1.65/live/room";
+static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/132399872.flv";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/73257119.flv";
 //static NSString* url = @"rtmp://192.168.199.187/live/room";
 //static NSString* url = @"rtmp://192.168.199.187/live/room";
@@ -17,7 +17,7 @@ static NSString* pullUlr = @"rtmp://10.0.1.65/live/room";
 
 
 //static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务器地址
-static NSString* pushUrl = @"rtmp://10.0.1.65/live/room";
+static NSString* pushUrl = @"rtmp://10.0.17.213/live/room";
 
 @interface LIveStartViewController ()
 {

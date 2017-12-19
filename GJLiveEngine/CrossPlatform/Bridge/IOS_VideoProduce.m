@@ -198,6 +198,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             //        [self.beautifyFilter addTarget:self.cropFilter];
         }else{
            _camera = [[GJImageARCapture alloc]initWithScene:_scene captureSize:size];
+//            [self.imageView addSubview:_scene.scene];
            _camera.frameRate              = _frameRate;
         }
 
