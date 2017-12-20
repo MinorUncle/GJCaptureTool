@@ -855,6 +855,13 @@ GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene){
     return result;
 }
 
+GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view){
+    pthread_mutex_lock(&context->lock);
+    GBool result = context->videoProducer->setCaptureView(context->videoProducer,view);
+    pthread_mutex_unlock(&context->lock);
+    return result;
+}
+
 GBool GJLivePush_StartPreview(GJLivePushContext *context) {
     pthread_mutex_lock(&context->lock);
 

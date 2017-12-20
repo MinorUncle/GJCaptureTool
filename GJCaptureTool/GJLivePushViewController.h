@@ -12,5 +12,6 @@
 @property(nonatomic,copy)NSString* pullAddr;
 @property(nonatomic,copy)NSString* pushAddr;
 @property(nonatomic,assign)BOOL isAr;
+@property(nonatomic,assign)BOOL isUILive;
 
 @end

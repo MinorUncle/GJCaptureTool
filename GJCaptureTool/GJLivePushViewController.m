@@ -20,7 +20,7 @@
 @interface PushManager : NSObject <GJLivePushDelegate>
 {
     NSDictionary* _videoSize;
-
+    
 }
 
 @property (strong, nonatomic) GJLivePush *livePush;
@@ -86,10 +86,10 @@
         config.mAudioBitrate = 128*1000;
         _livePush = [[GJLivePush alloc]init];
         [_livePush setPushConfig:config];
-//        _livePush.enableAec = YES;
+        //        _livePush.enableAec = YES;
         _livePush.delegate = self;
         _livePush.cameraPosition = GJCameraPositionFront;
-    
+        
         
         [self buildUI];
         
@@ -104,13 +104,8 @@
     UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
     [_view addGestureRecognizer:tap];
     
-    _livePush.previewView.contentMode = UIViewContentModeScaleAspectFit;
+    _livePush.previewView.contentMode = UIViewContentModeScaleAspectFill;
     _livePush.previewView.backgroundColor = [UIColor blackColor];
-    [self.view addSubview:_livePush.previewView];
-    
-    _livePush.previewView.contentMode = UIViewContentModeScaleAspectFit;
-    _livePush.previewView.backgroundColor = [UIColor blackColor];
-    
     [self.view addSubview:_livePush.previewView];
     
     _pushStartBtn = [[UIButton alloc]init];
@@ -307,7 +302,7 @@
     [_outputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_outputGain];
     
-
+    
 }
 - (UIViewController *)findViewController:(UIView *)sourceView
 {
@@ -350,7 +345,7 @@
     
     int rightCount = 16;
     rect.origin = CGPointMake(self.view.bounds.size.width*0.5, hOffset);
-    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.view.bounds.size.height-30) / rightCount);
+    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.view.bounds.size.height-hOffset) / rightCount);
     _pushStartBtn.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
@@ -445,19 +440,6 @@
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;
     if (btn == _trackImage) {
-        {
-            static UIImageView* showView;
-            if (showView == nil) {
-                showView = [[UIImageView alloc]initWithFrame:CGRectMake(50, 100, 100, 100)];
-                [self.view addSubview:showView];
-            }
-            UIImage* image = [_livePush captureFreshDisplayImage];
-            [NSTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
-                showView.image =image;// [_livePush captureFreshDisplayImage];
-                [showView setNeedsDisplay];
-            }];
-            return;
-        }
         if (btn.selected) {
             NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
             images[0] = [UIImage imageNamed:[NSString stringWithFormat:@"%d.png",1]];
@@ -493,7 +475,7 @@
                 overlays[0] = [GJOverlayAttribute overlayAttributeWithImage:[self getSnapshotImageWithSize:rect.size] frame:frame rotate:0];
             }
             [_livePush startStickerWithImages:overlays fps:15 updateBlock:^ void(NSInteger index,const GJOverlayAttribute* ioAttr, BOOL *ioFinish) {
-
+                
                 *ioFinish = NO;
                 if (*ioFinish) {
                     btn.selected = NO;
@@ -771,7 +753,7 @@
 -(void)buildUI{
     _view = [[UIView alloc]init];
     [_view addSubview:[_pull getPreviewView]];
-
+    
     UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
     [_view addGestureRecognizer:tap];
     
@@ -870,7 +852,7 @@
     rect.size.height = frame.size.height - rect.origin.y;
     
     _pull.previewView.frame = rect;
-
+    
     int count = 10;
     rect.size.height *= 1.0/count;
     _pullStateLab.frame = rect;
@@ -1000,7 +982,7 @@
 @interface GJLivePushViewController ()
 {
     PushManager* _pushManager;
-
+    
 }
 @property (strong, nonatomic) UIView *bottomView;
 @property(strong,nonatomic)NSMutableArray<PullManager*>* pulls;
@@ -1024,9 +1006,12 @@
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(barItemTap:)];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGDEBUG);
-//    RTMP_LogSetLevel(RTMP_LOGDEBUG);
+    //    RTMP_LogSetLevel(RTMP_LOGDEBUG);
     _pushManager = [[PushManager alloc]initWithPushUrl:_pushAddr];
-
+    
+    [self buildUI];
+    [self updateFrame];
+    
     if (_isAr) {
         if (@available(iOS 11.0, *)) {
             if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){
@@ -1037,12 +1022,13 @@
         } else {
             // Fallback on earlier versions
         }
+    }else{
+        _isUILive = YES;
+        _pushManager.livePush.captureView = _pulls[0].view;
     }
+    
 
     
-    [self buildUI];
-    [self updateFrame];
- 
 }
 
 -(void)viewWillAppear:(BOOL)animated{
@@ -1055,7 +1041,7 @@
     [_pushManager.livePush stopPreview];
 }
 -(void)buildUI{
-  
+    
     [self.view addSubview:_pushManager.view];
     
     for (int i = 0; i<PULL_COUNT; i++) {
@@ -1095,7 +1081,7 @@
     _pushManager.frame = rect;
     
     int count = PULL_COUNT + 2;
-
+    
     CGRect sRect;
     sRect.origin.x = 0;
     sRect.origin.y = CGRectGetMaxY(rect);
@@ -1133,7 +1119,7 @@
         _pushManager.livePush.outOrientation = orientation;
     }];
     NSLog(@"didRotateFromInterfaceOrientation");
-
+    
 }
 
 -(void)viewDidDisappear:(BOOL)animated{
@@ -1213,8 +1199,8 @@ static OSStatus CreateCGImageFromCVPixelBuffer(CVPixelBufferRef pixelBuffer, CGI
 
 
 -(void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event{
-//    UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"提示" message:@"是否测试释放推拉流对象" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:@"取消", nil];
-//    [alert show];
+    //    UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"提示" message:@"是否测试释放推拉流对象" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:@"取消", nil];
+    //    [alert show];
 }
 
 - (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex{
@@ -1228,19 +1214,20 @@ static OSStatus CreateCGImageFromCVPixelBuffer(CVPixelBufferRef pixelBuffer, CGI
 
 
 -(void)dealloc{
-
+    
     NSLog(@"dealloc:%@",self);
 }
 /*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
+ #pragma mark - Navigation
+ 
+ // In a storyboard-based application, you will often want to do a little preparation before navigation
+ - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+ // Get the new view controller using [segue destinationViewController].
+ // Pass the selected object to the new view controller.
+ }
+ */
 
 
 
 @end
+

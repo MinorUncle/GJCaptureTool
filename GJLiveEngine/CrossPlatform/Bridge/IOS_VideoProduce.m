@@ -16,6 +16,7 @@
 #import "GJLog.h"
 #import "GPUImageVideoCamera.h"
 #import "GJImageARCapture.h"
+#import "GJImageUICapture.h"
 #import <stdlib.h>
 typedef enum { //filter深度
     kFilterCamera = 0,
@@ -121,13 +122,13 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property (nonatomic, assign) BOOL                    horizontallyMirror;
 @property (nonatomic, assign) BOOL                    streamMirror;
 @property (nonatomic, assign) BOOL                    previewMirror;
-@property (nonatomic, assign) CGSize                  captureSize;
 @property (nonatomic, assign) int                     frameRate;
 @property (nonatomic, assign) GJPixelFormat           pixelFormat;
 @property (nonatomic, assign) GJRetainBufferPool *    bufferPool;
 @property (nonatomic, strong) GJImagePictureOverlay * sticker;
 @property (nonatomic, strong) GJImageTrackImage *     trackImage;
 @property (nonatomic, strong) id<GJImageARScene>      scene;
+@property (nonatomic, strong) UIView*                 captureView;
 
 
 @property (nonatomic, copy) VideoRecodeCallback callback;
@@ -163,6 +164,16 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     self.destSize = CGSizeMake((CGFloat) pixelFormat.mWidth, (CGFloat) pixelFormat.mHeight);
 }
 
+-(void)setScene:(id<GJImageARScene>)scene{
+    _captureView = nil;
+    _scene = scene;
+}
+
+-(void)setCaptureView:(UIView *)captureView{
+    _scene = nil;
+    _captureView = captureView;
+}
+
 - (void)dealloc {
     if (_sticker) {
         [_sticker stop];
@@ -185,21 +196,22 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     if (_camera == nil) {
 
         CGSize size = _destSize;
-        if (_outputOrientation == UIInterfaceOrientationPortrait ||
-            _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
-            size.height += size.width;
-            size.width  = size.height - size.width;
-            size.height = size.height - size.width;
-        }
-        if (_scene == nil) {
-  
+
+        if (_scene != nil) {
+            _camera = [[GJImageARCapture alloc]initWithScene:_scene captureSize:size];
+            //            [self.imageView addSubview:_scene.scene];
+        }else if(_captureView != nil){
+            _camera = [[GJImageUICapture alloc]initWithView:_captureView];
+        }else{
+            if (_outputOrientation == UIInterfaceOrientationPortrait ||
+                _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
+                size.height += size.width;
+                size.width  = size.height - size.width;
+                size.height = size.height - size.width;
+            }
             NSString *preset               = getCapturePresetWithSize(size);
             _camera                        = [[GPUImageVideoCamera alloc] initWithSessionPreset:preset cameraPosition:_cameraPosition];
             //        [self.beautifyFilter addTarget:self.cropFilter];
-        }else{
-           _camera = [[GJImageARCapture alloc]initWithScene:_scene captureSize:size];
-//            [self.imageView addSubview:_scene.scene];
-           _camera.frameRate              = _frameRate;
         }
 
         self.frameRate          = _frameRate;
@@ -421,7 +433,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     CGSize previewSize = _imageView.bounds.size;
     CGRect region =CGRectZero;
     
-    if (_imageView.superview != nil) {
+    if (_imageView && _imageView.superview != nil) {
         switch (_imageView.contentMode) {
             case UIViewContentModeScaleAspectFill://显示在显示视图内
             {
@@ -563,15 +575,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         self.camera.captureSessionPreset = preset;
     }
 
-    CGSize capture = getCaptureSizeWithSize(size);
-    if (_outputOrientation == UIInterfaceOrientationPortrait ||
-        _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
-//        实际获得的大小，需要转换回来
-        capture.height += capture.width;
-        capture.width  = capture.height - capture.width;
-        capture.height = capture.height - capture.width;
-    }
-    _captureSize               = capture;
+    CGSize capture = self.camera.captureSize;
     CGRect region              = [self getCropRectWithSourceSize:capture target:_destSize];
     self.cropFilter.cropRegion = region;
     [_cropFilter forceProcessingAtSize:_destSize];
@@ -756,6 +760,12 @@ inline static GBool videoProduceSetARScene(struct _GJVideoProduceContext *contex
     return GTrue;
 }
 
+inline static GBool videoProduceSetCaptureView(struct _GJVideoProduceContext *context, GView view) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    recode.captureView = (__bridge UIView*)(view);
+    return GTrue;
+}
+
 inline static GBool videoProduceSetHorizontallyMirror(struct _GJVideoProduceContext *context, GBool mirror) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
     [recode setHorizontallyMirror:mirror];
@@ -791,7 +801,7 @@ inline static GVoid videoProduceStopPreview(struct _GJVideoProduceContext *conte
 
 inline static GHandle getFreshDisplayImage(struct _GJVideoProduceContext *context) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    return CFBridgingRetain([recode getFreshDisplayImage]);
+    return (GHandle)CFBridgingRetain([recode getFreshDisplayImage]);
 }
 
 inline static GBool addSticker(struct _GJVideoProduceContext *context, const GVoid *overlays,  GInt32 fps, GJStickerUpdateCallback callback, const GVoid *userData) {
@@ -831,8 +841,9 @@ inline static GVoid stopTrackImage(struct _GJVideoProduceContext *context) {
 inline static GSize getCaptureSize(struct _GJVideoProduceContext *context) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
     GSize             size;
-    size.width  = recode.captureSize.width;
-    size.height = recode.captureSize.height;
+    CGSize capture = recode.camera.captureSize;
+    size.width = capture.width;
+    size.height = capture.height;
     return size;
 }
 
@@ -859,10 +870,12 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     context->addSticker            = addSticker;
     context->chanceSticker         = chanceSticker;
     context->setARScene            = videoProduceSetARScene;
+    context->setCaptureView        = videoProduceSetCaptureView;
     context->setVideoFormat        = videoProduceSetVideoFormat;
     context->startTrackImage       = startTrackImage;
     context->stopTrackImage        = stopTrackImage;
     context->getFreshDisplayImage   = getFreshDisplayImage;
+    
 }
 
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {

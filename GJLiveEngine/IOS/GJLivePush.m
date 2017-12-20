@@ -122,6 +122,11 @@ static GVoid livePushCallback(GHandle               userDate,
     _ARScene = ARScene;
 }
 
+-(void)setCaptureView:(UIView *)captureView{
+    GJLivePush_SetCaptureView(_livePush, (__bridge GView)(captureView));
+    _captureView = captureView;
+}
+
 - (void)startPreview {
     GJLivePush_StartPreview(_livePush);
 }

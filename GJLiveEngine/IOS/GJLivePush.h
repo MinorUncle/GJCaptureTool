@@ -97,6 +97,8 @@ typedef void(^OverlaysUpdate)(NSInteger index,const GJOverlayAttribute* _Nullabl
 
 //配置ar场景，开启ar模式，预览和推流前配置。scene= nil表示取消;
 @property (nonatomic,retain         ) id  <GJImageARScene> _Nullable                    ARScene;
+//录屏直播
+@property (nonatomic,retain         ) UIView*              _Nullable                    captureView;
 
 //- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
 
