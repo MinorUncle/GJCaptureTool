@@ -20,6 +20,12 @@ typedef GVoid (*RecodeCompleteCallback) (GHandle userData,const GChar* filePath,
 typedef GVoid (*GJStickerUpdateCallback)(GHandle userDate,GLong index,const GHandle ioParm,GBool* ioFinish);
 typedef GVoid (*AudioMixFinishCallback) (GHandle userData,const GChar* filePath, GHandle error);
 
+typedef struct GJPipleNode{
+    struct GJPipleNode* nextNodes;
+    GInt32 nextCount;
+    GBool (*nodeReceiveData)(GJRetainBuffer* data,GJType dataType);
+}GJPipleNode;
+
 typedef struct _GJRecodeContext{
     GHandle obaque;
     GBool   (*setup)                  (struct _GJRecodeContext* context, const GChar* fileUrl, RecodeCompleteCallback callback, GHandle userHandle);
@@ -43,6 +49,7 @@ typedef struct _GJPictureDisplayContext{
 }GJPictureDisplayContext;
 
 typedef struct _GJVideoProduceContext{
+    GJPipleNode pipleNode;
     GHandle obaque;
     GBool   (*videoProduceSetup)      (struct _GJVideoProduceContext* context, VideoFrameOutCallback callback, GHandle userData);
     GVoid   (*videoProduceUnSetup)    (struct _GJVideoProduceContext* context);
@@ -74,6 +81,7 @@ typedef struct _GJVideoProduceContext{
 }GJVideoProduceContext;
 
 typedef struct _GJAudioProduceContext{
+    GJPipleNode pipleNode;
     GHandle obaque;
     GBool   (*audioProduceSetup)      (struct _GJAudioProduceContext* context, AudioFrameOutCallback callback, GHandle userData);
     GVoid   (*audioProduceUnSetup)    (struct _GJAudioProduceContext* context);
@@ -108,6 +116,7 @@ typedef struct _GJAudioPlayContext{
 }GJAudioPlayContext;
 
 typedef struct _GJEncodeToAACContext{
+    GJPipleNode pipleNode;
     GHandle obaque;
     GBool   (*encodeSetup)            (struct _GJEncodeToAACContext* context, GJAudioFormat sourceFormat, GJAudioStreamFormat destForamt, AACPacketOutCallback callback,                GHandle userData);
     GVoid   (*encodeUnSetup)          (struct _GJEncodeToAACContext* context);
@@ -117,6 +126,7 @@ typedef struct _GJEncodeToAACContext{
 }GJEncodeToAACContext;
 
 typedef struct _GJAACDecodeContext{
+    GJPipleNode pipleNode;
     GHandle obaque;
     pthread_mutex_t lock;
 
@@ -127,6 +137,7 @@ typedef struct _GJAACDecodeContext{
 }GJAACDecodeContext;
 
 typedef struct _GJH264DecodeContext{
+    GJPipleNode pipleNode;
     GHandle obaque;
     GBool   (*decodeSetup)            (struct _GJH264DecodeContext* context, GJPixelType format, VideoFrameOutCallback callback, GHandle userData);
     GVoid   (*decodeUnSetup)          (struct _GJH264DecodeContext* context);
@@ -136,6 +147,7 @@ typedef struct _GJH264DecodeContext{
 }GJH264DecodeContext;
 
 typedef struct _GJEncodeToH264eContext{
+    GJPipleNode pipleNode;
     GHandle obaque;
     GBool   (*encodeSetup)            (struct _GJEncodeToH264eContext* context, GJPixelFormat format, H264PacketOutCallback callback, GHandle userData);
     GVoid   (*encodeUnSetup)          (struct _GJEncodeToH264eContext* context);
