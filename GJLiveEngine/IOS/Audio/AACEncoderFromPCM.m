@@ -245,7 +245,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "running状态编码错误 times:%d", _errorTimes++);
         return NO;
     }
-    R_BufferSetSize(audioBuffer, outCacheBufferList.mBuffers[0].mDataByteSize + 7);
+    R_BufferUseSize(audioBuffer, outCacheBufferList.mBuffers[0].mDataByteSize + 7);
     //    audioBuffer->size = outCacheBufferList.mBuffers[0].mDataByteSize+7;
     adtsDataForPacketLength(outCacheBufferList.mBuffers[0].mDataByteSize, R_BufferStart(&packet->retain), _destFormat.mSampleRate, _destFormat.mChannelsPerFrame);
 

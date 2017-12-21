@@ -122,7 +122,7 @@
     int needSize = _sizePerPacket - R_BufferSize(&_alignCacheFrame->retain);
     int leftSize = frame->mBuffers[0].mDataByteSize;
     while (leftSize >= needSize) {
-        R_BufferWriteAppend(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, needSize);
+        R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, needSize);
         _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
         _alignCacheFrame->pts     = time - (GInt64)(R_BufferSize(&_alignCacheFrame->retain) * _durPerSize);
 
@@ -141,7 +141,7 @@
     }
     if (leftSize > 0) {
         _alignCacheFrame->pts = (GInt64) time;
-        R_BufferWriteAppend(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, leftSize);
+        R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, leftSize);
     }
 }
 

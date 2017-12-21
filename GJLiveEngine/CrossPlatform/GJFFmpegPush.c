@@ -21,7 +21,6 @@ struct _GJStreamPush {
     GJVideoStreamFormat *videoFormat;
 
     GJQueue *sendBufferQueue;
-#define MAX_URL_LENGTH 200
     char     pushUrl[MAX_URL_LENGTH];
 
     pthread_t       sendThread;

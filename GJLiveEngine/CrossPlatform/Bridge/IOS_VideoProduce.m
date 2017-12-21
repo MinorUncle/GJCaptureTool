@@ -53,7 +53,7 @@ CGSize getCaptureSizeWithSize(CGSize size) {
     return captureSize;
 }
 
-NSString *getCapturePresetWithSize(CGSize size) {
+static NSString *getCapturePresetWithSize(CGSize size) {
     NSString *capturePreset;
     if (size.width <= 353 && size.height <= 289) {
         capturePreset = AVCaptureSessionPreset352x288;
@@ -523,7 +523,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].pixelBuffer;
             CVPixelBufferRetain(pixel_buffer);
             R_GJPixelFrame *frame                                   = (R_GJPixelFrame *) GJRetainBufferPoolGetData(wkSelf.bufferPool);
-            ((CVPixelBufferRef *) R_BufferStart(&frame->retain))[0] = pixel_buffer;
+            R_BufferWrite(&frame->retain, (GUInt8*)&pixel_buffer, sizeof(CVPixelBufferRef));
             frame->height                                           = (GInt32) wkSelf.destSize.height;
             frame->width                                            = (GInt32) wkSelf.destSize.width;
             wkSelf.callback(frame);
@@ -563,19 +563,21 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 - (void)updateCropSize {
     CGSize size = _destSize;
-    if (_outputOrientation == UIInterfaceOrientationPortrait ||
-        _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
-//        preset在此状况下做过转换
-        size.height += size.width;
-        size.width  = size.height - size.width;
-        size.height = size.height - size.width;
-    }
-    NSString *preset = getCapturePresetWithSize(size);
-    if (![preset isEqualToString:self.camera.captureSessionPreset]) {
-        self.camera.captureSessionPreset = preset;
-    }
+
+//    if (![preset isEqualToString:self.camera.captureSessionPreset]) {
+//        self.camera.captureSessionPreset = preset;
+//    }
 
     CGSize capture = self.camera.captureSize;
+    
+    if (capture.height - size.height > 0.001 ||
+        size.height - capture.height > 0.001 ||
+        capture.width - size.width > 0.001 ||
+        size.width - capture.width > 0.001) {
+        self.camera.captureSize = size;
+        capture = self.camera.captureSize;
+    }
+    
     CGRect region              = [self getCropRectWithSourceSize:capture target:_destSize];
     self.cropFilter.cropRegion = region;
     [_cropFilter forceProcessingAtSize:_destSize];

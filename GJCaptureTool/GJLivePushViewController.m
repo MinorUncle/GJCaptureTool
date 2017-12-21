@@ -104,7 +104,7 @@
     UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
     [_view addGestureRecognizer:tap];
     
-    _livePush.previewView.contentMode = UIViewContentModeScaleAspectFill;
+    _livePush.previewView.contentMode = UIViewContentModeScaleAspectFit;
     _livePush.previewView.backgroundColor = [UIColor blackColor];
     [self.view addSubview:_livePush.previewView];
     
@@ -1013,18 +1013,14 @@
     [self updateFrame];
     
     if (_isAr) {
-        if (@available(iOS 11.0, *)) {
             if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){
                 [[[UIAlertView alloc]initWithTitle:@"提示" message:@"该手机不支持ar,已切换到普通直播" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles: nil] show];
             }else{
                 _pushManager.livePush.ARScene = [[GJSunSystemARScene alloc]init];
             }
-        } else {
-            // Fallback on earlier versions
-        }
     }else{
-        _isUILive = YES;
-        _pushManager.livePush.captureView = _pulls[0].view;
+//        _isUILive = YES;
+//        _pushManager.livePush.captureView = _pulls[0].view;
     }
     
 

@@ -448,6 +448,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
 
         *outSize = R_BufferSize(&audioBuffer->retain);
         memcpy(data, R_BufferStart(&audioBuffer->retain), *outSize);
+        
         _syncControl->audioInfo.trafficStatus.leave.count++;
         _syncControl->audioInfo.trafficStatus.leave.ts  = (GLong) audioBuffer->pts;
         _syncControl->audioInfo.trafficStatus.leave.clock = GJ_Gettime() / 1000;
@@ -461,7 +462,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
             }
         }
 #endif
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "消耗音频 PTS:%lld size:%d",audioBuffer->pts,audioBuffer->retain.size);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "消耗音频 PTS:%lld size:%d",audioBuffer->pts,R_BufferSize(&audioBuffer->retain));
         R_BufferUnRetain(&audioBuffer->retain);
         return GTrue;
     } else {

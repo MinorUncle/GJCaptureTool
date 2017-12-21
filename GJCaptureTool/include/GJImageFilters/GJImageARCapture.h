@@ -37,7 +37,7 @@ typedef void(^ARUpdateBlock)();
 @property (nonatomic,assign) CGFloat zoomFactor;
 
 /// This enables the capture session preset to be changed on the fly
-@property (readwrite, nonatomic, copy) NSString *captureSessionPreset;
+//@property (readwrite, nonatomic, copy) NSString *captureSessionPreset;
 @property(readwrite, nonatomic) UIInterfaceOrientation outputImageOrientation;
 
 /// This sets the frame rate of the camera (iOS 5 and above only)
@@ -45,7 +45,7 @@ typedef void(^ARUpdateBlock)();
  Setting this to 0 or below will set the frame rate back to the default setting for a particular preset.
  */
 @property (readwrite) int32_t frameRate;
-@property (readwrite) CGSize captureSize;
+@property(assign, nonatomic) CGSize captureSize;
 
 @property (nonatomic,assign) CGPoint focusPoint;
 

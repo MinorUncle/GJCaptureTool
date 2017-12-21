@@ -26,11 +26,6 @@
 #define GRationalMake(num,den)  (GRational){(GInt32)(num),(GInt32)(den)}
 #define GRationalValue(rational) (GFloat32)(rational).num*1.0/(rational).den
 
-//typedef struct GStickerParm{
-//    GCRect frame;
-//    GFloat32 rotation;
-//    GHandle image;
-//} GStickerParm;
 typedef struct TrafficUnit{
     GLong ts;//ms,最新pts，排序后
     GTime clock;//ms,最新的系统时间
@@ -99,6 +94,8 @@ typedef struct GJPacket{
     GInt32 extendDataSize;
     GJPacketFlag  flag;
 }R_GJPacket;
+
+
 
 //typedef struct GJStreamFrame{
 //    union{

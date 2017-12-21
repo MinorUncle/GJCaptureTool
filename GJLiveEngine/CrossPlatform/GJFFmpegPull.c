@@ -103,14 +103,12 @@ static GHandle pullRunloop(GHandle parm) {
                     avccPacket->dataOffset = avccPacket->dataSize = 0;
                     avccPacket->extendDataOffset = 0;
                     avccPacket->extendDataSize   = 8 + spsSize + ppsSize;
-                    GUInt8 *packetData     = R_BufferStart(&avccPacket->retain) + avccPacket->dataOffset;
                     GInt32  spsNsize       = htonl(spsSize);
                     GInt32  ppsNsize       = htonl(ppsSize);
-                    memcpy(packetData, &spsNsize, 4);
-                    memcpy(packetData + 4, sps, spsSize);
-                    memcpy(packetData + 4 + spsSize, &ppsNsize, 4);
-                    memcpy(packetData + 8 + spsSize, pps, ppsSize);
-                    R_BufferSetSize(&avccPacket->retain, 8 + spsSize + ppsSize);
+                    R_BufferWrite(&avccPacket->retain, (GUInt8*)&spsNsize, 4);
+                    R_BufferWrite(&avccPacket->retain, sps, spsSize);
+                    R_BufferWrite(&avccPacket->retain, (GUInt8*)&ppsNsize, 4);
+                    R_BufferWrite(&avccPacket->retain, pps, ppsSize);
                     pthread_mutex_lock(&pull->mutex);
                     if (!pull->releaseRequest) {
                         pull->dataCallback(pull, avccPacket, pull->dataCallbackParm);
@@ -183,7 +181,6 @@ static GHandle pullRunloop(GHandle parm) {
             AVBufferRef *buffer     = av_buffer_ref(pkt.buf);
             R_GJPacket * h264Packet = (R_GJPacket *) GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             R_BufferPack((GJRetainBuffer **) &h264Packet, pkt.data, pkt.size, packetBufferRelease, buffer);
-            R_BufferSetSize(&h264Packet->retain, pkt.size);
             h264Packet->dataOffset = 0;
 #endif
 
@@ -216,7 +213,6 @@ static GHandle pullRunloop(GHandle parm) {
             R_GJPacket * aacPacket = (R_GJPacket *) GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPacket));
             AVBufferRef *buffer    = av_buffer_ref(pkt.buf);
             R_BufferPack((GJRetainBuffer **) &aacPacket, pkt.data, pkt.size, packetBufferRelease, buffer);
-            R_BufferSetSize(&aacPacket->retain, pkt.size);
             aacPacket->dataOffset = 0;
 #endif
             aacPacket->dataSize = pkt.size;

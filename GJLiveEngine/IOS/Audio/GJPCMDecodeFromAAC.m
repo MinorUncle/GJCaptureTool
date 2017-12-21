@@ -256,7 +256,7 @@ static const int mpeg4audio_sample_rates[16] = {
             break;
         }
 
-        R_BufferSetSize(&frame->retain, outCacheBufferList.mBuffers[0].mDataByteSize);
+        R_BufferUseSize(&frame->retain, outCacheBufferList.mBuffers[0].mDataByteSize);
         frame->pts  = _currentPts;
         frame->dts  = _currentPts;
         _currentPts = -1;
