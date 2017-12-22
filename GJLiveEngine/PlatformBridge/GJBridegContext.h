@@ -21,10 +21,30 @@ typedef GVoid (*GJStickerUpdateCallback)(GHandle userDate,GLong index,const GHan
 typedef GVoid (*AudioMixFinishCallback) (GHandle userData,const GChar* filePath, GHandle error);
 
 typedef struct GJPipleNode{
-    struct GJPipleNode* nextNodes;
-    GInt32 nextCount;
+    //可能有多个super，比如发送node会连接到音频编码和视频编码
+    struct GJPipleNode** superNodes;
+    GInt32 superCount;
+//    可能有多个sub，比如编码器会连接到发送器和录制器
+    struct GJPipleNode** subNodes;
+    GInt32 subCount;
     GBool (*nodeReceiveData)(GJRetainBuffer* data,GJType dataType);
+//    GBool (*nodeSetup)();
+    GBool (*nodeDealloc)();
 }GJPipleNode;
+
+GBool GJPipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode);
+
+
+/**
+ 断开superNode与subNode的连接
+
+ @param superNode superNode
+ @param subNode subNode
+ @param destorySubs 是否销毁独立的子路径
+ @return return value description
+ */
+GBool GJPipleDisConnectNode(GJPipleNode* superNode, GJPipleNode* subNode, GBool destorySubs);
+
 
 typedef struct _GJRecodeContext{
     GHandle obaque;

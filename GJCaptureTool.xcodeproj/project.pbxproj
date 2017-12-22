@@ -59,6 +59,7 @@
 		6A96CD691F258750000DC4FE /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A96CD591F258740000DC4FE /* libavformat.a */; };
 		6A96CD6A1F258750000DC4FE /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A96CD631F258740000DC4FE /* libavutil.a */; };
 		6A9856C51F2B3D2500128480 /* IOS_RAOPPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */; };
+		6AA09E231FECABE30089354B /* GJBridgeContext.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A50C1ECB4DFE0009E49A /* GJBridgeContext.c */; };
 		6AA453681F146A1A0009FB64 /* GJStreamPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453661F146A1A0009FB64 /* GJStreamPush.h */; };
 		6AA649011FC2C99F00AA3CAC /* LIveStartViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB297E41F4D8A9C00115220 /* LIveStartViewController.m */; };
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
@@ -336,13 +337,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = C58157021D9E537800B9118F;
 			remoteInfo = swscale;
-		};
-		AE04CA3B1FEC06EA006B5BDF /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = AEA704B01E745D8500C2E36B;
-			remoteInfo = ffplayer;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -1095,7 +1089,6 @@
 				6A96CD631F258740000DC4FE /* libavutil.a */,
 				6A96CD651F258740000DC4FE /* libpostproc.a */,
 				6A96CD671F258740000DC4FE /* libswscale.a */,
-				AE04CA3C1FEC06EA006B5BDF /* ffplayer */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2063,13 +2056,6 @@
 			remoteRef = 6A96CD661F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE04CA3C1FEC06EA006B5BDF /* ffplayer */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = ffplayer;
-			remoteRef = AE04CA3B1FEC06EA006B5BDF /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -2145,6 +2131,7 @@
 				6A435CA11F2757300046CEA3 /* GJH264Encoder.m in Sources */,
 				AE70A53C1ECB4DFE0009E49A /* GJLivePush.m in Sources */,
 				6AE37BD81ED5956800B049EB /* GJLivePushContext.c in Sources */,
+				6AA09E231FECABE30089354B /* GJBridgeContext.c in Sources */,
 				6ABF2B231F0B413600721DB3 /* IOS_H264Decode.m in Sources */,
 				6AA649011FC2C99F00AA3CAC /* LIveStartViewController.m in Sources */,
 				AE70A5281ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m in Sources */,
