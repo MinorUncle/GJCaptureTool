@@ -263,8 +263,16 @@ GVoid streamPushMessageCallback(GHandle userData, kStreamPushMessageType message
             GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "推流连接成功");
             context->connentClock = GJ_Gettime() / 1000;
             pthread_mutex_lock(&context->lock);
+            
+            GJPipleConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
+            GJPipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->videoPush);
+            
+            GJPipleConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
+            GJPipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->videoPush);
+            
             context->audioProducer->audioProduceStart(context->audioProducer);
             context->videoProducer->startProduce(context->videoProducer);
+            
             pthread_mutex_unlock(&context->lock);
             GLong during = (GLong)(context->connentClock - context->startPushClock);
             context->callback(context->userData, GJLivePush_connectSuccess, &during);
@@ -722,6 +730,57 @@ GVoid GJLivePush_SetConfig(GJLivePushContext *context, const GJPushConfig *confi
     pthread_mutex_unlock(&context->lock);
 }
 
+GBool _livePushSetupAudioEncodeIfNeed(GJLivePushContext *context){
+    GBool result = GTrue;
+    GJAudioFormat aFormat     = {0};
+    aFormat.mBitsPerChannel   = 16;
+    aFormat.mType             = GJAudioType_PCM;
+    aFormat.mFramePerPacket   = 1;
+    aFormat.mSampleRate       = context->pushConfig->mAudioSampleRate;
+    aFormat.mChannelsPerFrame = context->pushConfig->mAudioChannel;
+    
+    GJAudioStreamFormat aDFormat;
+    aDFormat.bitrate                = context->pushConfig->mAudioBitrate;
+    aDFormat.format                 = aFormat;
+    aDFormat.format.mFramePerPacket = 1024;
+    aDFormat.format.mType           = GJAudioType_AAC;
+    
+    GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "SetupAudioEncode");
+    if (context->audioEncoder->obaque == GNULL) {
+        context->audioEncoder->encodeSetup(context->audioEncoder, aFormat, aDFormat, aacPacketOutCallback, context);
+    }
+    return result;
+}
+
+GBool _livePushSetupVideoEncodeIfNeed(GJLivePushContext *context){
+    GBool result = GTrue;
+    GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "SetupAudioEncode");
+    GJPixelFormat vFormat = {0};
+    vFormat.mHeight       = (GUInt32) context->pushConfig->mPushSize.height;
+    vFormat.mWidth        = (GUInt32) context->pushConfig->mPushSize.width;
+    vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
+    if (context->videoEncoder->obaque == GNULL) {
+        context->videoEncoder->encodeSetup(context->videoEncoder, vFormat, h264PacketOutCallback, context);
+    }
+    context->videoEncoder->encodeSetProfile(context->videoEncoder, profileLevelMain);
+    context->videoEncoder->encodeSetGop(context->videoEncoder, context->pushConfig->mFps*4);
+    context->videoEncoder->encodeAllowBFrame(context->videoEncoder, GTrue);
+    context->videoEncoder->encodeSetEntropy(context->videoEncoder, EntropyMode_CABAC);
+    context->videoEncoder->encodeSetBitrate(context->videoEncoder, context->pushConfig->mVideoBitrate);
+    VideoDynamicInfo info;
+    info.sourceFPS     = info.currentFPS = context->pushConfig->mFps;
+    info.sourceBitrate = info.currentBitrate = context->pushConfig->mVideoBitrate;
+    context->callback(context->userData, GJLivePush_dynamicVideoUpdate, &info);
+    return result;
+}
+
+GBool _livePushSetupAudioRecodeIfNeed(GJLivePushContext *context){
+    GBool result = GTrue;
+    GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "SetupAudioEncode");
+    
+    return result;
+}
+
 GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
 
     GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "GJLivePush_StartPush url:%s", url);
@@ -763,39 +822,29 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
                 context->netSpeedUnit[i] = -1;
             }
 
+            _livePushSetupAudioEncodeIfNeed(context);
+
+            _livePushSetupVideoEncodeIfNeed(context);
+            
             GJAudioFormat aFormat     = {0};
             aFormat.mBitsPerChannel   = 16;
             aFormat.mType             = GJAudioType_PCM;
             aFormat.mFramePerPacket   = 1;
             aFormat.mSampleRate       = context->pushConfig->mAudioSampleRate;
             aFormat.mChannelsPerFrame = context->pushConfig->mAudioChannel;
-
+            
             GJAudioStreamFormat aDFormat;
             aDFormat.bitrate                = context->pushConfig->mAudioBitrate;
             aDFormat.format                 = aFormat;
             aDFormat.format.mFramePerPacket = 1024;
             aDFormat.format.mType           = GJAudioType_AAC;
-            if (context->audioEncoder->obaque == GNULL) {
-                context->audioEncoder->encodeSetup(context->audioEncoder, aFormat, aDFormat, aacPacketOutCallback, context);
-            }
+           
 
             GJPixelFormat vFormat = {0};
             vFormat.mHeight       = (GUInt32) context->pushConfig->mPushSize.height;
             vFormat.mWidth        = (GUInt32) context->pushConfig->mPushSize.width;
             vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
-            if (context->videoEncoder->obaque == GNULL) {
-                context->videoEncoder->encodeSetup(context->videoEncoder, vFormat, h264PacketOutCallback, context);
-            }
-            context->videoEncoder->encodeSetProfile(context->videoEncoder, profileLevelMain);
-            context->videoEncoder->encodeSetGop(context->videoEncoder, context->pushConfig->mFps*4);
-            context->videoEncoder->encodeAllowBFrame(context->videoEncoder, GTrue);
-            context->videoEncoder->encodeSetEntropy(context->videoEncoder, EntropyMode_CABAC);
-            context->videoEncoder->encodeSetBitrate(context->videoEncoder, context->pushConfig->mVideoBitrate);
-            VideoDynamicInfo info;
-            info.sourceFPS     = info.currentFPS = context->pushConfig->mFps;
-            info.sourceBitrate = info.currentBitrate = context->pushConfig->mVideoBitrate;
-            context->callback(context->userData, GJLivePush_dynamicVideoUpdate, &info);
-
+            
             GJVideoStreamFormat vf;
             vf.format.mFps    = context->pushConfig->mFps;
             vf.format.mWidth  = vFormat.mWidth;
@@ -833,6 +882,13 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context) {
         context->videoProducer->stopProduce(context->videoProducer);
         context->videoEncoder->encodeFlush(context->videoEncoder);
         context->audioEncoder->encodeFlush(context->audioEncoder);
+        
+        GJPipleDisConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder,GFalse);
+        GJPipleDisConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->videoPush,GFalse);
+        
+        GJPipleDisConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder,GFalse);
+        GJPipleDisConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->videoPush,GFalse);
+        
         while (context->operationACount) {
             GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "GJLivePush_StopPush wait A 100 us");
             usleep(100);
