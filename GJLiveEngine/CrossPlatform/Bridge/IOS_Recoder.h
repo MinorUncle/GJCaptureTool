@@ -8,5 +8,4 @@
 
 #import <Foundation/Foundation.h>
 #import "GJBridegContext.h"
-GVoid GJ_RecodeContextCreate(GJRecodeContext** context);
-GVoid GJ_RecodeContextDealloc(GJRecodeContext** context);
+

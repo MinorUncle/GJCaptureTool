@@ -27,7 +27,6 @@ typedef void(^OverlaysUpdate)(NSInteger index,GJOverlayAttribute* _Nonnull ioAtt
  开始贴图
  
  @param images 图片
- @param frame 位置，采用相对采集图片大小的相对关系，所有都在0-1之间
  @param fps 帧率,fps<=0,表示每次都更新
  @param update 更新回调
  @return 是否成功

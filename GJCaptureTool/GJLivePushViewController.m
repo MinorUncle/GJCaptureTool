@@ -681,7 +681,7 @@
 //    }
 //
 //}
--(void)livePush:(GJLivePush *)livePush UIRecodeFinish:(NSError *)error{
+-(void)livePush:(GJLivePush *)livePush recodeFinish:(NSError *)error{
     _uiRecode.enabled = YES;
     if (error) {
         NSLog(@"RECODE ERROR:%@",error);

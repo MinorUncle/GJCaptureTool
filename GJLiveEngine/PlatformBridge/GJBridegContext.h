@@ -20,19 +20,6 @@ typedef GVoid (*RecodeCompleteCallback) (GHandle userData,const GChar* filePath,
 typedef GVoid (*GJStickerUpdateCallback)(GHandle userDate,GLong index,const GHandle ioParm,GBool* ioFinish);
 typedef GVoid (*AudioMixFinishCallback) (GHandle userData,const GChar* filePath, GHandle error);
 
-typedef struct _GJRecodeContext{
-    GHandle obaque;
-    GBool   (*setup)                  (struct _GJRecodeContext* context, const GChar* fileUrl, RecodeCompleteCallback callback, GHandle userHandle);
-    GVoid   (*unSetup)                (struct _GJRecodeContext* context);
-    GBool   (*addVideoSource)         (struct _GJRecodeContext* context, GJVideoFormat format, GView targetView);
-    GBool   (*addAudioSource)         (struct _GJRecodeContext* context, GJAudioFormat format);
-    GVoid   (*sendVideoSourcePacket)  (struct _GJRecodeContext* context, R_GJPixelFrame* packet);
-    GVoid   (*sendAudioSourcePacket)  (struct _GJRecodeContext* context, R_GJPCMFrame* packet);
-    GBool   (*startRecode)            (struct _GJRecodeContext* context);
-    GVoid   (*stopRecode)             (struct _GJRecodeContext* context);
-
-}GJRecodeContext;
-
 typedef struct _GJPictureDisplayContext{
     GHandle obaque;
     GBool   (*displaySetup)           (struct _GJPictureDisplayContext* context);
@@ -152,7 +139,6 @@ typedef struct _GJEncodeToH264eContext{
 }GJEncodeToH264eContext;
 
 
-extern GVoid GJ_RecodeContextCreate(GJRecodeContext** context);
 extern GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext** context);
 extern GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext** context);
 extern GVoid GJ_AACDecodeContextCreate(GJAACDecodeContext** context);
@@ -162,7 +148,6 @@ extern GVoid GJ_H264EncodeContextCreate(GJEncodeToH264eContext** context);
 extern GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext** context);
 extern GVoid GJ_PictureDisplayContextCreate(GJPictureDisplayContext** context);
 
-extern GVoid GJ_RecodeContextDealloc(GJRecodeContext** context);
 extern GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext** context);
 extern GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext** context);
 extern GVoid GJ_AACDecodeContextDealloc(GJAACDecodeContext** context);
