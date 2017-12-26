@@ -66,7 +66,7 @@
 
 @end
 @implementation PushManager
-- (instancetype)initWithPushUrl:(NSString*)url
+- (instancetype)initWithPushUrl:(NSString*)url type:(GJCaptureType)type
 {
     self = [super init];
     if (self) {
@@ -85,6 +85,7 @@
         config.mFps = 15;
         config.mAudioBitrate = 128*1000;
         _livePush = [[GJLivePush alloc]init];
+        _livePush.captureType = type;
         [_livePush setPushConfig:config];
         //        _livePush.enableAec = YES;
         _livePush.delegate = self;
@@ -474,6 +475,7 @@
             for (int i = 0; i< 1; i++) {
                 overlays[0] = [GJOverlayAttribute overlayAttributeWithImage:[self getSnapshotImageWithSize:rect.size] frame:frame rotate:0];
             }
+            __weak PushManager* wkSelf = self;
             [_livePush startStickerWithImages:overlays fps:15 updateBlock:^ void(NSInteger index,const GJOverlayAttribute* ioAttr, BOOL *ioFinish) {
                 
                 *ioFinish = NO;
@@ -487,7 +489,7 @@
                     ioAttr.image = image;
                 }
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    image = [self getSnapshotImageWithSize:rect.size];
+                    image = [wkSelf getSnapshotImageWithSize:rect.size];
                 });
                 
                 ioAttr.rotate = r;
@@ -1007,23 +1009,34 @@
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGDEBUG);
     //    RTMP_LogSetLevel(RTMP_LOGDEBUG);
-    _pushManager = [[PushManager alloc]initWithPushUrl:_pushAddr];
+    _pushManager = [[PushManager alloc]initWithPushUrl:_pushAddr type:_type];
     
     [self buildUI];
     [self updateFrame];
-    
-    if (_isAr) {
+    switch (_type) {
+        case kGJCaptureTypeView:{
+            _pushManager.livePush.captureView = _pulls[0].view;
+            _pushManager.livePush.captureType = kGJCaptureTypeView;
+            break;
+        }
+        case kGJCaptureTypePaint:{
+            _pushManager.livePush.captureType = kGJCaptureTypePaint;
+            break;
+        }
+        case kGJCaptureTypeAR:
+        {
             if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){
                 [[[UIAlertView alloc]initWithTitle:@"提示" message:@"该手机不支持ar,已切换到普通直播" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles: nil] show];
             }else{
                 _pushManager.livePush.ARScene = [[GJSunSystemARScene alloc]init];
+                _pushManager.livePush.captureType = kGJCaptureTypeAR;
+                break;
             }
-    }else{
-//        _isUILive = YES;
-//        _pushManager.livePush.captureView = _pulls[0].view;
-    }
-    
+        }
 
+        default:
+            break;
+    }
     
 }
 

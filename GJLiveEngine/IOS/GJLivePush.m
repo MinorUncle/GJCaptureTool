@@ -133,6 +133,13 @@ static GVoid livePushCallback(GHandle               userDate,
     _captureView = captureView;
 }
 
+-(void)setCaptureType:(GJCaptureType)captureType{
+    if(GJLivePush_SetCaptureType(_livePush, captureType)){
+        _captureType = captureType;
+    };
+    
+}
+
 - (void)startPreview {
     GJLivePush_StartPreview(_livePush);
 }

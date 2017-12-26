@@ -16,6 +16,9 @@
 		6A0201041F06227800F4255B /* webserverconnection.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FE1F06227800F4255B /* webserverconnection.h */; };
 		6A0201051F06227800F4255B /* zeroconf.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FF1F06227800F4255B /* zeroconf.h */; };
 		6A0201091F0622D500F4255B /* raopserver.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0201081F0622D500F4255B /* raopserver.h */; };
+		6A0389271FF11BFF005AC7CE /* GJPaintingCamera.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A03890D1FF11BFF005AC7CE /* GJPaintingCamera.h */; };
+		6A0389291FF12AEA005AC7CE /* GJImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0389281FF12AEA005AC7CE /* GJImageView.h */; };
+		6A03892B1FF13004005AC7CE /* Particle.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A03892A1FF13004005AC7CE /* Particle.png */; };
 		6A0928701FC3B7CD000CC19B /* GJImageTrackImage.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0928561FC3B7CD000CC19B /* GJImageTrackImage.h */; };
 		6A0C84671FA84A00007C7CEA /* Version.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0C84661FA84A00007C7CEA /* Version.h */; };
 		6A1A1B0A1F2ED67A0043595F /* AACEncoderFromPCM_OLD.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */; };
@@ -38,7 +41,6 @@
 		6A3488841F45468F008223AA /* GJImageFramebuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A34887D1F45468F008223AA /* GJImageFramebuffer.h */; };
 		6A3488851F45468F008223AA /* GJImagePictureOverlay.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A34887E1F45468F008223AA /* GJImagePictureOverlay.h */; };
 		6A3488861F45468F008223AA /* GJImagePixelImageInput.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A34887F1F45468F008223AA /* GJImagePixelImageInput.h */; };
-		6A3488871F45468F008223AA /* GJImageView.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A3488801F45468F008223AA /* GJImageView.h */; };
 		6A3488881F45468F008223AA /* GJImageYUVDataInput.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A3488811F45468F008223AA /* GJImageYUVDataInput.h */; };
 		6A40DFB91EE8DAE80047E0F0 /* libTheAmazingAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFB41EE8DA4D0047E0F0 /* libTheAmazingAudioEngine.a */; };
 		6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
@@ -393,6 +395,9 @@
 		6A0200FE1F06227800F4255B /* webserverconnection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = webserverconnection.h; path = libairfloat/libairfloat/webserverconnection.h; sourceTree = SOURCE_ROOT; };
 		6A0200FF1F06227800F4255B /* zeroconf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zeroconf.h; path = libairfloat/libairfloat/zeroconf.h; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		6A0201081F0622D500F4255B /* raopserver.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = raopserver.h; path = libairfloat/libairfloat/raopserver.h; sourceTree = SOURCE_ROOT; };
+		6A03890D1FF11BFF005AC7CE /* GJPaintingCamera.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJPaintingCamera.h; path = ../../../../GJImage/GJImageFilters/GJPaintingCamera.h; sourceTree = "<group>"; };
+		6A0389281FF12AEA005AC7CE /* GJImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJImageView.h; path = ../../../../GJImage/GJImageFilters/GJImageView.h; sourceTree = "<group>"; };
+		6A03892A1FF13004005AC7CE /* Particle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Particle.png; sourceTree = "<group>"; };
 		6A0928561FC3B7CD000CC19B /* GJImageTrackImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImageTrackImage.h; sourceTree = "<group>"; };
 		6A0C84661FA84A00007C7CEA /* Version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Version.h; sourceTree = "<group>"; };
 		6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RtmpCode.xcodeproj; path = ../rtmpAndOpenssl/RtmpCode.xcodeproj; sourceTree = "<group>"; };
@@ -423,7 +428,6 @@
 		6A34887D1F45468F008223AA /* GJImageFramebuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImageFramebuffer.h; sourceTree = "<group>"; };
 		6A34887E1F45468F008223AA /* GJImagePictureOverlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImagePictureOverlay.h; sourceTree = "<group>"; };
 		6A34887F1F45468F008223AA /* GJImagePixelImageInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImagePixelImageInput.h; sourceTree = "<group>"; };
-		6A3488801F45468F008223AA /* GJImageView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImageView.h; sourceTree = "<group>"; };
 		6A3488811F45468F008223AA /* GJImageYUVDataInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJImageYUVDataInput.h; sourceTree = "<group>"; };
 		6A3955401FA33DE4002931D9 /* GJLiveEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJLiveEngine.h; sourceTree = "<group>"; };
 		6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = TheAmazingAudioEngine.xcodeproj; path = TheAmazingAudioEngine/TheAmazingAudioEngine.xcodeproj; sourceTree = "<group>"; };
@@ -902,6 +906,7 @@
 		04D15EC81E7E69C9005F6DDD /* GJImageFilters */ = {
 			isa = PBXGroup;
 			children = (
+				6A03890D1FF11BFF005AC7CE /* GJPaintingCamera.h */,
 				6AB685F31FE91664009B7032 /* GJImageUICapture.h */,
 				6A0928561FC3B7CD000CC19B /* GJImageTrackImage.h */,
 				6AF9DD8F1FA970AB00F6B4F7 /* GJImageARCapture.h */,
@@ -910,7 +915,7 @@
 				6A34887D1F45468F008223AA /* GJImageFramebuffer.h */,
 				6A34887E1F45468F008223AA /* GJImagePictureOverlay.h */,
 				6A34887F1F45468F008223AA /* GJImagePixelImageInput.h */,
-				6A3488801F45468F008223AA /* GJImageView.h */,
+				6A0389281FF12AEA005AC7CE /* GJImageView.h */,
 				6A3488811F45468F008223AA /* GJImageYUVDataInput.h */,
 			);
 			path = GJImageFilters;
@@ -1629,6 +1634,7 @@
 				C561ABFC1D51D3DC00113453 /* Main.storyboard */,
 				C561AC8B1D51D3DC00113453 /* Info.plist */,
 				C561AC8C1D51D3DC00113453 /* main.m */,
+				6A03892A1FF13004005AC7CE /* Particle.png */,
 				6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */,
 				C561AC8D1D51D3DC00113453 /* OpenGLPlayer */,
 				C561AC931D51D3DC00113453 /* ViewController.h */,
@@ -1697,6 +1703,7 @@
 				AE3634161F08122100E3C0AD /* alac_format.h in Headers */,
 				6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */,
 				6A559C311F3D3A3500698C19 /* GJStreamPull.h in Headers */,
+				6A0389271FF11BFF005AC7CE /* GJPaintingCamera.h in Headers */,
 				6A0201011F06227800F4255B /* rtprecorder.h in Headers */,
 				6A85FA1D1F01FA990037A64F /* GJLog.h in Headers */,
 				6A85FA211F01FA990037A64F /* GJRetainBuffer.h in Headers */,
@@ -1714,9 +1721,9 @@
 				6A0C84671FA84A00007C7CEA /* Version.h in Headers */,
 				6A40E1A51EEAA2D70047E0F0 /* AEPlaythroughChannel.h in Headers */,
 				6AF9DDB61FA9763D00F6B4F7 /* SCNViewController.h in Headers */,
+				6A0389291FF12AEA005AC7CE /* GJImageView.h in Headers */,
 				6A85FA1B1F01FA990037A64F /* GJBufferPool.h in Headers */,
 				AE70A5271ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h in Headers */,
-				6A3488871F45468F008223AA /* GJImageView.h in Headers */,
 				6A3488881F45468F008223AA /* GJImageYUVDataInput.h in Headers */,
 				6AE37BD51ED5956800B049EB /* GJLivePlayer.h in Headers */,
 				6A0928701FC3B7CD000CC19B /* GJImageTrackImage.h in Headers */,
@@ -2072,6 +2079,7 @@
 				6A3488481F453803008223AA /* 5.png in Resources */,
 				6AF9DDBB1FA97A6000F6B4F7 /* art.scnassets in Resources */,
 				6A3488431F453803008223AA /* 0.png in Resources */,
+				6A03892B1FF13004005AC7CE /* Particle.png in Resources */,
 				6A34884E1F453803008223AA /* index4.png in Resources */,
 				6A34884A1F453803008223AA /* index0.png in Resources */,
 				C561ACA41D51D3DC00113453 /* Main.storyboard in Resources */,

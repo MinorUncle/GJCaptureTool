@@ -44,7 +44,7 @@ typedef void(^ARUpdateBlock)();
 /**
  Setting this to 0 or below will set the frame rate back to the default setting for a particular preset.
  */
-@property (readwrite) int32_t frameRate;
+@property (readwrite,nonatomic,assign) int32_t frameRate;
 @property(assign, nonatomic) CGSize captureSize;
 
 @property (nonatomic,assign) CGPoint focusPoint;

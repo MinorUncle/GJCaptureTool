@@ -873,6 +873,13 @@ GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view){
     return result;
 }
 
+GBool GJLivePush_SetCaptureType(GJLivePushContext *context, GJCaptureType type){
+    pthread_mutex_lock(&context->lock);
+    GBool result = context->videoProducer->setCaptureType(context->videoProducer,type);
+    pthread_mutex_unlock(&context->lock);
+    return result;
+}
+
 GBool GJLivePush_StartPreview(GJLivePushContext *context) {
     pthread_mutex_lock(&context->lock);
 

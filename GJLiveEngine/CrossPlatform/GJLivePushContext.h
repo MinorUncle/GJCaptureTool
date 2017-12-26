@@ -94,6 +94,7 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context);
 GVoid GJLivePush_SetConfig(GJLivePushContext *context, const GJPushConfig *config);
 GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene);
 GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view);
+GBool GJLivePush_SetCaptureType(GJLivePushContext *context, GJCaptureType type);
 GBool GJLivePush_StartPreview(GJLivePushContext *context);
 GVoid GJLivePush_StopPreview(GJLivePushContext *context);
 GBool GJLivePush_SetAudioMute(GJLivePushContext *context, GBool mute);

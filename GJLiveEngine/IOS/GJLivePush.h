@@ -100,6 +100,7 @@ typedef void(^OverlaysUpdate)(NSInteger index,const GJOverlayAttribute* _Nullabl
 //录屏直播
 @property (nonatomic,retain         ) UIView*              _Nullable                    captureView;
 
+@property (nonatomic,assign         ) GJCaptureType captureType;
 //- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
 
 //- (void)stopCapture;
