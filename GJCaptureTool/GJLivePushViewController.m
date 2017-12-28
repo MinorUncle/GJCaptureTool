@@ -26,6 +26,7 @@
 @property (strong, nonatomic) GJLivePush *livePush;
 @property (copy, nonatomic) NSString* pushAddr;
 
+@property (strong, nonatomic) UIButton *paintBtn;
 @property (strong, nonatomic) UIButton *pushStartBtn;
 @property (strong, nonatomic) UIButton *audioMixBtn;
 @property (strong, nonatomic) UIButton *earPlay;
@@ -102,8 +103,6 @@
     _timeLab = [[UILabel alloc]init];
     [self.view addSubview:_timeLab];
     
-    UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
-    [_view addGestureRecognizer:tap];
     
     _livePush.previewView.contentMode = UIViewContentModeScaleAspectFit;
     _livePush.previewView.backgroundColor = [UIColor blackColor];
@@ -118,6 +117,21 @@
     [_pushStartBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_pushStartBtn];
     
+    if (_livePush.captureType == kGJCaptureTypePaint) {
+        _paintBtn = [[UIButton alloc]init];
+        [_paintBtn setTitle:@"全屏" forState:UIControlStateNormal];
+        [_paintBtn setTitle:@"恢复" forState:UIControlStateSelected];
+        [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
+        [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateSelected];
+        [_paintBtn setShowsTouchWhenHighlighted:YES];
+        [_paintBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:_paintBtn];
+    }else{
+        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+        [_view addGestureRecognizer:tap];
+        
+    }
+
     _pushStateLab = [[UILabel alloc]init];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
@@ -322,11 +336,26 @@
     
     CGRect rect = self.view.bounds;
     _livePush.previewView.frame = rect;
+    NSString* str = @"";
+    [_messureModel sizeToFit];
+    CGSize size =  _messureModel.bounds.size;
+    
     
     CGFloat hOffset = CGRectGetMaxY([self findViewController:self.view].navigationController.navigationBar.frame);
     int leftCount = 6;
+    
+    if (_livePush.captureType == kGJCaptureTypePaint) {
+        rect.size.width = frame.size.width * 0.4;
+        rect.size.height = (frame.size.height-hOffset) / leftCount;
+        if(rect.size.height > 50)rect.size.height = 50;
+        rect.origin.x = frame.size.width*0.3;
+        rect.origin.y = hOffset;
+        _paintBtn.frame = rect;
+    }
+    
     rect.origin = CGPointMake(0, hOffset);
-    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.view.bounds.size.height-hOffset) / leftCount);
+    rect.size = CGSizeMake(frame.size.width*0.5, (frame.size.height-hOffset) / leftCount);
+    
     _pushStateLab.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
@@ -345,8 +374,8 @@
     _currentV.frame = rect;
     
     int rightCount = 16;
-    rect.origin = CGPointMake(self.view.bounds.size.width*0.5, hOffset);
-    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.view.bounds.size.height-hOffset) / rightCount);
+    rect.origin = CGPointMake(frame.size.width - size.width, hOffset);
+    rect.size = CGSizeMake(size.width, (self.view.bounds.size.height-hOffset) / rightCount);
     _pushStartBtn.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
@@ -440,7 +469,39 @@
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;
-    if (btn == _trackImage) {
+    if (btn == _paintBtn) {
+        if (btn.selected) {
+            [UIView animateWithDuration:0.4 animations:^{
+                for (UIView* view in _view.superview.subviews) {
+                    if (view != _view) {
+                        view.alpha = 0;
+                    }
+                }
+                for (UIView* view in _view.subviews) {
+                    if (view != _paintBtn && view != _livePush.previewView) {
+                        view.alpha = 0;
+                    }
+                }
+                _beforeFullframe = _frame;
+                self.frame = [UIScreen mainScreen].bounds;
+            }];
+        }else{
+            [UIView animateWithDuration:0.4 animations:^{
+                for (UIView* view in _view.subviews) {
+                    if (view != _paintBtn && view != _livePush.previewView) {
+                        view.alpha = 1;
+                    }
+                }
+                for (UIView* view in _view.superview.subviews) {
+                    if (view != _view) {
+                        view.alpha = 1;
+                    }
+                }
+                self.frame = [UIScreen mainScreen].bounds;
+            }];
+        }
+        
+    }else if (btn == _trackImage) {
         if (btn.selected) {
             NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
             images[0] = [UIImage imageNamed:[NSString stringWithFormat:@"%d.png",1]];
