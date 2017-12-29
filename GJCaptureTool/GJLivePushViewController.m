@@ -1073,8 +1073,15 @@
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGDEBUG);
     //    RTMP_LogSetLevel(RTMP_LOGDEBUG);
-    _pushManager = [[PushManager alloc]initWithPushUrl:_pushAddr type:_type];
     
+    if(_type == kGJCaptureTypeAR){
+        if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){
+            [[[UIAlertView alloc]initWithTitle:@"提示" message:@"该手机不支持ar,已切换到普通直播" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles: nil] show];
+            _type = kGJCaptureTypeCamera;
+        }
+    }
+    _pushManager = [[PushManager alloc]initWithPushUrl:_pushAddr type:_type];
+    //ui放在后面，因为ar一定要先设置ARScene
     [self buildUI];
     [self updateFrame];
     switch (_type) {
@@ -1089,19 +1096,16 @@
         }
         case kGJCaptureTypeAR:
         {
-            if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){
-                [[[UIAlertView alloc]initWithTitle:@"提示" message:@"该手机不支持ar,已切换到普通直播" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles: nil] show];
-            }else{
-                _pushManager.livePush.ARScene = [[GJSunSystemARScene alloc]init];
-                _pushManager.livePush.captureType = kGJCaptureTypeAR;
-                break;
-            }
+            _pushManager.livePush.ARScene = [[GJSunSystemARScene alloc]init];
+            _pushManager.livePush.captureType = kGJCaptureTypeAR;
+            break;
         }
 
         default:
             break;
     }
     
+
 }
 
 -(void)viewWillAppear:(BOOL)animated{

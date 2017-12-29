@@ -192,7 +192,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     }
     if (_camera && _camera.isRunning) {
         [_camera stopCameraCapture];
-        _camera = nil;
+        [self deleteCamera];
     }
     GJRetainBufferPool *temPool = _bufferPool;
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -202,6 +202,12 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     });
 }
 
+-(void)deleteCamera{
+    if ([_camera isKindOfClass:[GJPaintingCamera class]]) {
+        [_camera removeObserver:self forKeyPath:@"captureSize"];
+    }
+    _camera = nil;
+}
 - (GPUImageOutput<GJCameraProtocal>*)camera {
     if (_camera == nil) {
 
@@ -227,6 +233,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             }
             case kGJCaptureTypePaint:{
                 _camera = [[GJPaintingCamera alloc]init];
+                [_camera addObserver:self forKeyPath:@"captureSize" options:NSKeyValueObservingOptionNew context:nil];
                 break;
             }
             case kGJCaptureTypeAR:{
@@ -253,10 +260,15 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         if (sonFilter) {
             [_camera addTarget:(id<GPUImageInput>)sonFilter];
         }
+        [self updateCropSize];
     }
     return _camera;
 }
 
+-(void)deleteShowImage{
+    [_imageView removeObserver:self forKeyPath:@"frame"];
+    _imageView = nil;
+}
 - (GJImageView *)imageView {
     if (_imageView == nil) {
         @synchronized(self) {
@@ -266,7 +278,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
                 }else{
                     _imageView = ((GJPaintingCamera*)self.camera).paintingView;
                 }
-
+                [_imageView addObserver:self forKeyPath:@"frame" options:NSKeyValueObservingOptionNew context:nil];
                 if (_previewMirror) {
                     [self setPreviewMirror:_previewMirror];
                 }
@@ -275,6 +287,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     }
     return _imageView;
 }
+
 
 - (GPUImageBeautifyFilter *)beautifyFilter {
     if (_beautifyFilter == nil) {
@@ -580,7 +593,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     }
     if (![parentFilter.targets containsObject:_imageView]) {
         [_camera stopCameraCapture];
-        _camera = nil;
+        [self deleteCamera];
         if (_trackImage) {
             [self stopTracking];
         }
@@ -599,29 +612,27 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (void)updateCropSize {
-    CGSize size = _destSize;
-
-//    if (![preset isEqualToString:self.camera.captureSessionPreset]) {
-//        self.camera.captureSessionPreset = preset;
-//    }
-
-    CGSize capture = self.camera.captureSize;
-    
-    if (capture.height < 2 || capture.width < 2) {
-        return;
-    }
-    
-    if (capture.height - size.height > 0.001 ||
-        size.height - capture.height > 0.001 ||
-        capture.width - size.width > 0.001 ||
-        size.width - capture.width > 0.001) {
-        self.camera.captureSize = size;
-        capture = self.camera.captureSize;
-    }
-    
-    CGRect region              = [self getCropRectWithSourceSize:capture target:_destSize];
-    self.cropFilter.cropRegion = region;
-    [_cropFilter forceProcessingAtSize:_destSize];
+    runSynchronouslyOnVideoProcessingQueue(^{
+        if(_camera == nil)return ;
+        CGSize size = _destSize;
+        CGSize capture = self.camera.captureSize;
+        if (capture.height < 2 || capture.width < 2) {
+            return;
+        }
+        if (capture.height - size.height > 0.001 ||
+            size.height - capture.height > 0.001 ||
+            capture.width - size.width > 0.001 ||
+            size.width - capture.width > 0.001) {
+            if (![self.camera isKindOfClass:[GJPaintingCamera class]]) {
+                self.camera.captureSize = size;
+            }
+            capture = self.camera.captureSize;
+        }
+        
+        CGRect region              = [self getCropRectWithSourceSize:capture target:_destSize];
+        self.cropFilter.cropRegion = region;
+        [_cropFilter forceProcessingAtSize:_destSize];
+    });
 }
 
 - (void)setOutputOrientation:(UIInterfaceOrientation)outputOrientation {
@@ -685,7 +696,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 - (void)stopPreview {
     if (_cropFilter.frameProcessingCompletionBlock == nil && [_camera isRunning]) {
         [_camera stopCameraCapture];
-        _camera = nil;
+        [self deleteCamera];
         if (_trackImage) {
             [self stopTracking];
         }
@@ -697,7 +708,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         }
 
         [parentFilter removeTarget:_imageView];
-        _imageView = nil;
+        [self deleteShowImage];
     });
 }
 
@@ -708,6 +719,18 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 -(UIImage*)getFreshDisplayImage{
     return [((GJImageView*)self.imageView) captureFreshImage];
+}
+
+-(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context{
+    if (object == _imageView) {
+        if ([keyPath isEqualToString:@"frame"]) {
+            [self updateCropSize];
+        }
+    }else if (object == _camera){
+        if ([keyPath isEqualToString:@"captureSize"]) {
+            [self updateCropSize];
+        }
+    }
 }
 
 
