@@ -1147,7 +1147,7 @@ GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps,
             break;
         };
         
-        if (!GJStreamPush_StartConnect(context->streamPush, fileUrl)) {
+        if (!GJStreamPush_StartConnect(context->streamRecode, fileUrl)) {
             GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "Recode_Connect error");
             result = GFalse;
             GJStreamPush_CloseAndDealloc(&context->streamRecode);
