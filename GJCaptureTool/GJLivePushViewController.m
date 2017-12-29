@@ -83,7 +83,11 @@
         config.mAudioSampleRate = 44100;
         config.mPushSize = (GSize){480, 640};
         config.mVideoBitrate = 8*80*1024;
-        config.mFps = 15;
+        if (type == kGJCaptureTypePaint) {
+            config.mFps = 30;
+        }else{
+            config.mFps = 15;
+        }
         config.mAudioBitrate = 128*1000;
         _livePush = [[GJLivePush alloc]init];
         _livePush.captureType = type;
@@ -336,7 +340,6 @@
     
     CGRect rect = self.view.bounds;
     _livePush.previewView.frame = rect;
-    NSString* str = @"";
     [_messureModel sizeToFit];
     CGSize size =  _messureModel.bounds.size;
     
