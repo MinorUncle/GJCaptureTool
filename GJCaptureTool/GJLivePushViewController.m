@@ -500,7 +500,7 @@
                         view.alpha = 1;
                     }
                 }
-                self.frame = [UIScreen mainScreen].bounds;
+                self.frame = _beforeFullframe;
             }];
         }
         
@@ -557,7 +557,7 @@
                 });
                 
                 ioAttr.rotate = r;
-                //                return [GJStickerAttribute stickerAttributWithImage:image frame:frame rotate:r];
+                //return [GJStickerAttribute stickerAttributWithImage:image frame:frame rotate:r];
             }];
             
             //            NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
