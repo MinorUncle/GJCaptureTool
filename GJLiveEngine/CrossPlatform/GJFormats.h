@@ -9,10 +9,10 @@
 #ifndef Formats_h
 #define Formats_h
 #include "GJPlatformHeader.h"
-typedef enum GJType{
-    VideoType,
-    AudooType,
-}GJType;
+//typedef enum GJType{
+//    VideoType,
+//    AudooType,
+//}GJType;
 typedef enum ProfileLevel{
     profileLevelBase,
     profileLevelMain,

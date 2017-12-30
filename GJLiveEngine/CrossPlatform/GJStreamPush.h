@@ -32,6 +32,7 @@ typedef struct _GJStreamPush GJStreamPush;
 
 GBool GJStreamPush_Create(GJStreamPush **push, StreamPushMessageCallback callback, GHandle streamPushParm, const GJAudioStreamFormat *audioFormat, const GJVideoStreamFormat *videoFormat);
 GVoid GJStreamPush_CloseAndDealloc(GJStreamPush **push);
+
 GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *data);
 GBool GJStreamPush_SendAudioData(GJStreamPush *push, R_GJPacket *data);
 
@@ -43,4 +44,11 @@ GFloat32 GJStreamPush_GetBufferRate(GJStreamPush *push);
 GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush *push);
 GJTrafficStatus GJStreamPush_GetAudioBufferCacheInfo(GJStreamPush *push);
 
+static inline GBool GJStreamPush_NodeRecodeData(GJStreamPush *push, R_GJPacket *data,GJMediaType type){
+    if (type == GJMediaType_Audio) {
+        return GJStreamPush_SendAudioData(push, data);
+    }else{
+        return GJStreamPush_SendVideoData(push, data);
+    }
+}
 #endif /* GJStreamPush_h */

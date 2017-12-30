@@ -8,191 +8,67 @@
 
 #include "GJBridegContext.h"
 #include "GJLog.h"
-static inline GBool isSubNode(GJPipleNode* superNode,GJPipleNode* subNode){
-    GBool findNode = GFalse;
-    for (int i = 0; i<superNode->subCount; i++) {
+GBool pipleNodeInit(GJPipleNode* node,NodeReceiveDataFunc receiveData){
+    GJAssert(node && node->lock == GNULL && node->subNodes == GNULL, "重复初始化，或者初始化前没有清零");
+    node->lock = malloc(sizeof(pthread_rwlock_t));
+    node->receiveData = GNULL;
+    node->subCount = 0;
+    node->receiveData = receiveData;
+    GInt result = pthread_rwlock_init(node->lock, GNULL);
+    GJAssert(result == 0, "pthread_rwlock_init error");
+    return result == 0;
+}
+
+GBool pipleNodeUnInit(GJPipleNode* node){
+    GJAssert(node->subCount == 0 && node->subNodes == GNULL, "存在连接的节点未初始化");
+    if (node->lock) {
+        pthread_rwlock_destroy(node->lock);
+        free(node->lock);
+        node->lock = GNULL;
+    }
+    return GTrue;
+}
+
+
+GBool pipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode){
+    GJAssert(superNode && superNode->lock != GNULL, "GJPipleConnectNode error");
+    pthread_rwlock_wrlock(superNode->lock);
+    GBool find = GFalse;
+    for (int i = 0; i< superNode->subCount; i++) {
         if (superNode->subNodes[i] == subNode) {
-            findNode = GTrue;
-            break;
+            find = GTrue;
         }
     }
-    return GTrue;
-}
-static inline GBool isSuperNode(GJPipleNode* subNode,GJPipleNode* superNode){
-    GBool findNode = GFalse;
-    for (int i = 0; i<subNode->superCount; i++) {
-        if (subNode->superNodes[i] == superNode) {
-            findNode = GTrue;
-            break;
-        }
+    if (!find) {
+        superNode->subNodes = realloc(superNode->subNodes, sizeof(GJPipleNode*)*superNode->subCount+1);
+        superNode->subNodes[superNode->subCount++] = subNode;
     }
+    pthread_rwlock_unlock(superNode->lock);
     return GTrue;
 }
 
-static inline GVoid subAddSuper(GJPipleNode* subNode,GJPipleNode* superNode){
-    if (subNode->superNodes == GNULL) {
-        subNode->superNodes = malloc(sizeof(GJPipleNode*));
-        subNode->superCount = 1;
-    }else{
-        if (!isSuperNode(subNode, superNode)) {
-            subNode->superCount++;
-            subNode->superNodes = (GJPipleNode**)realloc(subNode->superNodes, sizeof(GJPipleNode*)*subNode->superCount);
-            subNode->superNodes[subNode->superCount-1] = superNode;
-        }
-    }
-}
-
-static inline GVoid superAddSub(GJPipleNode* superNode,GJPipleNode* subNode){
-    if (superNode->subNodes == GNULL) {
-        superNode->subNodes = malloc(sizeof(GJPipleNode*));
-        superNode->subCount = 1;
-    }else{
-        if (!isSubNode(superNode, subNode)) {
-            superNode->subCount++;
-            superNode->subNodes = (GJPipleNode**)realloc(superNode->subNodes, sizeof(GJPipleNode*)*superNode->subCount);
-            superNode->subNodes[superNode->subCount-1] = subNode;
-        }
-    }
-}
-
-static inline GVoid superDelSub(GJPipleNode* superNode,GJPipleNode* subNode){
-#ifdef DEBUG
-    GJAssert(isSubNode(superNode, subNode), "check error");
-#endif
-    GBool found = GFalse;
-    for (int i = 0 ; i < superNode->subCount; i++) {
-        if (!found) {
-            if (superNode->subNodes[i] == subNode) {
-                found = GTrue;
-            }
-        }else{
+GBool pipleDisConnectNode(GJPipleNode* superNode, GJPipleNode* subNode){
+    GJAssert(superNode && superNode->lock != GNULL, "GJPipleDisConnectNode error");
+    pthread_rwlock_wrlock(superNode->lock);
+    GBool find = GFalse;
+    for (int i = 0; i< superNode->subCount; i++) {
+        if (find) {
             superNode->subNodes[i-1] = superNode->subNodes[i];
+        }else if (superNode->subNodes[i] == subNode) {
+            find = GTrue;
         }
     }
-    
-    if (found) {
+    if (find) {
         superNode->subCount--;
-        if (superNode->subCount > 0) {
-            superNode->subNodes = (GJPipleNode**)realloc(superNode->subNodes, sizeof(GJPipleNode*)*superNode->subCount);
-        }else{
+        if (superNode->subCount == 0) {
             free(superNode->subNodes);
             superNode->subNodes = GNULL;
-        }
-    }
-
-}
-static inline GVoid subDelSuper(GJPipleNode* subNode,GJPipleNode* superNode){
-    GBool found = GFalse;
-    for (int i = 0 ; i < subNode->superCount; i++) {
-        if (!found) {
-            if (subNode->superNodes[i] == superNode) {
-                found = GTrue;
-            }
         }else{
-            subNode->superNodes[i-1] = subNode->superNodes[i];
+            superNode->subNodes = realloc(superNode->subNodes, sizeof(GJPipleNode*)*superNode->subCount);
         }
     }
-    
-    if (found) {
-        subNode->superCount--;
-        if (subNode->superCount > 0) {
-            subNode->superNodes = (GJPipleNode**)realloc(subNode->superNodes, sizeof(GJPipleNode*)*subNode->superCount);
-        }else{
-            free(subNode->superNodes);
-            subNode->superNodes = GNULL;
-        }
-    }
-}
-
-GBool GJPipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode){
-#ifdef DEBUG
-    GBool isSuper = isSuperNode(subNode, superNode);
-    GBool isSub = isSubNode(superNode, subNode);
-    GJAssert(isSub == isSuper, "check error");
-    GJAssert(isSub == GFalse, "check error");
-#endif
-    superAddSub(superNode, subNode);
-    subAddSuper(subNode, superNode);
-#ifdef DEBUG
-    isSuper = isSuperNode(subNode, superNode);
-    isSub = isSubNode(superNode, subNode);
-    GJAssert(isSub == isSuper, "check error");
-    GJAssert(isSub == GTrue, "check error");
-#endif
+    pthread_rwlock_unlock(superNode->lock);
     return GTrue;
 }
 
-GBool GJPilpeIsOrphan(GJPipleNode* node){
-    return node->superCount > 0;
-}
-GVoid GJPipleDestoryOrphanNode(GJPipleNode* node){
-    GJAssert(GJPilpeIsOrphan(node), "check error");
-    for (int i = 0; i<node->subCount ;i++) {
-        subDelSuper(node->subNodes[i], node);
-        if (GJPilpeIsOrphan(node->superNodes[i])) {
-            GJPipleDestoryOrphanNode(node->subNodes[i]);
-        }
-    }
-    free(node->subNodes);
-    node->subCount = 0;
-    node->subNodes = GNULL;
-    if (node->nodeDealloc) {
-        node->nodeDealloc();
-    }
-}
-
-GBool GJPipleDisConnectNode(GJPipleNode* superNode, GJPipleNode* subNode, GBool destoryOrphan){
-#ifdef DEBUG
-    GBool isSuper = isSuperNode(subNode, superNode);
-    GBool isSub = isSubNode(superNode, subNode);
-    GJAssert(isSub == isSuper, "check error");
-    GJAssert(isSub == GTrue, "check error");
-#endif
-    superDelSub(superNode, subNode);
-    subDelSuper(subNode, superNode);
-    if (GJPilpeIsOrphan(subNode)) {
-        GJPipleDestoryOrphanNode(subNode);
-    }
-#ifdef DEBUG
-    isSuper = isSuperNode(subNode, superNode);
-    isSub = isSubNode(superNode, subNode);
-    GJAssert(isSub == isSuper, "check error");
-    GJAssert(isSub == GFalse, "check error");
-#endif
-    return GTrue;
-}
-
-//GBool GJPipleDisConnectNode(GJPipleNode* superNode, GJPipleNode* subNode, GBool destoryIncomplete){
-//#ifdef DEBUG
-//    GBool isSuper = isSuperNode(subNode, superNode);
-//    GBool isSub = isSubNode(superNode, subNode);
-//    GJAssert(isSub == isSuper, "check error");
-//    GJAssert(isSub == GTrue, "check error");
-//#endif
-//    GBool findNode = GFalse;
-//    for (int i = 0; i<superNode->subCount; i++) {
-//        if (findNode) {
-//            superNode->subNodes[i-1] = superNode->subNodes[i];
-//        }else{
-//            if (superNode->subNodes[i] == subNode) {
-//                findNode = GTrue;
-//                if(destoryIncomplete){
-//                    GJPipleDestoryTree(subNode);
-//                }else{
-//                    free(subNode->subNodes);
-//                    subNode->subNodes = GNULL;
-//                    if (subNode->nodeDealloc) {
-//                        subNode->nodeDealloc();
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    if (findNode) {
-//        superNode->subCount--;
-//        superNode->subNodes = (GJPipleNode**)realloc(superNode->subNodes, sizeof(GJPipleNode*)*superNode->subCount);
-//        GJAssert(superNode->subCount >= 0,"error");
-//    }
-//    return GTrue;
-//}
 

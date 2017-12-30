@@ -11,9 +11,10 @@
 #include "GJLog.h"
 #include "GJStreamPush.h"
 #include "GJUtil.h"
-
+#include "GJBridegContext.h"
 #define STREAM_PUSH_LOG GNULL
 struct _GJStreamPush {
+    GJPipleNode pipleNode;
     AVFormatContext *    formatContext;
     AVStream *           vStream;
     AVStream *           aStream;
@@ -262,6 +263,7 @@ GBool GJStreamPush_Create(GJStreamPush **sender, StreamPushMessageCallback callb
         push = *sender;
     }
     memset(push, 0, sizeof(GJStreamPush));
+    pipleNodeInit(&push->pipleNode, (NodeReceiveDataFunc)GJStreamPush_NodeRecodeData);
     GInt32 ret = avformat_network_init();
     if (ret < 0) {
         return GFalse;
@@ -407,6 +409,7 @@ GVoid GJStreamPush_Delloc(GJStreamPush *push) {
     }
     if (push->videoFormat) free(push->videoFormat);
     if (push->audioFormat) free(push->audioFormat);
+    pipleNodeUnInit(&push->pipleNode);
     free(push);
     GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJRtmpPush_Delloc:%p", push);
 }

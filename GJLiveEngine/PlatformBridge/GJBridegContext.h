@@ -10,7 +10,7 @@
 #define GJBridegContext_h
 #include "GJLiveDefine+internal.h"
 #include "GJFormats.h"
-
+#include <pthread.h>
 typedef GVoid (*AudioFrameOutCallback) (GHandle userData, R_GJPCMFrame* frame);
 typedef GVoid (*AACPacketOutCallback)  (GHandle userData, R_GJPacket* packet);
 typedef GVoid (*VideoFrameOutCallback) (GHandle userData, R_GJPixelFrame* frame);
@@ -20,19 +20,23 @@ typedef GVoid (*RecodeCompleteCallback) (GHandle userData,const GChar* filePath,
 typedef GVoid (*GJStickerUpdateCallback)(GHandle userDate,GLong index,const GHandle ioParm,GBool* ioFinish);
 typedef GVoid (*AudioMixFinishCallback) (GHandle userData,const GChar* filePath, GHandle error);
 
+typedef GBool (*NodeReceiveDataFunc)(GJRetainBuffer* data,GJMediaType dataType);
+
 typedef struct GJPipleNode{
-    //可能有多个super，比如发送node会连接到音频编码和视频编码
-    struct GJPipleNode** superNodes;
-    GInt32 superCount;
+
 //    可能有多个sub，比如编码器会连接到发送器和录制器
     struct GJPipleNode** subNodes;
     GInt32 subCount;
-    GBool (*nodeReceiveData)(GJRetainBuffer* data,GJType dataType);
-//    GBool (*nodeSetup)();
-    GBool (*nodeDealloc)();
+    NodeReceiveDataFunc receiveData;
+    pthread_rwlock_t* lock;
 }GJPipleNode;
 
-GBool GJPipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode);
+#define pipleNodeLock(node) pthread_rwlock_rdlock(node->lock)
+#define pipleNodeUnLock(node) pthread_rwlock_unlock(node->lock)
+
+GBool pipleNodeInit(GJPipleNode* node,NodeReceiveDataFunc receiveData);
+GBool pipleNodeUnInit(GJPipleNode* node);
+GBool pipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode);
 
 
 /**
@@ -40,10 +44,9 @@ GBool GJPipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode);
 
  @param superNode superNode
  @param subNode subNode
- @param destorySubs 是否销毁独立的子路径
  @return return value description
  */
-GBool GJPipleDisConnectNode(GJPipleNode* superNode, GJPipleNode* subNode, GBool destorySubs);
+GBool pipleDisConnectNode(GJPipleNode* superNode, GJPipleNode* subNode);
 
 
 typedef struct _GJRecodeContext{

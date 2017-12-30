@@ -264,11 +264,9 @@ GVoid streamPushMessageCallback(GHandle userData, kStreamPushMessageType message
             context->connentClock = GJ_Gettime() / 1000;
             pthread_mutex_lock(&context->lock);
             
-            GJPipleConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
-            GJPipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->videoPush);
+            pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->videoPush);
             
-            GJPipleConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
-            GJPipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->videoPush);
+            pipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->videoPush);
             
             context->audioProducer->audioProduceStart(context->audioProducer);
             context->videoProducer->startProduce(context->videoProducer);
@@ -883,11 +881,9 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context) {
         context->videoEncoder->encodeFlush(context->videoEncoder);
         context->audioEncoder->encodeFlush(context->audioEncoder);
         
-        GJPipleDisConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder,GFalse);
-        GJPipleDisConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->videoPush,GFalse);
+        pipleDisConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->videoPush);
         
-        GJPipleDisConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder,GFalse);
-        GJPipleDisConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->videoPush,GFalse);
+        pipleDisConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->videoPush);
         
         while (context->operationACount) {
             GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "GJLivePush_StopPush wait A 100 us");
