@@ -138,7 +138,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         outDataPacketDescription[0]                                                    = &(decode->tPacketDesc);
     }
     if (decode.currentPts <= 0) {
-        decode.currentPts = packet->pts;
+        decode.currentPts = GTimeMSValue(packet->pts);
     }
     decode->_prePacket = packet;
     return noErr;
@@ -257,8 +257,8 @@ static const int mpeg4audio_sample_rates[16] = {
         }
 
         R_BufferUseSize(&frame->retain, outCacheBufferList.mBuffers[0].mDataByteSize);
-        frame->pts  = _currentPts;
-        frame->dts  = _currentPts;
+        frame->pts  = GTimeMake(_currentPts,1000);
+        frame->dts  = frame->pts;
         _currentPts = -1;
         self.decodeCallback(frame);
         R_BufferUnRetain(&frame->retain);

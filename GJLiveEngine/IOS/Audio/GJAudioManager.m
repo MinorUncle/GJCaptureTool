@@ -124,14 +124,14 @@
     while (leftSize >= needSize) {
         R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, needSize);
         _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
-        _alignCacheFrame->pts     = time - (GInt64)(R_BufferSize(&_alignCacheFrame->retain) * _durPerSize);
+        _alignCacheFrame->pts     = GTimeMake(time - (GInt64)(R_BufferSize(&_alignCacheFrame->retain) * _durPerSize),1000);
 
-        static int64_t pre;
-        if (pre == 0) {
-            pre = _alignCacheFrame->pts;
-        }
+//        static GTime pre;
+//        if (pre == 0) {
+//            pre = _alignCacheFrame->pts;
+//        }
         //        printf("audio pts:%lld,size:%d dt:%lld\n",_alignCacheFrame->pts,_alignCacheFrame->retain.size,_alignCacheFrame->pts-pre);
-        pre = _alignCacheFrame->pts;
+//        pre = _alignCacheFrame->pts;
         self.audioCallback(_alignCacheFrame);
         R_BufferUnRetain(&_alignCacheFrame->retain);
         time             = time + needSize / _durPerSize;
@@ -140,7 +140,7 @@
         needSize         = _sizePerPacket;
     }
     if (leftSize > 0) {
-        _alignCacheFrame->pts = (GInt64) time;
+        _alignCacheFrame->pts = GTimeMake(time, 1000);
         R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, leftSize);
     }
 }

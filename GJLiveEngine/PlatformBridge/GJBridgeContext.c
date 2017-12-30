@@ -8,7 +8,20 @@
 
 #include "GJBridegContext.h"
 #include "GJLog.h"
-GBool pipleNodeInit(GJPipleNode* node,NodeReceiveDataFunc receiveData){
+static GBool pipleProduceDataCallback(GJPipleNode* node, GJRetainBuffer* data,GJMediaType dataType){
+    pipleNodeLock(node);
+    for (int i = 0; i < node->subCount; i++) {
+        node->subNodes[i]->receiveData(node->subNodes[i],data,dataType);
+    }
+    pipleNodeUnLock(node);
+    return GTrue;
+}
+
+NodeFlowDataFunc pipleNodeFlowFunc(GJPipleNode* node){
+    return pipleProduceDataCallback;
+}
+
+NodeFlowDataFunc pipleNodeInit(GJPipleNode* node,NodeFlowDataFunc receiveData){
     GJAssert(node && node->lock == GNULL && node->subNodes == GNULL, "重复初始化，或者初始化前没有清零");
     node->lock = malloc(sizeof(pthread_rwlock_t));
     node->receiveData = GNULL;
@@ -16,7 +29,7 @@ GBool pipleNodeInit(GJPipleNode* node,NodeReceiveDataFunc receiveData){
     node->receiveData = receiveData;
     GInt result = pthread_rwlock_init(node->lock, GNULL);
     GJAssert(result == 0, "pthread_rwlock_init error");
-    return result == 0;
+    return pipleProduceDataCallback;
 }
 
 GBool pipleNodeUnInit(GJPipleNode* node){

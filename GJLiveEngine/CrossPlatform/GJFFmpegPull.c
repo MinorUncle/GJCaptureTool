@@ -12,7 +12,9 @@
 #include "avformat.h"
 #include <stdio.h>
 #include "GJUtil.h"
+#include "GJBridegContext.h"
 struct _GJStreamPull {
+    GJPipleNode pipleNode;
     AVFormatContext *formatContext;
     GChar*             pullUrl[MAX_URL_LENGTH];
 #if MENORY_CHECK
@@ -114,6 +116,7 @@ static GHandle pullRunloop(GHandle parm) {
                         pull->dataCallback(pull, avccPacket, pull->dataCallbackParm);
                     }
                     pthread_mutex_unlock(&pull->mutex);
+                    pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&avccPacket->retain,GJMediaType_Video);
                     R_BufferUnRetain(&avccPacket->retain);
                 }
             }
@@ -155,6 +158,7 @@ static GHandle pullRunloop(GHandle parm) {
                 pull->dataCallback(pull, aaccPacket, pull->dataCallbackParm);
             }
             pthread_mutex_unlock(&pull->mutex);
+            pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&aaccPacket->retain,GJMediaType_Audio);
 
             R_BufferUnRetain(&aaccPacket->retain);
         }
@@ -185,13 +189,13 @@ static GHandle pullRunloop(GHandle parm) {
 #endif
 
             h264Packet->dataSize = pkt.size;
-            h264Packet->pts      = pkt.pts;
-            h264Packet->dts      = pkt.dts;
+            h264Packet->pts      = GTimeMake(pkt.pts, 1000);
+            h264Packet->dts      = GTimeMake(pkt.dts, 1000);
             h264Packet->type     = GJMediaType_Video;
             h264Packet->flag = ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY);
             pull->videoPullInfo.byte += pkt.size;
             pull->videoPullInfo.count ++;
-            pull->videoPullInfo.ts = pkt.pts;
+            pull->videoPullInfo.ts = GTimeMake(pkt.pts, 1000);
             if(!pull->hasVideoKey && ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY)){
                 pull->hasVideoKey = GTrue;
             }
@@ -201,6 +205,8 @@ static GHandle pullRunloop(GHandle parm) {
                 pull->dataCallback(pull, h264Packet, pull->dataCallbackParm);
             }
             pthread_mutex_unlock(&pull->mutex);
+            pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&h264Packet->retain,GJMediaType_Video);
+
             R_BufferUnRetain(&h264Packet->retain);
         } else if (pkt.stream_index == asIndex) {
             GJLOG(GNULL,GJ_LOGALL,"receive audio pts:%lld dts:%lld size:%d\n", pkt.pts, pkt.dts, pkt.size);
@@ -216,13 +222,13 @@ static GHandle pullRunloop(GHandle parm) {
             aacPacket->dataOffset = 0;
 #endif
             aacPacket->dataSize = pkt.size;
-            aacPacket->pts      = pkt.pts;
-            aacPacket->dts      = pkt.dts;
+            aacPacket->pts      = GTimeMake(pkt.pts, 1000);
+            aacPacket->dts      = GTimeMake(pkt.dts, 1000);
             aacPacket->extendDataOffset = aacPacket->extendDataSize = 0;
             aacPacket->type     = GJMediaType_Audio;
             pull->audioPullInfo.byte += pkt.size;
             pull->audioPullInfo.count ++;
-            pull->audioPullInfo.ts = pkt.pts;
+            pull->audioPullInfo.ts = GTimeMake(pkt.pts, 1000);
             //            printf("audio pts:%lld,dts:%lld\n",pkt.pts,pkt.dts);
             //            printf("receive packet pts:%lld size:%d  last data:%d\n",aacPacket->pts,aacPacket->dataSize,(aacPacket->retain.data + aacPacket->dataOffset + aacPacket->dataSize -1)[0]);
             pthread_mutex_lock(&pull->mutex);
@@ -230,6 +236,7 @@ static GHandle pullRunloop(GHandle parm) {
                 pull->dataCallback(pull, aacPacket, pull->dataCallbackParm);
             }
             pthread_mutex_unlock(&pull->mutex);
+            pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&aacPacket->retain,GJMediaType_Audio);
 
             R_BufferUnRetain(&aacPacket->retain);
         }
@@ -276,6 +283,7 @@ GBool GJStreamPull_Create(GJStreamPull **pullP, StreamPullMessageCallback callba
     av_register_all();
 
     memset(pull, 0, sizeof(GJStreamPull));
+    pipleNodeInit(&pull->pipleNode, GNULL);
     pull->formatContext = avformat_alloc_context();
     AVIOInterruptCB cb = {.callback = interrupt_callback, .opaque = pull};
     pull->formatContext->interrupt_callback = cb;
@@ -296,6 +304,7 @@ GVoid GJStreamPull_Delloc(GJStreamPull *pull) {
         GJRetainBufferPoolFree(pull->memoryCachePool);
 #endif
         avformat_free_context(pull->formatContext);
+        pipleNodeUnInit(&pull->pipleNode);
         free(pull);
         GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_Delloc:%p", pull);
     } else {

@@ -76,7 +76,7 @@ static GHandle sendRunloop(GHandle parm) {
                     queuePop(push->sendBufferQueue, (GHandle) packet, 0);
                     push->videoStatus.leave.byte += packet->dataSize;
                     push->videoStatus.leave.count++;
-                    push->videoStatus.leave.ts = (GLong) packet->dts;
+                    push->videoStatus.leave.ts = packet->dts;
                     R_BufferUnRetain(&packet->retain);
                     continue;
                 }
@@ -93,7 +93,7 @@ static GHandle sendRunloop(GHandle parm) {
                     queuePop(push->sendBufferQueue, (GHandle) packet, 0);
                     push->videoStatus.leave.byte += packet->dataSize;
                     push->videoStatus.leave.count++;
-                    push->videoStatus.leave.ts = (GLong) packet->dts;
+                    push->videoStatus.leave.ts = packet->dts;
                     R_BufferUnRetain(&packet->retain);
                     continue;
                 }
@@ -110,7 +110,7 @@ static GHandle sendRunloop(GHandle parm) {
                 queuePop(push->sendBufferQueue, (GHandle) &packet, 0);
                 push->audioStatus.leave.byte += packet->dataSize;
                 push->audioStatus.leave.count++;
-                push->audioStatus.leave.ts = (GLong) packet->dts;
+                push->audioStatus.leave.ts = packet->dts;
                 R_BufferUnRetain(&packet->retain);
             }
         }
@@ -155,8 +155,8 @@ static GHandle sendRunloop(GHandle parm) {
         }
 
         av_init_packet(sendPacket);
-        sendPacket->pts = packet->pts & 0x00007fffffff;
-        sendPacket->dts = packet->dts & 0x00007fffffff;
+        sendPacket->pts = (GInt64)(packet->pts.value*1000/packet->pts.scale) & 0x00007fffffff;
+        sendPacket->dts = (GInt64)(packet->dts.value*1000/packet->pts.scale) & 0x00007fffffff;
         sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
         sendPacket->size = packet->dataSize;
         if (packet->type == GJMediaType_Video) {
@@ -175,7 +175,7 @@ static GHandle sendRunloop(GHandle parm) {
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts, packet->dts, packet->dataSize);
+        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts.value, packet->dts.value, packet->dataSize);
 
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
@@ -184,15 +184,15 @@ static GHandle sendRunloop(GHandle parm) {
                 GJLOG(GNULL,GJ_LOGALL,"send video pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
                 push->videoStatus.leave.byte += packet->dataSize;
                 push->videoStatus.leave.count++;
-                push->videoStatus.leave.ts = (GLong) packet->dts;
-                push->videoStatus.leave.clock = GJ_Gettime()/1000;
+                push->videoStatus.leave.ts =  packet->dts;
+                push->videoStatus.leave.clock = GJ_Gettime();
             } else {
 
                 GJLOG(GNULL,GJ_LOGALL,"send audio pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
                 push->audioStatus.leave.byte += packet->dataSize;
                 push->audioStatus.leave.count++;
-                push->audioStatus.leave.ts = (GLong) packet->dts;
-                push->audioStatus.leave.clock = GJ_Gettime()/1000;
+                push->audioStatus.leave.ts = packet->dts;
+                push->audioStatus.leave.clock = GJ_Gettime();
             }
 
             pthread_mutex_lock(&push->mutex);
@@ -263,7 +263,7 @@ GBool GJStreamPush_Create(GJStreamPush **sender, StreamPushMessageCallback callb
         push = *sender;
     }
     memset(push, 0, sizeof(GJStreamPush));
-    pipleNodeInit(&push->pipleNode, (NodeReceiveDataFunc)GJStreamPush_NodeRecodeData);
+    pipleNodeInit(&push->pipleNode, (NodeFlowDataFunc)GJStreamPush_NodeReceiveData);
     GInt32 ret = avformat_network_init();
     if (ret < 0) {
         return GFalse;
@@ -451,10 +451,10 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         
-        push->videoStatus.enter.ts = (GLong) packet->dts;
+        push->videoStatus.enter.ts = packet->dts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
-        push->videoStatus.enter.clock = GJ_Gettime()/1000;
+        push->videoStatus.enter.clock = GJ_Gettime();
 
     } else {
         R_BufferUnRetain(&packet->retain);
@@ -468,7 +468,7 @@ GBool GJStreamPush_SendAudioData(GJStreamPush *push, R_GJPacket *packet) {
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
 
-        push->audioStatus.enter.ts = (GLong) packet->dts;
+        push->audioStatus.enter.ts = packet->dts;
         push->audioStatus.enter.count++;
         push->audioStatus.enter.byte += packet->dataSize;
     } else {

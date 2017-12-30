@@ -21,10 +21,10 @@
     GInt64 _fristPts;
     GBool  _shouldRestart;
     BOOL   requestFlush;
-    GTime _fristTime;
-    GTime _preDTS;
+    GInt64 _fristTime;
+    GInt64 _preDTS;
 #ifdef NETWORK_DELAY
-    GTime _dtsDelta;
+    GInt64 _dtsDelta;
 #endif
 }
 @property (nonatomic, assign) VTCompressionSessionRef enCodeSession;
@@ -58,10 +58,10 @@
 }
 
 //编码
-- (BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts {
+- (BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(GTime)pts {
 
     if (_fristTime < 0) {
-        _fristTime = GJ_Gettime()/1000;
+        _fristTime = GJ_Gettime().value;
     }
     //RETRY:
     {
@@ -81,7 +81,7 @@
         OSStatus status = VTCompressionSessionEncodeFrame(
             _enCodeSession,
             imageBuffer,
-            CMTimeMake(pts, 1000), //pts能得到dts和pts
+            CMTimeMake(pts.value, pts.scale), //pts能得到dts和pts
             kCMTimeInvalid,        // may be kCMTimeInvalid ,dts只能得到dts
             (__bridge CFDictionaryRef) properties,
             NULL,
@@ -302,8 +302,9 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     }
 
     pushPacket->type = GJMediaType_Video;
-    CMTime pts       = CMSampleBufferGetPresentationTimeStamp(sample);
-
+    CMTime ptsTime       = CMSampleBufferGetPresentationTimeStamp(sample);
+    GInt64 pts = ptsTime.value*1000/ptsTime.timescale;
+    GInt64 dts;
 #ifdef NETWORK_DELAY
     pushPacket->dts = GJ_Gettime()/1000;
     if (encoder->_dtsDelta == 0) {
@@ -314,28 +315,29 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 //    NSLog(@"decode Dur:%lld size:%d",pushPacket->dts - pts.value,pushPacket->dataSize);
 
 #else
-    pushPacket->dts = GJ_Gettime()/1000 - encoder->_fristTime;
+    dts = GJ_Gettime().value - encoder->_fristTime;
 #endif
 //    assert(pushPacket->dts != encoder->_preDTS);
 
-    if (pushPacket->dts == encoder->_preDTS) {
-        pushPacket->dts = encoder->_preDTS + 1;
+    if (dts == encoder->_preDTS) {
+        dts = encoder->_preDTS + 1;
     }
-    if (pushPacket->dts > pts.value) {
+    if (dts > pts) {
         if (encoder->_preDTS <= 0) {
-            encoder->_preDTS = pts.value-2;
-        }else if (encoder->_preDTS + 1 >= pts.value) {
+            encoder->_preDTS = pts-2;
+        }else if (encoder->_preDTS + 1 >= pts) {
             //如果比上一次解dts还要早，则直接推迟pts到dts
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pts:%d小于preDts:%d，修改pts为：%d",pts.value,encoder->_preDTS,encoder->_preDTS + 2);
-            pts.value = encoder->_preDTS+2;
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pts:%d小于preDts:%d，修改pts为：%d",pts,encoder->_preDTS,encoder->_preDTS + 2);
+            pts = encoder->_preDTS+2;
 
         }
         //dt则直接采用上次dts
-        pushPacket->dts = encoder->_preDTS+1;
+        dts = encoder->_preDTS+1;
     }
     
-    pushPacket->pts = pts.value;
-    encoder->_preDTS = pushPacket->dts;
+    pushPacket->pts = GTimeMake(pts, 1000);
+    pushPacket->dts = GTimeMake(dts, 1000);;
+    encoder->_preDTS =  dts;
 
 
 //    printf("encode over pts:%lld dts:%lld data size:%zu\n",pts.value,pushPacket->dts,totalLength);

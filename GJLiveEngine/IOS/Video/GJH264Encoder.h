@@ -106,7 +106,7 @@ typedef void(^H264EncodeComplete)(R_GJPacket* packet);
  @param pts pts in ms
  @return 是否失败。可能主动丢帧，也可能编码失败
  */
--(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(int64_t)pts;
+-(BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(GTime)pts;
 
 /**
  刷新编码器，之前的编码不会回调。

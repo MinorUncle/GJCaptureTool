@@ -79,8 +79,8 @@ void decodeOutputCallback(
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "解码error1:%d", (int) status);
         return;
     }
-    GInt64 pts = presentationTimeStamp.value * 1000 / presentationTimeStamp.timescale;
-    GLong  dts = (GLong) sourceFrameRefCon;
+    GTime pts = GTimeMake(presentationTimeStamp.value, presentationTimeStamp.timescale);
+    GTime  dts = GTimeMake((GInt64)sourceFrameRefCon, 1000);
     GJLOGFREQ("decode packet output pts:%lld", pts);
 
     GJH264Decoder *decoder = (__bridge GJH264Decoder *) (decompressionOutputRefCon);
@@ -89,7 +89,7 @@ void decodeOutputCallback(
     frame->height         = (GInt32) CVPixelBufferGetHeight(imageBuffer);
     frame->width          = (GInt32) CVPixelBufferGetWidth(imageBuffer);
     frame->pts            = pts;
-    frame->dts            = (GInt64) dts;
+    frame->dts            = dts;
     frame->type           = CVPixelBufferGetPixelFormatType(imageBuffer);
     CVPixelBufferRetain(imageBuffer);
     ((CVImageBufferRef *) R_BufferStart(&frame->retain))[0] = imageBuffer;
@@ -209,7 +209,7 @@ void decodeOutputCallback(
             CMSampleTimingInfo timingInfo;
             timingInfo.decodeTimeStamp       = kCMTimeInvalid;
             timingInfo.duration              = kCMTimeInvalid;
-            timingInfo.presentationTimeStamp = CMTimeMake(packet->pts, 1000);
+            timingInfo.presentationTimeStamp = CMTimeMake(packet->pts.value, packet->pts.scale);
             status                           = CMSampleBufferCreate(kCFAllocatorDefault,
                                           blockBuffer, true, NULL, NULL,
                                           _formatDesc, 1, 1, &timingInfo, 1,
@@ -234,7 +234,7 @@ void decodeOutputCallback(
         //                assert(status == 0);
         VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
         VTDecodeInfoFlags  flagOut;
-        GLong              dts    = packet->dts;
+        GLong              dts    = packet->dts.value*1000/packet->dts.scale;
         OSStatus           status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags, (GVoid *) dts, &flagOut);
         if (status < 0) {
             if (kVTInvalidSessionErr == status) {

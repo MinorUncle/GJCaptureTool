@@ -89,15 +89,15 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
         }break;
         case GJLivePull_netShakeUpdate:{
             if ([livePull.delegate respondsToSelector:@selector(livePull:netShake:)]) {
-                GTime time = *(GTime*)parm;
-                [livePull.delegate livePull:livePull netShake:(long)time];
+                GLong time = *(GLong*)parm;
+                [livePull.delegate livePull:livePull netShake:(GLong)time];
             }
         }break;
 #ifdef NETWORK_DELAY
         case GJLivePull_testNetShakeUpdate:
             if ([livePull.delegate respondsToSelector:@selector(livePull:testNetShake:)]) {
-                GTime time = *(GTime*)parm;
-                [livePull.delegate livePull:livePull testNetShake:(long)time];
+                GLong time = *(GLong*)parm;
+                [livePull.delegate livePull:livePull testNetShake:(GLong)time];
             }
             break;
         case GJLivePull_testKeyDelayUpdate:
@@ -120,13 +120,13 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
     GJTrafficStatus vCache                    = GJLivePull_GetVideoTrafficStatus(_pullContext);
     GJTrafficStatus aCache                    = GJLivePull_GetAudioTrafficStatus(_pullContext);
     _pullSessionStatus.videoStatus.cacheCount = vCache.enter.count - vCache.leave.count;
-    _pullSessionStatus.videoStatus.cacheTime  = vCache.enter.ts - vCache.leave.ts;
+    _pullSessionStatus.videoStatus.cacheTime  = GTimeSubtractMSValue(vCache.enter.ts, vCache.leave.ts);
     _pullSessionStatus.videoStatus.bitrate    = (vCache.enter.byte - _videoTraffic.enter.byte) * 1.0 / _gaterFrequency;
     _pullSessionStatus.videoStatus.frameRate  = (vCache.leave.count - _videoTraffic.leave.count) * 1.0 / _gaterFrequency;
     _pullSessionStatus.videoStatus.lastReceivePts = vCache.enter.ts;
     
     _pullSessionStatus.audioStatus.cacheCount = aCache.enter.count - aCache.leave.count;
-    _pullSessionStatus.audioStatus.cacheTime  = aCache.enter.ts - aCache.leave.ts;
+    _pullSessionStatus.audioStatus.cacheTime  = GTimeSubtractMSValue(aCache.enter.ts, aCache.leave.ts);
     _pullSessionStatus.audioStatus.bitrate    = (aCache.enter.byte - _audioTraffic.enter.byte) * 1.0 / _gaterFrequency;
     _pullSessionStatus.audioStatus.frameRate  = (aCache.leave.count - _audioTraffic.leave.count) * 1.0 / _gaterFrequency;
     _pullSessionStatus.audioStatus.lastReceivePts = aCache.enter.ts;

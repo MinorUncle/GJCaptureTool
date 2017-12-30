@@ -575,6 +575,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             R_BufferWrite(&frame->retain, (GUInt8*)&pixel_buffer, sizeof(CVPixelBufferRef));
             frame->height                                           = (GInt32) wkSelf.destSize.height;
             frame->width                                            = (GInt32) wkSelf.destSize.width;
+            frame->pts = GTimeMake(time.value, time.timescale);
             wkSelf.callback(frame);
             R_BufferUnRetain((GJRetainBuffer *) frame);
         };
@@ -738,8 +739,12 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 inline static GBool videoProduceSetup(struct _GJVideoProduceContext *context, VideoFrameOutCallback callback, GHandle userData) {
     GJAssert(context->obaque == GNULL, "上一个视频生产器没有释放");
     IOS_VideoProduce *recode = [[IOS_VideoProduce alloc] init];
+    NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
     recode.callback          = ^(R_GJPixelFrame *frame) {
-        callback(userData, frame);
+        if (callback) {
+            callback(userData, frame);
+        }
+        callFunc(&context->pipleNode,&frame->retain,GJMediaType_Video);
     };
 
     context->obaque = (__bridge_retained GHandle) recode;
@@ -926,6 +931,8 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
         *produceContext = (GJVideoProduceContext *) malloc(sizeof(GJVideoProduceContext));
     }
     GJVideoProduceContext *context = *produceContext;
+    memset(context, 0, sizeof(GJVideoProduceContext));
+    pipleNodeInit(&context->pipleNode, GNULL);
     context->videoProduceSetup     = videoProduceSetup;
     context->videoProduceUnSetup   = videoProduceUnSetup;
     context->startProduce          = videoProduceStart;
@@ -958,6 +965,7 @@ GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "videoProduceUnSetup 没有调用，自动调用");
         (*context)->videoProduceUnSetup(*context);
     }
+    pipleNodeUnInit(&(*context)->pipleNode);
     free(*context);
     *context = GNULL;
 }

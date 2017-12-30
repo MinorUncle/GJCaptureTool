@@ -52,8 +52,6 @@ typedef struct _GJLivePushContext {
     GTime  firstAudioEncodeClock;
     GTime  connentClock;
     GTime  disConnentClock;
-    GInt32 operationACount; //用来避免使用线程锁
-    GInt32 operationVCount; //用来避免使用线程锁
 
     GJLivePushCallback callback;
     GHandle            userData;

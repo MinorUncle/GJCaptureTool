@@ -13,7 +13,7 @@
 /**
  获得当前时间
 
- @return in us
+ @return scale in us
  */
 GTime GJ_Gettime();
 #endif /* GJUtil_h */

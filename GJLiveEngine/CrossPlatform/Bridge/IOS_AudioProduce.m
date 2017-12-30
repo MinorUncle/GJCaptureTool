@@ -25,10 +25,6 @@
 inline static GBool audioProduceSetup(struct _GJAudioProduceContext *context, AudioFrameOutCallback callback, GHandle userData) {
     GJAssert(context->obaque == GNULL, "上一个音频生产器没有释放");
   
-    if (callback == GNULL) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "回调函数不能为空");
-        return GFalse;
-    }
 #ifdef AUDIO_QUEUE_RECODE
     GJAudioQueueRecoder *recoder = [[GJAudioQueueRecoder alloc] initWithStreamWithSampleRate:format.mSampleRate channel:format.mChannelsPerFrame formatID:formatid];
     recoder.callback             = ^(R_GJPCMFrame *frame) {
@@ -40,8 +36,12 @@ inline static GBool audioProduceSetup(struct _GJAudioProduceContext *context, Au
 #ifdef AMAZING_AUDIO_ENGINE
 
     GJAudioManager *manager = [[GJAudioManager alloc] init];
+    NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
     manager.audioCallback   = ^(R_GJPCMFrame *frame) {
-        callback(userData, frame);
+        if (callback) {
+            callback(userData, frame);
+        }
+        callFunc(&context->pipleNode,&frame->retain,GJMediaType_Audio);
     };
     if (!manager) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "GJAudioManager setup ERROR");
@@ -251,6 +251,8 @@ GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext **recodeContext) {
         *recodeContext = (GJAudioProduceContext *) malloc(sizeof(GJAudioProduceContext));
     }
     GJAudioProduceContext *context = *recodeContext;
+    memset(context, 0, sizeof(GJAudioProduceContext));
+    pipleNodeInit(&context->pipleNode, GNULL);
     context->audioProduceSetup     = audioProduceSetup;
     context->audioProduceUnSetup   = audioProduceUnSetup;
     context->setAudioFormat        = setAudioFormat;
@@ -275,6 +277,7 @@ GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext **context) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "encodeUnSetup 没有调用，自动调用");
         (*context)->audioProduceUnSetup(*context);
     }
+    pipleNodeUnInit(&(*context)->pipleNode);
     free(*context);
     *context = GNULL;
 }

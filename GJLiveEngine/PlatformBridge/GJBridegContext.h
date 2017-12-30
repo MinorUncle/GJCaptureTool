@@ -20,24 +20,33 @@ typedef GVoid (*RecodeCompleteCallback) (GHandle userData,const GChar* filePath,
 typedef GVoid (*GJStickerUpdateCallback)(GHandle userDate,GLong index,const GHandle ioParm,GBool* ioFinish);
 typedef GVoid (*AudioMixFinishCallback) (GHandle userData,const GChar* filePath, GHandle error);
 
-typedef GBool (*NodeReceiveDataFunc)(GJRetainBuffer* data,GJMediaType dataType);
+struct GJPipleNode;
+typedef GBool (*NodeFlowDataFunc)(struct GJPipleNode* node, GJRetainBuffer* data,GJMediaType dataType);
 
 typedef struct GJPipleNode{
 
 //    可能有多个sub，比如编码器会连接到发送器和录制器
     struct GJPipleNode** subNodes;
     GInt32 subCount;
-    NodeReceiveDataFunc receiveData;
+    NodeFlowDataFunc receiveData;
     pthread_rwlock_t* lock;
 }GJPipleNode;
 
-#define pipleNodeLock(node) pthread_rwlock_rdlock(node->lock)
-#define pipleNodeUnLock(node) pthread_rwlock_unlock(node->lock)
+#define pipleNodeLock(node) pthread_rwlock_rdlock((node)->lock)
+#define pipleNodeUnLock(node) pthread_rwlock_unlock((node)->lock)
 
-GBool pipleNodeInit(GJPipleNode* node,NodeReceiveDataFunc receiveData);
+
+/**
+ 初始化
+
+ @param node node description
+ @param receiveData 该node从此函数接受数据
+ @return return 该node 产生的数据务必传递给此函数,也可以通过NodeFlowDataFunc 获取，
+ */
+NodeFlowDataFunc pipleNodeInit(GJPipleNode* node,NodeFlowDataFunc receiveData);
 GBool pipleNodeUnInit(GJPipleNode* node);
+NodeFlowDataFunc pipleNodeFlowFunc(GJPipleNode* node);
 GBool pipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode);
-
 
 /**
  断开superNode与subNode的连接
@@ -152,12 +161,10 @@ typedef struct _GJEncodeToAACContext{
 typedef struct _GJAACDecodeContext{
     GJPipleNode pipleNode;
     GHandle obaque;
-    pthread_mutex_t lock;
 
     GBool   (*decodeSetup)            (struct _GJAACDecodeContext* context, GJAudioFormat sourceFormat, GJAudioFormat destForamt, AudioFrameOutCallback callback, GHandle userData);
     GVoid   (*decodeUnSetup)          (struct _GJAACDecodeContext* context);
     GBool   (*decodePacket)           (struct _GJAACDecodeContext* context, R_GJPacket* packet);
-    AudioFrameOutCallback           decodeeCompleteCallback;
 }GJAACDecodeContext;
 
 typedef struct _GJH264DecodeContext{
@@ -166,8 +173,6 @@ typedef struct _GJH264DecodeContext{
     GBool   (*decodeSetup)            (struct _GJH264DecodeContext* context, GJPixelType format, VideoFrameOutCallback callback, GHandle userData);
     GVoid   (*decodeUnSetup)          (struct _GJH264DecodeContext* context);
     GBool   (*decodePacket)           (struct _GJH264DecodeContext* context, R_GJPacket* packet);
-    
-    VideoFrameOutCallback      decodeeCompleteCallback;
 }GJH264DecodeContext;
 
 typedef struct _GJEncodeToH264eContext{

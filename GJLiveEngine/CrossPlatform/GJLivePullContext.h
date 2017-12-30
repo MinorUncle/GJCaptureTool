@@ -20,7 +20,7 @@
 
 typedef enum _GJLivePullMessageType {
     GJLivePull_messageInvalid,
-    GJLivePull_connectSuccess,
+    GJLivePull_connectSuccess,//GLONG
     GJLivePull_closeComplete,
     GJLivePull_connectError,
     GJLivePull_urlPraseError,

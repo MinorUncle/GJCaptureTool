@@ -13,7 +13,7 @@
 #import "GJPCMDecodeFromAAC.h"
 #import <Foundation/Foundation.h>
 inline static GBool decodeSetup(struct _GJAACDecodeContext *context, GJAudioFormat sourceFormat, GJAudioFormat destForamt, AudioFrameOutCallback callback, GHandle userData) {
-    pthread_mutex_lock(&context->lock);
+    pipleNodeLock(&context->pipleNode);
     GJAssert(context->obaque == GNULL, "上一个音频解码器没有释放");
     if (sourceFormat.mType != GJAudioType_AAC) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码音频源格式不支持");
@@ -23,10 +23,7 @@ inline static GBool decodeSetup(struct _GJAACDecodeContext *context, GJAudioForm
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码目标音频格式不支持");
         return GFalse;
     }
-    if (callback == GNULL) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "回调函数不能为空");
-        return GFalse;
-    }
+
     AudioStreamBasicDescription s = {0};
     s.mBitsPerChannel             = sourceFormat.mBitsPerChannel;
     s.mFramesPerPacket            = sourceFormat.mFramePerPacket;
@@ -43,18 +40,21 @@ inline static GBool decodeSetup(struct _GJAACDecodeContext *context, GJAudioForm
     d.mFramesPerPacket                   = 1;
     d.mFormatFlags                       = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
     GJPCMDecodeFromAAC *decode           = [[GJPCMDecodeFromAAC alloc] initWithDestDescription:d SourceDescription:s];
-    context->decodeeCompleteCallback     = callback;
+    NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
     decode.decodeCallback                = ^(R_GJPCMFrame *frame) {
-        callback(userData, frame);
+        if (callback) {
+            callback(userData, frame);
+        }
+        callFunc(&context->pipleNode,&frame->retain,GJMediaType_Audio);
     };
     context->obaque = (__bridge_retained GHandle) decode;
     [decode start];
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "aac decode decodeSetup:%p", decode);
-    pthread_mutex_unlock(&context->lock);
+    pipleNodeUnLock(&context->pipleNode);
     return GTrue;
 }
 inline static GVoid decodeUnSetup(struct _GJAACDecodeContext *context) {
-    pthread_mutex_lock(&context->lock);
+    pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
         GJPCMDecodeFromAAC *decode = (__bridge_transfer GJPCMDecodeFromAAC *) (context->obaque);
         [decode stop];
@@ -62,14 +62,21 @@ inline static GVoid decodeUnSetup(struct _GJAACDecodeContext *context) {
         GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "aac decode unSetup:%p", decode);
         decode = nil;
     }
-    pthread_mutex_unlock(&context->lock);
+    pipleNodeUnLock(&context->pipleNode);
 }
 inline static GBool decodePacket(struct _GJAACDecodeContext *context, R_GJPacket *packet) {
-    pthread_mutex_lock(&context->lock);
+    pipleNodeLock(&context->pipleNode);
     GJPCMDecodeFromAAC *decode = (__bridge GJPCMDecodeFromAAC *) (context->obaque);
     [decode decodePacket:packet];
-    pthread_mutex_unlock(&context->lock);
+    pipleNodeUnLock(&context->pipleNode);
     return GTrue;
+}
+inline static GBool decodePacketFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
+    
+    pipleNodeLock(context);
+    GBool result = decodePacket((GJAACDecodeContext*)context,(R_GJPacket*)data);
+    pipleNodeUnLock(context);
+    return  result;
 }
 
 GVoid GJ_AACDecodeContextCreate(GJAACDecodeContext **decodeContext) {
@@ -77,18 +84,19 @@ GVoid GJ_AACDecodeContextCreate(GJAACDecodeContext **decodeContext) {
         *decodeContext = (GJAACDecodeContext *) malloc(sizeof(GJAACDecodeContext));
     }
     GJAACDecodeContext *context = *decodeContext;
-    pthread_mutex_init(&context->lock, GNULL);
+    memset(context, 0, sizeof(GJAACDecodeContext));
+    pipleNodeInit(&context->pipleNode,decodePacketFunc);
+
     context->decodeSetup             = decodeSetup;
     context->decodeUnSetup           = decodeUnSetup;
-    context->decodePacket            = decodePacket;
-    context->decodeeCompleteCallback = NULL;
+    context->decodePacket            = GNULL;
 }
 GVoid GJ_AACDecodeContextDealloc(GJAACDecodeContext **context) {
     if ((*context)->obaque) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "decodeUnSetup 没有调用，自动调用");
         (*context)->decodeUnSetup(*context);
     }
-    //pthread_mutex_destroy(&(*context)->lock);
+    pipleNodeUnInit(&(*context)->pipleNode);
     free(*context);
     *context = GNULL;
 }

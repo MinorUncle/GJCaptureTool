@@ -14,8 +14,13 @@ inline static GBool encodeSetup(struct _GJEncodeToH264eContext *context, GJPixel
     GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
     GJH264Encoder *encoder = [[GJH264Encoder alloc] initWithSourceSize:CGSizeMake((CGFloat) format.mWidth, (CGFloat) format.mHeight)];
     GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Encoder setup:%p", encoder);
+    
+    NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
     encoder.completeCallback = ^(R_GJPacket *packet) {
-        callback(userData, packet);
+        if (callback) {
+            callback(userData, packet);
+        }
+        callFunc(&context->pipleNode,&packet->retain,GJMediaType_Video);
     };
     context->obaque = (__bridge_retained GHandle) encoder;
     return GTrue;
@@ -89,11 +94,21 @@ inline static GBool encodeGetSPS_PPS(struct _GJEncodeToH264eContext *context, GU
     return result;
 }
 
+inline static GBool encodeFrameFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
+    pipleNodeLock(context);
+    encodeFrame((GJEncodeToH264eContext*)context,(R_GJPixelFrame*)data);
+    pipleNodeUnLock(context);
+    return  GTrue;
+}
+
+
 GVoid GJ_H264EncodeContextCreate(GJEncodeToH264eContext **encodeContext) {
     if (*encodeContext == NULL) {
         *encodeContext = (GJEncodeToH264eContext *) malloc(sizeof(GJEncodeToH264eContext));
     }
     GJEncodeToH264eContext *context = *encodeContext;
+    memset(context, 0, sizeof(GJEncodeToH264eContext));
+    pipleNodeInit(&context->pipleNode, encodeFrameFunc);
     context->encodeSetup            = encodeSetup;
     context->encodeUnSetup          = encodeUnSetup;
     context->encodeFrame            = encodeFrame;
@@ -111,6 +126,7 @@ GVoid GJ_H264EncodeContextDealloc(GJEncodeToH264eContext **context) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "encodeUnSetup 没有调用，自动调用");
         (*context)->encodeUnSetup(*context);
     }
+    pipleNodeUnInit(&(*context)->pipleNode);
     free(*context);
     *context = GNULL;
 }

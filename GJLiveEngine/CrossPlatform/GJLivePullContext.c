@@ -75,7 +75,7 @@ GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
                 result = GFalse;
                 break;
             }
-            context->startPullClock = GJ_Gettime() / 1000;
+            context->startPullClock = GJ_Gettime();
         }
         pthread_mutex_unlock(&context->lock);
     } while (0);
@@ -202,14 +202,15 @@ static GVoid pullMessageCallback(GJStreamPull *pull, kStreamPullMessageType mess
             break;
         case kStreamPullMessageType_connectSuccess: {
             GJLOG(livePull, GJ_LOGINFO, "pull connectSuccess");
-            livePull->connentClock = GJ_Gettime() / 1000.0;
-            GTime connentDur       = livePull->connentClock - livePull->startPullClock;
+            livePull->connentClock = GJ_Gettime();
+            GLong connentDur       =GTimeMSValue(GTimeSubtract(livePull->connentClock , livePull->startPullClock));
+
             livePull->callback(livePull->userData, GJLivePull_connectSuccess, &connentDur);
         } break;
         case kStreamPullMessageType_closeComplete: {
             GJLOG(livePull, GJ_LOGINFO, "pull closeComplete");
             GJPullSessionInfo info = {0};
-            info.sessionDuring     = GJ_Gettime() / 1000 - livePull->startPullClock;
+            info.sessionDuring     = GTimeMSValue(GTimeSubtract(GJ_Gettime(), livePull->startPullClock));
             livePull->callback(livePull->userData, GJLivePull_closeComplete, (GHandle) &info);
         } break;
         default:
@@ -234,9 +235,9 @@ void pullDataCallback(GJStreamPull *pull, R_GJPacket *packet, void *parm) {
     } else {
 
         livePull->audioUnDecodeByte += R_BufferSize(&packet->retain);
-        if (livePull->fristAudioPullClock == G_TIME_INVALID) {
+        if (G_TIME_IS_INVALID(livePull->fristAudioPullClock)) {
             if (packet->extendDataSize > 0 && packet->flag == GJPacketFlag_KEY) {
-                livePull->fristAudioPullClock = GJ_Gettime() / 1000.0;
+                livePull->fristAudioPullClock = GJ_Gettime();
                 uint8_t *adts                 = packet->extendDataOffset + R_BufferStart(&packet->retain);
                 uint8_t  sampleIndex          = adts[2] << 2;
                 sampleIndex                   = sampleIndex >> 4;
@@ -295,8 +296,8 @@ static GVoid aacDecodeCompleteCallback(GHandle userData, R_GJPCMFrame *frame) {
 static GVoid h264DecodeCompleteCallback(GHandle userData, R_GJPixelFrame *frame) {
 
     GJLivePullContext *pullContext = userData;
-    if (pullContext->fristVideoPullClock == G_TIME_INVALID) {
-        pullContext->fristVideoPullClock = GJ_Gettime() / 1000.0;
+    if (G_TIME_IS_INVALID(pullContext->fristVideoPullClock)) {
+        pullContext->fristVideoPullClock = GJ_Gettime();
         GJLivePlay_SetVideoFormat(pullContext->player, frame->type);
         GJPullFristFrameInfo info = {0};
         info.size.width           = (GFloat32) frame->width; //CGSizeMake((float)frame->width, (float)frame->height);

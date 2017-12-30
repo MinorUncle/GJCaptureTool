@@ -131,7 +131,7 @@ typedef struct PullInfo{
     GFloat32 frameRate;//
     GLong  cacheTime;
     GLong  cacheCount;
-    GLong  lastReceivePts;
+    GTime  lastReceivePts;
 }GJPullInfo;
 typedef struct UnitBufferInfo{
     GFloat32 percent;//byte/s
@@ -168,8 +168,8 @@ typedef enum _ConnentCloceReason{
 typedef struct _PullSessionInfo{
     GLong pullFrameCount;
     GLong dropFrameCount;
-    GTime sessionDuring;
-    GTime buffingTimes;
+    GLong sessionDuring;
+    GLong buffingTimes;
     GLong buffingCount;
 }GJPullSessionInfo;
 

@@ -141,7 +141,7 @@ static void pcmHandleInputBuffer(void *aqData, AudioQueueRef inAQ, AudioQueueBuf
         R_BufferWrite(&buffer->retain, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
         //        memcpy(buffer->retain.data, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
         //        buffer->retain.size = inBuffer->mAudioDataByteSize;
-        buffer->pts = inStartTime->mHostTime;
+        buffer->pts = GTimeMake(CACurrentMediaTime()*1000, 1000);
         tempSelf.callback(buffer);
 
         R_BufferUnRetain(&buffer->retain);

@@ -27,7 +27,7 @@
 #define GRationalValue(rational) (GFloat32)(rational).num*1.0/(rational).den
 
 typedef struct TrafficUnit{
-    GLong ts;//ms,最新pts，排序后
+    GTime ts;//ms,最新pts，排序后
     GTime clock;//ms,最新的系统时间
 //    GLong dts;//dts只能单调上升，否则重新开始计算
     GLong count;
@@ -61,16 +61,16 @@ typedef struct TrafficStatus{
 
 typedef struct PCMFrame{
     GJRetainBuffer retain;
-    GInt64 pts;
-    GInt64 dts;
+    GTime pts;
+    GTime dts;
     GInt32 channel;
 }R_GJPCMFrame;
 
 typedef struct PixelFrame{
     GJRetainBuffer retain;
     GJPixelType type;
-    GInt64 pts;
-    GInt64 dts;
+    GTime pts;
+    GTime dts;
     GInt32 width;
     GInt32 height;
 }R_GJPixelFrame;
@@ -85,8 +85,8 @@ typedef enum _GJPacketFlag{
 typedef struct GJPacket{
     GJRetainBuffer retain;
     GJMediaType type;
-    GInt64 pts;
-    GInt64 dts;
+    GTime pts;
+    GTime dts;
     GInt64 dataOffset;
     GInt32 dataSize;
     GInt64 extendDataOffset;

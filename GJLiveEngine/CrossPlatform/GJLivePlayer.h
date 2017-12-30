@@ -45,13 +45,13 @@ typedef enum _GJPlayMessage {
     GJPlayMessage_FristRender,
 } GJPlayMessage;
 typedef struct CacheInfo {
-    GTime lowWaterFlag;
-    GTime highWaterFlag;
-    GTime speedTotalDuration;
-    GTime bufferTotalDuration;
-    GTime lastBufferDuration;
-    GTime bufferTimes;
-    GTime lastPauseFlag;
+    GLong lowWaterFlag;
+    GLong highWaterFlag;
+    GLong speedTotalDuration;
+    GLong bufferTotalDuration;
+    GLong lastBufferDuration;
+    GLong bufferTimes;
+    GLong lastPauseFlag;
 } GJCacheInfo;
 typedef struct PlayControl {
     GJPlayStatus    status;
@@ -66,8 +66,8 @@ typedef struct _GJNetShakeInfo {
     GInt32 collectUpdateDur;
     GTime collectStartClock;
     GTime collectStartPts;
-    GTime maxDownShake;
-    GTime preMaxDownShake;
+    GLong maxDownShake;
+    GLong preMaxDownShake;
     
 #ifdef NETWORK_DELAY
     GInt32 networkDelay;
@@ -99,6 +99,7 @@ typedef struct SyncControl {
 typedef GVoid (*GJLivePlayCallback)(GHandle userDate, GJPlayMessage message, GHandle param);
 
 typedef struct _GJLivePlayContext {
+    GJPipleNode pipleNode;
     GHandle            userDate;
     GJLivePlayCallback callback;
     GJSyncControl      syncControl;
@@ -121,39 +122,21 @@ GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame);
 GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame);
 GVoid GJLivePlay_SetAudioFormat(GJLivePlayer *player, GJAudioFormat audioFormat);
 GVoid GJLivePlay_SetVideoFormat(GJLivePlayer *player, GJPixelType audioFormat);
-
 GHandle GJLivePlay_GetVideoDisplayView(GJLivePlayer *player);
 
 GJTrafficStatus GJLivePlay_GetVideoCacheInfo(GJLivePlayer *player);
 GJTrafficStatus GJLivePlay_GetAudioCacheInfo(GJLivePlayer *player);
+
+inline static GBool GJLivePlay_NodeAddData(GJPipleNode* node,GJRetainBuffer* data, GJMediaType type){
+    if (type == GJMediaType_Audio) {
+       return GJLivePlay_AddAudioData((GJLivePlayer*)node, (R_GJPCMFrame*)data);
+    }else{
+       return  GJLivePlay_AddVideoData((GJLivePlayer*)node, (R_GJPixelFrame*)data);
+    }
+}
+
 #ifdef NETWORK_DELAY
 //采集到显示的延迟
 GLong GJLivePlay_GetNetWorkDelay(GJLivePlayer *player);
 #endif
 
-//@protocol GJLivePlayerDeletate <NSObject>
-//
-//-(void)livePlayer:(GJLivePlayer*)livePlayer bufferUpdatePercent:(float)percent duration:(long)duration;
-//
-//@end
-//
-//
-//
-//@interface GJLivePlayer : NSObject
-//@property(readonly,nonatomic)UIView* displayView;
-//@property(weak,nonatomic)id<GJLivePlayerDeletate> delegate;
-//
-//
-//@property(assign,nonatomic)AudioStreamBasicDescription audioFormat;
-//
-//-(void)start;
-//-(void)stop;
-//-(BOOL)addVideoDataWith:(CVImageBufferRef)imageData pts:(int64_t)pts;
-//-(BOOL)addAudioDataWith:(GJRetainBuffer*)audioData pts:(int64_t)pts;
-//-(GJTrafficStatus)getVideoCache;
-//-(GJTrafficStatus)getAudioCache;
-//#ifdef NETWORK_DELAY
-//-(long)getNetWorkDelay;
-//#endif
-//
-//@end

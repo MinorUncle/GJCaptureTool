@@ -44,7 +44,7 @@ GFloat32 GJStreamPush_GetBufferRate(GJStreamPush *push);
 GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush *push);
 GJTrafficStatus GJStreamPush_GetAudioBufferCacheInfo(GJStreamPush *push);
 
-static inline GBool GJStreamPush_NodeRecodeData(GJStreamPush *push, R_GJPacket *data,GJMediaType type){
+static inline GBool GJStreamPush_NodeReceiveData(GJStreamPush *push, R_GJPacket *data,GJMediaType type){
     if (type == GJMediaType_Audio) {
         return GJStreamPush_SendAudioData(push, data);
     }else{
