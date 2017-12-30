@@ -25,7 +25,8 @@ static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务
 {
     UIButton* _startBtn;
     UIButton* _arStartBtn;
-
+    UIButton* _uiStartBtn;
+    UIButton* _paintStartBtn;
     UITextField* _pushAddr;
     UITextField* _pullAddr;
     
@@ -38,18 +39,23 @@ static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务
     [super viewDidLoad];
 //    self.navigationController.navigationBarHidden = YES;
     self.view.backgroundColor = [UIColor whiteColor];
-    CGRect rect = CGRectMake(0, 200, 80, 40);
 
+    int yCount = 6;
+    CGFloat yPadding = 100;
+    CGFloat height = 50;
+    CGFloat marrgin = (self.view.bounds.size.height - yPadding*2 - yCount * height)/(yCount - 1);
+
+    CGRect rect = CGRectMake(0, yPadding, 80, height);
     UILabel* leftLab = [[UILabel alloc]initWithFrame:rect];
     leftLab.text = @"拉流地址";
     [self.view addSubview:leftLab];
     
-    rect.origin.y += 100;
+    rect.origin.y = CGRectGetMaxY(rect)+marrgin;
     leftLab = [[UILabel alloc]initWithFrame:rect];
     leftLab.text = @"推流地址";
     [self.view addSubview:leftLab];
     
-    rect.origin.y = 200;
+    rect.origin.y = yPadding;
     rect.origin.x = leftLab.frame.size.width;
     rect.size.width = self.view.bounds.size.width - rect.size.width;
 
@@ -58,29 +64,41 @@ static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务
     _pullAddr.text = pullUlr;
     [self.view addSubview:_pullAddr];
 
-    rect.origin.y += 100;
+    rect.origin.y = CGRectGetMaxY(rect)+marrgin;
     _pushAddr = [[UITextField alloc]initWithFrame:rect];
     _pushAddr.text = pushUrl;
     _pushAddr.borderStyle =  UITextBorderStyleRoundedRect;
     [self.view addSubview:_pushAddr];
     
+    rect.origin.y = CGRectGetMaxY(rect)+marrgin;
     rect.origin.x = 0;
     rect.size.width = self.view.bounds.size.width;
-    rect.origin.y += 100;
     _startBtn = [[UIButton alloc]initWithFrame:rect];
     [_startBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchUpInside];
     [_startBtn setTitle:@"普通直播" forState:UIControlStateNormal];
     [_startBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.view addSubview:_startBtn];
     
-    rect.origin.x = 0;
-    rect.size.width = self.view.bounds.size.width;
-    rect.origin.y += 100;
+    rect.origin.y = CGRectGetMaxY(rect)+marrgin;
     _arStartBtn = [[UIButton alloc]initWithFrame:rect];
     [_arStartBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchUpInside];
     [_arStartBtn setTitle:@"AR直播" forState:UIControlStateNormal];
     [_arStartBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.view addSubview:_arStartBtn];
+    
+    rect.origin.y = CGRectGetMaxY(rect)+marrgin;
+    _uiStartBtn = [[UIButton alloc]initWithFrame:rect];
+    [_uiStartBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchUpInside];
+    [_uiStartBtn setTitle:@"直播3 v" forState:UIControlStateNormal];
+    [_uiStartBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [self.view addSubview:_uiStartBtn];
+    
+    rect.origin.y = CGRectGetMaxY(rect)+marrgin;
+    _paintStartBtn = [[UIButton alloc]initWithFrame:rect];
+    [_paintStartBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchUpInside];
+    [_paintStartBtn setTitle:@"直播3 p" forState:UIControlStateNormal];
+    [_paintStartBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [self.view addSubview:_paintStartBtn];
     // Do any additional setup after loading the view.
 }
 -(void)startBtn:(UIButton*)btn{
@@ -97,9 +115,14 @@ static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务
     c.pushAddr = push;
     
     if (btn == _arStartBtn) {
-        c.isAr = YES;
+        c.type = kGJCaptureTypeAR;
+    }else if (btn == _startBtn){
+        c.type = kGJCaptureTypeCamera;
+    }else if(btn == _paintStartBtn){
+        c.type = kGJCaptureTypePaint;
+    }else if (btn == _uiStartBtn){
+        c.type = kGJCaptureTypeView;
     }
-    
     [self.navigationController pushViewController:c animated:YES];
 }
 

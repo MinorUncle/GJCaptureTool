@@ -80,7 +80,8 @@ typedef struct _GJVideoProduceContext{
     GVoid   (*stopProduce)            (struct _GJVideoProduceContext* context);
     GBool   (*startPreview)           (struct _GJVideoProduceContext* context);
     GBool   (*setARScene)             (struct _GJVideoProduceContext* context,GHandle scene);
-    GBool   (*setCaptureView)             (struct _GJVideoProduceContext* context,GView view);
+    GBool   (*setCaptureView)         (struct _GJVideoProduceContext* context,GView view);
+    GBool   (*setCaptureType)         (struct _GJVideoProduceContext* context,GJCaptureType type);
 
     GVoid   (*stopPreview)            (struct _GJVideoProduceContext* context);
     GHandle (*getRenderView)          (struct _GJVideoProduceContext* context);
@@ -187,7 +188,6 @@ typedef struct _GJEncodeToH264eContext{
 }GJEncodeToH264eContext;
 
 
-extern GVoid GJ_RecodeContextCreate(GJRecodeContext** context);
 extern GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext** context);
 extern GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext** context);
 extern GVoid GJ_AACDecodeContextCreate(GJAACDecodeContext** context);
@@ -197,7 +197,6 @@ extern GVoid GJ_H264EncodeContextCreate(GJEncodeToH264eContext** context);
 extern GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext** context);
 extern GVoid GJ_PictureDisplayContextCreate(GJPictureDisplayContext** context);
 
-extern GVoid GJ_RecodeContextDealloc(GJRecodeContext** context);
 extern GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext** context);
 extern GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext** context);
 extern GVoid GJ_AACDecodeContextDealloc(GJAACDecodeContext** context);

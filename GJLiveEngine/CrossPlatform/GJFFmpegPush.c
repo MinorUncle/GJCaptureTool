@@ -57,7 +57,7 @@ static GHandle sendRunloop(GHandle parm) {
     }
     pthread_mutex_lock(&push->mutex);
     if (push->messageCallback) {
-        push->messageCallback(push->streamPushParm, kStreamPushMessageType_connectSuccess, GNULL);
+        push->messageCallback(push, push->streamPushParm, kStreamPushMessageType_connectSuccess, GNULL);
     }
     pthread_mutex_unlock(&push->mutex);
 
@@ -197,7 +197,7 @@ static GHandle sendRunloop(GHandle parm) {
 
             pthread_mutex_lock(&push->mutex);
             if (push->messageCallback) {
-                push->messageCallback(push->streamPushParm,kStreamPushMessageType_packetSendSignal,&(packet->type));
+                push->messageCallback(push, push->streamPushParm,kStreamPushMessageType_packetSendSignal,&(packet->type));
             }
             pthread_mutex_unlock(&push->mutex);
 
@@ -240,7 +240,7 @@ END:
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&push->mutex);
     if (push->messageCallback) {
-        push->messageCallback(push->streamPushParm, errType, errParm);
+        push->messageCallback(push, push->streamPushParm, errType, errParm);
     }
     push->sendThread = GNULL;
     if (push->releaseRequest == GTrue) {

@@ -41,7 +41,7 @@ typedef void(^ARUpdateBlock)();
 -(void)livePush:(GJLivePush*_Nonnull)livePush closeConnent:(GJPushSessionInfo*_Nonnull)info resion:(GJConnentCloceReason)reason;
 -(void)livePush:(GJLivePush*_Nonnull)livePush connentSuccessWithElapsed:(GLong)elapsed;
 -(void)livePush:(GJLivePush*_Nonnull)livePush dynamicVideoUpdate:(VideoDynamicInfo*_Nonnull)elapsed;
--(void)livePush:(GJLivePush*_Nonnull)livePush UIRecodeFinish:(NSError*_Nonnull)error;
+-(void)livePush:(GJLivePush*_Nonnull)livePush recodeFinish:(NSError*_Nullable)error;
 -(void)livePush:(GJLivePush*_Nonnull)livePush errorType:(GJLiveErrorType)type infoDesc:(NSString*_Nonnull)info;
 //-(void)livePush:(GJLivePush*)livePush pushPacket:(R_GJH264Packet*)packet;
 //-(void)livePush:(GJLivePush*)livePush pushImagebuffer:(CVImageBufferRef)packet pts:(CMTime)pts;
@@ -100,6 +100,7 @@ typedef void(^OverlaysUpdate)(NSInteger index,const GJOverlayAttribute* _Nullabl
 //录屏直播
 @property (nonatomic,retain         ) UIView*              _Nullable                    captureView;
 
+@property (nonatomic,assign         ) GJCaptureType captureType;
 //- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
 
 //- (void)stopCapture;

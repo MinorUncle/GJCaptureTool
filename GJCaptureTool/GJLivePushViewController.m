@@ -26,6 +26,7 @@
 @property (strong, nonatomic) GJLivePush *livePush;
 @property (copy, nonatomic) NSString* pushAddr;
 
+@property (strong, nonatomic) UIButton *paintBtn;
 @property (strong, nonatomic) UIButton *pushStartBtn;
 @property (strong, nonatomic) UIButton *audioMixBtn;
 @property (strong, nonatomic) UIButton *earPlay;
@@ -66,7 +67,7 @@
 
 @end
 @implementation PushManager
-- (instancetype)initWithPushUrl:(NSString*)url
+- (instancetype)initWithPushUrl:(NSString*)url type:(GJCaptureType)type
 {
     self = [super init];
     if (self) {
@@ -82,9 +83,14 @@
         config.mAudioSampleRate = 44100;
         config.mPushSize = (GSize){480, 640};
         config.mVideoBitrate = 8*80*1024;
-        config.mFps = 15;
+        if (type == kGJCaptureTypePaint) {
+            config.mFps = 30;
+        }else{
+            config.mFps = 15;
+        }
         config.mAudioBitrate = 128*1000;
         _livePush = [[GJLivePush alloc]init];
+        _livePush.captureType = type;
         [_livePush setPushConfig:config];
         //        _livePush.enableAec = YES;
         _livePush.delegate = self;
@@ -101,8 +107,6 @@
     _timeLab = [[UILabel alloc]init];
     [self.view addSubview:_timeLab];
     
-    UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
-    [_view addGestureRecognizer:tap];
     
     _livePush.previewView.contentMode = UIViewContentModeScaleAspectFit;
     _livePush.previewView.backgroundColor = [UIColor blackColor];
@@ -117,6 +121,21 @@
     [_pushStartBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_pushStartBtn];
     
+    if (_livePush.captureType == kGJCaptureTypePaint) {
+        _paintBtn = [[UIButton alloc]init];
+        [_paintBtn setTitle:@"全屏" forState:UIControlStateNormal];
+        [_paintBtn setTitle:@"恢复" forState:UIControlStateSelected];
+        [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
+        [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateSelected];
+        [_paintBtn setShowsTouchWhenHighlighted:YES];
+        [_paintBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:_paintBtn];
+    }else{
+        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+        [_view addGestureRecognizer:tap];
+        
+    }
+
     _pushStateLab = [[UILabel alloc]init];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
@@ -321,11 +340,25 @@
     
     CGRect rect = self.view.bounds;
     _livePush.previewView.frame = rect;
+    [_messureModel sizeToFit];
+    CGSize size =  _messureModel.bounds.size;
+    
     
     CGFloat hOffset = CGRectGetMaxY([self findViewController:self.view].navigationController.navigationBar.frame);
     int leftCount = 6;
+    
+    if (_livePush.captureType == kGJCaptureTypePaint) {
+        rect.size.width = frame.size.width * 0.4;
+        rect.size.height = (frame.size.height-hOffset) / leftCount;
+        if(rect.size.height > 50)rect.size.height = 50;
+        rect.origin.x = frame.size.width*0.3;
+        rect.origin.y = hOffset;
+        _paintBtn.frame = rect;
+    }
+    
     rect.origin = CGPointMake(0, hOffset);
-    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.view.bounds.size.height-hOffset) / leftCount);
+    rect.size = CGSizeMake(frame.size.width*0.5, (frame.size.height-hOffset) / leftCount);
+    
     _pushStateLab.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
@@ -344,8 +377,8 @@
     _currentV.frame = rect;
     
     int rightCount = 16;
-    rect.origin = CGPointMake(self.view.bounds.size.width*0.5, hOffset);
-    rect.size = CGSizeMake(self.view.bounds.size.width*0.5, (self.view.bounds.size.height-hOffset) / rightCount);
+    rect.origin = CGPointMake(frame.size.width - size.width, hOffset);
+    rect.size = CGSizeMake(size.width, (self.view.bounds.size.height-hOffset) / rightCount);
     _pushStartBtn.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
@@ -439,7 +472,39 @@
 
 -(void)takeSelect:(UIButton*)btn{
     btn.selected = !btn.selected;
-    if (btn == _trackImage) {
+    if (btn == _paintBtn) {
+        if (btn.selected) {
+            [UIView animateWithDuration:0.4 animations:^{
+                for (UIView* view in _view.superview.subviews) {
+                    if (view != _view) {
+                        view.alpha = 0;
+                    }
+                }
+                for (UIView* view in _view.subviews) {
+                    if (view != _paintBtn && view != _livePush.previewView) {
+                        view.alpha = 0;
+                    }
+                }
+                _beforeFullframe = _frame;
+                self.frame = [UIScreen mainScreen].bounds;
+            }];
+        }else{
+            [UIView animateWithDuration:0.4 animations:^{
+                for (UIView* view in _view.subviews) {
+                    if (view != _paintBtn && view != _livePush.previewView) {
+                        view.alpha = 1;
+                    }
+                }
+                for (UIView* view in _view.superview.subviews) {
+                    if (view != _view) {
+                        view.alpha = 1;
+                    }
+                }
+                self.frame = _beforeFullframe;
+            }];
+        }
+        
+    }else if (btn == _trackImage) {
         if (btn.selected) {
             NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
             images[0] = [UIImage imageNamed:[NSString stringWithFormat:@"%d.png",1]];
@@ -474,6 +539,7 @@
             for (int i = 0; i< 1; i++) {
                 overlays[0] = [GJOverlayAttribute overlayAttributeWithImage:[self getSnapshotImageWithSize:rect.size] frame:frame rotate:0];
             }
+            __weak PushManager* wkSelf = self;
             [_livePush startStickerWithImages:overlays fps:15 updateBlock:^ void(NSInteger index,const GJOverlayAttribute* ioAttr, BOOL *ioFinish) {
                 
                 *ioFinish = NO;
@@ -487,11 +553,11 @@
                     ioAttr.image = image;
                 }
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    image = [self getSnapshotImageWithSize:rect.size];
+                    image = [wkSelf getSnapshotImageWithSize:rect.size];
                 });
                 
                 ioAttr.rotate = r;
-                //                return [GJStickerAttribute stickerAttributWithImage:image frame:frame rotate:r];
+                //return [GJStickerAttribute stickerAttributWithImage:image frame:frame rotate:r];
             }];
             
             //            NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
@@ -681,7 +747,7 @@
 //    }
 //
 //}
--(void)livePush:(GJLivePush *)livePush UIRecodeFinish:(NSError *)error{
+-(void)livePush:(GJLivePush *)livePush recodeFinish:(NSError *)error{
     _uiRecode.enabled = YES;
     if (error) {
         NSLog(@"RECODE ERROR:%@",error);
@@ -1007,24 +1073,39 @@
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGDEBUG);
     //    RTMP_LogSetLevel(RTMP_LOGDEBUG);
-    _pushManager = [[PushManager alloc]initWithPushUrl:_pushAddr];
     
+    if(_type == kGJCaptureTypeAR){
+        if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){
+            [[[UIAlertView alloc]initWithTitle:@"提示" message:@"该手机不支持ar,已切换到普通直播" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles: nil] show];
+            _type = kGJCaptureTypeCamera;
+        }
+    }
+    _pushManager = [[PushManager alloc]initWithPushUrl:_pushAddr type:_type];
+    //ui放在后面，因为ar一定要先设置ARScene
     [self buildUI];
     [self updateFrame];
-    
-    if (_isAr) {
-            if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){
-                [[[UIAlertView alloc]initWithTitle:@"提示" message:@"该手机不支持ar,已切换到普通直播" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles: nil] show];
-            }else{
-                _pushManager.livePush.ARScene = [[GJSunSystemARScene alloc]init];
-            }
-    }else{
-//        _isUILive = YES;
-//        _pushManager.livePush.captureView = _pulls[0].view;
+    switch (_type) {
+        case kGJCaptureTypeView:{
+            _pushManager.livePush.captureView = _pulls[0].view;
+            _pushManager.livePush.captureType = kGJCaptureTypeView;
+            break;
+        }
+        case kGJCaptureTypePaint:{
+            _pushManager.livePush.captureType = kGJCaptureTypePaint;
+            break;
+        }
+        case kGJCaptureTypeAR:
+        {
+            _pushManager.livePush.ARScene = [[GJSunSystemARScene alloc]init];
+            _pushManager.livePush.captureType = kGJCaptureTypeAR;
+            break;
+        }
+
+        default:
+            break;
     }
     
 
-    
 }
 
 -(void)viewWillAppear:(BOOL)animated{

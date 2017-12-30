@@ -41,23 +41,6 @@ static GBool     requestDestoryServer;
 static void _GJLivePush_SetCodeBitrate(GJLivePushContext *context, GInt32 destRate);
 static void _GJLivePush_GetQualityInfo(GJLivePushContext *context, GInt32* ioBitrate, GJNetworkQuality * oQuality,GRational* oVideoDropStep);
 
-
-static GVoid _recodeCompleteCallback(GHandle userData, const GChar *filePath, GHandle error) {
-    GJLivePushContext *context = userData;
-    pthread_mutex_lock(&context->lock);
-    context->recoder->unSetup(context->recoder);
-    if (context->pushConfig == GNULL) { //表示已经释放了，需要自己释放
-        pthread_mutex_unlock(&context->lock);
-
-        pthread_mutex_destroy(&context->lock);
-        free(context);
-        return;
-    }
-    context->callback(context->userData, GJLivePush_recodeComplete, error);
-    context->recoder = GNULL;
-    pthread_mutex_unlock(&context->lock);
-}
-
 static GVoid videoCaptureFrameOutCallback(GHandle userData, R_GJPixelFrame *frame) {
     GJLivePushContext *context = userData;
     if (context->stopPushClock == G_TIME_INVALID) {
@@ -99,15 +82,6 @@ static GVoid audioCaptureFrameOutCallback(GHandle userData, R_GJPCMFrame *frame)
             frame->pts = GJ_Gettime() / 1000 - context->connentClock;
 #endif
             context->audioEncoder->encodeFrame(context->audioEncoder, frame);
-            if (context->recoder) {
-
-                pthread_mutex_lock(&context->lock);
-                if (context->recoder) {
-
-                    context->recoder->sendAudioSourcePacket(context->recoder, frame);
-                }
-                pthread_mutex_unlock(&context->lock);
-            }
         }
         context->operationACount--;
     }
@@ -239,24 +213,53 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
     if (context->firstVideoEncodeClock == G_TIME_INVALID) {
 
         GJAssert(packet->flag && GJPacketFlag_KEY, "第一帧非关键帧");
-        context->preCheckVideoTraffic = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
+        context->preCheckVideoTraffic = GJStreamPush_GetVideoBufferCacheInfo(context->streamPush);
         context->firstVideoEncodeClock = GJ_Gettime() / 1000;
-        GJStreamPush_SendVideoData(context->videoPush, packet);
+        GJStreamPush_SendVideoData(context->streamPush, packet);
 
     } else {
-        GJTrafficStatus vbufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
-        GJTrafficStatus aBufferStatus = GJStreamPush_GetAudioBufferCacheInfo(context->videoPush);
-        GJStreamPush_SendVideoData(context->videoPush, packet);
+        GJTrafficStatus vbufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->streamPush);
+        GJTrafficStatus aBufferStatus = GJStreamPush_GetAudioBufferCacheInfo(context->streamPush);
+        GJStreamPush_SendVideoData(context->streamPush, packet);
         _GJLivePush_CheckBufferCache(context,vbufferStatus,aBufferStatus);
     }
 }
 
 static GVoid aacPacketOutCallback(GHandle userData, R_GJPacket *packet) {
     GJLivePushContext *context = userData;
-    GJStreamPush_SendAudioData(context->videoPush, packet);
+    GJStreamPush_SendAudioData(context->streamPush, packet);
 }
 
-GVoid streamPushMessageCallback(GHandle userData, kStreamPushMessageType messageType, GHandle messageParm) {
+static GVoid streamRecodeMessageCallback(GJStreamPush* push, GHandle userData, kStreamPushMessageType messageType, GHandle messageParm) {
+    GJLivePushContext *context = userData;
+    switch (messageType) {
+        case kStreamPushMessageType_closeComplete: {
+            pthread_mutex_lock(&context->lock);
+            GJStreamPush_CloseAndDealloc(&context->streamRecode);
+             context->callback(context->userData, GJLivePush_recodeSuccess, GNULL);
+            pthread_mutex_unlock(&context->lock);
+            break;
+        }
+        case kStreamPushMessageType_urlPraseError:{
+            pthread_mutex_lock(&context->lock);
+            GJStreamPush_CloseAndDealloc(&context->streamRecode);
+            context->callback(context->userData, GJLivePush_recodeFaile, GNULL);
+            pthread_mutex_unlock(&context->lock);
+            break;
+        }
+        case kStreamPushMessageType_sendPacketError:{
+            pthread_mutex_lock(&context->lock);
+            GJStreamPush_CloseAndDealloc(&context->streamRecode);
+            context->callback(context->userData, GJLivePush_recodeFaile, GNULL);
+            pthread_mutex_unlock(&context->lock);
+            break;
+        }
+        default:
+            break;
+            
+    }
+}
+static GVoid streamPushMessageCallback(GJStreamPush* push,GHandle userData, kStreamPushMessageType messageType, GHandle messageParm) {
     GJLivePushContext *context = userData;
     switch (messageType) {
         case kStreamPushMessageType_connectSuccess: {
@@ -264,9 +267,9 @@ GVoid streamPushMessageCallback(GHandle userData, kStreamPushMessageType message
             context->connentClock = GJ_Gettime() / 1000;
             pthread_mutex_lock(&context->lock);
             
-            pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->videoPush);
+            pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamPush);
             
-            pipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->videoPush);
+            pipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamPush);
             
             context->audioProducer->audioProduceStart(context->audioProducer);
             context->videoProducer->startProduce(context->videoProducer);
@@ -294,8 +297,8 @@ GVoid streamPushMessageCallback(GHandle userData, kStreamPushMessageType message
         case kStreamPushMessageType_packetSendSignal:{
             GJMediaType packetType = *(GJMediaType*)messageParm;
             if (packetType == GJMediaType_Video && GRationalValue(context->videoDropStep) >= 0.9999) {
-                GJTrafficStatus vbufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
-                GJTrafficStatus abufferStatus = GJStreamPush_GetAudioBufferCacheInfo(context->videoPush);
+                GJTrafficStatus vbufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->streamPush);
+                GJTrafficStatus abufferStatus = GJStreamPush_GetAudioBufferCacheInfo(context->streamPush);
 
                 GLong cacheInPts = vbufferStatus.enter.ts - vbufferStatus.leave.ts;
                 GLong cacheInCount = vbufferStatus.enter.count - vbufferStatus.leave.count;
@@ -679,7 +682,7 @@ GVoid GJLivePush_SetConfig(GJLivePushContext *context, const GJPushConfig *confi
     }
 
     pthread_mutex_lock(&context->lock);
-    if (context->videoPush != GNULL) {
+    if (context->streamPush != GNULL) {
         GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "推流期间不能配置pushconfig");
     } else {
         if (context->pushConfig == GNULL) {
@@ -785,7 +788,7 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
     GBool result = GTrue;
     pthread_mutex_lock(&context->lock);
     do {
-        if (context->videoPush != GNULL) {
+        if (context->streamPush != GNULL) {
             GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "请先停止上一个流");
         } else {
             if (context->pushConfig == GNULL) {
@@ -850,15 +853,16 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
             vf.format.mType   = GJVideoType_H264;
             vf.bitrate        = context->pushConfig->mVideoBitrate;
 
-            if (!GJStreamPush_Create(&context->videoPush, streamPushMessageCallback, (GHandle) context, &aDFormat, &vf)) {
+            if (!GJStreamPush_Create(&context->streamPush, streamPushMessageCallback, (GHandle) context, &aDFormat, &vf)) {
                 GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "GJStreamPush_Create error");
                 result = GFalse;
                 break;
             };
 
-            if (!GJStreamPush_StartConnect(context->videoPush, url)) {
+            if (!GJStreamPush_StartConnect(context->streamPush, url)) {
                 GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "GJStreamPush_StartConnect error");
                 result = GFalse;
+                GJStreamPush_CloseAndDealloc(&context->streamRecode);
                 break;
             };
 
@@ -874,26 +878,33 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
 
 GVoid GJLivePush_StopPush(GJLivePushContext *context) {
     pthread_mutex_lock(&context->lock);
-    if (context->videoPush) {
+    if (context->streamPush) {
         context->stopPushClock = GJ_Gettime() / 1000;
         context->audioProducer->audioProduceStop(context->audioProducer);
         context->videoProducer->stopProduce(context->videoProducer);
         context->videoEncoder->encodeFlush(context->videoEncoder);
         context->audioEncoder->encodeFlush(context->audioEncoder);
         
-        pipleDisConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->videoPush);
+        pipleDisConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamPush);
         
-        pipleDisConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->videoPush);
+        pipleDisConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamPush);
         
         while (context->operationACount) {
             GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "GJLivePush_StopPush wait A 100 us");
-            usleep(100);
+            usleep(500);
         }
         while (context->operationVCount) {
             GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "GJLivePush_StopPush wait V 100 us");
-            usleep(100);
+            usleep(500);
         }
-        GJStreamPush_CloseAndDealloc(&context->videoPush);
+        if (context->streamRecode) {
+            GJStreamPush_CloseAndDealloc(&context->streamRecode);
+            while (context->streamRecode) {
+                GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "GJLivePush_StopPush wait stream recode 100 us");
+                usleep(500);
+            }
+        }
+        GJStreamPush_CloseAndDealloc(&context->streamPush);
     } else {
         GJLOG(LIVEPUSH_LOG, GJ_LOGWARNING, "重复停止推流流");
     }
@@ -910,6 +921,13 @@ GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene){
 GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view){
     pthread_mutex_lock(&context->lock);
     GBool result = context->videoProducer->setCaptureView(context->videoProducer,view);
+    pthread_mutex_unlock(&context->lock);
+    return result;
+}
+
+GBool GJLivePush_SetCaptureType(GJLivePushContext *context, GJCaptureType type){
+    pthread_mutex_lock(&context->lock);
+    GBool result = context->videoProducer->setCaptureType(context->videoProducer,type);
     pthread_mutex_unlock(&context->lock);
     return result;
 }
@@ -1118,10 +1136,6 @@ GVoid GJLivePush_Dealloc(GJLivePushContext **pushContext) {
             free(context->netSpeedUnit);
             context->netSpeedUnit = GNULL;
         }
-        if (context->recoder) { //让录制结束后自己释放
-            pthread_mutex_unlock(&context->lock);
-            return;
-        }
         pthread_mutex_unlock(&context->lock);
         pthread_mutex_destroy(&context->lock);
 
@@ -1131,11 +1145,11 @@ GVoid GJLivePush_Dealloc(GJLivePushContext **pushContext) {
 }
 
 GJTrafficStatus GJLivePush_GetVideoTrafficStatus(GJLivePushContext *context) {
-    return GJStreamPush_GetVideoBufferCacheInfo(context->videoPush);
+    return GJStreamPush_GetVideoBufferCacheInfo(context->streamPush);
 }
 
 GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext *context) {
-    return GJStreamPush_GetAudioBufferCacheInfo(context->videoPush);
+    return GJStreamPush_GetAudioBufferCacheInfo(context->streamPush);
 }
 
 GHandle GJLivePush_GetDisplayView(GJLivePushContext *context) {
@@ -1154,35 +1168,44 @@ GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps,
 
     pthread_mutex_lock(&context->lock);
     do {
-        if (context->recoder) {
-            GJLOG(LIVEPUSH_LOG, GJ_LOGFORBID, "上一个录制还未完成");
+        if (context->streamRecode) {
+            result = GFalse;
+            GJLOG(GNULL, GJ_LOGFORBID, "请先停止上一个录制");
+            break;
+        }
+        GJAudioFormat aFormat     = {0};
+        aFormat.mBitsPerChannel   = 16;
+        aFormat.mType             = GJAudioType_PCM;
+        aFormat.mFramePerPacket   = 1;
+        aFormat.mSampleRate       = context->pushConfig->mAudioSampleRate;
+        aFormat.mChannelsPerFrame = context->pushConfig->mAudioChannel;
+        
+        GJAudioStreamFormat aDFormat;
+        aDFormat.bitrate                = context->pushConfig->mAudioBitrate;
+        aDFormat.format                 = aFormat;
+        aDFormat.format.mFramePerPacket = 1024;
+        aDFormat.format.mType           = GJAudioType_AAC;
+        
+        GJVideoStreamFormat vf;
+        vf.format.mFps    = context->pushConfig->mFps;
+        vf.format.mWidth  = (GUInt32) context->pushConfig->mPushSize.width;
+        vf.format.mHeight = (GUInt32) context->pushConfig->mPushSize.height;
+        vf.format.mType   = GJVideoType_H264;
+        vf.bitrate        = context->pushConfig->mVideoBitrate;
+        
+        if(!GJStreamPush_Create(&context->streamRecode, streamRecodeMessageCallback, context, &aDFormat, &vf)){
+            GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "Recode_Create error");
             result = GFalse;
             break;
-        } else {
-            if (context->pushConfig == GNULL || context->pushConfig->mAudioSampleRate <= 0 || context->pushConfig->mAudioChannel <= 0) {
-                GJLOG(LIVEPUSH_LOG, GJ_LOGFORBID, "请先配置正确pushConfig");
-                result = GFalse;
-                break;
-            }
-            GJAudioFormat format     = {0};
-            format.mChannelsPerFrame = context->pushConfig->mAudioChannel;
-            format.mSampleRate       = context->pushConfig->mAudioSampleRate;
-            format.mType             = GJAudioType_PCM;
-            format.mBitsPerChannel   = 16;
-            format.mFramePerPacket   = 1;
-            GJ_RecodeContextCreate(&context->recoder);
-            context->recoder->setup(context->recoder, fileUrl, _recodeCompleteCallback, context);
-            
-            GJVideoFormat vFormat = {0};
-            vFormat.mFps = fps;
-            
-            context->recoder->addAudioSource(context->recoder, format);
-            context->recoder->addVideoSource(context->recoder,vFormat,view);
-            result = context->recoder->startRecode(context->recoder);
-            if (!result) {
-                GJLivePush_StopRecode(context);
-            }
-        }
+        };
+        
+        if (!GJStreamPush_StartConnect(context->streamRecode, fileUrl)) {
+            GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "Recode_Connect error");
+            result = GFalse;
+            GJStreamPush_CloseAndDealloc(&context->streamRecode);
+            break;
+        };
+        
     } while (0);
     pthread_mutex_unlock(&context->lock);
 
@@ -1191,9 +1214,7 @@ GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps,
 
 GVoid GJLivePush_StopRecode(GJLivePushContext *context) {
     pthread_mutex_lock(&context->lock);
-    if (context->recoder) {
-        context->recoder->stopRecode(context->recoder);
-    }
+    GJStreamPush_CloseAndDealloc(&context->streamRecode);
     pthread_mutex_unlock(&context->lock);
 }
 

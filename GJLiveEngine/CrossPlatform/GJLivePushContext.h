@@ -25,7 +25,8 @@
 typedef enum _GJLivePushMessageType {
     GJLivePush_messageInvalid,
     GJLivePush_connectSuccess, //data，到start time的延时
-    GJLivePush_recodeComplete,
+    GJLivePush_recodeSuccess,
+    GJLivePush_recodeFaile,
     GJLivePush_closeComplete,
     GJLivePush_dynamicVideoUpdate,
     GJLivePush_connectError,
@@ -36,12 +37,12 @@ typedef enum _GJLivePushMessageType {
 typedef GVoid (*GJLivePushCallback)(GHandle userDate, GJLivePushMessageType message, GHandle param);
 
 typedef struct _GJLivePushContext {
-    GJStreamPush *          videoPush;
+    GJStreamPush *          streamPush;
+    GJStreamPush *          streamRecode;
     GJEncodeToH264eContext *videoEncoder;
     GJEncodeToAACContext *  audioEncoder;
     GJVideoProduceContext * videoProducer;
     GJAudioProduceContext * audioProducer;
-    GJRecodeContext *       recoder;
 
     pthread_mutex_t lock;
 
@@ -93,6 +94,7 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context);
 GVoid GJLivePush_SetConfig(GJLivePushContext *context, const GJPushConfig *config);
 GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene);
 GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view);
+GBool GJLivePush_SetCaptureType(GJLivePushContext *context, GJCaptureType type);
 GBool GJLivePush_StartPreview(GJLivePushContext *context);
 GVoid GJLivePush_StopPreview(GJLivePushContext *context);
 GBool GJLivePush_SetAudioMute(GJLivePushContext *context, GBool mute);

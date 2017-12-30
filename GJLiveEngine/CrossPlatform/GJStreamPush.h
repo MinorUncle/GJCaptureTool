@@ -16,6 +16,7 @@
 
 #define MAX_URL_LENGTH 100
 #define PUSH_PACKET_PRE_SIZE 23
+typedef struct _GJStreamPush GJStreamPush;
 
 typedef enum _kStreamPushMessageType {
     kStreamPushMessageType_connectSuccess,
@@ -26,9 +27,8 @@ typedef enum _kStreamPushMessageType {
     kStreamPushMessageType_sendPacketError, //网络错误，发送失败
     
 } kStreamPushMessageType;
-typedef GVoid (*StreamPushMessageCallback)(GHandle userData, kStreamPushMessageType messageType,const GHandle messageParm);
+typedef GVoid (*StreamPushMessageCallback)(GJStreamPush* push, GHandle userData, kStreamPushMessageType messageType,const GHandle messageParm);
 
-typedef struct _GJStreamPush GJStreamPush;
 
 GBool GJStreamPush_Create(GJStreamPush **push, StreamPushMessageCallback callback, GHandle streamPushParm, const GJAudioStreamFormat *audioFormat, const GJVideoStreamFormat *videoFormat);
 GVoid GJStreamPush_CloseAndDealloc(GJStreamPush **push);

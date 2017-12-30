@@ -46,6 +46,13 @@ typedef struct GRational{
 
 
 typedef GHandle GView;
+
+typedef enum _GJCaptureType{
+    kGJCaptureTypeCamera,
+    kGJCaptureTypeView,
+    kGJCaptureTypePaint,
+    kGJCaptureTypeAR,
+}GJCaptureType;
 typedef enum _GJCaptureSizeType
 {
     kCaptureSize352_288,
