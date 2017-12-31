@@ -468,7 +468,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
             }
         }
 #endif
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "消耗音频 PTS:%lld size:%d",audioBuffer->pts,R_BufferSize(&audioBuffer->retain));
+//        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "消耗音频 PTS:%lld size:%d",audioBuffer->pts,R_BufferSize(&audioBuffer->retain));
         R_BufferUnRetain(&audioBuffer->retain);
         return GTrue;
     } else {
@@ -715,6 +715,8 @@ GBool GJLivePlay_Start(GJLivePlayer *player) {
         changeSyncType(&player->syncControl, kTimeSYNCVideo);
         queueEnablePush(player->playControl.imageQueue, GTrue);
         queueEnablePush(player->playControl.audioQueue, GTrue);
+        queueEnablePop(player->playControl.audioQueue, GTrue);
+        queueEnablePop(player->playControl.imageQueue, GTrue);
 
     } else {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "GJLivePlayer 重复 start");
@@ -1005,7 +1007,7 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
     
     GJLivePlay_CheckNetShake(player, audioFrame->pts);
     
-    if (player->audioPlayer->audioGetStatus(player->audioPlayer) != kPlayStatusRunning) {
+    if (player->audioPlayer->audioGetStatus(player->audioPlayer) <= kPlayStatusStop) {
         _syncControl->audioInfo.startPts               = audioFrame->pts;
         _syncControl->audioInfo.trafficStatus.leave.ts = audioFrame->pts; ///防止audioInfo.startPts不为从0开始时，audiocache过大，
         //防止视频先到，导致时差特别大

@@ -60,8 +60,8 @@ GBool GJLivePull_Create(GJLivePullContext **pullContext, GJLivePullCallback call
 }
 GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
     GBool result = GTrue;
+    pthread_mutex_lock(&context->lock);
     do {
-        pthread_mutex_lock(&context->lock);
         if (context->streamPull != GNULL) {
             GJLOG(context, GJ_LOGERROR, "请先停止上一个流");
         } else {
@@ -90,8 +90,8 @@ GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
             pipleConnectNode((GJPipleNode*)context->streamPull, &context->audioDecoder->pipleNode);
 
         }
-        pthread_mutex_unlock(&context->lock);
     } while (0);
+    pthread_mutex_unlock(&context->lock);
     return result;
 }
 GVoid GJLivePull_StopPull(GJLivePullContext *context) {
