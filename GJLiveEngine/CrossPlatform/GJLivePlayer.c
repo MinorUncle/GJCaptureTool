@@ -190,10 +190,10 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 
     GLong shake = (GTimeSencondValue(clock) - GTimeSencondValue(netShake->collectStartClock) - (GTimeSencondValue(pts) - GTimeSencondValue(netShake->collectStartPts)))*1000; //统计少发的抖动
 #ifdef NETWORK_DELAY
-    GInt32 delay = 0;
-    GTime testShake = 0;
+    GLong delay = 0;
+    GLong testShake = 0;
     if (NeedTestNetwork) {
-        delay = (GInt32)((GJ_Gettime() / 1000 ) & 0x7fffffff) - (GInt32)pts;
+        delay = (GLong)((GJ_Gettime().value ) & 0x7fffffff) - GTimeMSValue(pts);
         
         testShake = delay - netShake->collectStartDelay;
         
@@ -208,7 +208,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 #ifdef NETWORK_DELAY
         if (NeedTestNetwork && testShake > netShake->preMaxTestDownShake) {
             GJLOG(LOG_DEBUG, GJ_LOGDEBUG, "Current unit MaxDownShake:%lld  current delay:%d",netShake->maxDownShake,delay);
-            GTime parm = (GTime)delay;
+            GLong parm = (GLong)delay;
             player->callback(player->userDate,GJPlayMessage_TestKeyDelayUpdate,&parm);
         }
 #endif
@@ -456,7 +456,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
 #ifdef NETWORK_DELAY
         if (NeedTestNetwork) {
             if (_syncControl->syncType == kTimeSYNCAudio) {
-                GInt32 packetDelay = (GInt32)((GJ_Gettime() / 1000 ) & 0x7fffffff) - (GInt32)audioBuffer->pts;
+                GLong packetDelay = ((GJ_Gettime().value ) & 0x7fffffff) - GTimeMSValue(audioBuffer->pts);
                 _syncControl->netShake.networkDelay += packetDelay;
                 _syncControl->netShake.delayCount ++;
             }
@@ -603,7 +603,7 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
 #ifdef NETWORK_DELAY
         if (NeedTestNetwork) {
             if (_syncControl->syncType == kTimeSYNCVideo) {
-                GInt32 packetDelay = (GInt32)((GJ_Gettime() / 1000 ) & 0x7fffffff) - (GInt32)cImageBuf->pts;
+                GInt32 packetDelay = (GInt32)((GJ_Gettime().value) & 0x7fffffff) - (GInt32)GTimeMSValue(cImageBuf->pts);
                 _syncControl->netShake.networkDelay += packetDelay;
                 _syncControl->netShake.delayCount ++;
             }
@@ -1053,7 +1053,7 @@ GJTrafficStatus GJLivePlay_GetAudioCacheInfo(GJLivePlayer *player) {
 
 #ifdef NETWORK_DELAY
 GLong GJLivePlay_GetNetWorkDelay(GJLivePlayer *player){
-    GInt32 delay = 0;
+    GLong delay = 0;
     if (player->syncControl.netShake.delayCount > 0) {
         delay = player->syncControl.netShake.networkDelay / player->syncControl.netShake.delayCount;
     }

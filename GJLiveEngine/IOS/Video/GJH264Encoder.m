@@ -306,13 +306,11 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     GInt64 pts = ptsTime.value*1000/ptsTime.timescale;
     GInt64 dts;
 #ifdef NETWORK_DELAY
-    pushPacket->dts = GJ_Gettime()/1000;
+    dts = GJ_Gettime().value;
     if (encoder->_dtsDelta == 0) {
-        encoder->_dtsDelta = (int)GMAX(1000,(pushPacket->dts - pts.value)*4);
+        encoder->_dtsDelta = (int)GMAX(1000,(dts - pts)*4);
     }
-    pushPacket->dts -= encoder->_dtsDelta;
-//    pushPacket->dts = GJ_Gettime()/1000 - encoder->_fristTime;
-//    NSLog(@"decode Dur:%lld size:%d",pushPacket->dts - pts.value,pushPacket->dataSize);
+    dts -= encoder->_dtsDelta;
 
 #else
     dts = GJ_Gettime().value - encoder->_fristTime;

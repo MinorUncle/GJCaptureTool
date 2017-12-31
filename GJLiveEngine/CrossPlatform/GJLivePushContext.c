@@ -45,16 +45,7 @@ static GVoid videoCaptureFrameOutCallback(GHandle userData, R_GJPixelFrame *fram
     GJLivePushContext *context = userData;
     if (G_TIME_IS_INVALID(context->stopPushClock)) {
         if (!context->videoMute && (context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
-#ifdef NETWORK_DELAY
-            if (NeedTestNetwork) {
 
-                frame->pts = GJ_Gettime() / 1000;
-            }else{
-                frame->pts = GJ_Gettime() / 1000 - context->connentClock;
-            }
-#else
-//            frame->pts = GTimeSubtract(GJ_Gettime(), context->connentClock);
-#endif
             context->videoEncoder->encodeFrame(context->videoEncoder, frame);
         } else {
             GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "丢视频帧");

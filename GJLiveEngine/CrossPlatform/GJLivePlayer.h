@@ -70,11 +70,11 @@ typedef struct _GJNetShakeInfo {
     GLong preMaxDownShake;
     
 #ifdef NETWORK_DELAY
-    GInt32 networkDelay;
-    GInt32 delayCount;
-    GTime  collectStartDelay;
-    GTime  maxTestDownShake;
-    GTime  preMaxTestDownShake;
+    GLong networkDelay;
+    GLong delayCount;
+    GLong  collectStartDelay;
+    GLong  maxTestDownShake;
+    GLong  preMaxTestDownShake;
 
 #endif
 } GJNetShakeInfo;

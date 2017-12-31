@@ -102,7 +102,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
             break;
         case GJLivePull_testKeyDelayUpdate:
             if ([livePull.delegate respondsToSelector:@selector(livePull:testKeyDelay:)]) {
-                GTime time = *(GTime*)parm;
+                GLong time = *(GLong*)parm;
                 [livePull.delegate livePull:livePull testKeyDelay:(long)time];
             }
             break;
