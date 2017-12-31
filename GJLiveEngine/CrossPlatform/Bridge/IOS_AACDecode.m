@@ -12,34 +12,11 @@
 #import "GJLog.h"
 #import "GJPCMDecodeFromAAC.h"
 #import <Foundation/Foundation.h>
-inline static GBool decodeSetup(struct _GJAACDecodeContext *context, GJAudioFormat sourceFormat, GJAudioFormat destForamt, AudioFrameOutCallback callback, GHandle userData) {
+inline static GBool decodeSetup(struct _GJAACDecodeContext *context, GJAudioFormat destForamt, AudioFrameOutCallback callback, GHandle userData) {
     pipleNodeLock(&context->pipleNode);
     GJAssert(context->obaque == GNULL, "上一个音频解码器没有释放");
-    if (sourceFormat.mType != GJAudioType_AAC) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码音频源格式不支持");
-        return GFalse;
-    }
-    if (destForamt.mType != GJAudioType_PCM) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码目标音频格式不支持");
-        return GFalse;
-    }
 
-    AudioStreamBasicDescription s = {0};
-    s.mBitsPerChannel             = sourceFormat.mBitsPerChannel;
-    s.mFramesPerPacket            = sourceFormat.mFramePerPacket;
-    s.mSampleRate                 = sourceFormat.mSampleRate;
-    s.mFormatID                   = kAudioFormatMPEG4AAC;
-    s.mChannelsPerFrame           = sourceFormat.mChannelsPerFrame;
-
-    AudioStreamBasicDescription d = s;
-    d.mChannelsPerFrame           = destForamt.mChannelsPerFrame;
-    d.mSampleRate                 = destForamt.mSampleRate;
-    d.mFormatID                   = kAudioFormatLinearPCM; //PCM
-    d.mBitsPerChannel             = destForamt.mBitsPerChannel;
-    d.mBytesPerPacket = d.mBytesPerFrame = d.mChannelsPerFrame * d.mBitsPerChannel;
-    d.mFramesPerPacket                   = 1;
-    d.mFormatFlags                       = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
-    GJPCMDecodeFromAAC *decode           = [[GJPCMDecodeFromAAC alloc] initWithDestDescription:d SourceDescription:s];
+    GJPCMDecodeFromAAC *decode           = [[GJPCMDecodeFromAAC alloc] init];
     NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
     decode.decodeCallback                = ^(R_GJPCMFrame *frame) {
         if (callback) {
@@ -71,11 +48,25 @@ inline static GBool decodePacket(struct _GJAACDecodeContext *context, R_GJPacket
     pipleNodeUnLock(&context->pipleNode);
     return GTrue;
 }
+GJAudioFormat decodeGetDestFormat(struct _GJAACDecodeContext *context) {
+    GJPCMDecodeFromAAC *decode = (__bridge GJPCMDecodeFromAAC *) (context->obaque);
+    AudioStreamBasicDescription dest = decode.destFormat;
+    GJAudioFormat format = {0};
+    format.mBitsPerChannel = dest.mBitsPerChannel;
+    format.mChannelsPerFrame = dest.mChannelsPerFrame;
+    format.mType      = GJAudioType_PCM;
+    format.mFramePerPacket  = dest.mFramesPerPacket;
+    format.mSampleRate = dest.mSampleRate;
+    format.mFormatFlags = dest.mFormatFlags;
+    return format;
+}
 inline static GBool decodePacketFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
-    
-    pipleNodeLock(context);
-    GBool result = decodePacket((GJAACDecodeContext*)context,(R_GJPacket*)data);
-    pipleNodeUnLock(context);
+    GBool result = GFalse;
+    if (dataType == GJMediaType_Audio) {
+        pipleNodeLock(context);
+        result = decodePacket((GJAACDecodeContext*)context,(R_GJPacket*)data);
+        pipleNodeUnLock(context);
+    }
     return  result;
 }
 
@@ -89,6 +80,7 @@ GVoid GJ_AACDecodeContextCreate(GJAACDecodeContext **decodeContext) {
 
     context->decodeSetup             = decodeSetup;
     context->decodeUnSetup           = decodeUnSetup;
+    context->decodeGetDestFormat    = decodeGetDestFormat;
     context->decodePacket            = GNULL;
 }
 GVoid GJ_AACDecodeContextDealloc(GJAACDecodeContext **context) {

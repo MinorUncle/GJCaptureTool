@@ -9,6 +9,7 @@
 #import "GJAudioManager.h"
 #import <AVFoundation/AVFoundation.h>
 #import "GJLog.h"
+#import "GJUtil.h"
 
 #define PCM_FRAME_COUNT 1024
 
@@ -16,7 +17,8 @@
 @interface GJAudioManager () {
     R_GJPCMFrame *_alignCacheFrame;
     GInt32        _sizePerPacket;
-    float         _durPerSize;
+    GLong         _sendFrameCount;
+    GLong         _startTime;//ms
     NSMutableDictionary<id,id<AEAudioPlayable>>* _mixPlayers;
     BOOL          _needResumeEarMonitoring;
 }
@@ -117,30 +119,38 @@
 }
 
 - (void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time {
-    //    R_GJPCMFrame* pcmFrame = NULL;
-    //    printf("audio size:%d chchesize:%d pts:%lld\n",frame->mBuffers[0].mDataByteSize,_alignCacheFrame->retain.size,time);
-    int needSize = _sizePerPacket - R_BufferSize(&_alignCacheFrame->retain);
-    int leftSize = frame->mBuffers[0].mDataByteSize;
-    while (leftSize >= needSize) {
-        R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, needSize);
-        _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
-        _alignCacheFrame->pts     = GTimeMake(time - (GInt64)(R_BufferSize(&_alignCacheFrame->retain) * _durPerSize),1000);
+    //time 为一帧结束时间，pts为一帧开始时间
 
-//        static GTime pre;
-//        if (pre == 0) {
-//            pre = _alignCacheFrame->pts;
-//        }
-        //        printf("audio pts:%lld,size:%d dt:%lld\n",_alignCacheFrame->pts,_alignCacheFrame->retain.size,_alignCacheFrame->pts-pre);
-//        pre = _alignCacheFrame->pts;
+    int64_t timeCount = (time-_startTime)*_audioFormat.mSampleRate/1000;
+    if (timeCount < _sendFrameCount - PCM_FRAME_COUNT) {
+        GJLOG(GNULL, GJ_LOGWARNING, "采集数据过多，丢帧");
+        return;
+    }
+    while (timeCount > _sendFrameCount + 2*PCM_FRAME_COUNT) {
+        R_BufferWriteConst(&_alignCacheFrame->retain, 0, PCM_FRAME_COUNT* _audioFormat.mBytesPerFrame-R_BufferSize(&_alignCacheFrame->retain));
+        _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
+        _alignCacheFrame->pts     = GTimeMake(_sendFrameCount*1000/_audioFormat.mSampleRate+_startTime,1000);
         self.audioCallback(_alignCacheFrame);
         R_BufferUnRetain(&_alignCacheFrame->retain);
-        time             = time + needSize / _durPerSize;
+        _sendFrameCount += PCM_FRAME_COUNT;
         _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
-        leftSize         = leftSize - needSize;
-        needSize         = _sizePerPacket;
+        GJLOG(GNULL, GJ_LOGWARNING, "采集延迟，填充空白帧");
+    }
+    
+    int blackSize = _sizePerPacket - R_BufferSize(&_alignCacheFrame->retain);
+    int leftSize = frame->mBuffers[0].mDataByteSize;
+    while (leftSize >= blackSize) {
+        R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, blackSize);
+        _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
+        _alignCacheFrame->pts     = GTimeMake(_sendFrameCount*1000/_audioFormat.mSampleRate+_startTime,1000);
+        self.audioCallback(_alignCacheFrame);
+        R_BufferUnRetain(&_alignCacheFrame->retain);
+        _sendFrameCount += PCM_FRAME_COUNT;
+        _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
+        leftSize         = leftSize - blackSize;
+        blackSize         = _sizePerPacket;
     }
     if (leftSize > 0) {
-        _alignCacheFrame->pts = GTimeMake(time, 1000);
         R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, leftSize);
     }
 }
@@ -169,7 +179,8 @@
 - (BOOL)startRecode:(NSError **)error {
     GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc, GNULL, GNULL);
     _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
-
+    _sendFrameCount = 0;
+    _startTime = GTimeMSValue( GJ_Gettime());
     NSError *configError;
     [[GJAudioSessionCenter shareSession] lockBeginConfig];
     [[GJAudioSessionCenter shareSession] requestPlay:YES key:self.description error:&configError];
@@ -206,8 +217,6 @@
     if (preferredBufferDuration - _audioController.preferredBufferDuration > 0.01 || preferredBufferDuration - _audioController.preferredBufferDuration < -0.01) {
         [_audioController setPreferredBufferDuration:preferredBufferDuration];
     }
-    _durPerSize = 1000.0 / _audioController.audioDescription.mSampleRate / _audioController.audioDescription.mBytesPerFrame;
-
     
     if (![_audioController start:error]) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "AEAudioController start error:%@", (*error).description.UTF8String);

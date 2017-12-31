@@ -9,19 +9,14 @@
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import "GJRetainBuffer.h"
-typedef enum _PlayStatus{
-    kPlayAInvalidStatus = 0,
-    kPlayAStopStatus,
-    kPlayARunningStatus,
-    kPlayAPauseStatus,
-}PlayStatus;
+#import "GJLiveDefine+internal.h"
 @interface GJAudioQueuePlayer : NSObject
 
 @property (nonatomic,assign,readonly) BOOL available;
 @property (nonatomic,assign,readonly) AudioStreamBasicDescription format;
 @property (nonatomic,assign) float volume;
 @property (nonatomic,assign) UInt32 maxBufferSize;
-@property (nonatomic,assign,readonly) PlayStatus status;
+@property (nonatomic,assign,readonly) GJPlayStatus status;
 
 /**
  *  return playedTime of audioqueue, return invalidPlayedTime when error occurs.

@@ -77,6 +77,10 @@ inline static GFloat32 audioGetSpeed(struct _GJAudioPlayContext *context) {
     GJAudioQueueDrivePlayer *player = (__bridge GJAudioQueueDrivePlayer *) (context->obaque);
     return player.speed;
 }
+inline static GJPlayStatus audioGetStatus(struct _GJAudioPlayContext *context) {
+    GJAudioQueueDrivePlayer *player = (__bridge GJAudioQueueDrivePlayer *) (context->obaque);
+    return player.status;
+}
 GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext **audioPlayContext) {
     if (*audioPlayContext == NULL) {
         *audioPlayContext = (GJAudioPlayContext *) malloc(sizeof(GJAudioPlayContext));
@@ -90,6 +94,7 @@ GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext **audioPlayContext) {
     context->audioResume        = audioResume;
     context->audioSetSpeed      = audioSetSpeed;
     context->audioGetSpeed      = audioGetSpeed;
+    context->audioGetStatus     = audioGetStatus;
     context->audioPlayCallback  = GNULL;
 }
 GVoid GJ_AudioPlayContextDealloc(GJAudioPlayContext **context) {

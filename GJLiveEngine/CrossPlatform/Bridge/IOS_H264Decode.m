@@ -50,10 +50,14 @@ inline static GBool decodePacket(struct _GJH264DecodeContext *context, R_GJPacke
 }
 
 inline static GBool decodePacketFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
-    pipleNodeLock(context);
-    GBool result = decodePacket((GJH264DecodeContext*)context,(R_GJPacket*)data);
-    pipleNodeUnLock(context);
+    GBool result = GFalse;
+    if (dataType == GJMediaType_Video) {
+        pipleNodeLock(context);
+        result = decodePacket((GJH264DecodeContext*)context,(R_GJPacket*)data);
+        pipleNodeUnLock(context);
+    }
     return  result;
+    
 }
 
 GVoid GJ_H264DecodeContextCreate(GJH264DecodeContext **decodeContext) {

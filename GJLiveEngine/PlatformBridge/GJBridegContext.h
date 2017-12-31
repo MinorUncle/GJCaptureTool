@@ -146,6 +146,7 @@ typedef struct _GJAudioPlayContext{
     GBool   (*audioResume)            (struct _GJAudioPlayContext* context);
     GBool   (*audioSetSpeed)          (struct _GJAudioPlayContext* context, GFloat32 speed);
     GFloat32 (*audioGetSpeed)         (struct _GJAudioPlayContext* context);
+    GJPlayStatus (*audioGetStatus)    (struct _GJAudioPlayContext* context);
 }GJAudioPlayContext;
 
 typedef struct _GJEncodeToAACContext{
@@ -162,9 +163,11 @@ typedef struct _GJAACDecodeContext{
     GJPipleNode pipleNode;
     GHandle obaque;
 
-    GBool   (*decodeSetup)            (struct _GJAACDecodeContext* context, GJAudioFormat sourceFormat, GJAudioFormat destForamt, AudioFrameOutCallback callback, GHandle userData);
+    GBool   (*decodeSetup)            (struct _GJAACDecodeContext* context, GJAudioFormat destForamt, AudioFrameOutCallback callback, GHandle userData);
     GVoid   (*decodeUnSetup)          (struct _GJAACDecodeContext* context);
     GBool   (*decodePacket)           (struct _GJAACDecodeContext* context, R_GJPacket* packet);
+    GJAudioFormat   (*decodeGetDestFormat)(struct _GJAACDecodeContext* context);
+
 }GJAACDecodeContext;
 
 typedef struct _GJH264DecodeContext{

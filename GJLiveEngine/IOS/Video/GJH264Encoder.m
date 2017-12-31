@@ -42,7 +42,7 @@
         _bitrate    = 600;
         ;
         //        _allowMinBitRate = _currentBitRate;
-        _allowBFrame = YES;
+        _allowBFrame = NO;
 
         _profileLevel = profileLevelMain;
         _entropyMode  = EntropyMode_CABAC;

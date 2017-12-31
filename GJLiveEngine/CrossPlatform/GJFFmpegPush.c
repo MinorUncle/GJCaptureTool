@@ -175,7 +175,15 @@ static GHandle sendRunloop(GHandle parm) {
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts.value, packet->dts.value, packet->dataSize);
+        
+#ifdef DEBUG
+        static GLong preDTS[2];
+        GInt32 type = sendPacket->stream_index == push->aStream->index;
+//        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld ddts:%d size:%d\n",type, sendPacket->pts, sendPacket->pts,sendPacket->pts - preDTS[type], sendPacket->size);
+        preDTS[type] = sendPacket->pts;
+#endif
+
+//        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts.value, packet->dts.value, packet->dataSize);
 
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {

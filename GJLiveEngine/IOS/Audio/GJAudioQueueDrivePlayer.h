@@ -27,7 +27,7 @@ typedef BOOL(^FillDataCallBack)(void* data,int* size);
 @property (nonatomic,assign) float speed;
 
 @property (nonatomic,assign) UInt32 maxBufferSize;
-@property (nonatomic,assign,readonly) PlayStatus status;
+@property (nonatomic,assign,readonly) GJPlayStatus status;
 //@property (nonatomic,weak) id<GJAudioQueueDrivePlayerDelegate> delegate;
 //default 5
 @property (nonatomic,assign) int cacheBufferCount;

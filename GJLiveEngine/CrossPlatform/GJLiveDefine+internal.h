@@ -38,6 +38,15 @@ typedef struct TrafficStatus{
     GJTrafficUnit enter;
 }GJTrafficStatus;
 
+typedef enum _GJPlayStatus {
+    kPlayStatusInvalid,
+    kPlayStatusStop,
+    kPlayStatusRunning,
+    kPlayStatusPause,
+    kPlayStatusBuffering,
+} GJPlayStatus;
+
+
 //typedef struct H264Packet{
 //    GJRetainBuffer retain;
 //    GInt64 pts;

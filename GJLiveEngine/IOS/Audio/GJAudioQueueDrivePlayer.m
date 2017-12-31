@@ -77,7 +77,7 @@
 
 - (void)_init {
     _volume = 1.0f;
-    _status = kPlayAInvalidStatus;
+    _status = kPlayStatusInvalid;
 }
 
 #pragma mark - error
@@ -142,7 +142,7 @@
     propValue = kAudioQueueTimePitchAlgorithm_Spectral;
     AudioQueueSetProperty(_audioQueue, kAudioQueueProperty_TimePitchAlgorithm, &propValue, sizeof(propValue));
 
-    _status     = kPlayAStopStatus;
+    _status     = kPlayStatusStop;
     self.volume = 1.0;
     self.speed  = 1.0;
 }
@@ -162,8 +162,8 @@
         return YES;
     }
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AudioQueueStart");
-    if (_status != kPlayARunningStatus) {
-        _status = kPlayARunningStatus;
+    if (_status != kPlayStatusRunning) {
+        _status = kPlayStatusRunning;
 
         if (_format.mFormatID == kAudioFormatLinearPCM) {
             for (int i = 0; i < _cacheBufferCount - 1; ++i) {
@@ -173,7 +173,7 @@
                 memset(buffer->mAudioData, 0, buffer->mAudioDataByteSize);
                 status = AudioQueueEnqueueBuffer(_audioQueue, buffer, 0, NULL);
                 if (status != noErr) {
-                    _status = kPlayAStopStatus;
+                    _status = kPlayStatusStop;
                     AudioQueueDispose(_audioQueue, YES);
                     _audioQueue = NULL;
                     GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioQueueAllocateBuffer faile");
@@ -190,7 +190,7 @@
                 if (self.fillDataCallback(buffer->mAudioData, &size)) {
                     buffer->mAudioDataByteSize = size;
                 } else {
-                    _status = kPlayAStopStatus;
+                    _status = kPlayStatusStop;
                     GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "audio player get aac faile");
                     return NO;
                 };
@@ -201,7 +201,7 @@
 
                 status = AudioQueueEnqueueBuffer(_audioQueue, buffer, 1, &packet);
                 if (status != noErr) {
-                    _status = kPlayAStopStatus;
+                    _status = kPlayStatusStop;
                     AudioQueueDispose(_audioQueue, YES);
                     _audioQueue = NULL;
                     GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioQueueAllocateBuffer faile");
@@ -215,7 +215,7 @@
         OSStatus status = AudioQueueStart(_audioQueue, NULL);
         if (status != 0) {
             char *codeChar = (char *) &status;
-            _status        = kPlayAStopStatus;
+            _status        = kPlayStatusStop;
             AudioQueueDispose(_audioQueue, false);
             GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "播放失败 Error：%c%c%c%c CODE:%d", codeChar[3], codeChar[2], codeChar[1], codeChar[0], status);
             return NO;
@@ -226,13 +226,13 @@
 
 - (BOOL)resume {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "audioplay resume");
-    if (_status == kPlayAPauseStatus) {
-        _status         = kPlayARunningStatus;
+    if (_status == kPlayStatusPause) {
+        _status         = kPlayStatusRunning;
         OSStatus status = AudioQueueStart(_audioQueue, NULL);
         if (status != 0) {
             char *codeChar = (char *) &status;
             GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioQueueStartError：%c%c%c%c CODE:%d", codeChar[3], codeChar[2], codeChar[1], codeChar[0], status);
-            _status = kPlayAPauseStatus;
+            _status = kPlayStatusPause;
             return NO;
         }
     }
@@ -241,8 +241,8 @@
 
 - (BOOL)pause {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "audioplay pause");
-    if (_status != kPlayAPauseStatus) {
-        _status         = kPlayAPauseStatus;
+    if (_status != kPlayStatusPause) {
+        _status         = kPlayStatusPause;
         OSStatus status = AudioQueuePause(_audioQueue);
         if (status != noErr) {
             GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "pause error:%d", status);
@@ -275,8 +275,8 @@
 - (BOOL)stop:(BOOL)immediately {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AudioQueuestop");
 
-    PlayStatus pre  = _status; //防止监听部分重启
-    _status         = kPlayAStopStatus;
+    GJPlayStatus pre  = _status; //防止监听部分重启
+    _status         = kPlayStatusStop;
     OSStatus status = AudioQueueStop(_audioQueue, immediately);
     if (status != noErr) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioQueueStop error:%d", status);
@@ -359,7 +359,7 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
         memset(inBuffer->mAudioData, 0, inBuffer->mAudioDataByteSize);
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "play silence audio");
     }
-    if (player.status == kPlayAStopStatus) {
+    if (player.status == kPlayStatusStop) {
         AudioQueueFreeBuffer(inAQ, inBuffer);
         return;
     }
@@ -376,11 +376,11 @@ static void aacAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
 
     int dataSize = 0;
 
-    if (player.status == kPlayARunningStatus && player.fillDataCallback(inBuffer->mAudioData, &dataSize)) {
+    if (player.status == kPlayStatusRunning && player.fillDataCallback(inBuffer->mAudioData, &dataSize)) {
         inBuffer->mAudioDataByteSize = dataSize;
     } else {
 
-        if (player.status == kPlayAStopStatus) {
+        if (player.status == kPlayStatusStop) {
 
             AudioQueueFreeBuffer(inAQ, inBuffer);
             return;
@@ -403,7 +403,7 @@ static void MCAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
         UInt32 isRunning = 0;
         UInt32 size      = sizeof(isRunning);
         AudioQueueGetProperty(inAQ, inID, &isRunning, &size);
-        if (player.status == kPlayARunningStatus && !isRunning) {
+        if (player.status == kPlayStatusRunning && !isRunning) {
             [player start];
             GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "warnning ...... auto start");
         }

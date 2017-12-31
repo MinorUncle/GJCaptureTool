@@ -172,10 +172,13 @@ static GHandle pullRunloop(GHandle parm) {
             goto END;
         }
 
-
-        
+#ifdef DEBUG
+        GLong preDTS[2];
+        GInt32 type = pkt.stream_index == asIndex;
+//        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%d size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
+        preDTS[type] = pkt.pts;
+#endif
         if (pkt.stream_index == vsIndex) {
-            GJLOG(GNULL,GJ_LOGALL,"receive video pts:%lld dts:%lld size:%d\n", pkt.pts, pkt.dts, pkt.size);
 
 #if MENORY_CHECK
             R_GJPacket *h264Packet = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
@@ -209,7 +212,6 @@ static GHandle pullRunloop(GHandle parm) {
 
             R_BufferUnRetain(&h264Packet->retain);
         } else if (pkt.stream_index == asIndex) {
-            GJLOG(GNULL,GJ_LOGALL,"receive audio pts:%lld dts:%lld size:%d\n", pkt.pts, pkt.dts, pkt.size);
 #if MENORY_CHECK
             R_GJPacket *aacPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
             aacPacket->dataOffset = 0;

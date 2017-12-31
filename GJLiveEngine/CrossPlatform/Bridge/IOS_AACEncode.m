@@ -74,9 +74,7 @@ GVoid encodeFlush(struct _GJEncodeToAACContext *context) {
 }
 
 inline static GBool encodeFrameFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
-    pipleNodeLock(context);
     encodeFrame((GJEncodeToAACContext*)context,(R_GJPCMFrame*)data);
-    pipleNodeUnLock(context);
     return  GTrue;
 }
 

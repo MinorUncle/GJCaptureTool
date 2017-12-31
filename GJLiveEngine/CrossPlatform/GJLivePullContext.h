@@ -54,6 +54,7 @@ typedef struct _GJLivePullContext {
     GTime                fristVideoPullClock;
     GTime                fristAudioPullClock;
     GTime                fristVideoDecodeClock;
+    GTime                fristAudioDecodeClock;
 
     GJLivePullCallback callback;
     GHandle            userData;

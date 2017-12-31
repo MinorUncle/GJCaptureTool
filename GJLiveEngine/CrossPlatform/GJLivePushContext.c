@@ -761,7 +761,7 @@ GBool _livePushSetupVideoEncodeIfNeed(GJLivePushContext *context){
     }
     context->videoEncoder->encodeSetProfile(context->videoEncoder, profileLevelMain);
     context->videoEncoder->encodeSetGop(context->videoEncoder, context->pushConfig->mFps*4);
-    context->videoEncoder->encodeAllowBFrame(context->videoEncoder, GTrue);
+    context->videoEncoder->encodeAllowBFrame(context->videoEncoder, GFalse);
     context->videoEncoder->encodeSetEntropy(context->videoEncoder, EntropyMode_CABAC);
     context->videoEncoder->encodeSetBitrate(context->videoEncoder, context->pushConfig->mVideoBitrate);
     VideoDynamicInfo info;

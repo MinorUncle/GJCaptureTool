@@ -27,6 +27,4 @@ typedef void(^DecodeComplete)(R_GJPCMFrame* frame);
 
 -(void)decodePacket:(R_GJPacket*)packet;
 
-
-- (instancetype)initWithDestDescription:(AudioStreamBasicDescription)description SourceDescription:(AudioStreamBasicDescription)sourceDescription;
 @end

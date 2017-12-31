@@ -29,21 +29,28 @@ static int startCount;
 static int stopCount;
 
 @implementation GJPCMDecodeFromAAC
-- (instancetype)initWithDestDescription:(AudioStreamBasicDescription)destDescription SourceDescription:(AudioStreamBasicDescription)sourceDescription;
+- (BOOL)createCorverWithDescription:(AudioStreamBasicDescription)destDescription SourceDescription:(AudioStreamBasicDescription)sourceDescription
+{
+        _sourceFormat = sourceDescription;
+        _destFormat   = destDescription;
+    __block BOOL result = NO;
+    if ([NSThread isMainThread]) {
+        result = [self _createEncodeConverter];
+    }else{
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            result = [self _createEncodeConverter];
+        });
+    }
+    return result;
+}
+
+- (instancetype)init
 {
     self = [super init];
     if (self) {
-        _sourceFormat = sourceDescription;
-        _destFormat   = destDescription;
-
         [self initQueue];
     }
     return self;
-}
-
-- (instancetype)init {
-    AudioStreamBasicDescription s = {0}, d = [GJPCMDecodeFromAAC defaultDestFormatDescription];
-    return [self initWithDestDescription:d SourceDescription:s];
 }
 - (void)initQueue {
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_SERIAL);
@@ -72,7 +79,6 @@ static int stopCount;
 - (void)start {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AACDecode Start:%p", self);
     _running = YES;
-    [self _createEncodeConverter];
     startCount++;
 }
 - (void)stop {
@@ -145,8 +151,38 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 }
 
 - (void)decodePacket:(R_GJPacket *)packet {
+    if (!_running) {
+        return;
+    }
+    if (_decodeConvert == nil) {
+        if (packet->extendDataSize > 0) {
+            uint8_t *adts                 = packet->extendDataOffset + R_BufferStart(&packet->retain);
+            uint8_t  sampleIndex          = adts[2] << 2;
+            sampleIndex                   = sampleIndex >> 4;
+            int     sampleRate            = mpeg4audio_sample_rates[sampleIndex];
+            uint8_t channel               = (adts[2] & 0x1) << 2;
+            channel += (adts[3] & 0xc0) >> 6;
+            
+            AudioStreamBasicDescription s = {0};
+            s.mFramesPerPacket            = 1024;
+            s.mSampleRate                 = sampleRate;
+            s.mFormatID                   = kAudioFormatMPEG4AAC;
+            s.mChannelsPerFrame           = channel;
+            
+            
+            AudioStreamBasicDescription d = s;
+            d.mBitsPerChannel =16;
+            d.mFormatID                   = kAudioFormatLinearPCM; //PCM
+            d.mBytesPerPacket = d.mBytesPerFrame = d.mChannelsPerFrame * d.mBitsPerChannel/8;
+            d.mFramesPerPacket                   = 1;
+            d.mFormatFlags                       = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
+            [self createCorverWithDescription:d SourceDescription:s];
+        }else{
+            return;
+        }
+    }
     R_BufferRetain(&packet->retain);
-    if (!_running || !queuePush(_resumeQueue, packet, 0)) {
+    if (!queuePush(_resumeQueue, packet, 0)) {
         R_BufferUnRetain(&packet->retain);
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "aac decode to pcm queuePush faile");
     }
