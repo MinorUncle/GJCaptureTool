@@ -84,7 +84,7 @@ static GHandle IOS_PictureDisplayGetView(GJPictureDisplayContext *context) {
 }
 GVoid GJ_PictureDisplayContextCreate(GJPictureDisplayContext **disPlayContext) {
     if (*disPlayContext == NULL) {
-        *disPlayContext = (GJPictureDisplayContext *) malloc(sizeof(GJPictureDisplayContext));
+        *disPlayContext = (GJPictureDisplayContext *) calloc(1,sizeof(GJPictureDisplayContext));
     }
     GJPictureDisplayContext *context = *disPlayContext;
     context->displaySetup            = IOS_PictureDisplaySetup;

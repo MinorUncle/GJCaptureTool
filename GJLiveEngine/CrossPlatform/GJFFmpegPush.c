@@ -155,8 +155,8 @@ static GHandle sendRunloop(GHandle parm) {
         }
 
         av_init_packet(sendPacket);
-        sendPacket->pts = (GInt64)(packet->pts.value*1000/packet->pts.scale) & 0x00007fffffff;
-        sendPacket->dts = (GInt64)(packet->dts.value*1000/packet->pts.scale) & 0x00007fffffff;
+        sendPacket->pts = (GInt64)GTimeMSValue(packet->pts) & 0x7fffffff;
+        sendPacket->dts = (GInt64)GTimeMSValue(packet->dts) & 0x7fffffff;
         sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
         sendPacket->size = packet->dataSize;
         if (packet->type == GJMediaType_Video) {

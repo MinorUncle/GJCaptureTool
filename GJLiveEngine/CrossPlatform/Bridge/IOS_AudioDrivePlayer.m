@@ -18,6 +18,7 @@
 
 @end
 inline static GBool audioPlaySetup(struct _GJAudioPlayContext *context, GJAudioFormat format, FillDataCallback dataCallback, GHandle userData) {
+    GJAssert(context->obaque == GNULL, "上一个GJAudioQueueDrivePlayer 没有释放");
     if (format.mType != GJAudioType_PCM) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "视频格式不支持");
         return GFalse;
@@ -83,7 +84,7 @@ inline static GJPlayStatus audioGetStatus(struct _GJAudioPlayContext *context) {
 }
 GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext **audioPlayContext) {
     if (*audioPlayContext == NULL) {
-        *audioPlayContext = (GJAudioPlayContext *) malloc(sizeof(GJAudioPlayContext));
+        *audioPlayContext = (GJAudioPlayContext *) calloc(1,sizeof(GJAudioPlayContext));
     }
     GJAudioPlayContext *context = *audioPlayContext;
     context->audioPlaySetup     = audioPlaySetup;

@@ -53,7 +53,7 @@ GBool pipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode){
         }
     }
     if (!find) {
-        superNode->subNodes = realloc(superNode->subNodes, sizeof(GJPipleNode*)*superNode->subCount+1);
+        superNode->subNodes = realloc(superNode->subNodes, sizeof(GJPipleNode*)*(superNode->subCount+1));
         superNode->subNodes[superNode->subCount++] = subNode;
     }
     pthread_rwlock_unlock(superNode->lock);

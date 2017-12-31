@@ -2222,6 +2222,14 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				ENABLE_BITCODE = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					"malloc=GMalloc",
+					"free=GFree",
+					"realloc=GRealloc",
+					"calloc=GCalloc",
+				);
 				HEADER_SEARCH_PATHS = (
 					"\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"",
 					"\"$(SRCROOT)/../GJMp4Demo/Mp4v2Code/include\"/**",
