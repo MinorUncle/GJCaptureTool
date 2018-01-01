@@ -193,41 +193,39 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     GLong delay = 0;
     GLong testShake = 0;
     if (NeedTestNetwork) {
-        delay = (GLong)((GJ_Gettime().value ) & 0x7fffffff) - GTimeMSValue(pts);
+        delay = (GLong)((clock.value ) & 0x7fffffff) - GTimeMSValue(pts);
         
         testShake = delay - netShake->collectStartDelay;
         
         if (testShake > netShake->maxTestDownShake) {
             netShake->maxTestDownShake = testShake;
         }
+        
+        if (testShake > netShake->preMaxTestDownShake) {
+            GJLOG(LOG_DEBUG, GJ_LOGDEBUG, "Current unit MaxDownShake:%lld  current delay:%ld",netShake->maxDownShake,delay);
+            GLong parm = (GLong)delay;
+            player->callback(player->userDate,GJPlayMessage_TestKeyDelayUpdate,&parm);
+        }
     }
 #endif
     //    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "setLowshake:%lld,max:%lld ,preMax:%lld",shake,netShake->maxDownShake,netShake->preMaxDownShake);
     if (shake > netShake->maxDownShake) {
         netShake->maxDownShake = shake;
-#ifdef NETWORK_DELAY
-        if (NeedTestNetwork && testShake > netShake->preMaxTestDownShake) {
-            GJLOG(LOG_DEBUG, GJ_LOGDEBUG, "Current unit MaxDownShake:%lld  current delay:%ld",netShake->maxDownShake,delay);
-            GLong parm = (GLong)delay;
-            player->callback(player->userDate,GJPlayMessage_TestKeyDelayUpdate,&parm);
-        }
-#endif
+
         if (shake > netShake->preMaxDownShake) {
             updateWater(_syncControl, shake);
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "new shake to update max:%lld ,preMax:%lld", netShake->maxDownShake, netShake->preMaxDownShake);
             
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&shake);
-#ifdef NETWORK_DELAY
-            if (testShake != shake) {
-                GJLOG(GNULL, GJ_LOGWARNING, "测量值(%ld)与真实值(%ld)不相等",testShake,shake);
 
-            }
-            if (NeedTestNetwork) {
-                player->callback(player->userDate,GJPlayMessage_TestNetShakeUpdate,&testShake);
-            }
-#endif
         }
     }
+
+#ifdef NETWORK_DELAY
+    if (testShake != shake) {
+        GJLOG(GNULL, GJ_LOGWARNING, "测量值(%ld)与真实值(%ld)不相等",testShake,shake);
+    }
+#endif
     
     if(shake < 0){
         netShake->collectStartClock = clock;

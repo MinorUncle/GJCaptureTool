@@ -157,7 +157,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
                     }
                 }
             } else{
-                GJLOG(GNULL, GJ_LOGDEBUG,"favorableCount count:%d",context->favorableCount);
+                GJLOG(GNULL, GJ_LOGINFO,"favorableCount count:%d",context->favorableCount);
                 if (context->favorableCount / context->increaseSpeedStep > context->increaseCount &&
                     context->videoBitrate < context->pushConfig->mVideoBitrate) {
                     context->increaseCount = context->favorableCount / context->increaseSpeedStep;

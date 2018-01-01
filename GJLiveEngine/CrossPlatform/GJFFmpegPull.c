@@ -163,6 +163,11 @@ static GHandle pullRunloop(GHandle parm) {
             R_BufferUnRetain(&aaccPacket->retain);
         }
     }
+    
+    for (int i = 0; i < pull->formatContext->nb_streams; i++) {
+        av_dump_format(pull->formatContext, i, (const char*)pull->pullUrl, GFalse);
+    }
+
     AVPacket pkt;
     while (!pull->stopRequest) {
         GInt32 ret = av_read_frame(pull->formatContext, &pkt);

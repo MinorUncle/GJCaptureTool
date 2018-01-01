@@ -336,7 +336,11 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
     }
     AVIOInterruptCB cb = {.callback = interrupt_callback, .opaque = push};
     push->formatContext->interrupt_callback = cb;
+    AVDictionary* metadata = push->formatContext->metadata;
+    av_dict_set_int(&metadata, "fps", 15, 0);
+    av_dict_set(&metadata, "author", "GuangJin.Zhou", AV_DICT_MATCH_CASE);
 
+    push->formatContext->metadata = metadata;
     memcpy(push->pushUrl, sendUrl, strlen(sendUrl) + 1);
     AVCodec *audioCode = GNULL;
     AVCodec *videoCode = GNULL;
