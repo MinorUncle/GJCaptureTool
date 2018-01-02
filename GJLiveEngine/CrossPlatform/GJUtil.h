@@ -16,4 +16,8 @@
  @return scale in us
  */
 GTime GJ_Gettime();
+
+GInt32 GJ_GetCPUCount();
+GFloat32 GJ_GetCPUUsage();
+
 #endif /* GJUtil_h */
