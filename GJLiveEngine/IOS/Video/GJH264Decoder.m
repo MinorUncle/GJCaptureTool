@@ -81,7 +81,7 @@ void decodeOutputCallback(
     }
     GTime pts = GTimeMake(presentationTimeStamp.value, presentationTimeStamp.timescale);
     GTime  dts = GTimeMake((GInt64)sourceFrameRefCon, 1000);
-    GJLOGFREQ("decode packet output pts:%lld", pts);
+    GJLOGFREQ("decode packet output pts:%lld", pts.value);
 
     GJH264Decoder *decoder = (__bridge GJH264Decoder *) (decompressionOutputRefCon);
 

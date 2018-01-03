@@ -16,7 +16,7 @@
 struct _GJStreamPull {
     GJPipleNode pipleNode;
     AVFormatContext *formatContext;
-    GChar*             pullUrl[MAX_URL_LENGTH];
+    GChar             pullUrl[MAX_URL_LENGTH];
 #if MENORY_CHECK
     GJRetainBufferPool *memoryCachePool;
 #endif

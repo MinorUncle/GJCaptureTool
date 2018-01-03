@@ -60,7 +60,7 @@
         _assetWriter = [[AVAssetWriter alloc] initWithURL:[NSURL fileURLWithPath:self.destFileUrl.path]
                                                  fileType:AVFileTypeQuickTimeMovie
                                                     error:&error];
-        if(error)GJLOG(GNULL, GJ_LOGERROR, "AVAssetWriter  create error:%s",error.localizedDescription);
+        if(error)GJLOG(GNULL, GJ_LOGERROR, "AVAssetWriter  create error:%s",error.localizedDescription.UTF8String);
     }
     return self;
 }
@@ -252,7 +252,7 @@ NSData* createData;
                     _audioFrameCount += sizeFrame;
                     [self writeAudioWithSampleBuffer:sample pts:pts];
                     [self freeSampleBuffer:sample];
-                    GJLOG( GNULL,  GJ_LOGINFO, "appendSampleBuffer empty data，currentTimeFrames:%d audioframe:%d",currentTimeFrames,_audioFrameCount);
+                    GJLOG( GNULL,  GJ_LOGINFO, "appendSampleBuffer empty data，currentTimeFrames:%ld audioframe:%d",(long)currentTimeFrames,_audioFrameCount);
                 }else{
                     NSAssert(0, @"createBlackSampleBufferWithSample ERROR");
                     return;
@@ -283,7 +283,7 @@ NSData* createData;
             _fpsTimer=nil;
             [_videoInput markAsFinished];
             if (_assetWriter.error) {
-                GJLOG( GNULL,  GJ_LOGERROR,"_videoInput Finished,error:%s",_assetWriter.error.localizedFailureReason);
+                GJLOG( GNULL,  GJ_LOGERROR,"_videoInput Finished,error:%s",_assetWriter.error.localizedDescription.UTF8String);
             }else{
                 GJLOG( GNULL,  GJ_LOGDEBUG,"_videoInput Finished");
             }
@@ -344,7 +344,7 @@ NSData* createData;
                         NSInteger size = sizeFrame* _audioFormat.mBytesPerFrame;
                         if(currentTimeFrames - _audioFrameCount > 4* sizeFrame) {
                             [self addCurrentAudioSource:_slientData size:size];
-                            GJLOG( GNULL,  GJ_LOGINFO, "appendSampleBuffer2 empty data，currentTimeFrames:%d audioframe:%d",currentTimeFrames,_audioFrameCount);
+                            GJLOG( GNULL,  GJ_LOGINFO, "appendSampleBuffer2 empty data，currentTimeFrames:%ld audioframe:%ld",(long)currentTimeFrames,(long)_audioFrameCount);
                         }
                     }
                 }
@@ -360,7 +360,7 @@ NSData* createData;
         
         if(![adaptor appendPixelBuffer:pixelBuffer withPresentationTime:CMTimeMake(pts, 1000)]){
             
-            GJLOG( GNULL,  GJ_LOGINFO,"appendPixelBuffer pts:%f error:%@",time,_assetWriter.error);
+            GJLOG( GNULL,  GJ_LOGINFO,"appendPixelBuffer pts:%lld error:%s",pts,_assetWriter.error.localizedDescription.UTF8String);
             [self videoFourceFinsh];
         }else{
             GJLOG( GNULL,  GJ_LOGINFO,"appendPixelBuffer pts:%lld",pts);
@@ -372,7 +372,7 @@ NSData* createData;
     if([_audioInput isReadyForMoreMediaData]){
                 BOOL result =  [_audioInput appendSampleBuffer:sampleBuffer];
                 if (!result) {
-                    GJLOG( GNULL,  GJ_LOGINFO, "appendSampleBuffer error:%@",_assetWriter.error);
+                    GJLOG( GNULL,  GJ_LOGINFO, "appendSampleBuffer error:%s",_assetWriter.error.localizedDescription.UTF8String);
                     [self audioFourceFinsh];
                 }
     }else{
@@ -439,7 +439,7 @@ NSData* createData;
             self.callback(self.destFileUrl, error);
         }
         if (error) {
-            GJLOG( GNULL,  GJ_LOGERROR, "finishWriting:%s",error.localizedDescription);
+            GJLOG( GNULL,  GJ_LOGERROR, "finishWriting:%s",error.localizedDescription.UTF8String);
 
         }else{
             GJLOG( GNULL,  GJ_LOGDEBUG, "finishWriting");

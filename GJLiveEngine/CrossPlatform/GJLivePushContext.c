@@ -123,7 +123,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
                     }
                     context->videoNetSpeed /= fullCount;
                     //count越大越准确
-                    GJLOG(GNULL, GJ_LOGDEBUG,"busy status, avgRate :%f kB/s currentRate:%f sendCount:%d sendByte:%ld cacheCount:%d cacheTime:%d ms speedUnitCount:%d",context->videoNetSpeed / 8.0 / 1024,currentBitRate / 8.0 / 1024, fullCount,sendByte,cacheInCount,cacheInPts,fullCount);
+                    GJLOG(GNULL, GJ_LOGDEBUG,"busy status, avgRate :%f kB/s currentRate:%f sendCount:%d sendByte:%ld cacheCount:%ld cacheTime:%ld ms speedUnitCount:%d",context->videoNetSpeed / 8.0 / 1024,currentBitRate / 8.0 / 1024, fullCount,sendByte,cacheInCount,cacheInPts,fullCount);
                     GJAssert(context->videoNetSpeed >= 0, "错误");
                     GJAssert(sendTs > 0 || sendByte == 0 , "错误");
                     GJAssert(cacheInPts <= 50000, "错误");

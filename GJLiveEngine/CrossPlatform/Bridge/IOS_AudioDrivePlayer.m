@@ -26,11 +26,11 @@ inline static GBool audioPlaySetup(struct _GJAudioPlayContext *context, GJAudioF
     GJAudioQueueDrivePlayer *player = [[GJAudioQueueDrivePlayer alloc] initWithSampleRate:format.mSampleRate channel:format.mChannelsPerFrame formatID:kAudioFormatLinearPCM];
     NSError *error;
     if (![[GJAudioSessionCenter shareSession] requestPlay:YES key:[NSString stringWithFormat:@"%p", player] error:&error]) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "request play session fail:%@", error);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "request play session fail:%s", error.localizedDescription.UTF8String);
     }
 
     if (![[GJAudioSessionCenter shareSession] activeSession:YES key:[NSString stringWithFormat:@"%p", player] error:&error]) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "activeSession session fail:%@", error);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "activeSession session fail:%s", error.localizedDescription.UTF8String);
     }
 
     player.fillDataCallback = ^BOOL(void *data, int *size) {
@@ -44,10 +44,10 @@ inline static GVoid audioPlayUnSetup(struct _GJAudioPlayContext *context) {
         GJAudioQueueDrivePlayer *player = (__bridge_transfer GJAudioQueueDrivePlayer *) (context->obaque);
         NSError *                error;
         if (![[GJAudioSessionCenter shareSession] requestPlay:NO key:[NSString stringWithFormat:@"%p", player] error:&error]) {
-            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "request play session fail:%@", error);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "request play session fail:%s", error.localizedDescription.UTF8String);
         }
         if (![[GJAudioSessionCenter shareSession] activeSession:NO key:[NSString stringWithFormat:@"%p", player] error:&error]) {
-            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "activeSession session fail:%@", error);
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "activeSession session fail:%s", error.localizedDescription.UTF8String);
         }
         context->obaque = GNULL;
         player          = nil;
