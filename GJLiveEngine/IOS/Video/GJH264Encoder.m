@@ -277,10 +277,10 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         memcpy(data + spsppsSize + 8, inDataPointer, totalLength);
         inDataPointer = data + spsppsSize + 8;
         
-        GJLOG(DEFAULT_LOG, GJ_LOGINFO,"encode sps size:%zu:", spsSize);
-        GJ_LogHexString(GJ_LOGINFO, sps, (GUInt32) spsSize);
-        GJLOG(DEFAULT_LOG, GJ_LOGINFO,"encode pps size:%zu:", ppsSize);
-        GJ_LogHexString(GJ_LOGINFO, pps, (GUInt32) ppsSize);
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode sps size:%zu:", spsSize);
+        GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode pps size:%zu:", ppsSize);
+        GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
 
     } else {
         int needSize = (int) (totalLength + PUSH_H264_PACKET_PRE_SIZE);

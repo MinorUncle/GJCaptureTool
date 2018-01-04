@@ -13,6 +13,8 @@
     dispatch_queue_t _decodeQueue; //解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
     NSData* _spsData;
     NSData* _ppsData;
+    BOOL _isRunning;
+    GJQueue* _inputQueue;
 }
 @property (nonatomic) VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
@@ -27,10 +29,12 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
 - (instancetype)init {
     self = [super init];
     if (self) {
-        _decodeQueue       = dispatch_queue_create("GJDecodeQueue", DISPATCH_QUEUE_SERIAL);
         _outPutImageFormat = kCVPixelFormatType_32BGRA;
         //        _outPutImageFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
         GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVPixelBufferRef), GTrue, R_GJPixelFrameMalloc, cvImagereleaseCallBack, GNULL);
+        _isRunning= NO;
+        _decodeQueue       = dispatch_queue_create("videoDecodeQueue", DISPATCH_QUEUE_SERIAL);
+        queueCreate(&_inputQueue, 20, YES, YES);
     }
     return self;
 }
@@ -116,16 +120,54 @@ void decodeOutputCallback(
     }
     return codeIndex;
 }
+-(BOOL)startDecode{
+    if (_isRunning) {
+        GJAssert(0, "重复开始");
+        return NO;
+    }
+    _isRunning = YES;
+    queueEnablePop(_inputQueue, GTrue);
 
+    dispatch_async(_decodeQueue, ^{
+        R_GJPacket* packet;
+        while (_isRunning && queuePop(_inputQueue, (GHandle*)&packet, GINT32_MAX)) {
+            [self _decodePacket:packet];
+        }
+    });
+    return YES;
+}
+-(void)stopDecode{
+    _isRunning = NO;
+    queueEnablePop(_inputQueue, GFalse);
+    queueBroadcastPop(_inputQueue);
+    GInt32 length = 0;
+    queueClean(_inputQueue, GNULL, &length);
+    if (length > 0) {
+        GHandle* buffer = malloc(sizeof(GHandle)*length);
+        queueClean(_inputQueue, buffer, &length);
+        for (int i = 0; i<length; i++) {
+            R_BufferUnRetain((GJRetainBuffer*)(buffer[i]));
+        }
+        free(buffer);
+    }
+}
 - (void)decodePacket:(R_GJPacket *)packet {
-    //    NSLog(@"decodeFrame:%@",[NSThread currentThread]);
-
-    //    printf("before decode pts:%lld ,dts:%lld ,size:%d\n",packet->pts,packet->dts,packet->dataSize);
+    R_BufferRetain(&packet->retain);
+    if (!_isRunning || !queuePush(_inputQueue, packet, 0)) {
+        R_BufferUnRetain(&packet->retain);
+    }
+}
+- (void)_decodePacket:(R_GJPacket *)packet {
     OSStatus          status;
     long              blockLength  = 0;
     CMSampleBufferRef sampleBuffer = NULL;
     CMBlockBufferRef  blockBuffer  = NULL;
 
+    static GInt32 index = 0;
+    index++;
+    GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"receive encode video index:%d size:%lld:",index-2, packet->dataSize-packet->dataOffset);
+    GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&packet->retain)+packet->dataOffset, (GUInt32) 20);
+    
     if (packet->flag == GJPacketFlag_KEY && packet->extendDataSize > 0) {
         
         int32_t  spsSize = 0, ppsSize = 0;
@@ -145,8 +187,8 @@ void decodeOutputCallback(
                 GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "包含sps而不包含pps");
             }
         }
-
-        if(sps && pps && (_decompressionSession == nil || memcmp(sps, _spsData.bytes, spsSize) || memcmp(pps, _ppsData.bytes, ppsSize))){
+        if(sps && pps 
+           && (_decompressionSession == nil || memcmp(sps, _spsData.bytes, spsSize) || memcmp(pps, _ppsData.bytes, ppsSize))){
             GJLOG(DEFAULT_LOG,GJ_LOGINFO,"decode sps size:%d:", spsSize);
             GJ_LogHexString(GJ_LOGINFO, sps, (GUInt32) spsSize);
             GJLOG(DEFAULT_LOG,GJ_LOGINFO,"decode pps size:%d:", ppsSize);

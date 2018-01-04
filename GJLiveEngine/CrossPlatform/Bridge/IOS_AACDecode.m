@@ -63,9 +63,7 @@ GJAudioFormat decodeGetDestFormat(struct _GJAACDecodeContext *context) {
 inline static GBool decodePacketFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
     GBool result = GFalse;
     if (dataType == GJMediaType_Audio) {
-        pipleNodeLock(context);
         result = decodePacket((GJAACDecodeContext*)context,(R_GJPacket*)data);
-        pipleNodeUnLock(context);
     }
     return  result;
 }

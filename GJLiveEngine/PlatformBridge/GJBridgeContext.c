@@ -23,11 +23,15 @@ NodeFlowDataFunc pipleNodeFlowFunc(GJPipleNode* node){
 
 NodeFlowDataFunc pipleNodeInit(GJPipleNode* node,NodeFlowDataFunc receiveData){
     GJAssert(node && node->lock == GNULL && node->subNodes == GNULL, "重复初始化，或者初始化前没有清零");
-    node->lock = malloc(sizeof(pthread_rwlock_t));
+    node->lock = malloc(sizeof(pthread_mutex_t));
     node->receiveData = GNULL;
     node->subCount = 0;
     node->receiveData = receiveData;
-    GInt result = pthread_rwlock_init(node->lock, GNULL);
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    GInt result = pthread_mutex_init(node->lock, &attr);
+    pthread_mutexattr_destroy(&attr);
     GJAssert(result == 0, "pthread_rwlock_init error");
     return pipleProduceDataCallback;
 }
@@ -35,7 +39,7 @@ NodeFlowDataFunc pipleNodeInit(GJPipleNode* node,NodeFlowDataFunc receiveData){
 GBool pipleNodeUnInit(GJPipleNode* node){
     GJAssert(node->subCount == 0 && node->subNodes == GNULL, "存在连接的节点未初始化");
     if (node->lock) {
-        pthread_rwlock_destroy(node->lock);
+        pthread_mutex_destroy(node->lock);
         free(node->lock);
         node->lock = GNULL;
     }
@@ -45,7 +49,7 @@ GBool pipleNodeUnInit(GJPipleNode* node){
 
 GBool pipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode){
     GJAssert(superNode && superNode->lock != GNULL, "GJPipleConnectNode error");
-    pthread_rwlock_wrlock(superNode->lock);
+    pthread_mutex_lock(superNode->lock);
     GBool find = GFalse;
     for (int i = 0; i< superNode->subCount; i++) {
         if (superNode->subNodes[i] == subNode) {
@@ -56,13 +60,13 @@ GBool pipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode){
         superNode->subNodes = realloc(superNode->subNodes, sizeof(GJPipleNode*)*(superNode->subCount+1));
         superNode->subNodes[superNode->subCount++] = subNode;
     }
-    pthread_rwlock_unlock(superNode->lock);
+    pthread_mutex_unlock(superNode->lock);
     return GTrue;
 }
 
 GBool pipleDisConnectNode(GJPipleNode* superNode, GJPipleNode* subNode){
     GJAssert(superNode && superNode->lock != GNULL, "GJPipleDisConnectNode error");
-    pthread_rwlock_wrlock(superNode->lock);
+    pthread_mutex_lock(superNode->lock);
     GBool find = GFalse;
     for (int i = 0; i< superNode->subCount; i++) {
         if (find) {
@@ -80,7 +84,7 @@ GBool pipleDisConnectNode(GJPipleNode* superNode, GJPipleNode* subNode){
             superNode->subNodes = realloc(superNode->subNodes, sizeof(GJPipleNode*)*superNode->subCount);
         }
     }
-    pthread_rwlock_unlock(superNode->lock);
+    pthread_mutex_unlock(superNode->lock);
     return GTrue;
 }
 

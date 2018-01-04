@@ -169,7 +169,6 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
             s.mFormatID                   = kAudioFormatMPEG4AAC;
             s.mChannelsPerFrame           = channel;
             
-            
             AudioStreamBasicDescription d = s;
             d.mBitsPerChannel =16;
             d.mFormatID                   = kAudioFormatLinearPCM; //PCM

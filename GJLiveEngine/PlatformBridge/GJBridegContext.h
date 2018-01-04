@@ -29,11 +29,11 @@ typedef struct GJPipleNode{
     struct GJPipleNode** subNodes;
     GInt32 subCount;
     NodeFlowDataFunc receiveData;
-    pthread_rwlock_t* lock;
+    pthread_mutex_t* lock;
 }GJPipleNode;
 
-#define pipleNodeLock(node) pthread_rwlock_rdlock((node)->lock)
-#define pipleNodeUnLock(node) pthread_rwlock_unlock((node)->lock)
+#define pipleNodeLock(node) pthread_mutex_lock((node)->lock)
+#define pipleNodeUnLock(node) pthread_mutex_unlock((node)->lock)
 
 
 /**

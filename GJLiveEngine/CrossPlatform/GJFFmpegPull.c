@@ -116,6 +116,10 @@ static GHandle pullRunloop(GHandle parm) {
                         pull->dataCallback(pull, avccPacket, pull->dataCallbackParm);
                     }
                     pthread_mutex_unlock(&pull->mutex);
+                    GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"receive decode sps size:%d:", spsSize);
+                    GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
+                    GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"receive decode pps size:%d:", ppsSize);
+                    GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
                     pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&avccPacket->retain,GJMediaType_Video);
                     R_BufferUnRetain(&avccPacket->retain);
                 }
@@ -213,6 +217,11 @@ static GHandle pullRunloop(GHandle parm) {
                 pull->dataCallback(pull, h264Packet, pull->dataCallbackParm);
             }
             pthread_mutex_unlock(&pull->mutex);
+            
+            static GInt32 index = 0;
+            GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"receive video index:%d size:%d:",index++, h264Packet->dataSize);
+            GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&h264Packet->retain)+h264Packet->dataOffset, (GUInt32) 20);
+            
             pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&h264Packet->retain,GJMediaType_Video);
 
             R_BufferUnRetain(&h264Packet->retain);

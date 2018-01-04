@@ -471,7 +471,13 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
             }
         }
 #endif
-//        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "消耗音频 PTS:%lld size:%d",audioBuffer->pts,R_BufferSize(&audioBuffer->retain));
+        static GInt64 preTime ;
+        if (preTime == 0) {
+            preTime = GJ_Gettime().value;
+        }
+        GInt64 currentTime = GJ_Gettime().value;
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "消耗音频 PTS:%lld size:%d dTime:%lld",audioBuffer->pts.value,R_BufferSize(&audioBuffer->retain),currentTime - preTime);
+        preTime = currentTime;
         R_BufferUnRetain(&audioBuffer->retain);
         return GTrue;
     } else {

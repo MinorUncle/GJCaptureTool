@@ -194,6 +194,10 @@ static GHandle sendRunloop(GHandle parm) {
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.ts =  packet->dts;
                 push->videoStatus.leave.clock = GJ_Gettime();
+                
+                static GInt32 index = 0;
+                GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"send video index:%d size:%d:",index++, sendPacket->size);
+                GJ_LogHexString(GJ_LOGDEBUG, sendPacket->data, (GUInt32) 20);
             } else {
 
                 GJLOG(GNULL,GJ_LOGALL,"send audio pts:%lld dts:%lld size:%d\n", packet->pts.value, packet->dts.value, packet->dataSize);

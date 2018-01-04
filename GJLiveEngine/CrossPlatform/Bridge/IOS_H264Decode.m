@@ -26,6 +26,7 @@ inline static GBool decodeSetup(struct _GJH264DecodeContext *context, GJPixelTyp
         callFunc(&context->pipleNode,&frame->retain,GJMediaType_Video);
     };
     context->obaque = (__bridge_retained GHandle) decode;
+    [decode startDecode];
     pipleNodeUnLock(&context->pipleNode);
 
     return GTrue;
@@ -34,6 +35,7 @@ inline static GVoid decodeUnSetup(struct _GJH264DecodeContext *context) {
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
         GJH264Decoder *decode = (__bridge_transfer GJH264Decoder *) (context->obaque);
+        [decode stopDecode];
         context->obaque       = GNULL;
         decode                = nil;
         GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder unsetup");
@@ -52,9 +54,7 @@ inline static GBool decodePacket(struct _GJH264DecodeContext *context, R_GJPacke
 inline static GBool decodePacketFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
     GBool result = GFalse;
     if (dataType == GJMediaType_Video) {
-        pipleNodeLock(context);
         result = decodePacket((GJH264DecodeContext*)context,(R_GJPacket*)data);
-        pipleNodeUnLock(context);
     }
     return  result;
     
