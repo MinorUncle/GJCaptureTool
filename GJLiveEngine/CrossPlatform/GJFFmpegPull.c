@@ -184,7 +184,7 @@ static GHandle pullRunloop(GHandle parm) {
 #ifdef DEBUG
         GLong preDTS[2];
         GInt32 type = pkt.stream_index == asIndex;
-//        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%d size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
+        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
         preDTS[type] = pkt.pts;
 #endif
         if (pkt.stream_index == vsIndex) {
@@ -218,9 +218,9 @@ static GHandle pullRunloop(GHandle parm) {
             }
             pthread_mutex_unlock(&pull->mutex);
             
-            static GInt32 index = 0;
-            GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"receive video index:%d size:%d:",index++, h264Packet->dataSize);
-            GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&h264Packet->retain)+h264Packet->dataOffset, (GUInt32) 20);
+//            static GInt32 index = 0;
+//            GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"receive video index:%d pts:%lld, size:%d:",index++,h264Packet->pts.value, h264Packet->dataSize);
+//            GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&h264Packet->retain)+h264Packet->dataOffset, (GUInt32) 20);
             
             pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&h264Packet->retain,GJMediaType_Video);
 

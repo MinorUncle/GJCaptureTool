@@ -273,6 +273,18 @@
 }
 
 - (BOOL)stop:(BOOL)immediately {
+    if (![NSThread isMainThread]) {
+        if (immediately) {
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                [self stop:immediately];
+            });
+        }else{
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self stop:immediately];
+            });
+        }
+        return YES;
+    }
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AudioQueuestop");
 
     GJPlayStatus pre  = _status; //防止监听部分重启
