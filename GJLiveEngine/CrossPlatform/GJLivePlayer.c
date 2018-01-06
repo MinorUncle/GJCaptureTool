@@ -74,10 +74,6 @@ static void changeSyncType(GJSyncControl *sync, TimeSYNCType syncType) {
         sync->netShake.collectStartPts = sync->audioInfo.trafficStatus.enter.ts;
     }
     sync->netShake.collectStartClock = GJ_Gettime();
-    if (sync->netShake.collectStartPts.value > 1000000) {
-        printf("nil");
-    }
-
 }
 
 static void updateWater(GJSyncControl *syncControl, GLong shake){
@@ -238,7 +234,6 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     if(shake < 0){
         netShake->collectStartClock = clock;
         netShake->collectStartPts   = pts;
-        GJAssert(netShake->collectStartPts.value < 100000,"");
 
         if(netShake->maxDownShake > netShake->preMaxDownShake){
             netShake->preMaxDownShake =  netShake->maxDownShake;
@@ -274,7 +269,6 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         netShake->maxDownShake      = 0;
         netShake->collectStartClock = clock;
         netShake->collectStartPts   = pts;
-        GJAssert(netShake->collectStartPts.value < 100000,"");
 
 #ifdef NETWORK_DELAY
         if (NeedTestNetwork) {
@@ -287,105 +281,6 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "更新网络抖动收集");
     }
 }
-//GVoid GJLivePlay_CheckNetShake(GJSyncControl* _syncControl,GTime pts){
-////   typedef struct _GJNetShakeInfo{
-////    GTime collectStartClock;
-////    GTime preCollectClock;
-////    GTime preCollectPts;
-////    GTime preUpShake;
-////    GTime preDownShake;
-////    GTime upShake;
-////    GTime downShake;
-////    }GJNetShakeInfo;
-//    GTime clock = GJ_Gettime()/1000;
-//    SyncInfo* syncInfo = &_syncControl->audioInfo;
-//    GJNetShakeInfo* netShake = &_syncControl->netShake;
-//    if (_syncControl->syncType == kTimeSYNCVideo) {
-//        syncInfo = &_syncControl->videoInfo;
-//    }
-//
-//    GTime unitClockDif = clock - netShake->preCollectClock;
-//    GTime unitPtsDif = (pts - syncInfo->trafficStatus.enter.ts);
-//    GTime currentShake = unitPtsDif - unitClockDif;
-//    if(currentShake < 0) {
-//        netShake->downShake += currentShake;
-//        GTime totalShake = netShake->preUpShake + netShake->preDownShake + netShake->upShake+netShake->downShake;
-//        if (-totalShake > _syncControl->bufferInfo.lowWaterFlag) {
-//            _syncControl->bufferInfo.lowWaterFlag = GMAX(-totalShake,MIN_CACHE_DUR);
-//            _syncControl->bufferInfo.highWaterFlag = GMAX(netShake->preDownShake+netShake->downShake, MAX_CACHE_DUR);
-//        }
-//    }else{
-//        netShake->upShake += currentShake;
-//        GTime totalShake = netShake->preUpShake + netShake->preDownShake + netShake->upShake+netShake->downShake;
-//        _syncControl->bufferInfo.lowWaterFlag = GMAX(-totalShake,MIN_CACHE_DUR);
-//    }
-//    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "setLowWater:%d,hightWater:%d",_syncControl->bufferInfo.lowWaterFlag,_syncControl->bufferInfo.highWaterFlag);
-//    netShake->preCollectClock = clock;
-//    netShake->preCollectPts = pts;
-//    if (clock - netShake->collectStartClock >= UPDATE_SHAKE_TIME) {
-//        netShake->preDownShake = netShake->downShake;
-//        netShake->preUpShake = netShake->upShake;
-//        netShake->downShake = 0;
-//        netShake->upShake = 0;
-//        netShake->collectStartClock = clock;
-//        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "更新网络抖动收集");
-//    }
-//}
-//GVoid GJLivePlay_CheckNetShake(GJSyncControl* _syncControl,GTime pts){
-////    typedef struct _GJNetShakeInfo{
-////        GTime collectStartClock;
-////        GTime collectUnitStartClock;
-////        GTime collectUnitEndClock;
-////        GTime collectUnitPtsCache;
-////        GTime preUnitMaxShake;
-////        GTime preUnitMinShake;
-////
-////        GTime maxShake;
-////        GTime minShake;
-////    }GJNetShakeInfo;
-//    //收集网络抖动
-//    GTime clock = GJ_Gettime()/1000;
-//    SyncInfo* syncInfo = &_syncControl->audioInfo;
-//    if (_syncControl->syncType == kTimeSYNCVideo) {
-//        syncInfo = &_syncControl->videoInfo;
-//    }
-//    GTime unitClockDif = clock - _syncControl->netShake.collectUnitEndClock;
-//    GTime unitPtsDif = (pts - syncInfo->trafficStatus.enter.ts);
-//    GTime preShake = _syncControl->netShake.collectUnitPtsCache - _syncControl->netShake.collectUnitEndClock + _syncControl->netShake.collectUnitStartClock;
-//    GTime currentShake = unitPtsDif - unitClockDif;
-//    if ((currentShake >= -10.0 && preShake >= -10.0) || (currentShake <= 10.0 && preShake <= 10.0)) {
-//        _syncControl->netShake.collectUnitEndClock = clock;
-//        _syncControl->netShake.collectUnitPtsCache += unitPtsDif;
-//    }else{
-//        GTime unitShake = -preShake;
-//        if (_syncControl->netShake.maxDownShake > unitShake){
-//            _syncControl->netShake.maxDownShake = unitShake;
-//            unitShake = GMAX(unitShake, _syncControl->netShake.preUnitMaxDownShake);
-//            _syncControl->bufferInfo.lowWaterFlag = GMAX(MIN_CACHE_DUR,unitShake);
-//
-//            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "preShake:%d,currentShake:%d,totalShake:%d,重置lowWaterFlag：%d，highWaterFlag：%d",preShake,currentShake,totalShake,_syncControl->bufferInfo.lowWaterFlag,_syncControl->bufferInfo.highWaterFlag);
-//
-//            if (_syncControl->bufferInfo.lowWaterFlag > _syncControl->bufferInfo.highWaterFlag) {
-//                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGFORBID, "lowAudioWaterFlag 大于 highAudioWaterFlag怎么可能！！！");
-//                _syncControl->bufferInfo.highWaterFlag = _syncControl->bufferInfo.lowWaterFlag;
-//            }
-//        }else{
-//            GJLOGFREQ("pull net shake:%d,but not affect",totalShake);
-//        }
-//        _syncControl->netShake.collectUnitStartClock = _syncControl->netShake.collectUnitEndClock;
-//        _syncControl->netShake.collectUnitEndClock = clock;
-//        _syncControl->netShake.collectUnitPtsCache = unitPtsDif;
-//
-//        if (clock - _syncControl->netShake.collectStartClock >= UPDATE_SHAKE_TIME) {
-//            _syncControl->netShake.preUnitMaxShake = _syncControl->netShake.maxShake;
-//            _syncControl->netShake.preUnitMinShake = _syncControl->netShake.minShake;
-//            _syncControl->netShake.minShake = -MIN_CACHE_DUR;
-//            _syncControl->netShake.maxShake = MAX_CACHE_DUR;
-//            _syncControl->netShake.collectStartClock = _syncControl->netShake.collectUnitStartClock;
-//            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "更新网络抖动收集 startClock:%d",_syncControl->netShake.collectStartClock);
-//        }
-//    }
-//}
 
 GVoid GJLivePlay_CheckWater(GJLivePlayer *player) {
 

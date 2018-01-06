@@ -157,6 +157,7 @@ static GHandle pullRunloop(GHandle parm) {
             adts[5]                = (char) (((fullLength & 7) << 5) + 0x1F);
             adts[6]                = (char) 0xFC;
 
+            aaccPacket->pts = GTimeMake(0, 1000);
             pthread_mutex_lock(&pull->mutex);
             if (!pull->releaseRequest) {
                 pull->dataCallback(pull, aaccPacket, pull->dataCallbackParm);
@@ -182,10 +183,10 @@ static GHandle pullRunloop(GHandle parm) {
         }
 
 #ifdef DEBUG
-        GLong preDTS[2];
-        GInt32 type = pkt.stream_index == asIndex;
-        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
-        preDTS[type] = pkt.pts;
+//        GLong preDTS[2];
+//        GInt32 type = pkt.stream_index == asIndex;
+//        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
+//        preDTS[type] = pkt.pts;
 #endif
         if (pkt.stream_index == vsIndex) {
 

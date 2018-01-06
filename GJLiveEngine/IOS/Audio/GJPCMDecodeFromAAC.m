@@ -176,6 +176,9 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
             d.mFramesPerPacket                   = 1;
             d.mFormatFlags                       = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
             [self createCorverWithDescription:d SourceDescription:s];
+            if (packet->dataSize <= 0) {
+                return;
+            }
         }else{
             return;
         }
@@ -294,8 +297,8 @@ static const int mpeg4audio_sample_rates[16] = {
         R_BufferUseSize(&frame->retain, outCacheBufferList.mBuffers[0].mDataByteSize);
         frame->pts  = GTimeMake(_currentPts,1000);
         frame->dts  = frame->pts;
-        _currentPts = -1;
         self.decodeCallback(frame);
+        _currentPts = -1;
         R_BufferUnRetain(&frame->retain);
     }
 }
