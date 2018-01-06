@@ -92,7 +92,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
         context->favorableCount ++;
     }
     GTime cacheTime = GTimeSubtract(vBufferStatus.enter.ts , vBufferStatus.leave.ts);
-    GLong cacheInPts = cacheTime.value/cacheTime.scale;
+    GLong cacheInPts = GTimeMSValue(cacheTime);
     if (context->checkCount++ % context->rateCheckStep == 0) {
         if (GTimeSubtractMSValue(GJ_Gettime(),vBufferStatus.enter.clock) < 1000.0/context->pushConfig->mFps-10) {
             //如果发送间隔很短，则表示是b帧，无论是网络好还是差，都不准确，过滤不检查，同时checkCount--表示下一帧在检查。

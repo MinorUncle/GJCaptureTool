@@ -18,14 +18,10 @@
 #define DROP_BITRATE_RATE 0.1
 
 @interface GJH264Encoder () {
-    GInt64 _fristPts;
     GBool  _shouldRestart;
     BOOL   requestFlush;
-    GInt64 _fristTime;
     GInt64 _preDTS;
-#ifdef NETWORK_DELAY
     GInt64 _dtsDelta;
-#endif
 }
 @property (nonatomic, assign) VTCompressionSessionRef enCodeSession;
 @property (nonatomic, assign) GJRetainBufferPool *    bufferPool;
@@ -46,11 +42,7 @@
 
         _profileLevel = profileLevelMain;
         _entropyMode  = EntropyMode_CABAC;
-        _fristPts     = GINT64_MAX;
-#ifdef NETWORK_DELAY
         _dtsDelta     = 0;
-#endif
-        _fristTime    = -1;
         _preDTS     = -1;
         [self creatEnCodeSession];
     }
@@ -59,10 +51,6 @@
 
 //编码
 - (BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(GTime)pts {
-
-    if (_fristTime < 0) {
-        _fristTime = GJ_Gettime().value;
-    }
     //RETRY:
     {
         //    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount*1000.0/_destFormat.baseFormat.fps, 1000);
@@ -305,27 +293,23 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     CMTime ptsTime       = CMSampleBufferGetPresentationTimeStamp(sample);
     GInt64 pts = ptsTime.value*1000/ptsTime.timescale;
     GInt64 dts;
-#ifdef NETWORK_DELAY
+
     dts = GJ_Gettime().value;
-    if (encoder->_dtsDelta == 0) {
-        encoder->_dtsDelta = (int)GMAX(1000,(dts - pts)*4);
+    if (encoder->_dtsDelta <= 0) {
+        encoder->_dtsDelta = (int)GMAX(1000,(dts - pts)*8);
     }
     dts -= encoder->_dtsDelta;
 
-#else
-    dts = GJ_Gettime().value - encoder->_fristTime;
-#endif
 //    assert(pushPacket->dts != encoder->_preDTS);
 
-    if (dts == encoder->_preDTS) {
+    if (dts <= encoder->_preDTS) {
         dts = encoder->_preDTS + 1;
     }
     if (dts > pts) {
-        if (encoder->_preDTS <= 0) {
-            encoder->_preDTS = pts-2;
-        }else if (encoder->_preDTS + 1 >= pts) {
-            //如果比上一次解dts还要早，则直接推迟pts到dts
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pts:%lld小于preDts:%lld，修改pts为：%lld",pts,encoder->_preDTS,encoder->_preDTS + 2);
+        if (encoder->_preDTS + 1 >= pts) {
+            //如果比上一次解dts还要早，则直接推迟pts到dts,并扩大差距
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "pts:%lld小于preDts:%lld，修改pts为：%lld",pts,encoder->_preDTS,encoder->_preDTS + 2);
+            encoder->_dtsDelta *= 1.2;
             pts = encoder->_preDTS+2;
 
         }
@@ -337,7 +321,18 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     pushPacket->dts = GTimeMake(dts, 1000);;
     encoder->_preDTS =  dts;
 
+#ifdef DEBUG
+//    static GTimeValue preDTS;
+//    GJLOG(GNULL,GJ_LOGDEBUG,"encode type:video pts:%lld dts:%lld ddts:%d size:%d\n", pushPacket->pts.value, pushPacket->dts.value,pushPacket->pts.value - preDTS, pushPacket->dataSize);
+//    preDTS = pushPacket->pts.value;
+//    GJAssert(pushPacket->dataSize>0, "");
+    
+//    static GInt32 index = 0;
+//    GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"encode video index:%d size:%d:",index++, pushPacket->dataSize);
+//    GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&pushPacket->retain)+pushPacket->dataOffset+pushPacket->dataSize-20, (GUInt32) 20);
+#endif
 
+    
 //    printf("encode over pts:%lld dts:%lld data size:%zu\n",pts.value,pushPacket->dts,totalLength);
 
 //    NSData* seid = [NSData dataWithBytes:pushPacket->ppOffset+pushPacket->retain.data length:30];
@@ -376,8 +371,6 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     requestFlush = YES;
     _sps         = nil;
     _pps         = nil;
-    _fristPts    = GINT64_MAX;
-    _fristTime   = -1;
     _preDTS    = -1;
 }
 

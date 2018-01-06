@@ -277,7 +277,7 @@ static int restartCount;
     GJTrafficStatus vInfo = GJLivePush_GetVideoTrafficStatus(_livePush);
     GJTrafficStatus aInfo = GJLivePush_GetAudioTrafficStatus(_livePush);
     GTime vTime = GTimeSubtract(vInfo.enter.ts, vInfo.leave.ts);
-    _pushSessionStatus.videoStatus.cacheTime = (GLong)(vTime.value / vTime.scale);
+    _pushSessionStatus.videoStatus.cacheTime = (GLong)(GTimeMSValue(vTime));
     _pushSessionStatus.videoStatus.frameRate =
         (vInfo.leave.count - _videoInfo.leave.count) / _gaterFrequency;
     _pushSessionStatus.videoStatus.bitrate =
@@ -287,7 +287,7 @@ static int restartCount;
     _videoInfo = vInfo;
     
     GTime aTime = GTimeSubtract(aInfo.enter.ts, aInfo.leave.ts);
-    _pushSessionStatus.audioStatus.cacheTime = (GLong)(aTime.value / aTime.scale);
+    _pushSessionStatus.audioStatus.cacheTime = (GLong)(GTimeMSValue(aTime));
     _pushSessionStatus.audioStatus.frameRate =
         (aInfo.leave.count - _audioInfo.leave.count) * 1024.0 / _gaterFrequency;
     _pushSessionStatus.audioStatus.bitrate =
@@ -297,7 +297,7 @@ static int restartCount;
     _audioInfo = aInfo;
 
     [_delegate livePush:self updatePushStatus:&_pushSessionStatus];
-    if (vTime.value/vTime.scale > MAX_SEND_DELAY &&//延迟过多重启
+    if (GTimeMSValue(vTime) > MAX_SEND_DELAY &&//延迟过多重启
         vInfo.enter.count - vInfo.leave.count > 2) {//防止初始ts不为0导致一直重启
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "推流缓存过多，重新启动推流");
         restartCount++;

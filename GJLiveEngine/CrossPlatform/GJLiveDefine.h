@@ -123,7 +123,7 @@ typedef enum _GJNetworkQuality{
 typedef struct PushInfo{
     GFloat32 bitrate;//byte/s
     GFloat32 frameRate;//
-    GLong  cacheTime;
+    GLong  cacheTime;//in ms
     GLong  cacheCount;
 }GJPushInfo;
 typedef struct PullInfo{

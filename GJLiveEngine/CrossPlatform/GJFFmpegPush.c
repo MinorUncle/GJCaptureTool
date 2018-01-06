@@ -34,6 +34,7 @@ struct _GJStreamPush {
 
     GJTrafficStatus audioStatus;
     GJTrafficStatus videoStatus;
+    GTimeValue     startMS;
 };
 
 static GJTrafficStatus error_Status;
@@ -153,10 +154,11 @@ static GHandle sendRunloop(GHandle parm) {
             R_BufferUnRetain(&packet->retain);
             break;
         }
-
+        GTimeValue pts = GTimeMSValue(packet->pts)-push->startMS;
+        GTimeValue dts = GTimeMSValue(packet->dts)-push->startMS;
         av_init_packet(sendPacket);
-        sendPacket->pts = (GInt64)GTimeMSValue(packet->pts) & 0x7fffffff;
-        sendPacket->dts = (GInt64)GTimeMSValue(packet->dts) & 0x7fffffff;
+        sendPacket->pts = (GInt64)(pts) & 0x7fffffff;
+        sendPacket->dts = (GInt64)(dts) & 0x7fffffff;
         sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
         sendPacket->size = packet->dataSize;
         if (packet->type == GJMediaType_Video) {
@@ -176,15 +178,20 @@ static GHandle sendRunloop(GHandle parm) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
         
-#ifdef DEBUG
-        static GLong preDTS[2];
-        GInt32 type = sendPacket->stream_index == push->aStream->index;
-//        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld ddts:%d size:%d\n",type, sendPacket->pts, sendPacket->pts,sendPacket->pts - preDTS[type], sendPacket->size);
-        preDTS[type] = sendPacket->pts;
-#endif
+//#ifdef DEBUG
+//        static GLong preDTS[2];
+//        GInt32 type = sendPacket->stream_index == push->aStream->index;
+//        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld ddts:%d size:%d\n",type, sendPacket->pts, sendPacket->dts,sendPacket->pts - preDTS[type], sendPacket->size);
+//        preDTS[type] = sendPacket->pts;
+//#endif
 
-//        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld size:%d \n",sendPacket->stream_index, packet->pts.value, packet->dts.value, packet->dataSize);
 
+//        if (sendPacket->stream_index == 0) {
+//            static GInt32 index = 0;
+//            GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"send video index:%d size:%d:",index++, sendPacket->size);
+//            GJ_LogHexString(GJ_LOGDEBUG, sendPacket->data+sendPacket->size-20, (GUInt32) 20);
+//
+//        }
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
         if (iRet >= 0) {
             if (packet->type == GJMediaType_Video) {
@@ -195,9 +202,6 @@ static GHandle sendRunloop(GHandle parm) {
                 push->videoStatus.leave.ts =  packet->dts;
                 push->videoStatus.leave.clock = GJ_Gettime();
                 
-                static GInt32 index = 0;
-                GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"send video index:%d size:%d:",index++, sendPacket->size);
-                GJ_LogHexString(GJ_LOGDEBUG, sendPacket->data, (GUInt32) 20);
             } else {
 
                 GJLOG(GNULL,GJ_LOGALL,"send audio pts:%lld dts:%lld size:%d\n", packet->pts.value, packet->dts.value, packet->dataSize);
@@ -323,7 +327,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
         GJLOG(STREAM_PUSH_LOG, GJ_LOGWARNING, "等待push释放结束");
     }
     push->stopRequest = GFalse;
-
+    push->startMS = 0;
     queueEnablePush(push->sendBufferQueue, GTrue);
     queueEnablePop(push->sendBufferQueue, GTrue);
     char *format = GNULL;
@@ -465,6 +469,13 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
 
     if (push == GNULL) return GFalse;
     R_BufferRetain(&packet->retain);
+    
+#ifndef NETWORK_DELAY
+    if (push->startMS <= 0) {
+        push->startMS = GTimeMSValue(packet->dts);
+    }
+#endif
+    
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         
         push->videoStatus.enter.ts = packet->dts;
@@ -479,7 +490,7 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
     return GTrue;
 }
 GBool GJStreamPush_SendAudioData(GJStreamPush *push, R_GJPacket *packet) {
-    if (push == GNULL) return GFalse;
+    if (push == GNULL || push->videoStatus.enter.clock.value <= 0) return GFalse;
 
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {

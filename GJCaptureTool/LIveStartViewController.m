@@ -10,12 +10,12 @@
 #import "GJLivePushViewController.h"
 //static NSString* pullUlr = @"rtmp://192.168.199.187/live/room";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/132399872.flv";
-//static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/73257119.flv";
+static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/73257119.flv";
 //static NSString* url = @"rtmp://192.168.199.187/live/room";
 //static NSString* url = @"rtmp://192.168.199.187/live/room";
 //static NSString* pullUlr = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
 //static NSString* url = @"rtsp://10.0.23.65/sample_100kbit.mp4";
-static NSString* pullUlr = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
+//static NSString* pullUlr = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
 
 
 static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务器地址
