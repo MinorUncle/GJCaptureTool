@@ -35,6 +35,7 @@
         _mixToSream = YES;
         _mixPlayers = [NSMutableDictionary dictionaryWithCapacity:2];
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotific:) name:AVAudioSessionRouteChangeNotification object:nil];
+        GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc, GNULL, GNULL);
     }
     return self;
 }
@@ -72,20 +73,20 @@
 }
 
 - (instancetype)initWithFormat:(AudioStreamBasicDescription)audioFormat {
-    self = [super init];
-    if (self) {
-
-    
-
-        //        _blockPlay = [AEBlockChannel channelWithBlock:^(const AudioTimeStamp *time, UInt32 frames, AudioBufferList *audio) {
-        //            for (int i = 0 ; i<audio->mNumberBuffers; i++) {
-        //                memset(audio->mBuffers[i].mData, 20, audio->mBuffers[i].mDataByteSize);
-        //            }
-        //            NSLog(@"block play time:%f",time->mSampleTime);
-        //        }];
-        //        [_audioController addChannels:@[_blockPlay]];
-    }
-    return self;
+//    self = [super init];
+//    if (self) {
+//
+//    
+//
+//        //        _blockPlay = [AEBlockChannel channelWithBlock:^(const AudioTimeStamp *time, UInt32 frames, AudioBufferList *audio) {
+//        //            for (int i = 0 ; i<audio->mNumberBuffers; i++) {
+//        //                memset(audio->mBuffers[i].mData, 20, audio->mBuffers[i].mDataByteSize);
+//        //            }
+//        //            NSLog(@"block play time:%f",time->mSampleTime);
+//        //        }];
+//        //        [_audioController addChannels:@[_blockPlay]];
+//    }
+    return [self init];
 }
 
 -(void)setAudioFormat:(AudioStreamBasicDescription)audioFormat{
@@ -116,6 +117,10 @@
         }
     }
     _sizePerPacket = PCM_FRAME_COUNT * audioFormat.mBytesPerFrame;
+    if (_alignCacheFrame) {
+        R_BufferUnRetain(&_alignCacheFrame->retain);
+    }
+    _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
 }
 
 - (void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time {
@@ -134,7 +139,7 @@
         R_BufferUnRetain(&_alignCacheFrame->retain);
         _sendFrameCount += PCM_FRAME_COUNT;
         _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
-        GJLOG(GNULL, GJ_LOGWARNING, "采集延迟，填充空白帧");
+        GJLOG(GNULL, GJ_LOGINFO, "采集延迟，填充空白帧");
     }
     
     int blackSize = _sizePerPacket - R_BufferSize(&_alignCacheFrame->retain);
@@ -177,8 +182,6 @@
 }
 
 - (BOOL)startRecode:(NSError **)error {
-    GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc, GNULL, GNULL);
-    _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
     _sendFrameCount = 0;
     _startTime = GTimeMSValue( GJ_Gettime());
     NSError *configError;
@@ -226,7 +229,7 @@
 }
 
 - (void)stopRecode {
-
+    GJLOG(GNULL, GJ_LOGDEBUG, "stopRecode");
     if (_mixfilePlay) {
         [self stopMix];
     }
@@ -243,18 +246,6 @@
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%s", configError.description.UTF8String);
     }
 
-    if (_alignCacheFrame) {
-        R_BufferUnRetain(&_alignCacheFrame->retain);
-        _alignCacheFrame = GNULL;
-    }
-    if (_bufferPool) {
-        GJRetainBufferPool *pool = _bufferPool;
-        _bufferPool              = GNULL;
-        dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            GJRetainBufferPoolClean(pool, GTrue);
-            GJRetainBufferPoolFree(pool);
-        });
-    }
 }
 
 - (AEPlaythroughChannel *)playthrough {
@@ -408,8 +399,19 @@
 
 - (void)dealloc {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJAudioManager dealloc");
-    if (_bufferPool) {
+    if (_audioController.running) {
         [self stopRecode];
+    }
+    if (_alignCacheFrame) {
+        R_BufferUnRetain(&_alignCacheFrame->retain);
+    }
+    if (_bufferPool) {
+        GJRetainBufferPool *pool = _bufferPool;
+        _bufferPool              = GNULL;
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            GJRetainBufferPoolClean(pool, GTrue);
+            GJRetainBufferPoolFree(pool);
+        });
     }
     [_audioController removeInputReceiver:_audioMixer];
     [_audioController removeChannels:_mixPlayers.allValues];

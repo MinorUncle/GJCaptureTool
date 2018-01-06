@@ -234,6 +234,11 @@ void decodeOutputCallback(
     }
 
     if (packet->dataSize > 0) {
+#ifdef DEBUG
+//        static GInt32 index = 0;
+//        GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"decode video index:%d size:%d:",index++, packet->dataSize);
+//        GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&packet->retain)+packet->dataOffset+packet->dataSize-20, (GUInt32) 20);
+#endif
         blockLength = (int) (packet->dataSize);
         void *data  = packet->dataOffset + R_BufferStart(&packet->retain);
 

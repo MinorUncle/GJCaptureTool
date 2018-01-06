@@ -270,14 +270,14 @@ static GVoid streamPushMessageCallback(GJStreamPush* push,GHandle userData, kStr
             
             pthread_mutex_unlock(&context->lock);
             GTime time = GTimeSubtract(context->connentClock , context->startPushClock);
-            GLong during = (GLong)(time.value/time.scale);
+            GLong during = (GLong)GTimeMSValue(time);
             context->callback(context->userData, GJLivePush_connectSuccess, &during);
         } break;
         case kStreamPushMessageType_closeComplete: {
             GJPushSessionInfo info   = {0};
             context->disConnentClock = GJ_Gettime();
             GTime time = GTimeSubtract(context->disConnentClock , context->connentClock);
-            info.sessionDuring       = (GLong)(time.value/time.scale);
+            info.sessionDuring       = (GLong)GTimeMSValue(time);
             context->callback(context->userData, GJLivePush_closeComplete, &info);
         } break;
         case kStreamPushMessageType_urlPraseError:

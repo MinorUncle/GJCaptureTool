@@ -379,7 +379,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
             preTime = GJ_Gettime().value;
         }
         GInt64 currentTime = GJ_Gettime().value;
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "消耗音频 PTS:%lld size:%d dTime:%lld",audioBuffer->pts.value,R_BufferSize(&audioBuffer->retain),currentTime - preTime);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "消耗音频 PTS:%lld size:%d dTime:%lld",audioBuffer->pts.value,R_BufferSize(&audioBuffer->retain),currentTime - preTime);
         preTime = currentTime;
         R_BufferUnRetain(&audioBuffer->retain);
         return GTrue;

@@ -308,7 +308,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     if (dts > pts) {
         if (encoder->_preDTS + 1 >= pts) {
             //如果比上一次解dts还要早，则直接推迟pts到dts,并扩大差距
-            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "pts:%lld小于preDts:%lld，修改pts为：%lld",pts,encoder->_preDTS,encoder->_preDTS + 2);
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pts:%lld小于preDts:%lld，修改pts为：%lld",pts,encoder->_preDTS,encoder->_preDTS + 2);
             encoder->_dtsDelta *= 1.2;
             pts = encoder->_preDTS+2;
 

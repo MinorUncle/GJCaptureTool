@@ -16,7 +16,7 @@
 #import "GJBufferPool.h"
 #import "GJAudioManager.h"
 #import <ARKit/ARConfiguration.h>
-
+#import <libavutil/log.h>
 @interface PushManager : NSObject <GJLivePushDelegate>
 {
     NSDictionary* _videoSize;
@@ -1056,8 +1056,8 @@
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(barItemTap:)];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
     GJ_LogSetLevel(GJ_LOGDEBUG);
-    //    RTMP_LogSetLevel(RTMP_LOGDEBUG);
-    
+    RTMP_LogSetLevel(RTMP_LOGDEBUG);
+    av_log_set_level(AV_LOG_INFO);
     if(_type == kGJCaptureTypeAR){
         if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){
             [[[UIAlertView alloc]initWithTitle:@"提示" message:@"该手机不支持ar,已切换到普通直播" delegate:nil cancelButtonTitle:@"确认" otherButtonTitles: nil] show];

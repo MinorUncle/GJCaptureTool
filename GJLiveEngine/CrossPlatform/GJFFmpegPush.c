@@ -48,7 +48,7 @@ static GHandle sendRunloop(GHandle parm) {
     kStreamPushMessageType errType = kStreamPushMessageType_connectError;
     GHandle                errParm = GNULL;
     AVDictionary *         option  = GNULL;
-    //    av_dict_set_int(&option, "timeout", 8000, 0);
+    av_dict_set_int(&option, "send_buffer_size", 30000, 0);
     GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl, AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, &option);
     av_dict_free(&option);
     if (ret < 0) {

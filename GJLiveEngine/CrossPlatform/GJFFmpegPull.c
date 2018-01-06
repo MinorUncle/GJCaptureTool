@@ -59,28 +59,46 @@ static GHandle pullRunloop(GHandle parm) {
     pthread_setname_np("Loop.GJStreamPull");
     GJStreamPull *         pull    = parm;
     kStreamPullMessageType message = 0;
-
-    GInt32 result = avformat_open_input(&pull->formatContext, (const GChar*)pull->pullUrl, GNULL, GNULL);
+    
+    AVDictionary* options = GNULL;
+    av_dict_set_int(&options, "fpsprobesize", 0, 0);
+    GInt32 result = avformat_open_input(&pull->formatContext, (const GChar*)pull->pullUrl, GNULL, &options);
+    av_dict_free(&options);
     if (result < 0) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avformat_open_input error,url:%s",pull->pullUrl);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avformat_open_input error:%s,url:%s",av_err2str(result),pull->pullUrl);
         message = kStreamPullMessageType_connectError;
         goto END;
     }
     av_format_inject_global_side_data(pull->formatContext);
-    pull->formatContext->fps_probe_size = 0;
+//    pull->formatContext->fps_probe_size = 0;
     //    pull->formatContext->max_analyze_duration = 0;
-    result = avformat_find_stream_info(pull->formatContext, GNULL);
+///<----ijk中的启动优化
+//    framedrop 只用在ffplay，用于cpu性能太差时，视频显示延迟时是否丢帧，framedrop>0，表示丢帧，==0表示视频不为时间线时丢帧，否则不丢帧，基本无用
+//    av_dict_set_int(&options, "framedrop", 1, 0);
+//flush_packets,刷新缓存，只有复用的时候需要，解复用的时候不需要，
+//    av_dict_set_int(&options, "flush_packets", 1, 0);
+//    avformat_find_stream_info的数据包不保存。不用设置
+    //    av_dict_set_int(&options, "nobuffer", 1, 0);
+    
+//        av_dict_set_int(&options, "max_analyze_duration", 1000, 0);
+
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "start avformat_find_stream_info");
+
+    result = avformat_find_stream_info(pull->formatContext, &options);
     if (result < 0) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "avformat_find_stream_info");
         message = kStreamPullMessageType_connectError;
         goto END;
     }
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "end avformat_find_stream_info");
 
     if (pull->messageCallback) {
         pull->messageCallback(pull, kStreamPullMessageType_connectSuccess, pull->messageCallbackParm, NULL);
     }
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "start av_find_best_stream vindex");
 
     GInt32 vsIndex = av_find_best_stream(pull->formatContext, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "end av_find_best_stream vindex");
     if (vsIndex < 0) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "not found video stream");
     } else {
@@ -126,8 +144,11 @@ static GHandle pullRunloop(GHandle parm) {
             }
         }
     }
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "start av_find_best_stream aindex");
 
     GInt32 asIndex = av_find_best_stream(pull->formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, NULL, 0);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "end av_find_best_stream aindex");
+
     if (asIndex < 0) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "not found audio stream");
     } else {
