@@ -379,7 +379,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
             preTime = GJ_Gettime().value;
         }
         GInt64 currentTime = GJ_Gettime().value;
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "消耗音频 PTS:%lld size:%d dTime:%lld",audioBuffer->pts.value,R_BufferSize(&audioBuffer->retain),currentTime - preTime);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "消耗音频 PTS:%lld size:%d dTime:%lld",audioBuffer->pts.value,R_BufferSize(&audioBuffer->retain),currentTime - preTime);
         preTime = currentTime;
         R_BufferUnRetain(&audioBuffer->retain);
         return GTrue;
@@ -733,6 +733,10 @@ GVoid GJLivePlay_Resume(GJLivePlayer *player){
     player->playControl.status = kPlayStatusRunning;
     if (player->audioPlayer != GNULL) {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "stop buffing");
+        //先开启播放器，设置clock，否则视频先运行的话，会导致视频落后
+        player->syncControl.videoInfo.trafficStatus.leave.clock = player->syncControl.audioInfo.trafficStatus.leave.clock = GJ_Gettime();
+        player->audioPlayer->audioResume(player->audioPlayer);
+        
         queueSetMinCacheSize(player->playControl.imageQueue, 0);
         if (queueGetLength(player->playControl.imageQueue) > 0) {
             queueBroadcastPop(player->playControl.imageQueue);
@@ -749,8 +753,7 @@ GVoid GJLivePlay_Resume(GJLivePlayer *player){
         } else {
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGFORBID, "暂停管理出现问题");
         }
-        player->syncControl.videoInfo.trafficStatus.leave.clock = player->syncControl.audioInfo.trafficStatus.leave.clock = GJ_Gettime();
-        player->audioPlayer->audioResume(player->audioPlayer);
+  
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "buffing times:%ld useDuring:%ld", player->syncControl.bufferInfo.bufferTimes, player->syncControl.bufferInfo.lastBufferDuration);
         
     }
