@@ -339,13 +339,6 @@
 			remoteGlobalIDString = C58157021D9E537800B9118F;
 			remoteInfo = swscale;
 		};
-		AE8AAE0A1FF7BDE100964479 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = AEA704B01E745D8500C2E36B;
-			remoteInfo = ffplayer;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -1116,7 +1109,6 @@
 				6A96CD631F258740000DC4FE /* libavutil.a */,
 				6A96CD651F258740000DC4FE /* libpostproc.a */,
 				6A96CD671F258740000DC4FE /* libswscale.a */,
-				AE8AAE0B1FF7BDE100964479 /* ffplayer */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -2070,13 +2062,6 @@
 			remoteRef = 6A96CD661F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AE8AAE0B1FF7BDE100964479 /* ffplayer */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = ffplayer;
-			remoteRef = AE8AAE0A1FF7BDE100964479 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -2413,7 +2398,7 @@
 					"$(PROJECT_DIR)/lib",
 					"$(PROJECT_DIR)/fat-faac/lib",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool.TEST";
+				PRODUCT_BUNDLE_IDENTIFIER = live.demo;
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2443,7 +2428,7 @@
 					"$(PROJECT_DIR)/fat-faac/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = "--.GJCaptureTool.TEST";
+				PRODUCT_BUNDLE_IDENTIFIER = live.demo;
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";

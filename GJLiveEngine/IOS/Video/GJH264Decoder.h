@@ -28,4 +28,6 @@ typedef void(^H264DecodeComplete)(R_GJPixelFrame* frame);
 @property(nonatomic,assign)GJRetainBufferPool* bufferPool;
 
 -(void)decodePacket:(R_GJPacket *)packet;
+-(void)stopDecode;
+-(BOOL)startDecode;
 @end

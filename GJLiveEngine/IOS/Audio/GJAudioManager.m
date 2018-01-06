@@ -189,7 +189,7 @@
     [[GJAudioSessionCenter shareSession] requestAllowAirPlay:YES key:self.description error:&configError];
     [[GJAudioSessionCenter shareSession] unLockApplyConfig:&configError];
     if (configError) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%@", configError.description.UTF8String);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%s", configError.description.UTF8String);
     }
     
 #ifdef AUDIO_SEND_TEST
@@ -219,7 +219,7 @@
     }
     
     if (![_audioController start:error]) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "AEAudioController start error:%@", (*error).description.UTF8String);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "AEAudioController start error:%s", (*error).description.UTF8String);
     }
 
     return *error == nil;
@@ -240,7 +240,7 @@
     [[GJAudioSessionCenter shareSession] requestAllowAirPlay:NO key:self.description error:nil];
     [[GJAudioSessionCenter shareSession] unLockApplyConfig:&configError];
     if (configError) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%@", configError.description.UTF8String);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%s", configError.description.UTF8String);
     }
 
     if (_alignCacheFrame) {

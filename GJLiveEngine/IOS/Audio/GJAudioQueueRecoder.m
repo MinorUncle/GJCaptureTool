@@ -252,7 +252,7 @@ static void aacHandleInputBuffer(void *aqData, AudioQueueRef inAQ, AudioQueueBuf
     status          = AudioQueueNewInput(&format, callback, (__bridge void *_Nullable)(self), NULL, 0, 0, &_mAudioQueue);
     if (status != 0) {
         char *formatName = (char *) &(status);
-        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioQueueNewInput error:%d: %c%c%c%c---------", formatName[3], formatName[2], formatName[1], formatName[0]);
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioQueueNewInput error:%d: %c%c%c%c---------",status, formatName[3], formatName[2], formatName[1], formatName[0]);
         _mAudioQueue = NULL;
 
         return NO;
@@ -306,7 +306,7 @@ static void aacHandleInputBuffer(void *aqData, AudioQueueRef inAQ, AudioQueueBuf
     NSError *error;
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord error:&error];
     if (error) {
-        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AVAudioSession setCategory error:%s", error.localizedDescription);
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AVAudioSession setCategory error:%s", error.localizedDescription.UTF8String);
     }
     error = NULL;
     //    [[AVAudioSession sharedInstance]overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker  error:NULL];
@@ -315,7 +315,7 @@ static void aacHandleInputBuffer(void *aqData, AudioQueueRef inAQ, AudioQueueBuf
     //    }
     [[AVAudioSession sharedInstance] setActive:YES error:&error];
     if (error) {
-        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AVAudioSession setActive error:%s", error.localizedDescription);
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AVAudioSession setActive error:%s", error.localizedDescription.UTF8String);
     }
     NSArray<AVAudioSessionPortDescription *> *inputs = [AVAudioSession sharedInstance].availableInputs;
     for (AVAudioSessionPortDescription *input in inputs) { //设置非内置麦克风

@@ -68,7 +68,7 @@ static GHandle sendRunloop(GHandle parm) {
             if (push->stopRequest) {
                 goto END;
             }
-            GJLOG(STREAM_PUSH_LOG, GJ_LOGINFO, "peek index:%d type:%d, pts:%lld\n", 0, packet->type, packet->pts);
+            GJLOG(STREAM_PUSH_LOG, GJ_LOGINFO, "peek index:%d type:%d, pts:%lld\n", 0, packet->type, packet->pts.value);
             if (packet->type == GJMediaType_Video) {
                 GUInt8 *start = packet->extendDataOffset + R_BufferStart(&packet->retain);
                 if (packet->extendDataSize < 0 || (start[4] & 0x1f) != 7) {
@@ -189,14 +189,18 @@ static GHandle sendRunloop(GHandle parm) {
         if (iRet >= 0) {
             if (packet->type == GJMediaType_Video) {
 
-                GJLOG(GNULL,GJ_LOGALL,"send video pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
+                GJLOG(GNULL,GJ_LOGALL,"send video pts:%lld dts:%lld size:%d\n", packet->pts.value, packet->dts.value, packet->dataSize);
                 push->videoStatus.leave.byte += packet->dataSize;
                 push->videoStatus.leave.count++;
                 push->videoStatus.leave.ts =  packet->dts;
                 push->videoStatus.leave.clock = GJ_Gettime();
+                
+                static GInt32 index = 0;
+                GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"send video index:%d size:%d:",index++, sendPacket->size);
+                GJ_LogHexString(GJ_LOGDEBUG, sendPacket->data, (GUInt32) 20);
             } else {
 
-                GJLOG(GNULL,GJ_LOGALL,"send audio pts:%lld dts:%lld size:%d\n", packet->pts, packet->dts, packet->dataSize);
+                GJLOG(GNULL,GJ_LOGALL,"send audio pts:%lld dts:%lld size:%d\n", packet->pts.value, packet->dts.value, packet->dataSize);
                 push->audioStatus.leave.byte += packet->dataSize;
                 push->audioStatus.leave.count++;
                 push->audioStatus.leave.ts = packet->dts;

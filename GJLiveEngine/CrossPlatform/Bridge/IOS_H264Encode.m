@@ -95,9 +95,7 @@ inline static GBool encodeGetSPS_PPS(struct _GJEncodeToH264eContext *context, GU
 }
 
 inline static GBool encodeFrameFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
-    pipleNodeLock(context);
     encodeFrame((GJEncodeToH264eContext*)context,(R_GJPixelFrame*)data);
-    pipleNodeUnLock(context);
     return  GTrue;
 }
 

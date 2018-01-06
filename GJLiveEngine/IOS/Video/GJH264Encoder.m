@@ -277,10 +277,10 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         memcpy(data + spsppsSize + 8, inDataPointer, totalLength);
         inDataPointer = data + spsppsSize + 8;
         
-        GJLOG(DEFAULT_LOG, GJ_LOGINFO,"encode sps size:%zu:", spsSize);
-        GJ_LogHexString(GJ_LOGINFO, sps, (GUInt32) spsSize);
-        GJLOG(DEFAULT_LOG, GJ_LOGINFO,"encode pps size:%zu:", ppsSize);
-        GJ_LogHexString(GJ_LOGINFO, pps, (GUInt32) ppsSize);
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode sps size:%zu:", spsSize);
+        GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode pps size:%zu:", ppsSize);
+        GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
 
     } else {
         int needSize = (int) (totalLength + PUSH_H264_PACKET_PRE_SIZE);
@@ -325,7 +325,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
             encoder->_preDTS = pts-2;
         }else if (encoder->_preDTS + 1 >= pts) {
             //如果比上一次解dts还要早，则直接推迟pts到dts
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pts:%d小于preDts:%d，修改pts为：%d",pts,encoder->_preDTS,encoder->_preDTS + 2);
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pts:%lld小于preDts:%lld，修改pts为：%lld",pts,encoder->_preDTS,encoder->_preDTS + 2);
             pts = encoder->_preDTS+2;
 
         }

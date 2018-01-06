@@ -246,8 +246,8 @@
     
     _messureModel = [[UIButton alloc]init];
     _messureModel.backgroundColor = [UIColor clearColor];
-    [_messureModel setTitle:@"开启度量模式" forState:UIControlStateNormal];
-    [_messureModel setTitle:@"关闭度量模式" forState:UIControlStateSelected];
+    [_messureModel setTitle:@"开启回声消除" forState:UIControlStateNormal];
+    [_messureModel setTitle:@"关闭回声消除" forState:UIControlStateSelected];
     [_messureModel setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_messureModel addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     _messureModel.backgroundColor = [UIColor clearColor];
@@ -528,12 +528,9 @@
         
     }else  if (btn == _sticker) {
         if (btn.selected) {
+            
             CGRect rect = CGRectMake(0, 0, 360, 100);
-            _timeLab.frame = rect;
-            _timeLab.backgroundColor = [UIColor whiteColor];
-            _timeLab.textAlignment = NSTextAlignmentCenter;
-            _timeLab.textColor = [UIColor blackColor];
-            _timeLab.font = [UIFont systemFontOfSize:26];
+
             NSMutableArray<GJOverlayAttribute*>* overlays = [NSMutableArray arrayWithCapacity:6];
             CGRect frame = {_livePush.captureSize.width*0.5,_livePush.captureSize.height*0.5,rect.size.width,rect.size.height};
             for (int i = 0; i< 1; i++) {
@@ -551,13 +548,14 @@
                 static UIImage* image ;
                 if (image != nil) {
                     ioAttr.image = image;
-                }
-                dispatch_async(dispatch_get_main_queue(), ^{
+                    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+                        image = [wkSelf getSnapshotImageWithSize:rect.size];
+                    });
+                }else{
                     image = [wkSelf getSnapshotImageWithSize:rect.size];
-                });
-                
+                }
+
                 ioAttr.rotate = r;
-                //return [GJStickerAttribute stickerAttributWithImage:image frame:frame rotate:r];
             }];
             
             //            NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
@@ -646,46 +644,31 @@
 
 
 -(UIImage*)getSnapshotImageWithSize:(CGSize)size{
-    
-    //    CGRect rect = CGRectMake(0, 0, size.width, size.height);
-    //    CVPixelBufferRef pixelBuffer = NULL ;
-    //    NSDictionary *dic = [NSDictionary dictionaryWithObjectsAndKeys:
-    //                                                           [NSNumber numberWithInt:       kCVPixelFormatType_32BGRA], kCVPixelBufferPixelFormatTypeKey,
-    //                                                           [NSNumber numberWithInt:size.width], kCVPixelBufferWidthKey,
-    //                                                           [NSNumber numberWithInt:size.height], kCVPixelBufferHeightKey,
-    //                                                           [NSNumber numberWithBool:YES], kCVPixelBufferCGImageCompatibilityKey,
-    //                                                          [NSNumber numberWithBool:YES],kCVPixelBufferCGBitmapContextCompatibilityKey,
-    //                                                           nil];
-    //
-    //    CVReturn result = CVPixelBufferCreate(GNULL, rect.size.width, rect.size.height, kCVPixelFormatType_32BGRA, (__bridge CFDictionaryRef _Nullable)(dic), &pixelBuffer);
-    //    if (result != kCVReturnSuccess) {
-    //        GJLOG( GNULL,  GJ_LOGERROR,"CVPixelBufferPoolCreatePixelBuffer error:%d",result);
-    //        return nil;
-    //    }
-    //    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
-    //
-    //    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
-    //    void *pxdata = CVPixelBufferGetBaseAddress(pixelBuffer);
-    //    CGColorSpaceRef rgbColorSpace = CGColorSpaceCreateDeviceRGB();
-    //
-    //    CGContextRef context = CGBitmapContextCreate(pxdata, rect.size.width, rect.size.height, 8, bytesPerRow, rgbColorSpace, kCGImageAlphaPremultipliedFirst);
-    //    //注意第n个变换参数会应用0 ~ n-1个数据的变换
-    //    CGAffineTransform affine = CGAffineTransformTranslate(CGAffineTransformMakeScale(1, -1), 0, -1*rect.size.height);
-    //    CGContextConcatCTM(context, affine);
-    //    //        采用afterScreenUpdates：NO,采用YES，防止动画变慢
-    //    result = [_timeLab drawViewHierarchyInRect:rect afterScreenUpdates:NO];
-    //    UIGraphicsPopContext();
-    //    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
-    //    CGColorSpaceRelease(rgbColorSpace);
-    //    CGContextRelease(context);
-    
     static   NSDateFormatter *formatter ;
-    formatter = [[NSDateFormatter alloc] init];
-    [formatter setDateFormat:@"yyyy-MM-dd hh:mm:ss:SSS"];
+    if (formatter == nil) {
+        formatter = [[NSDateFormatter alloc] init];
+        [formatter setDateFormat:@"yyyy-MM-dd hh:mm:ss:SSS"];
+    }
+  
     NSString *dateTime = [formatter stringFromDate:[NSDate date]];
-    _timeLab.text = dateTime;
+    
+    CGRect rect = CGRectMake(0, 0, size.width, size.height);
+    NSDictionary* attr = @{NSFontAttributeName:[UIFont systemFontOfSize:20]};
+
+    static CGPoint fontPoint ;
+    if (fontPoint.y < 0.0001) {
+        CGSize fontSize = [dateTime sizeWithAttributes:attr];
+        fontPoint.x = (size.width - fontSize.width)*0.5;
+        fontPoint.y = (size.height - fontSize.height)*0.5;
+    }
+//    _timeLab.text = dateTime;
     UIGraphicsBeginImageContextWithOptions(size, GTrue, [UIScreen mainScreen].scale);
-    [_timeLab drawViewHierarchyInRect:_timeLab.bounds afterScreenUpdates:NO];
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextSetFillColorWithColor(context, [UIColor colorWithRed:1 green:1 blue:1 alpha:1].CGColor);
+    CGContextFillRect(context, rect);
+//    [dateTime drawInRect:rect withAttributes:attr];
+    [dateTime drawAtPoint:fontPoint withAttributes:attr];
+//    [_timeLab drawViewHierarchyInRect:_timeLab.bounds afterScreenUpdates:NO];
     UIImage* image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
     return image;
@@ -960,6 +943,7 @@
         };
     }else{
         [_pull stopStreamPull];
+        _pullStateLab.text = @"结束连接";
     }
 }
 
