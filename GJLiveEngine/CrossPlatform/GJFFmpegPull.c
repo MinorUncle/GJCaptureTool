@@ -69,7 +69,8 @@ static GHandle pullRunloop(GHandle parm) {
         message = kStreamPullMessageType_connectError;
         goto END;
     }
-    av_format_inject_global_side_data(pull->formatContext);
+//    不要用av_format_inject_global_side_data，暂时没有发现用处，倒是如果不对接受到的包不做get side data处理的话，解码会出错
+//    av_format_inject_global_side_data(pull->formatContext);
 //    pull->formatContext->fps_probe_size = 0;
     //    pull->formatContext->max_analyze_duration = 0;
 ///<----ijk中的启动优化
@@ -204,16 +205,17 @@ static GHandle pullRunloop(GHandle parm) {
         }
 
 #ifdef DEBUG
-//        GLong preDTS[2];
-//        GInt32 type = pkt.stream_index == asIndex;
-//        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
-//        preDTS[type] = pkt.pts;
+        GLong preDTS[2];
+        GInt32 type = pkt.stream_index == asIndex;
+        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
+        preDTS[type] = pkt.pts;
 #endif
         if (pkt.stream_index == vsIndex) {
-
+//            GInt32 extendDataSize = 0;
+//            av_packet_get_side_data(&pkt, AV_PKT_DATA_NEW_EXTRADATA, &extendDataSize);
 #if MENORY_CHECK
-            R_GJPacket *h264Packet = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
-            h264Packet->dataOffset = 0;
+            R_GJPacket *h264Packet = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size+extendDataSize);
+            h264Packet->dataOffset = extendDataSize;
             R_BufferWrite(&h264Packet->retain, pkt.data, pkt.size);
 #else
             AVBufferRef *buffer     = av_buffer_ref(pkt.buf);
@@ -232,6 +234,9 @@ static GHandle pullRunloop(GHandle parm) {
             pull->videoPullInfo.ts = GTimeMake(pkt.pts, 1000);
             if(!pull->hasVideoKey && ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY)){
                 pull->hasVideoKey = GTrue;
+            }
+            if ((h264Packet->retain.data[4] & 0x0f)!= 1) {
+                printf("type:%x\n",h264Packet->retain.data[4]);
             }
             h264Packet->extendDataSize = h264Packet->extendDataOffset = 0;
             pthread_mutex_lock(&pull->mutex);

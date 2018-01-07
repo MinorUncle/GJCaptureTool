@@ -12,6 +12,7 @@
 #include "GJStreamPush.h"
 #include "GJUtil.h"
 #include "GJBridegContext.h"
+#include <libavformat/avformat.h>
 #define STREAM_PUSH_LOG GNULL
 struct _GJStreamPush {
     GJPipleNode pipleNode;
@@ -159,10 +160,16 @@ static GHandle sendRunloop(GHandle parm) {
         av_init_packet(sendPacket);
         sendPacket->pts = (GInt64)(pts) & 0x7fffffff;
         sendPacket->dts = (GInt64)(dts) & 0x7fffffff;
-        sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
-        sendPacket->size = packet->dataSize;
+
         if (packet->type == GJMediaType_Video) {
             sendPacket->stream_index = push->vStream->index;
+            if (packet->extendDataSize > 0 && (packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY) {
+                sendPacket->data = R_BufferStart(&packet->retain) + packet->extendDataOffset;
+                sendPacket->size = packet->dataSize+packet->extendDataSize;
+            }else{
+                sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
+                sendPacket->size = packet->dataSize;
+            }
             GUInt32 nalSize;
             GUInt8* start = sendPacket->data;
             GUInt8* end = sendPacket->data + sendPacket->size;
@@ -172,18 +179,20 @@ static GHandle sendRunloop(GHandle parm) {
                 start += nalSize + 4;
             }
         } else {
+            sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
+            sendPacket->size = packet->dataSize;
             sendPacket->stream_index = push->aStream->index;
         }
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
         
-//#ifdef DEBUG
-//        static GLong preDTS[2];
-//        GInt32 type = sendPacket->stream_index == push->aStream->index;
-//        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld ddts:%d size:%d\n",type, sendPacket->pts, sendPacket->dts,sendPacket->pts - preDTS[type], sendPacket->size);
-//        preDTS[type] = sendPacket->pts;
-//#endif
+#ifdef DEBUG
+        static GLong preDTS[2];
+        GInt32 type = sendPacket->stream_index == push->aStream->index;
+        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld ddts:%d size:%d isKey:%d\n",type, sendPacket->pts, sendPacket->dts,sendPacket->pts - preDTS[type], sendPacket->size,(packet->flag & GJPacketFlag_KEY)==GJPacketFlag_KEY);
+        preDTS[type] = sendPacket->pts;
+#endif
 
 
 //        if (sendPacket->stream_index == 0) {

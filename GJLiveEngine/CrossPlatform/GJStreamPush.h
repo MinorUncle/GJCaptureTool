@@ -11,7 +11,6 @@
 
 #include "GJLiveDefine+internal.h"
 #include "GJQueue.h"
-#include "avformat.h"
 #include <stdio.h>
 
 #define MAX_URL_LENGTH 100

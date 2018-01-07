@@ -214,7 +214,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         }
     }
 #endif
-    GJLOG(GNULL, GJ_LOGDEBUG, "new shake:%lld,max:%lld ,preMax:%lld",shake,netShake->maxDownShake,netShake->preMaxDownShake);
+    GJLOG(GNULL, GJ_LOGINFO, "new shake:%lld,max:%lld ,preMax:%lld",shake,netShake->maxDownShake,netShake->preMaxDownShake);
     if (shake > netShake->maxDownShake) {
         netShake->maxDownShake = shake;
 #ifdef NETWORK_DELAY
