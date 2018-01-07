@@ -9,7 +9,7 @@
 #include "GJBufferPool.h"
 #include "GJLog.h"
 #include "GJStreamPull.h"
-#include "avformat.h"
+#include <libavformat/avformat.h>
 #include <stdio.h>
 #include "GJUtil.h"
 #include "GJBridegContext.h"

@@ -24,10 +24,14 @@
 #define VIDEO_PTS_PRECISION 1000
 #define AUDIO_PTS_PRECISION 100
 
-#define UPDATE_SHAKE_TIME 15 * 1000 //
 #define MAX_CACHE_DUR 5000 //抖动最大缓存控制
 #define MIN_CACHE_DUR 100  //抖动最小缓存控制
 #define MAX_CACHE_RATIO 3
+#define HIGHT_PASS_FILTER 0.5 //高通滤波
+
+#define UPDATE_SHAKE_TIME_MIN 2*MAX_CACHE_DUR //
+#define UPDATE_SHAKE_TIME_MAX 10*MAX_CACHE_DUR //
+
 
 #define VIDEO_MAX_CACHE_COUNT 100 //初始化缓存空间
 #define AUDIO_MAX_CACHE_COUNT 200
@@ -83,7 +87,9 @@ static void updateWater(GJSyncControl *syncControl, GLong shake){
         shake = MIN_CACHE_DUR;
     }
     GJAssert(shake < 10000, "异常");
+    
     syncControl->bufferInfo.lowWaterFlag  = shake;
+    
     syncControl->bufferInfo.highWaterFlag = syncControl->bufferInfo.lowWaterFlag * MAX_CACHE_RATIO;
     GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "updateWater lowWaterFlag:%ld,highWaterFlag:%ld",syncControl->bufferInfo.lowWaterFlag,syncControl->bufferInfo.highWaterFlag);
 }
@@ -102,8 +108,9 @@ static GBool GJLivePlay_StartDewatering(GJLivePlayer *player) {
             player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.2);
         }
         //减小最大抖动更新间隔
-        player->syncControl.netShake.collectUpdateDur -= UPDATE_SHAKE_TIME/2;
-        player->syncControl.netShake.collectUpdateDur = GMIN(player->syncControl.netShake.collectUpdateDur, UPDATE_SHAKE_TIME);
+        GInt32 collectUpdateDur = player->syncControl.netShake.collectUpdateDur - UPDATE_SHAKE_TIME_MIN/2;
+        collectUpdateDur = GMAX(collectUpdateDur, UPDATE_SHAKE_TIME_MIN);
+        player->syncControl.netShake.collectUpdateDur = collectUpdateDur;
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "reduce collectUpdateDur to:%d",player->syncControl.netShake.collectUpdateDur);
     }
     pthread_mutex_unlock(&player->playControl.oLock);
@@ -139,7 +146,9 @@ static GBool GJLivePlay_StartBuffering(GJLivePlayer *player) {
         queueSetMinCacheSize(player->playControl.imageQueue, VIDEO_MAX_CACHE_COUNT);
         queueSetMinCacheSize(player->playControl.audioQueue, AUDIO_MAX_CACHE_COUNT);
         //每次缓冲时增大最大抖动更新间隔
-        player->syncControl.netShake.collectUpdateDur += UPDATE_SHAKE_TIME;
+        GInt32 collectUpdateDur = player->syncControl.netShake.collectUpdateDur + UPDATE_SHAKE_TIME_MIN;
+        collectUpdateDur = GMIN(collectUpdateDur, UPDATE_SHAKE_TIME_MAX);
+        player->syncControl.netShake.collectUpdateDur = collectUpdateDur;
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "add collectUpdateDur to:%d",player->syncControl.netShake.collectUpdateDur);
     } else {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "buffer when status not in running");
@@ -191,6 +200,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 
     GLong shake = (GTimeSencondValue(clock) - GTimeSencondValue(netShake->collectStartClock) - (GTimeSencondValue(pts) - GTimeSencondValue(netShake->collectStartPts)))*1000; //统计少发的抖动
     GJAssert(shake < 100000,"");
+    
 #ifdef NETWORK_DELAY
     GLong delay = 0;
     GLong testShake = 0;
@@ -204,7 +214,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         }
     }
 #endif
-    //    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "setLowshake:%lld,max:%lld ,preMax:%lld",shake,netShake->maxDownShake,netShake->preMaxDownShake);
+    GJLOG(GNULL, GJ_LOGDEBUG, "new shake:%lld,max:%lld ,preMax:%lld",shake,netShake->maxDownShake,netShake->preMaxDownShake);
     if (shake > netShake->maxDownShake) {
         netShake->maxDownShake = shake;
 #ifdef NETWORK_DELAY
@@ -214,9 +224,9 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             player->callback(player->userDate,GJPlayMessage_TestKeyDelayUpdate,&parm);
         }
 #endif
-        if (shake > netShake->preMaxDownShake) {
+        if (netShake->maxDownShake > netShake->preMaxDownShake) {
             updateWater(_syncControl, shake);
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "new shake to update max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "new shake to update waterFlage. max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
             
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&shake);
 #ifdef NETWORK_DELAY
@@ -232,26 +242,41 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     }
     
     if(shake < 0){
-        netShake->collectStartClock = clock;
-        netShake->collectStartPts   = pts;
+
 
         if(netShake->maxDownShake > netShake->preMaxDownShake){
+            
             netShake->preMaxDownShake =  netShake->maxDownShake;
+        }else if(GTimeMSValue(clock) - GTimeMSValue(netShake->collectStartClock) > (MIN_CACHE_DUR + MAX_CACHE_DUR)*0.5){
+            //防止连续负数
+            
+            //防止高频的负数刷新更新时间，难以到达更新时间，以至于难以减小。
+            netShake->maxDownShake = MIN_CACHE_DUR;
+            netShake->preMaxDownShake =  netShake->preMaxDownShake*HIGHT_PASS_FILTER + netShake->maxDownShake*(1-HIGHT_PASS_FILTER);
+            GJLOG(GNULL, GJ_LOGINFO, "negative shake to update water flage");
+            updateWater(_syncControl,netShake->preMaxDownShake);
+            player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&netShake->preMaxDownShake);
         }
+        netShake->maxDownShake = MIN_CACHE_DUR;
+        netShake->collectStartClock = clock;
+        netShake->collectStartPts   = pts;
         GJLOG(GNULL, GJ_LOGINFO, "negative shake to update max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
 #ifdef NETWORK_DELAY
         if (NeedTestNetwork) {
+            
             if (netShake->maxTestDownShake > netShake->preMaxTestDownShake) {
                 netShake->preMaxTestDownShake =  netShake->maxTestDownShake;
                 GJLOG(GNULL, GJ_LOGINFO, "real negative shake to update max:%lld ,preMax:%lld", netShake->maxTestDownShake, netShake->preMaxTestDownShake);
             }
             netShake->collectStartDelay = delay;
-            netShake->maxTestDownShake = 0;
+            netShake->maxTestDownShake = MIN_CACHE_DUR;
         }
 #endif
-    }else if (GTimeSubtractMSValue(clock, netShake->collectStartClock) >= netShake->collectUpdateDur) {
+    }else
+    if (GTimeSubtractMSValue(clock, netShake->collectStartClock) >= netShake->collectUpdateDur) {
         
         if (netShake->preMaxDownShake > netShake->maxDownShake) {
+            
             updateWater(_syncControl,netShake->maxDownShake);
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&netShake->maxDownShake);
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
@@ -622,7 +647,7 @@ GBool GJLivePlay_Start(GJLivePlayer *player) {
 
         player->syncControl.netShake.preMaxDownShake = MIN_CACHE_DUR;
         player->syncControl.netShake.maxDownShake    = MIN_CACHE_DUR;
-        player->syncControl.netShake.collectUpdateDur = UPDATE_SHAKE_TIME;
+        player->syncControl.netShake.collectUpdateDur = UPDATE_SHAKE_TIME_MIN;
         player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&player->syncControl.netShake.maxDownShake);
 #ifdef NETWORK_DELAY
         player->syncControl.netShake.preMaxTestDownShake = MIN_CACHE_DUR;
