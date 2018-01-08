@@ -177,6 +177,7 @@ static GHandle pullRunloop(GHandle parm) {
                 h264Packet = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);
                 h264Packet->extendDataOffset = 0;
                 h264Packet->extendDataSize = 0;
+                h264Packet->flag = ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY);
             }
             R_BufferWrite(&h264Packet->retain, pkt.data, pkt.size);
             
@@ -185,11 +186,10 @@ static GHandle pullRunloop(GHandle parm) {
             h264Packet->pts      = GTimeMake(pkt.pts, 1000);
             h264Packet->dts      = GTimeMake(pkt.dts, 1000);
             h264Packet->type     = GJMediaType_Video;
-            h264Packet->flag = ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY);
             pull->videoPullInfo.byte += pkt.size;
             pull->videoPullInfo.count ++;
             pull->videoPullInfo.ts = GTimeMake(pkt.pts, 1000);
-            if(!pull->hasVideoKey && ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY)){
+            if(!pull->hasVideoKey && ((h264Packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY)){
                 pull->hasVideoKey = GTrue;
             }
         

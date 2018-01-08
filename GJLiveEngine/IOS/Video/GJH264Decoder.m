@@ -177,12 +177,10 @@ void decodeOutputCallback(
         if ( (start[4] & 0x1f) == 7 ) {
             spsSize = ntohl(*(uint32_t*)start);
             sps = start + 4;
-            packet->dataOffset += 4 + spsSize;
             if ((start[spsSize + 8] & 0x1f) == 8) {
                 memcpy(&ppsSize, spsSize + sps, 4);
                 ppsSize = ntohl(*(uint32_t*)(sps + spsSize));
                 pps     = sps + spsSize + 4;
-                packet->dataOffset += 4 + ppsSize;
             }else{
                 GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "包含sps而不包含pps");
             }
@@ -213,8 +211,6 @@ void decodeOutputCallback(
                 NSLog(@"key:%@,%@",CFArrayGetValueAtIndex(arr, i),list);
             }
 #endif
-            
-            
             
             GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "reCreate decoder ,format:%p", _formatDesc);
             [self createDecompSession];
