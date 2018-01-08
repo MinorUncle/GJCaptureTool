@@ -29,8 +29,8 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
 - (instancetype)init {
     self = [super init];
     if (self) {
-        _outPutImageFormat = kCVPixelFormatType_32BGRA;
         //        _outPutImageFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
+        _outPutImageFormat = kCVPixelFormatType_32BGRA;
         GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVPixelBufferRef), GTrue, R_GJPixelFrameMalloc, cvImagereleaseCallBack, GNULL);
         _isRunning= NO;
         _decodeQueue       = dispatch_queue_create("videoDecodeQueue", DISPATCH_QUEUE_SERIAL);

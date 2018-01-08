@@ -19,8 +19,8 @@ typedef enum ProfileLevel{
     profileLevelHigh,
 }ProfileLevel;
 typedef enum EntropyMode{
-    EntropyMode_CABAC,
-    EntropyMode_CAVLC,
+    kEntropyMode_CABAC,
+    kEntropyMode_CAVLC,
 }EntropyMode;
 
 #define VIDEO_TIMESCALE 1000

@@ -88,7 +88,7 @@ static GHandle pullRunloop(GHandle parm) {
         goto END;
     }
 //    不要用av_format_inject_global_side_data，暂时没有发现用处，倒是如果不对接受到的包不做get side data处理的话，解码会出错
-//    av_format_inject_global_side_data(pull->formatContext);
+    av_format_inject_global_side_data(pull->formatContext);
 //    pull->formatContext->fps_probe_size = 0;
     //    pull->formatContext->max_analyze_duration = 0;
 ///<----ijk中的启动优化

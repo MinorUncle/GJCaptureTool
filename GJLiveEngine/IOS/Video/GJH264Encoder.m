@@ -38,10 +38,10 @@
         _bitrate    = 600;
         ;
         //        _allowMinBitRate = _currentBitRate;
-        _allowBFrame = NO;
+        _allowBFrame = YES;
 
         _profileLevel = profileLevelMain;
-        _entropyMode  = EntropyMode_CABAC;
+        _entropyMode  = kEntropyMode_CABAC;
         _dtsDelta     = 0;
         _preDTS     = -1;
         [self creatEnCodeSession];

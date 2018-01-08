@@ -36,10 +36,10 @@ CFStringRef  getCFStrByLevel(ProfileLevel level){
 CFStringRef getCFStrByEntropyMode(EntropyMode model){
     CFStringRef ref;
     switch (model) {
-        case EntropyMode_CABAC:
+        case kEntropyMode_CABAC:
             ref = kVTH264EntropyMode_CABAC;
             break;
-        case EntropyMode_CAVLC:
+        case kEntropyMode_CAVLC:
             ref = kVTH264EntropyMode_CAVLC;
             break;
         default:
