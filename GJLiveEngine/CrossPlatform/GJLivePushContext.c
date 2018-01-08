@@ -944,6 +944,11 @@ GBool GJLivePush_SetAudioMute(GJLivePushContext *context, GBool mute) {
     
     pthread_mutex_lock(&context->lock);
     context->audioMute = mute;
+    if(mute){
+        pipleDisConnectNode(&context->audioProducer->pipleNode, &context->audioEncoder->pipleNode);
+    }else{
+        pipleConnectNode(&context->audioProducer->pipleNode, &context->audioEncoder->pipleNode);
+    }
     pthread_mutex_unlock(&context->lock);
 
     return GTrue;
