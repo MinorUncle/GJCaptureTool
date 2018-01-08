@@ -265,6 +265,7 @@
 }
 
 -(void)setUseMeasurementMode:(BOOL)useMeasurementMode{
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setUseMeasurementMode:%d", useMeasurementMode);
     _useMeasurementMode = useMeasurementMode;
     if (_audioController) {
         if (_audioController.useMeasurementMode != useMeasurementMode) {
@@ -274,6 +275,7 @@
 }
 
 -(void)setAce:(BOOL)ace{
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setAce:%d", ace);
     _ace = ace;
     if (_audioController) {
         if (_audioController.voiceProcessingEnabled != ace) {
@@ -293,6 +295,7 @@
 }
 
 -(void)_setAudioInEarMonitoring:(BOOL)audioInEarMonitoring{
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "_setAudioInEarMonitoring:%d", audioInEarMonitoring);
     _audioInEarMonitoring = audioInEarMonitoring;
     if (_audioController == nil) {
         return;
@@ -314,6 +317,7 @@
 }
 
 -(void)setEnableReverb:(BOOL)enable{
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setEnableReverb:%d", enable);
     _enableReverb = enable;
     if (_reverb == nil) {
         _reverb           = [[AEReverbFilter alloc] init];
@@ -331,6 +335,7 @@
 }
 
 - (void)setMixToSream:(BOOL)mixToSream {
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setMixToSream:%d", mixToSream);
     _mixToSream = mixToSream;
     
     if(_audioMixer){

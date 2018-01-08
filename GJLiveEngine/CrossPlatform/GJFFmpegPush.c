@@ -23,7 +23,7 @@ struct _GJStreamPush {
     GJVideoStreamFormat *videoFormat;
 
     GJQueue *sendBufferQueue;
-    char     pushUrl[MAX_URL_LENGTH];
+    char*     pushUrl;
 
     pthread_t       sendThread;
     pthread_mutex_t mutex;
@@ -328,7 +328,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
     size_t length = strlen(sendUrl);
     memset(&push->videoStatus, 0, sizeof(GJTrafficStatus));
     memset(&push->audioStatus, 0, sizeof(GJTrafficStatus));
-    GJAssert(length <= MAX_URL_LENGTH - 1, "sendURL 长度不能大于：%d", 100 - 1);
+    push->pushUrl = realloc(push->pushUrl,length + 1);
     memcpy(push->pushUrl, sendUrl, length + 1);
     if (push->sendThread) {
         GJLOG(STREAM_PUSH_LOG, GJ_LOGWARNING, "上一个push没有释放，开始释放并等待");
@@ -359,7 +359,6 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
     av_dict_set(&metadata, "author", "GuangJin.Zhou", AV_DICT_MATCH_CASE);
 
     push->formatContext->metadata = metadata;
-    memcpy(push->pushUrl, sendUrl, strlen(sendUrl) + 1);
     AVCodec *audioCode = GNULL;
     AVCodec *videoCode = GNULL;
 
@@ -440,6 +439,9 @@ GVoid GJStreamPush_Delloc(GJStreamPush *push) {
     if (push->videoFormat) free(push->videoFormat);
     if (push->audioFormat) free(push->audioFormat);
     pipleNodeUnInit(&push->pipleNode);
+    if (push->pushUrl != GNULL) {
+        free(push->pushUrl);
+    }
     free(push);
     GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJRtmpPush_Delloc:%p", push);
 }

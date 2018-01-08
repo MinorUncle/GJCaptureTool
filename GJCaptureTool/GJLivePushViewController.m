@@ -39,7 +39,7 @@
 @property (strong, nonatomic) UIButton *messureModel;
 @property (strong, nonatomic) UIButton *sticker;
 @property (strong, nonatomic) UIButton *sizeChangeBtn;
-@property (strong, nonatomic) UIButton *trackImage;
+@property (strong, nonatomic) UIButton *aecBtn;
 @property (strong, nonatomic) UIView *view;
 
 
@@ -193,8 +193,8 @@
     
     _mixStream = [[UIButton alloc]init];
     _mixStream.backgroundColor = [UIColor clearColor];
-    [_mixStream setTitle:@"禁止混流" forState:UIControlStateNormal];
-    [_mixStream setTitle:@"允许混流" forState:UIControlStateSelected];
+    [_mixStream setTitle:@"禁止混音入流" forState:UIControlStateNormal];
+    [_mixStream setTitle:@"允许混音入流" forState:UIControlStateSelected];
     [_mixStream setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_mixStream addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     _mixStream.backgroundColor = [UIColor clearColor];
@@ -226,14 +226,14 @@
     _audioMute.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_audioMute];
     
-    _uiRecode = [[UIButton alloc]init];
-    _uiRecode.backgroundColor = [UIColor clearColor];
-    [_uiRecode setTitle:@"开始UI录制" forState:UIControlStateNormal];
-    [_uiRecode setTitle:@"结束UI录制" forState:UIControlStateSelected];
-    [_uiRecode setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
-    [_uiRecode addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _uiRecode.backgroundColor = [UIColor clearColor];
-    [self.view addSubview:_uiRecode];
+//    _uiRecode = [[UIButton alloc]init];
+//    _uiRecode.backgroundColor = [UIColor clearColor];
+//    [_uiRecode setTitle:@"开始UI录制" forState:UIControlStateNormal];
+//    [_uiRecode setTitle:@"结束UI录制" forState:UIControlStateSelected];
+//    [_uiRecode setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+//    [_uiRecode addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+//    _uiRecode.backgroundColor = [UIColor clearColor];
+//    [self.view addSubview:_uiRecode];
     
     _reverb = [[UIButton alloc]init];
     _reverb.backgroundColor = [UIColor clearColor];
@@ -246,8 +246,8 @@
     
     _messureModel = [[UIButton alloc]init];
     _messureModel.backgroundColor = [UIColor clearColor];
-    [_messureModel setTitle:@"开启回声消除" forState:UIControlStateNormal];
-    [_messureModel setTitle:@"关闭回声消除" forState:UIControlStateSelected];
+    [_messureModel setTitle:@"开启messure模式" forState:UIControlStateNormal];
+    [_messureModel setTitle:@"关闭messure模式" forState:UIControlStateSelected];
     [_messureModel setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_messureModel addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     _messureModel.backgroundColor = [UIColor clearColor];
@@ -262,14 +262,14 @@
     _sticker.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_sticker];
     
-    _trackImage = [[UIButton alloc]init];
-    _trackImage.backgroundColor = [UIColor clearColor];
-    [_trackImage setTitle:@"开始跟踪贴纸" forState:UIControlStateNormal];
-    [_trackImage setTitle:@"结束跟踪贴纸" forState:UIControlStateSelected];
-    [_trackImage setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
-    [_trackImage addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _trackImage.backgroundColor = [UIColor clearColor];
-    [self.view addSubview:_trackImage];
+    _aecBtn = [[UIButton alloc]init];
+    _aecBtn.backgroundColor = [UIColor clearColor];
+    [_aecBtn setTitle:@"开启回声消除" forState:UIControlStateNormal];
+    [_aecBtn setTitle:@"关闭回声消除" forState:UIControlStateSelected];
+    [_aecBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_aecBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    _aecBtn.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:_aecBtn];
     
     _sizeChangeBtn = [[UIButton alloc]init];
     _sizeChangeBtn.backgroundColor = [UIColor clearColor];
@@ -376,7 +376,7 @@
     rect.origin.y = CGRectGetMaxY(rect);
     _currentV.frame = rect;
     
-    int rightCount = 16;
+    int rightCount = 15;
     rect.origin = CGPointMake(frame.size.width - size.width, hOffset);
     rect.size = CGSizeMake(size.width, (self.view.bounds.size.height-hOffset) / rightCount);
     _pushStartBtn.frame = rect;
@@ -399,8 +399,8 @@
     rect.origin.y = CGRectGetMaxY(rect);
     _videoMute.frame = rect;
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _uiRecode.frame = rect;
+//    rect.origin.y = CGRectGetMaxY(rect);
+//    _uiRecode.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     _reverb.frame = rect;
@@ -412,7 +412,7 @@
     _sticker.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
-    _trackImage.frame = rect;
+    _aecBtn.frame = rect;
     
     rect.origin.y = CGRectGetMaxY(rect);
     _sizeChangeBtn.frame = rect;
@@ -504,17 +504,18 @@
             }];
         }
         
-    }else if (btn == _trackImage) {
-        if (btn.selected) {
-            NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
-            images[0] = [UIImage imageNamed:[NSString stringWithFormat:@"%d.png",1]];
-            
-            CGSize size = _livePush.captureSize;
-            GCRect rect = {size.width*0.2,size.height*0.5,100.0,100.0};
-            [_livePush startTrackingImageWithImages:images initFrame:rect];
-        }else{
-            [_livePush stopTracking];
-        }
+    }else if (btn == _aecBtn) {
+        [_livePush setEnableAec:btn.selected];
+//        if (btn.selected) {
+//            NSMutableArray<UIImage*>* images = [NSMutableArray arrayWithCapacity:6];
+//            images[0] = [UIImage imageNamed:[NSString stringWithFormat:@"%d.png",1]];
+//
+//            CGSize size = _livePush.captureSize;
+//            GCRect rect = {size.width*0.2,size.height*0.5,100.0,100.0};
+//            [_livePush startTrackingImageWithImages:images initFrame:rect];
+//        }else{
+//            [_livePush stopTracking];
+//        }
     }else if (btn == _sizeChangeBtn) {
         btn.selected = NO;
         btn.tag++;
@@ -589,7 +590,7 @@
     }else if (btn == _uiRecode) {
         if (btn.selected) {
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
-            path = [path stringByAppendingPathComponent:@"test.mp4"];
+            path = [path stringByAppendingPathComponent:@"test.flv"];
             if(![_livePush startUIRecodeWithRootView:self.view fps:15 filePath:[NSURL fileURLWithPath:path]]){
                 btn.selected = NO;
             }

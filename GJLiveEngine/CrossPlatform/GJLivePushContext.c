@@ -221,6 +221,11 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
 static GVoid streamRecodeMessageCallback(GJStreamPush* push, GHandle userData, kStreamPushMessageType messageType, GHandle messageParm) {
     GJLivePushContext *context = userData;
     switch (messageType) {
+        case kStreamPushMessageType_connectSuccess: {
+            pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamRecode);
+            pipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamRecode);
+            break;
+        }
         case kStreamPushMessageType_closeComplete: {
             pthread_mutex_lock(&context->lock);
             GJStreamPush_CloseAndDealloc(&context->streamRecode);
@@ -874,6 +879,9 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
 
 GVoid GJLivePush_StopPush(GJLivePushContext *context) {
     pthread_mutex_lock(&context->lock);
+    if (context->streamRecode) {
+        GJLivePush_StopRecode(context);
+    }
     if (context->streamPush) {
         context->stopPushClock = GJ_Gettime();
         context->audioProducer->audioProduceStop(context->audioProducer);
@@ -911,6 +919,7 @@ GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene){
 }
 
 GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view){
+    
     pthread_mutex_lock(&context->lock);
     GBool result = context->videoProducer->setCaptureView(context->videoProducer,view);
     pthread_mutex_unlock(&context->lock);
@@ -918,6 +927,7 @@ GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view){
 }
 
 GBool GJLivePush_SetCaptureType(GJLivePushContext *context, GJCaptureType type){
+    
     pthread_mutex_lock(&context->lock);
     GBool result = context->videoProducer->setCaptureType(context->videoProducer,type);
     pthread_mutex_unlock(&context->lock);
@@ -1202,7 +1212,7 @@ GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps,
             GJStreamPush_CloseAndDealloc(&context->streamRecode);
             break;
         };
-        
+        result = GTrue;
     } while (0);
     pthread_mutex_unlock(&context->lock);
 
@@ -1211,6 +1221,8 @@ GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps,
 
 GVoid GJLivePush_StopRecode(GJLivePushContext *context) {
     pthread_mutex_lock(&context->lock);
+    pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamRecode);
+    pipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamRecode);
     GJStreamPush_CloseAndDealloc(&context->streamRecode);
     pthread_mutex_unlock(&context->lock);
 }
