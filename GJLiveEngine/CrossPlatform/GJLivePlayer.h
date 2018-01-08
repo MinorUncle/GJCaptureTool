@@ -114,8 +114,8 @@ GBool GJLivePlay_Pause(GJLivePlayer *player);
 GVoid GJLivePlay_Resume(GJLivePlayer *player);
 GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame);
 GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame);
-GVoid GJLivePlay_SetAudioFormat(GJLivePlayer *player, GJAudioFormat audioFormat);
-GVoid GJLivePlay_SetVideoFormat(GJLivePlayer *player, GJPixelType audioFormat);
+GVoid GJLivePlay_AddAudioSourceFormat(GJLivePlayer *player, GJAudioFormat audioFormat);
+GVoid GJLivePlay_AddVideoSourceFormat(GJLivePlayer *player, GJPixelType audioFormat);
 GHandle GJLivePlay_GetVideoDisplayView(GJLivePlayer *player);
 
 GJTrafficStatus GJLivePlay_GetVideoCacheInfo(GJLivePlayer *player);

@@ -261,7 +261,7 @@ static GVoid aacDecodeCompleteCallback(GHandle userData, R_GJPCMFrame *frame) {
         if (destformat.mSampleRate > 0) {
             pthread_mutex_lock(&livePull->lock);
             if (livePull->streamPull) {//没有停止
-                GJLivePlay_SetAudioFormat(livePull->player, destformat);
+                GJLivePlay_AddAudioSourceFormat(livePull->player, destformat);
                 livePull->fristAudioDecodeClock = GJ_Gettime();
                 
                 pipleConnectNode(&livePull->audioDecoder->pipleNode, &livePull->player->pipleNode);
@@ -275,7 +275,7 @@ static GVoid h264DecodeCompleteCallback(GHandle userData, R_GJPixelFrame *frame)
     GJLivePullContext *pullContext = userData;
     if (G_TIME_IS_INVALID(pullContext->fristVideoDecodeClock)) {
         pullContext->fristVideoDecodeClock = GJ_Gettime();
-        GJLivePlay_SetVideoFormat(pullContext->player, frame->type);
+        GJLivePlay_AddVideoSourceFormat(pullContext->player, frame->type);
         GJPullFristFrameInfo info = {0};
         info.size.width           = (GFloat32) frame->width; //CGSizeMake((float)frame->width, (float)frame->height);
         info.size.height          = (GFloat32) frame->height;
