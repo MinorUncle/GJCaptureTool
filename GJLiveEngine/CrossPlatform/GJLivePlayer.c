@@ -286,7 +286,8 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     if (GTimeSubtractMSValue(clock, netShake->collectStartClock) >= netShake->collectUpdateDur) {
         
         if (netShake->preMaxDownShake > netShake->maxDownShake) {
-            
+            //0.5倍的缓冲
+            netShake->maxDownShake = (netShake->maxDownShake + netShake->preMaxDownShake)*0.5;
             updateWater(_syncControl,netShake->maxDownShake);
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&netShake->maxDownShake);
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);

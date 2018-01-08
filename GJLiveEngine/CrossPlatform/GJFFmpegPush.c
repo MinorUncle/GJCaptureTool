@@ -191,6 +191,7 @@ static GHandle sendRunloop(GHandle parm) {
         static GLong preDTS[2];
         GInt32 type = sendPacket->stream_index == push->aStream->index;
         GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld ddts:%lld size:%d isKey:%d\n",type, sendPacket->pts, sendPacket->dts,sendPacket->pts - preDTS[type], sendPacket->size,(packet->flag & GJPacketFlag_KEY)==GJPacketFlag_KEY);
+
         preDTS[type] = sendPacket->pts;
 #endif
 
@@ -484,7 +485,7 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
         push->startMS = GTimeMSValue(packet->dts);
     }
 #endif
-    
+
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         
         push->videoStatus.enter.ts = packet->dts;

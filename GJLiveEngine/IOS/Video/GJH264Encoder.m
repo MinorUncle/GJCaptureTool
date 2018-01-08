@@ -212,10 +212,8 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 
     bool keyframe = !CFDictionaryContainsKey((CFArrayGetValueAtIndex(CMSampleBufferGetSampleAttachmentsArray(sample, true), 0)), kCMSampleAttachmentKey_NotSync);
 
-    if (encoder.sps == nil) {
-        if (!keyframe) {
-            return;
-        }
+    if (keyframe) {
+ 
         CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sample);
         size_t                 spsSize, sparameterSetCount;
         int                    spHeadSize;
