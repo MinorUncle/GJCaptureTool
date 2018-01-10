@@ -39,6 +39,7 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
     return self;
 }
 - (void)dealloc {
+    queueFree(&_inputQueue);
     GJRetainBufferPool *temPool = _bufferPool;
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         GJRetainBufferPoolClean(temPool, GTrue);
@@ -132,6 +133,7 @@ void decodeOutputCallback(
         R_GJPacket* packet;
         while (_isRunning && queuePop(_inputQueue, (GHandle*)&packet, GINT32_MAX)) {
             [self _decodePacket:packet];
+            R_BufferUnRetain(&packet->retain);
         }
     });
     return YES;
