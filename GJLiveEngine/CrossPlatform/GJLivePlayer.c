@@ -169,7 +169,7 @@ static GVoid GJLivePlay_StopBuffering(GJLivePlayer *player) {
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->playControl.status == kPlayStatusBuffering) {
         player->playControl.status = kPlayStatusRunning;
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "stop buffing");
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "GJLivePlay_StopBuffering:%p",player);
         queueSetMinCacheSize(player->playControl.imageQueue, 0);
         if (queueGetLength(player->playControl.imageQueue) > 0) {
             queueBroadcastPop(player->playControl.imageQueue);
@@ -644,6 +644,7 @@ GBool GJLivePlay_Create(GJLivePlayer **liveplayer, GJLivePlayCallback callback, 
     }
 
     GJLivePlayer *player = *liveplayer;
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_Create:%p",player);
     pipleNodeInit(&player->pipleNode, GJLivePlay_NodeAddData);
     GJ_PictureDisplayContextCreate(&player->videoPlayer);
     player->videoPlayer->displaySetup(player->videoPlayer);
@@ -658,6 +659,7 @@ GBool GJLivePlay_Create(GJLivePlayer **liveplayer, GJLivePlayCallback callback, 
 }
 GVoid GJLivePlay_AddAudioSourceFormat(GJLivePlayer *player, GJAudioFormat audioFormat) {
     GJAssert(player->playControl.status != kPlayStatusStop, "开始播放后才能添加播放资源");
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_AddAudioSourceFormat:%p",player);
     if (memcmp(&audioFormat, &player->audioFormat, sizeof(audioFormat))!=0) {
         player->audioFormat = audioFormat;
         if (player->audioPlayer->obaque) {
@@ -667,6 +669,7 @@ GVoid GJLivePlay_AddAudioSourceFormat(GJLivePlayer *player, GJAudioFormat audioF
     }
 }
 GVoid GJLivePlay_AddVideoSourceFormat(GJLivePlayer *player, GJPixelType audioFormat) {
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_AddVideoSourceFormat:%p",player);
     player->videoPlayer->displaySetFormat(player->videoPlayer, audioFormat);
 }
 GBool GJLivePlay_Start(GJLivePlayer *player) {
@@ -716,7 +719,7 @@ GVoid GJLivePlay_Stop(GJLivePlayer *player) {
     GJLivePlay_StopBuffering(player);
 
     if (player->playControl.status != kPlayStatusStop) {
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "gjliveplayer stop start");
+        GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_Stop:%p",player);
         pthread_mutex_lock(&player->playControl.oLock);
         player->playControl.status = kPlayStatusStop;
         queueEnablePush(player->playControl.audioQueue, GFalse);
@@ -786,6 +789,7 @@ GVoid GJLivePlay_Stop(GJLivePlayer *player) {
 
 GBool GJLivePlay_Pause(GJLivePlayer *player){
     GJAssert(player != GNULL, "GJLivePlay_Pause nil");
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_Pause:%p",player);
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->playControl.status != kPlayStatusPause) {
         
@@ -808,6 +812,7 @@ GBool GJLivePlay_Pause(GJLivePlayer *player){
 }
 GVoid GJLivePlay_Resume(GJLivePlayer *player){
     GJAssert(player != GNULL, "GJLivePlay_Pause nil");
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_Resume:%p",player);
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->playControl.status != kPlayStatusRunning) {
         player->playControl.status = kPlayStatusRunning;
@@ -1093,12 +1098,13 @@ GLong GJLivePlay_GetNetWorkDelay(GJLivePlayer *player){
 #endif
 
 GHandle GJLivePlay_GetVideoDisplayView(GJLivePlayer *player) {
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_GetVideoDisplayView:%p",player);
     return player->videoPlayer->getDispayView(player->videoPlayer);
 }
 
 GVoid GJLivePlay_Dealloc(GJLivePlayer **livePlayer) {
-    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "GJPlivePlayer dealloc");
     GJLivePlayer *player = *livePlayer;
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_Dealloc:%p",player);
     if (player->audioPlayer->obaque) {
         player->audioPlayer->audioPlayUnSetup(player->audioPlayer);
     }

@@ -364,6 +364,7 @@ GBool GJStreamPull_Create(GJStreamPull **pullP, StreamPullMessageCallback callba
     } else {
         pull = *pullP;
     }
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJStreamPull_Create:%p",pull);
     GInt32 ret = avformat_network_init();
     if (ret < 0) {
         return GFalse;
@@ -384,6 +385,7 @@ GBool GJStreamPull_Create(GJStreamPull **pullP, StreamPullMessageCallback callba
     return GTrue;
 }
 GVoid GJStreamPull_Delloc(GJStreamPull *pull) {
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJStreamPull_Delloc:%p",pull);
     if (pull) {
         GJRetainBufferPoolClean(pull->memoryCachePool, GTrue);
         GJRetainBufferPoolFree(pull->memoryCachePool);
@@ -397,7 +399,7 @@ GVoid GJStreamPull_Delloc(GJStreamPull *pull) {
     }
 }
 GVoid GJStreamPull_Release(GJStreamPull *pull) {
-    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_Release:%p", pull);
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJStreamPull_Release:%p",pull);
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
     pull->messageCallback = NULL;
@@ -411,18 +413,18 @@ GVoid GJStreamPull_Release(GJStreamPull *pull) {
     }
 }
 GVoid GJStreamPull_Close(GJStreamPull *pull) {
-    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_Close:%p", pull);
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJStreamPull_Close:%p",pull);
     pull->stopRequest = GTrue;
 }
 
 GVoid GJStreamPull_CloseAndRelease(GJStreamPull *pull) {
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJStreamPull_CloseAndRelease:%p",pull);
     GJStreamPull_Close(pull);
     GJStreamPull_Release(pull);
 }
 
 GBool GJStreamPull_StartConnect(GJStreamPull *pull, StreamPullDataCallback dataCallback, GHandle callbackParm, const GChar *pullUrl) {
-    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJStreamPull_StartConnect:%p", pull);
-
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJStreamPull_StartConnect:%p",pull);
     if (pull->pullThread != NULL) {
         GJStreamPull_Close(pull);
         pthread_join(pull->pullThread, NULL);

@@ -33,6 +33,7 @@ GBool GJLivePull_Create(GJLivePullContext **pullContext, GJLivePullCallback call
                 break;
             }
         }
+        GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePull_Create:%p",*pullContext);
         GJLivePullContext *context = *pullContext;
         context->callback          = callback;
         context->userData          = param;
@@ -59,6 +60,7 @@ GBool GJLivePull_Create(GJLivePullContext **pullContext, GJLivePullCallback call
     return result;
 }
 GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePull_StartPull:%p",context);
     GBool result = GTrue;
     pthread_mutex_lock(&context->lock);
     do {
@@ -96,6 +98,7 @@ GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
 }
 GVoid GJLivePull_StopPull(GJLivePullContext *context) {
     pthread_mutex_lock(&context->lock);
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePull_StartPull:%p",context);
     if (context->streamPull) {
         pipleDisConnectNode((GJPipleNode*)context->streamPull, &context->audioDecoder->pipleNode);
         pipleDisConnectNode((GJPipleNode*)context->streamPull, &context->videoDecoder->pipleNode);
@@ -113,6 +116,7 @@ GVoid GJLivePull_StopPull(GJLivePullContext *context) {
 
 GVoid GJLivePull_Pause(GJLivePullContext *context){
     GJAssert(context != GNULL, "GJLivePullContext nil");
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePull_Pause:%p",context);
     pthread_mutex_lock(&context->lock);
     GJLivePlay_Pause(context->player);
     pthread_mutex_unlock(&context->lock);
@@ -121,6 +125,7 @@ GVoid GJLivePull_Pause(GJLivePullContext *context){
 
 GVoid GJLivePull_Resume(GJLivePullContext *context){
     GJAssert(context != GNULL, "GJLivePullContext nil");
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePull_Resume:%p",context);
     pthread_mutex_lock(&context->lock);
     GJLivePlay_Resume(context->player);
     pthread_mutex_unlock(&context->lock);
@@ -146,9 +151,11 @@ GInt32 GJLivePull_GetNetWorkDelay(GJLivePullContext *context){
 #endif
 
 GHandle GJLivePull_GetDisplayView(GJLivePullContext *context) {
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePull_GetDisplayView:%p",context);
     return GJLivePlay_GetVideoDisplayView(context->player);
 }
 GVoid GJLivePull_Dealloc(GJLivePullContext **pullContext) {
+    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePull_Dealloc:%p",*pullContext);
     GJLivePullContext *context = *pullContext;
     if (context == GNULL) {
         GJLOG(context, GJ_LOGERROR, "非法释放");

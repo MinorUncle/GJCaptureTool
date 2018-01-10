@@ -288,6 +288,8 @@ GBool GJStreamPush_Create(GJStreamPush **sender, StreamPushMessageCallback callb
     } else {
         push = *sender;
     }
+    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJStreamPush_Create:%p", push);
+
     memset(push, 0, sizeof(GJStreamPush));
     pipleNodeInit(&push->pipleNode, (NodeFlowDataFunc)GJStreamPush_NodeReceiveData);
     GInt32 ret = avformat_network_init();
@@ -323,7 +325,7 @@ static int interrupt_callback(void *parm) {
 }
 GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
 
-    GJLOG(STREAM_PUSH_LOG, GJ_LOGINFO, "GJRtmpPush_StartConnect:%p", push);
+    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJRtmpPush_StartConnect:%p", push);
 
     size_t length = strlen(sendUrl);
     memset(&push->videoStatus, 0, sizeof(GJTrafficStatus));
@@ -416,6 +418,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
 }
 
 GVoid GJStreamPush_Delloc(GJStreamPush *push) {
+    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJStreamPush_Delloc:%p", push);
 
     GInt32 length = queueGetLength(push->sendBufferQueue);
     if (length > 0) {
@@ -446,7 +449,7 @@ GVoid GJStreamPush_Delloc(GJStreamPush *push) {
     GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJRtmpPush_Delloc:%p", push);
 }
 GVoid GJStreamPush_Release(GJStreamPush *push) {
-    GJLOG(STREAM_PUSH_LOG, GJ_LOGINFO, "GJRtmpPush_Release::%p", push);
+    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJRtmpPush_Release::%p", push);
 
     GBool shouldDelloc    = GFalse;
     pthread_mutex_lock(&push->mutex);
@@ -462,9 +465,9 @@ GVoid GJStreamPush_Release(GJStreamPush *push) {
 }
 GVoid GJStreamPush_Close(GJStreamPush *sender) {
     if (sender->stopRequest) {
-        GJLOG(STREAM_PUSH_LOG, GJ_LOGINFO, "GJRtmpPush_Close：%p  重复关闭", sender);
+        GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJRtmpPush_Close：%p  重复关闭", sender);
     } else {
-        GJLOG(STREAM_PUSH_LOG, GJ_LOGINFO, "GJRtmpPush_Close:%p", sender);
+        GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJRtmpPush_Close:%p", sender);
         sender->stopRequest = GTrue;
         queueEnablePush(sender->sendBufferQueue, GFalse);
         queueEnablePop(sender->sendBufferQueue, GFalse);
@@ -473,6 +476,7 @@ GVoid GJStreamPush_Close(GJStreamPush *sender) {
     }
 }
 GVoid GJStreamPush_CloseAndDealloc(GJStreamPush **push) {
+    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJStreamPush_CloseAndDealloc:%p", *push);
     GJStreamPush_Close(*push);
     GJStreamPush_Release(*push);
     *push = GNULL;
