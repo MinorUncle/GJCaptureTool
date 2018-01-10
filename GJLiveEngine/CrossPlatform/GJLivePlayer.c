@@ -21,8 +21,8 @@
 
 //#define UIIMAGE_SHOW
 
-#define VIDEO_PTS_PRECISION 1000
-#define AUDIO_PTS_PRECISION 100
+#define VIDEO_PTS_PRECISION 400
+#define AUDIO_PTS_PRECISION 200
 
 #define MAX_CACHE_DUR 5000 //抖动最大缓存控制
 #define MIN_CACHE_DUR 100  //抖动最小缓存控制
@@ -437,14 +437,25 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "消耗音频 PTS:%lld size:%d dTime:%lld",audioBuffer->pts.value,R_BufferSize(&audioBuffer->retain),currentTime - preTime);
         preTime = currentTime;
 #endif
-        
-        R_BufferUnRetain(&audioBuffer->retain);
+        if(_playControl->freshAudioFrame != GNULL){
+            R_BufferUnRetain(&_playControl->freshAudioFrame->retain);
+        }
+        _playControl->freshAudioFrame = audioBuffer;
         return GTrue;
     } else {
-        if (_playControl->status == kPlayStatusRunning) {
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "audio player queue empty");
-            if (_syncControl->syncType == kTimeSYNCAudio) {
-                GJLivePlay_StartBuffering(player);
+        GLong shake = GMAX(_syncControl->netShake.maxDownShake, _syncControl->netShake.preMaxDownShake);
+        GLong currentTime = GTimeMSValue(GJ_Gettime());
+        GLong lastClock = GTimeMSValue(_syncControl->audioInfo.trafficStatus.leave.clock);
+        if(shake < AUDIO_PTS_PRECISION && shake-(currentTime - lastClock)< AUDIO_PTS_PRECISION){
+            *outSize = R_BufferSize(&_playControl->freshAudioFrame->retain);
+            memcpy(data, R_BufferStart(&_playControl->freshAudioFrame->retain), *outSize);
+        }else{
+            *outSize = 0;
+            if (_playControl->status == kPlayStatusRunning) {
+                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "audio player queue empty");
+                if (_syncControl->syncType == kTimeSYNCAudio) {
+                    GJLivePlay_StartBuffering(player);
+                }
             }
         }
         return GFalse;
@@ -721,6 +732,12 @@ GVoid GJLivePlay_Stop(GJLivePlayer *player) {
 
         pthread_mutex_lock(&player->playControl.oLock);
         player->audioPlayer->audioStop(player->audioPlayer);
+        
+        if (player->playControl.freshAudioFrame) {
+            R_BufferUnRetain(&player->playControl.freshAudioFrame->retain);
+            player->playControl.freshAudioFrame = GNULL;
+        }
+        
         GInt32 vlength = queueGetLength(player->playControl.imageQueue);
         GInt32 alength = queueGetLength(player->playControl.audioQueue);
 

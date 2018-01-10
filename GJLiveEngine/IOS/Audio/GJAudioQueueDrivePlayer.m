@@ -362,7 +362,7 @@
 static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer) {
 
     GJAudioQueueDrivePlayer *player = (__bridge GJAudioQueueDrivePlayer *) inClientData;
-    int                      dataSize;
+    int                      dataSize = inBuffer->mAudioDataByteSize;
 
     if (player.fillDataCallback(inBuffer->mAudioData, &dataSize)) {
         inBuffer->mAudioDataByteSize = dataSize;
