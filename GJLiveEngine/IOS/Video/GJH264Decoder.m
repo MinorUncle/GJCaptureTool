@@ -170,11 +170,15 @@ void decodeOutputCallback(
 //    GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"receive encode video index:%d size:%lld:",index-2, packet->dataSize-packet->dataOffset);
 //    GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&packet->retain)+packet->dataOffset, (GUInt32) 20);
     
-    if (packet->flag == GJPacketFlag_KEY && packet->extendDataSize > 0) {
+    if ((packet->flag == GJPacketFlag_KEY && packet->extendDataSize > 0) || _decompressionSession == nil) {
         
         int32_t  spsSize = 0, ppsSize = 0;
         uint8_t *sps = NULL, *pps = NULL, *start;
-        start = R_BufferStart(&packet->retain) + packet->extendDataOffset;
+        if (packet->extendDataSize > 0) {
+            start = R_BufferStart(&packet->retain) + packet->extendDataOffset;
+        }else{
+            start = R_BufferStart(&packet->retain) + packet->dataOffset;
+        }
         
         if ( (start[4] & 0x1f) == 7 ) {
             spsSize = ntohl(*(uint32_t*)start);
@@ -186,9 +190,23 @@ void decodeOutputCallback(
             }else{
                 GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "包含sps而不包含pps");
             }
+        }else{
+            GInt32 index = 0;
+            while (index < packet->dataSize) {
+                if ((start[index+4] & 0x1f) == 7) {
+                    sps = start + index + 4;
+                    memcpy(&spsSize, start + index, 4);
+                    spsSize = ntohl(spsSize);
+                }else if ((start[index+4] & 0x1f) == 8){
+                    pps = start + index + 4;
+                    memcpy(&ppsSize, start + index, 4);
+                    ppsSize = ntohl(ppsSize);
+                    break;
+                }
+            }
         }
-        if(sps && pps 
-           && (_decompressionSession == nil || memcmp(sps, _spsData.bytes, spsSize) || memcmp(pps, _ppsData.bytes, ppsSize))){
+        
+        if(sps && pps && (_decompressionSession == nil || memcmp(sps, _spsData.bytes, spsSize) || memcmp(pps, _ppsData.bytes, ppsSize))){
             GJLOG(DEFAULT_LOG,GJ_LOGINFO,"decode sps size:%d:", spsSize);
             GJ_LogHexString(GJ_LOGINFO, sps, (GUInt32) spsSize);
             GJLOG(DEFAULT_LOG,GJ_LOGINFO,"decode pps size:%d:", ppsSize);
@@ -223,11 +241,6 @@ void decodeOutputCallback(
                 GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "解码器创建失败");
 
             }
-        }
-    } else {
-        if (_decompressionSession == NULL) {
-            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "解码器为空，且缺少关键帧，丢帧");
-            goto ERROR;
         }
     }
 

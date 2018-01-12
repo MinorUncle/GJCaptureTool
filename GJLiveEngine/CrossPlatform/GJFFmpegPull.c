@@ -160,6 +160,8 @@ static GHandle pullRunloop(GHandle parm) {
                     R_BufferUnRetain(&avccPacket->retain);
                 }
             }
+        }else{
+            GJLOG(GNULL, GJ_LOGWARNING, "没有sps,pps");
         }
         GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "end av_find_best_stream vindex");
     }
@@ -256,6 +258,38 @@ static GHandle pullRunloop(GHandle parm) {
                 h264Packet->extendDataSize = 0;
                 h264Packet->flag = ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY);
             }
+            
+            ////<-----conversion
+            GUInt8* preNal = GNULL;
+            for (int i = 0; i<pkt.size-4; i++) {
+                if (pkt.data[i] == 0) {
+                    if (pkt.data[i+1] == 0) {
+                        if (pkt.data[i+2] == 0) {
+                            if (pkt.data[i+3] == 1) {
+                                if (preNal != GNULL) {
+                                    GInt32 nalSize = (GInt32)(pkt.data + i - preNal - 4);
+                                    nalSize = htonl(nalSize);
+                                    memcpy(preNal, &nalSize, 4);
+                                }
+                                preNal = pkt.data + i;
+                            }else{
+                                i+=2;
+                            }
+                        }else{
+                            i+=2;
+                        }
+                    }else{
+                        i++;
+                    }
+                }
+            }
+            if (preNal) {
+                GInt32 nalSize = pkt.size - 4;
+                nalSize = htonl(nalSize);
+                memcpy(preNal, &nalSize, 4);
+            }
+            ///->>>
+            
             R_BufferWrite(&h264Packet->retain, pkt.data, pkt.size);
             
             h264Packet->dataOffset = h264Packet->extendDataOffset+h264Packet->extendDataSize;
