@@ -273,11 +273,10 @@ END:
         shouldDelloc = GTrue;
     }
     pthread_mutex_unlock(&push->mutex);
+    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "sendRunloop end:%p",push);
     if (shouldDelloc) {
         GJStreamPush_Delloc(push);
     }
-    GJLOG(STREAM_PUSH_LOG, GJ_LOGINFO, "sendRunloop end");
-
     return GNULL;
 }
 
@@ -325,7 +324,7 @@ static int interrupt_callback(void *parm) {
 }
 GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
 
-    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJRtmpPush_StartConnect:%p", push);
+    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJStreamPush_StartConnect:%p", push);
 
     size_t length = strlen(sendUrl);
     memset(&push->videoStatus, 0, sizeof(GJTrafficStatus));
@@ -446,10 +445,10 @@ GVoid GJStreamPush_Delloc(GJStreamPush *push) {
         free(push->pushUrl);
     }
     free(push);
-    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJRtmpPush_Delloc:%p", push);
+    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJStreamPush_Delloc end:%p", push);
 }
 GVoid GJStreamPush_Release(GJStreamPush *push) {
-    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJRtmpPush_Release::%p", push);
+    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJStreamPush_Delloc::%p", push);
 
     GBool shouldDelloc    = GFalse;
     pthread_mutex_lock(&push->mutex);

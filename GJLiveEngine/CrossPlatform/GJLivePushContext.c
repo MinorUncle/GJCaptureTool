@@ -199,12 +199,12 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
 
     GJLivePushContext *context = userData;
     if (G_TIME_IS_INVALID(context->firstVideoEncodeClock)) {
-
-        GJAssert(packet->flag && GJPacketFlag_KEY, "第一帧非关键帧");
-        context->preCheckVideoTraffic = GJStreamPush_GetVideoBufferCacheInfo(context->streamPush);
-        context->firstVideoEncodeClock = GJ_Gettime();
-        GJStreamPush_SendVideoData(context->streamPush, packet);
-
+        if((packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY){
+//            GJAssert(packet->flag && GJPacketFlag_KEY, "第一帧非关键帧");
+            context->preCheckVideoTraffic = GJStreamPush_GetVideoBufferCacheInfo(context->streamPush);
+            context->firstVideoEncodeClock = GJ_Gettime();
+            GJStreamPush_SendVideoData(context->streamPush, packet);
+        }
     } else {
         GJTrafficStatus vbufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->streamPush);
         GJTrafficStatus aBufferStatus = GJStreamPush_GetAudioBufferCacheInfo(context->streamPush);
@@ -825,8 +825,10 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
             }
 
             _livePushSetupAudioEncodeIfNeed(context);
-
             _livePushSetupVideoEncodeIfNeed(context);
+            
+            context->videoEncoder->encodeFlush(context->videoEncoder);
+            context->audioEncoder->encodeFlush(context->audioEncoder);
             
             GJAudioFormat aFormat     = {0};
             aFormat.mBitsPerChannel   = 16;
@@ -891,8 +893,7 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context) {
         //确保没有下一帧数据到达刷新模块
         pipleDisConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
 //        pipleDisConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
-        context->videoEncoder->encodeFlush(context->videoEncoder);
-        context->audioEncoder->encodeFlush(context->audioEncoder);
+
         
         //确保没有下一帧数据到发送模块
         pipleDisConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamPush);
