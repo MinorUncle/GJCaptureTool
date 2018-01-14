@@ -547,7 +547,7 @@
 		AE70A4D21ECB4DFE0009E49A /* GJUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJUtil.c; sourceTree = "<group>"; };
 		AE70A4D31ECB4DFE0009E49A /* GJUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJUtil.h; sourceTree = "<group>"; };
 		AE70A4D41ECB4DFE0009E49A /* sps_decode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sps_decode.c; sourceTree = "<group>"; };
-		AE70A4D51ECB4DFE0009E49A /* sps_decode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sps_decode.h; sourceTree = "<group>"; };
+		AE70A4D51ECB4DFE0009E49A /* sps_decode.h */ = {isa = PBXFileReference; fileEncoding = 2147484705; lastKnownFileType = sourcecode.c.h; lineEnding = 2; path = sps_decode.h; sourceTree = "<group>"; };
 		AE70A4D71ECB4DFE0009E49A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		AE70A4DA1ECB4DFE0009E49A /* AACEncoderFromPCM.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AACEncoderFromPCM.h; sourceTree = "<group>"; };
 		AE70A4DB1ECB4DFE0009E49A /* AACEncoderFromPCM.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AACEncoderFromPCM.m; sourceTree = "<group>"; };

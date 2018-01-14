@@ -41,7 +41,7 @@ struct _GJStreamPull {
 };
 GVoid GJStreamPull_Delloc(GJStreamPull *pull);
 
-GBool praseAVCC(GUInt8* avcc,GInt32 avccSize,GUInt8** osps,GInt32*ospsSize,GUInt8**opps,GInt32* oppsSize){
+GBool praseExtendData(GUInt8* avcc,GInt32 avccSize,GUInt8** osps,GInt32*ospsSize,GUInt8**opps,GInt32* oppsSize){
     if (avccSize > 9 && (avcc[8] & 0x1f) == 7) {
         GUInt8 *sps     = avcc + 8;
         GInt32  spsSize = avcc[6] << 8;
@@ -65,6 +65,62 @@ GBool praseAVCC(GUInt8* avcc,GInt32 avccSize,GUInt8** osps,GInt32*ospsSize,GUInt
             }
         }else{
             return GFalse;
+        }
+    }else{
+        GUInt8 *sps =GNULL ,* pps = GNULL, *preNal = GNULL;
+        GInt32 spsSize = 0,ppsSize = 0;
+        GInt32* preNalSize = GNULL;
+        for (int i = 0; i<avccSize; i++) {
+            if (avcc[i] == 0) {
+                if (avcc[i+1] == 0) {
+                    if (avcc[i+2] == 0) {
+                        if (avcc[i+3]==1) {
+                            if (preNalSize && preNal) {
+                                *preNalSize = (GInt32)(avcc + i - preNal);
+                                if (spsSize > 0 && ppsSize > 0) {
+                                    *osps = sps;
+                                    *ospsSize = spsSize;
+                                    *opps = pps;
+                                    *oppsSize = ppsSize;
+                                    break;
+                                }
+                            }
+                            if ((avcc[i+4] & 0x1f) == 7) {
+                                sps = avcc + i + 4;
+                                preNalSize = &spsSize;
+                                preNal = sps;
+                            }else if ((avcc[i+4] & 0x1f) == 8){
+                                pps = avcc + i + 4;
+                                preNalSize = &ppsSize;
+                                preNal = pps;
+                            }
+                            i+=3;
+                        }else if(avcc[i+3] != 0){
+                            i += 3;
+                        }
+                    }else if(avcc[i+2] == 1){
+                        if (preNalSize && preNal) {
+                            *preNalSize = (GInt32)(avcc + i - preNal);
+                            if (spsSize > 0 && ppsSize > 0) {
+                                break;
+                            }
+                        }
+                        if ((avcc[i+3] & 0x1f) == 7) {
+                            sps = avcc + i + 3;
+                            preNalSize = &spsSize;
+                            preNal = sps;
+                        }else if ((avcc[i+3] & 0x1f) == 8){
+                            pps = avcc + i + 3;
+                            preNalSize = &ppsSize;
+                            preNal = pps;
+                        }
+                    }else{
+                        i+=2;
+                    }
+                }else{
+                    i+=1;
+                }
+            }
         }
     }
     return  GTrue;
@@ -235,11 +291,58 @@ static GHandle pullRunloop(GHandle parm) {
         
         if (pkt.stream_index == vsIndex) {
 //#if MENORY_CHECK
+            ////<-----conversion
+            if (((GUInt16*)pkt.data)[0] == 0 &&
+                (pkt.data[2] == 1 || ((GUInt16*)pkt.data)[1]) == 1) {
+                
+                GUInt8* preNal = GNULL;
+                for (int i = 0; i<pkt.size-4; i++) {
+                    if (pkt.data[i] == 0) {
+                        if (pkt.data[i+1] == 0) {
+                            if (pkt.data[i+2] == 0) {
+                                if (pkt.data[i+3] == 1) {
+                                    if (preNal != GNULL) {
+                                        GInt32 nalSize = (GInt32)(pkt.data + i - preNal);
+                                        nalSize = htonl(nalSize);
+                                        memcpy(preNal-4, &nalSize, 4);
+                                    }
+                                    preNal = pkt.data + i+4;
+                                    i+=3;//跳过4-1个
+                                }else if(pkt.data[i+3] != 0){//3-1
+                                    i+=2;
+                                }//否则//1-1
+                            }else if(pkt.data[i+2] == 1){//匹配成功0x000001，3-1,
+                                pkt.data = GRealloc(pkt.data,pkt.size);
+                                memmove(pkt.data+i+1, pkt.data+i, pkt.size-i);
+                                pkt.size++;
+                                if (preNal != GNULL) {
+                                    GInt32 nalSize = (GInt32)(pkt.data + i - preNal);
+                                    nalSize = htonl(nalSize);
+                                    memcpy(preNal-4, &nalSize, 4);
+                                }
+                                preNal = pkt.data + i +4;
+                                i+=3;
+                            }else{
+                                i+=2;
+                            }
+                        }else{
+                            i++;
+                        }
+                    }
+                }
+                if (preNal) {
+                    GInt32 nalSize = (GInt32)(pkt.data + pkt.size - preNal);
+                    nalSize = htonl(nalSize);
+                    memcpy(preNal, &nalSize, 4);
+                }
+            }
+            ///->>>
+            
             
             R_GJPacket *h264Packet = GNULL;
             GUInt8* sps,*pps;
             GInt32 spsSize,ppsSize;
-            if (extendData && praseAVCC(extendData, extendDataSize, &sps, &spsSize, &pps, &ppsSize)) {
+            if (extendData && praseExtendData(extendData, extendDataSize, &sps, &spsSize, &pps, &ppsSize)) {
                 
                 h264Packet = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size+extendDataSize);
                 h264Packet->type = GJMediaType_Video;
@@ -259,36 +362,7 @@ static GHandle pullRunloop(GHandle parm) {
                 h264Packet->flag = ((pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY);
             }
             
-            ////<-----conversion
-            GUInt8* preNal = GNULL;
-            for (int i = 0; i<pkt.size-4; i++) {
-                if (pkt.data[i] == 0) {
-                    if (pkt.data[i+1] == 0) {
-                        if (pkt.data[i+2] == 0) {
-                            if (pkt.data[i+3] == 1) {
-                                if (preNal != GNULL) {
-                                    GInt32 nalSize = (GInt32)(pkt.data + i - preNal - 4);
-                                    nalSize = htonl(nalSize);
-                                    memcpy(preNal, &nalSize, 4);
-                                }
-                                preNal = pkt.data + i;
-                            }else{
-                                i+=2;
-                            }
-                        }else{
-                            i+=2;
-                        }
-                    }else{
-                        i++;
-                    }
-                }
-            }
-            if (preNal) {
-                GInt32 nalSize = pkt.size - 4;
-                nalSize = htonl(nalSize);
-                memcpy(preNal, &nalSize, 4);
-            }
-            ///->>>
+          
             
             R_BufferWrite(&h264Packet->retain, pkt.data, pkt.size);
             
@@ -300,6 +374,28 @@ static GHandle pullRunloop(GHandle parm) {
             pull->videoPullInfo.byte += pkt.size;
             pull->videoPullInfo.count ++;
             pull->videoPullInfo.ts = GTimeMake(pkt.pts, 1000);
+            
+            
+            
+            static int times;
+            if (times++ < 3) {
+                printf("decoder nal start time:%d\n",times);
+                GUInt8* data = R_BufferStart(&h264Packet->retain) + h264Packet->dataOffset;
+                GInt32 size = h264Packet->dataSize;
+                GInt32 index = 0;
+                while (index<size) {
+                    GInt32 nalSize = 0;
+                    memcpy(&nalSize, data+index, 4);
+                    nalSize = ntohl(nalSize);
+                    
+                    printf("decoder nal type:%d,size:%d,data:\n",data[4+index] & 0x1f,nalSize);
+                    GJ_LogHex(GJ_LOGDEBUG, data, h264Packet->dataSize);
+                    index += nalSize + 4;
+                    
+                }
+            }
+            
+            
             
             pthread_mutex_lock(&pull->mutex);
 //            if (!pull->releaseRequest && pull->hasVideoKey){

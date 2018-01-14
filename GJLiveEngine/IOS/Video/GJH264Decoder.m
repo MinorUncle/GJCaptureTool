@@ -197,11 +197,18 @@ void decodeOutputCallback(
                     sps = start + index + 4;
                     memcpy(&spsSize, start + index, 4);
                     spsSize = ntohl(spsSize);
+                    index += spsSize+4;
                 }else if ((start[index+4] & 0x1f) == 8){
                     pps = start + index + 4;
                     memcpy(&ppsSize, start + index, 4);
                     ppsSize = ntohl(ppsSize);
+                    index += ppsSize+4;
                     break;
+                }else{
+                    GUInt32 nalSize = 0;
+                    memcpy(&nalSize, start + index, 4);
+                    nalSize = ntohl(nalSize);
+                    index += nalSize+4;
                 }
             }
         }
@@ -249,6 +256,25 @@ void decodeOutputCallback(
 //        static GInt32 index = 0;
 //        GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"decode video index:%d size:%d:",index++, packet->dataSize);
 //        GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&packet->retain)+packet->dataOffset+packet->dataSize-20, (GUInt32) 20);
+        
+        
+        static int times;
+        if (times++ < 3) {
+            NSLog(@"decoder nal start time:%d",times);
+            GUInt8* data = R_BufferStart(&packet->retain) + packet->dataOffset;
+            GInt32 size = packet->dataSize;
+            GInt32 index = 0;
+            while (index<size) {
+                GInt32 nalSize = 0;
+                memcpy(&nalSize, data+index, 4);
+                nalSize = ntohl(nalSize);
+                NSData* nalData = [NSData dataWithBytesNoCopy:data+index+4 length:nalSize freeWhenDone:NO];
+                NSLog(@"decoder nal type:%d,size:%lu,data:%@",data[4+index] & 0x1f,(unsigned long)nalData.length,nalData);
+                index += nalSize + 4;
+
+            }
+        }
+        
 #endif
         blockLength = (int) (packet->dataSize);
         void *data  = packet->dataOffset + R_BufferStart(&packet->retain);

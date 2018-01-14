@@ -1061,7 +1061,7 @@
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithTitle:@"返回" style:UIBarButtonItemStylePlain target:self action:@selector(barItemTap:)];
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(barItemTap:)];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
-    GJ_LogSetLevel(GJ_LOGDEBUG);
+    GJ_LogSetLevel(GJ_LOGINFO);
     RTMP_LogSetLevel(RTMP_LOGDEBUG);
     av_log_set_level(AV_LOG_INFO);
     if(_type == kGJCaptureTypeAR){
