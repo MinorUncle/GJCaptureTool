@@ -707,9 +707,12 @@
             });
             [_livePush stopStreamPush];
             sleep(1);
-            if(![_livePush startStreamPushWithUrl:_pushAddr]){
-                NSLog(@"startStreamPushWithUrl error");
-            };
+            if (_pushStartBtn.selected) {
+                if(![_livePush startStreamPushWithUrl:_pushAddr]){
+                    NSLog(@"startStreamPushWithUrl error");
+                };
+            }
+
             break;
         }
         default:
@@ -1002,7 +1005,9 @@
             sleep(1);
             dispatch_async(dispatch_get_main_queue(), ^{
                 _pullStateLab.text = @"尝试重连中";
-                [livePull startStreamPullWithUrl:_pullAddr];
+                if(_pullBtn.selected){
+                    [livePull startStreamPullWithUrl:_pullAddr];
+                }
             });
             break;
         }
