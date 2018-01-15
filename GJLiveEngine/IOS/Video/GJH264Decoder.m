@@ -258,23 +258,6 @@ void decodeOutputCallback(
 //        GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&packet->retain)+packet->dataOffset+packet->dataSize-20, (GUInt32) 20);
         
         
-        static int times;
-        if (times++ < 3) {
-            NSLog(@"decoder nal start time:%d",times);
-            GUInt8* data = R_BufferStart(&packet->retain) + packet->dataOffset;
-            GInt32 size = packet->dataSize;
-            GInt32 index = 0;
-            while (index<size) {
-                GInt32 nalSize = 0;
-                memcpy(&nalSize, data+index, 4);
-                nalSize = ntohl(nalSize);
-                NSData* nalData = [NSData dataWithBytesNoCopy:data+index+4 length:nalSize freeWhenDone:NO];
-                NSLog(@"decoder nal type:%d,size:%lu,data:%@",data[4+index] & 0x1f,(unsigned long)nalData.length,nalData);
-                index += nalSize + 4;
-
-            }
-        }
-        
 #endif
         blockLength = (int) (packet->dataSize);
         void *data  = packet->dataOffset + R_BufferStart(&packet->retain);

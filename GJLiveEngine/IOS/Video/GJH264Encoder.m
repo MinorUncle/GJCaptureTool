@@ -334,23 +334,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 //    GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"encode video index:%d size:%d:",index++, pushPacket->dataSize);
 //    GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&pushPacket->retain)+pushPacket->dataOffset+pushPacket->dataSize-20, (GUInt32) 20);
     
-    
-    static int times;
-    if (times++ < 3) {
-        NSLog(@"encoder nal start time:%d",times);
-        GUInt8* data = R_BufferStart(&pushPacket->retain) + pushPacket->dataOffset;
-        GInt32 size = pushPacket->dataSize;
-        GInt32 index = 0;
-        while (index<size) {
-            GInt32 nalSize = 0;
-            memcpy(&nalSize, data+index, 4);
-            nalSize = ntohl(nalSize);
-            NSData* nalData = [NSData dataWithBytesNoCopy:data+index+4 length:nalSize freeWhenDone:NO];
-          NSLog(@"encoder nal type:%d,size:%lu,data:%@",data[4+index] & 0x1f,(unsigned long)nalData.length,nalData);
-            index += nalSize + 4;
-          
-        }
-    }
+
 #endif
 
     

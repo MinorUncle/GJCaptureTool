@@ -133,7 +133,7 @@ static GHandle pullRunloop(GHandle parm) {
     
     AVDictionary* options = GNULL;
     av_dict_set_int(&options, "fpsprobesize", 0, 0);
-//    av_dict_set(&options, "fflags", "keepside", 0);
+    av_dict_set(&options, "fflags", "keepside", 0);
     av_dict_set_int(&options, "fflags", pull->formatContext->flags|AVFMT_FLAG_KEEP_SIDE_DATA, 0);
 
     GInt32 result = avformat_open_input(&pull->formatContext, (const GChar*)pull->pullUrl, GNULL, &options);
@@ -286,6 +286,8 @@ static GHandle pullRunloop(GHandle parm) {
         GJLOG(GNULL,GJ_LOGINFO,"receive type:%d pts:%lld dts:%lld dpts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
         preDTS[type] = pkt.pts;
 #endif
+        
+        av_packet_split_side_data(&pkt);
         GInt32 extendDataSize = 0;
         GUInt8* extendData = av_packet_get_side_data(&pkt, AV_PKT_DATA_NEW_EXTRADATA, &extendDataSize);
         
@@ -333,7 +335,7 @@ static GHandle pullRunloop(GHandle parm) {
                 if (preNal) {
                     GInt32 nalSize = (GInt32)(pkt.data + pkt.size - preNal);
                     nalSize = htonl(nalSize);
-                    memcpy(preNal, &nalSize, 4);
+                    memcpy(preNal-4, &nalSize, 4);
                 }
             }
             ///->>>
@@ -375,28 +377,6 @@ static GHandle pullRunloop(GHandle parm) {
             pull->videoPullInfo.count ++;
             pull->videoPullInfo.ts = GTimeMake(pkt.pts, 1000);
             
-            
-            
-            static int times;
-            if (times++ < 3) {
-                printf("decoder nal start time:%d\n",times);
-                GUInt8* data = R_BufferStart(&h264Packet->retain) + h264Packet->dataOffset;
-                GInt32 size = h264Packet->dataSize;
-                GInt32 index = 0;
-                while (index<size) {
-                    GInt32 nalSize = 0;
-                    memcpy(&nalSize, data+index, 4);
-                    nalSize = ntohl(nalSize);
-                    
-                    printf("decoder nal type:%d,size:%d,data:\n",data[4+index] & 0x1f,nalSize);
-                    GJ_LogHex(GJ_LOGDEBUG, data, h264Packet->dataSize);
-                    index += nalSize + 4;
-                    
-                }
-            }
-            
-            
-            
             pthread_mutex_lock(&pull->mutex);
 //            if (!pull->releaseRequest && pull->hasVideoKey){
             //不需要过滤非i帧，因为有些服务器发送过来的不是i帧，会导致延迟过高。但是不过滤会导致解码出的图片比较出现花屏
@@ -409,7 +389,8 @@ static GHandle pullRunloop(GHandle parm) {
             R_BufferUnRetain(&h264Packet->retain);
         } else if (pkt.stream_index == asIndex) {
             R_GJPacket *aacPacket = GNULL;
-            if(extendData && extendDataSize >= 2){
+            if((extendData && extendDataSize >= 2) ||
+               (pkt.size > 7 && (*((GUInt32*)pkt.data) & 0xfff0) == 0xfff0)){
                 int adtsLength         = 7;
 
                 aacPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size + adtsLength);
