@@ -160,10 +160,11 @@ GInt32 writeADTS(GUInt8* buffer,GUInt8 size,const ADTS* adts){
     if (frequencyIndex < 0) {
         return GFalse;
     }
+    GUInt8 profile = adts->profile - 1;
     GUInt16 fullLength = adts->varHeader.aac_frame_length + 7;
     buffer[0]                = (char) 0xFF;                                                 // 11111111      = syncword
     buffer[1]                = (char) 0xF1;                                                 // 1111 0 00 1 = syncword+id(MPEG-4) + Layer + absent
-    buffer[2]                = (char) (((adts->profile) << 6) + (frequencyIndex << 2) + (adts->channelConfig >> 2)); // profile(2)+sampling(4)+privatebit(1)+channel_config(1)
+    buffer[2]                = (char) (((profile) << 6) + (frequencyIndex << 2) + (adts->channelConfig >> 2)); // profile(2)+sampling(4)+privatebit(1)+channel_config(1)
     buffer[3]                = (char) (((adts->channelConfig & 3) << 6) + (fullLength >> 11));
     buffer[4]                = (char) ((fullLength & 0x7FF) >> 3);
     buffer[5]                = (char) (((fullLength & 7) << 5) + 0x1F);
@@ -175,17 +176,24 @@ GInt32 readADTS(const GUInt8* data,GUInt8 size,ADTS* adts){
     if (size < 7 || adts == GNULL) {
         return GFalse;
     }
-    if(data[0] != 0xf && data[1] != 0xf && data[2] != 0xf && data[3] > 1)return GFalse;
-    GUInt16  sampleIndex          = data[2] << 2;
+    if(data[0] != 0xff || (data[1] & 0xf0) != 0xf0 || (data[1] & 0x0f) > 1)return GFalse;
+    GUInt8  sampleIndex          = data[2] << 2;
     sampleIndex                   = sampleIndex >> 4;
     if (sampleIndex > ADTS_SAMPLERATE_LEN) {
         return GFalse;
     }
+    adts->protection_absent = data[1] & 0x1;
+    
+    adts->profile = (data[2] >> 6) + 1;
     adts->sampleRate = adtsFrequency[sampleIndex];
     adts->channelConfig            = (data[2] & 0x1) << 2;
     adts->channelConfig += (data[3] & 0xc0) >> 6;
-    
-    return 7;
+    GUInt32  length;
+    memcpy(&length, data + 3, 4);
+    length = ntohl(length);
+    length &= 0x03ffe000;
+    adts->varHeader.aac_frame_length = length >> 13;
+    return adts->protection_absent ? 7:9;
 }
 
 GInt32 readASC(const GUInt8* data,GUInt8 size,AST* ast){

@@ -36,8 +36,18 @@ typedef struct _GASC{
 const GUInt32 astFrequency[AST_SAMPLERATE_LEN] = {5510,11025,22050,44100};
 const GUInt32 adtsFrequency[ADTS_SAMPLERATE_LEN] = {96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350};
 
+
+typedef enum GJAudioObjectType {
+    kGJ_AOT_NULL,
+    // Support?                Name
+    kGJ_AOT_AAC_MAIN,              ///< Y                       Main
+    kGJ_AOT_AAC_LC,                ///< Y                       Low Complexity
+    kGJ_AOT_AAC_SSR,               ///< N (code in SoC repo)    Scalable Sample Rate
+    kGJ_AOT_AAC_LTP,               ///< Y                       Long Term Prediction
+    kGJ_AOT_SBR,                   ///< Y                       Spectral Band Replication
+}GJAudioObjectType;
 typedef struct _AST{
-    GUInt8 audioType;//5 b
+    GJAudioObjectType audioType;//5 b
     GUInt32 sampleRate;//4 b
     GUInt8 channelConfig;//4 b
     GASC asc;//3 b
@@ -52,7 +62,7 @@ typedef struct _ADTS{
     GUInt8 ID;//1 b,MPEG Version: 0 for MPEG-4，1 for MPEG-2
     GUInt8 layer;//2 b,always: '00'
     GUInt8 protection_absent;//1 b,Warning, set to 1 if there is no CRC and 0 if there is CRC
-    GUInt8 profile;//2 b,
+    GJAudioObjectType profile;//2 b,
     GUInt32 sampleRate;//4 b
     GUInt8 channelConfig;//3 b
     

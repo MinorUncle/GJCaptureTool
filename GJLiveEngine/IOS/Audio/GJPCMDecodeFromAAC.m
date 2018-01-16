@@ -9,6 +9,7 @@
 #import "GJPCMDecodeFromAAC.h"
 #import "GJLog.h"
 #import "GJRetainBufferPool.h"
+#import "GJUtil.h"
 
 @interface GJPCMDecodeFromAAC () {
     AudioConverterRef   _decodeConvert;
@@ -156,28 +157,30 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     if (_decodeConvert == nil) {
         if (packet->extendDataSize > 0) {
-            uint8_t *adts                 = packet->extendDataOffset + R_BufferStart(&packet->retain);
-            uint8_t  sampleIndex          = adts[2] << 2;
-            sampleIndex                   = sampleIndex >> 4;
-            int     sampleRate            = mpeg4audio_sample_rates[sampleIndex];
-            uint8_t channel               = (adts[2] & 0x1) << 2;
-            channel += (adts[3] & 0xc0) >> 6;
-            
-            AudioStreamBasicDescription s = {0};
-            s.mFramesPerPacket            = 1024;
-            s.mSampleRate                 = sampleRate;
-            s.mFormatID                   = kAudioFormatMPEG4AAC;
-            s.mChannelsPerFrame           = channel;
-            
-            AudioStreamBasicDescription d = s;
-            d.mBitsPerChannel =16;
-            d.mFormatID                   = kAudioFormatLinearPCM; //PCM
-            d.mBytesPerPacket = d.mBytesPerFrame = d.mChannelsPerFrame * d.mBitsPerChannel/8;
-            d.mFramesPerPacket                   = 1;
-            d.mFormatFlags                       = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
-            [self createCorverWithDescription:d SourceDescription:s];
-            if (packet->dataSize <= 0) {
-                return;
+            uint8_t *astBuffer                 = packet->extendDataOffset + R_BufferStart(&packet->retain);
+            AST ast = {0};
+            int astLen = 0;
+            if ((astLen = readASC(astBuffer, packet->extendDataSize, &ast)) > 0) {
+   
+                int     sampleRate            = ast.sampleRate;
+                uint8_t channel               = ast.channelConfig;
+                
+                AudioStreamBasicDescription s = {0};
+                s.mFramesPerPacket            = 1024;
+                s.mSampleRate                 = sampleRate;
+                s.mFormatID                   = kAudioFormatMPEG4AAC;
+                s.mChannelsPerFrame           = channel;
+                
+                AudioStreamBasicDescription d = s;
+                d.mBitsPerChannel =16;
+                d.mFormatID                   = kAudioFormatLinearPCM; //PCM
+                d.mBytesPerPacket = d.mBytesPerFrame = d.mChannelsPerFrame * d.mBitsPerChannel/8;
+                d.mFramesPerPacket                   = 1;
+                d.mFormatFlags                       = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
+                [self createCorverWithDescription:d SourceDescription:s];
+                if (packet->dataSize <= 0) {
+                    return;
+                }
             }
         }else{
             return;
@@ -192,34 +195,15 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
 #define AAC_FRAME_PER_PACKET 1024
 
-static const int mpeg4audio_sample_rates[16] = {
-    96000, 88200, 64000, 48000, 44100, 32000,
-    24000, 22050, 16000, 12000, 11025, 8000, 7350};
 - (BOOL)_createEncodeConverter {
     if (_decodeConvert) {
         AudioConverterDispose(_decodeConvert);
     }
 
     if (_sourceFormat.mFormatID <= 0) {
-        // get audio format
-        R_GJPacket *packet;
-        if (queuePeekWaitValue(_resumeQueue, 0, (void **) &packet, INT_MAX) && packet->flag == GJPacketFlag_KEY && _running) {
-            uint8_t *adts        = packet->dataOffset + R_BufferStart(&packet->retain);
-            uint8_t  sampleIndex = adts[2] << 2;
-            sampleIndex          = sampleIndex >> 4;
-            int     sampleRate   = mpeg4audio_sample_rates[sampleIndex];
-            uint8_t channel      = adts[2] & 0x1 << 2;
-            channel += (adts[3] & 0xb0) >> 6;
 
-            memset(&_sourceFormat, 0, sizeof(_sourceFormat));
-            _sourceFormat.mFormatID         = kAudioFormatMPEG4AAC;
-            _sourceFormat.mChannelsPerFrame = channel;
-            _sourceFormat.mSampleRate       = sampleRate;
-            _sourceFormat.mFramesPerPacket  = 1024;
-        } else {
-            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "aac decode queuePeekWaitValue faile");
-            return false;
-        }
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "_sourceFormat unknowe");
+        return false;
     }
     if (_destFormat.mFormatID <= 0) {
         _destFormat.mSampleRate       = _sourceFormat.mSampleRate;       // 3
