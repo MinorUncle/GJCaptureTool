@@ -13,7 +13,6 @@
     dispatch_queue_t _decodeQueue; //解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
     NSData* _spsData;
     NSData* _ppsData;
-    BOOL _isRunning;
     GJQueue* _inputQueue;
 }
 @property (nonatomic) VTDecompressionSessionRef decompressionSession;

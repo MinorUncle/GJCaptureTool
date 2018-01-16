@@ -110,6 +110,7 @@ typedef struct _GJVideoProduceContext{
 
     GBool   (*startTrackImage)        (struct _GJVideoProduceContext* context, const GVoid* images,GCRect initFrame);
     GVoid   (*stopTrackImage)         (struct _GJVideoProduceContext* context);
+    GVoid   (*setDropStep)            (struct _GJVideoProduceContext* context, GRational videoDropStep);
 
 }GJVideoProduceContext;
 
@@ -175,6 +176,8 @@ typedef struct _GJH264DecodeContext{
     GHandle obaque;
     GBool   (*decodeSetup)            (struct _GJH264DecodeContext* context, GJPixelType format, VideoFrameOutCallback callback, GHandle userData);
     GVoid   (*decodeUnSetup)          (struct _GJH264DecodeContext* context);
+    GBool   (*decodeStart)            (struct _GJH264DecodeContext* context);
+    GVoid   (*decodeStop)             (struct _GJH264DecodeContext* context);
     GBool   (*decodePacket)           (struct _GJH264DecodeContext* context, R_GJPacket* packet);
 }GJH264DecodeContext;
 

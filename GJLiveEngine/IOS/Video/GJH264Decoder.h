@@ -26,6 +26,7 @@ typedef void(^H264DecodeComplete)(R_GJPixelFrame* frame);
 @property(nonatomic,assign)OSType outPutImageFormat;
 @property(nonatomic,copy)H264DecodeComplete completeCallback;
 @property(nonatomic,assign)GJRetainBufferPool* bufferPool;
+@property(nonatomic,assign,readonly)BOOL isRunning;
 
 -(void)decodePacket:(R_GJPacket *)packet;
 -(void)stopDecode;

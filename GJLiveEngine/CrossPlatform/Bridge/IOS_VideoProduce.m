@@ -111,7 +111,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return position;
 }
 
-@interface IOS_VideoProduce : NSObject
+@interface IOS_VideoProduce : NSObject{
+}
 @property (nonatomic, strong) GPUImageOutput<GJCameraProtocal>*    camera;
 @property (nonatomic, strong) GJImageView *           imageView;
 @property (nonatomic, strong) GPUImageCropFilter *    cropFilter;
@@ -131,6 +132,9 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property (nonatomic, assign) GJCaptureType           captureType;
 @property (nonatomic, strong) id<GJImageARScene>      scene;
 @property (nonatomic, strong) UIView*                 captureView;
+@property (nonatomic, assign) GRational               dropStep;
+@property (nonatomic, assign) long                  captureCount;
+@property (nonatomic, assign) long                  dropCount;
 
 
 @property (nonatomic, copy) VideoRecodeCallback callback;
@@ -562,6 +566,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 - (BOOL)startProduce {
     __weak IOS_VideoProduce *wkSelf = self;
+    _dropCount = 0;
+    _captureCount = 0;
     runSynchronouslyOnVideoProcessingQueue(^{
         GPUImageOutput *parentFilter = _sticker;
         if (parentFilter == nil) {
@@ -576,7 +582,11 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             frame->height                                           = (GInt32) wkSelf.destSize.height;
             frame->width                                            = (GInt32) wkSelf.destSize.width;
             frame->pts = GTimeMake(time.value, time.timescale);
-            wkSelf.callback(frame);
+            if (wkSelf.captureCount++ % wkSelf.dropStep.den >= wkSelf.dropStep.num) {
+                wkSelf.callback(frame);
+            }else{
+                wkSelf.dropCount ++;
+            }
             R_BufferUnRetain((GJRetainBuffer *) frame);
         };
         [self updateCropSize];
@@ -862,6 +872,11 @@ inline static GBool setStreamMirror (struct _GJVideoProduceContext* context, GBo
     return recode.streamMirror == mirror;
 }
 
+inline static GVoid setDropStep (struct _GJVideoProduceContext* context, GRational step){
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    recode.dropStep = step;
+}
+
 inline static GBool videoProduceSetFrameRate(struct _GJVideoProduceContext *context, GInt32 fps) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
     [recode setFrameRate:fps];
@@ -956,8 +971,8 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     context->setVideoFormat        = videoProduceSetVideoFormat;
     context->startTrackImage       = startTrackImage;
     context->stopTrackImage        = stopTrackImage;
-    context->getFreshDisplayImage   = getFreshDisplayImage;
-    
+    context->getFreshDisplayImage  = getFreshDisplayImage;
+    context->setDropStep           = setDropStep;
 }
 
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {

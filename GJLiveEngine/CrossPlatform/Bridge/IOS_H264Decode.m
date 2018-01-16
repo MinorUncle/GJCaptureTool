@@ -18,6 +18,20 @@ inline static GBool decodeSetup(struct _GJH264DecodeContext *context, GJPixelTyp
     GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder setup");
 
     GJH264Decoder *decode   = [[GJH264Decoder alloc] init];
+    switch (format) {
+        case GJPixelType_32BGRA:
+            decode.outPutImageFormat = kCVPixelFormatType_32BGRA;
+            break;
+        case GJPixelType_YpCbCr8BiPlanar:
+            decode.outPutImageFormat = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+            break;
+        case GJPixelType_YpCbCr8BiPlanar_Full:
+            decode.outPutImageFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
+            break;
+        default:
+            GJLOG(GNULL, GJ_LOGFORBID, "格式不支持");
+            break;
+    }
     NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
     decode.completeCallback = ^(R_GJPixelFrame *frame) {
         if (callback) {
@@ -26,7 +40,6 @@ inline static GBool decodeSetup(struct _GJH264DecodeContext *context, GJPixelTyp
         callFunc(&context->pipleNode,&frame->retain,GJMediaType_Video);
     };
     context->obaque = (__bridge_retained GHandle) decode;
-    [decode startDecode];
     pipleNodeUnLock(&context->pipleNode);
 
     return GTrue;
@@ -35,14 +48,39 @@ inline static GVoid decodeUnSetup(struct _GJH264DecodeContext *context) {
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
         GJH264Decoder *decode = (__bridge_transfer GJH264Decoder *) (context->obaque);
-        [decode stopDecode];
+        if (decode.isRunning) {
+            [decode stopDecode];
+        }
         context->obaque       = GNULL;
         decode                = nil;
         GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder unsetup");
     }
     pipleNodeUnLock(&context->pipleNode);
-
 }
+
+inline static  GBool  decodeStart(struct _GJH264DecodeContext* context){
+    pipleNodeLock(&context->pipleNode);
+    if (context->obaque) {
+        GJH264Decoder *decode = (__bridge_transfer GJH264Decoder *) (context->obaque);
+        [decode startDecode];
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder decodeStart");
+    }
+    pipleNodeUnLock(&context->pipleNode);
+    return GTrue;
+};
+
+inline static  GVoid  decodeStop(struct _GJH264DecodeContext* context){
+    pipleNodeLock(&context->pipleNode);
+    if (context->obaque) {
+        GJH264Decoder *decode = (__bridge_transfer GJH264Decoder *) (context->obaque);
+        if (decode.isRunning) {
+            [decode stopDecode];
+        }
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder decodeStart");
+    }
+    pipleNodeUnLock(&context->pipleNode);
+};
+
 inline static GBool decodePacket(struct _GJH264DecodeContext *context, R_GJPacket *packet) {
     pipleNodeLock(&context->pipleNode);
     GJH264Decoder *decode = (__bridge GJH264Decoder *) (context->obaque);
@@ -69,6 +107,8 @@ GVoid GJ_H264DecodeContextCreate(GJH264DecodeContext **decodeContext) {
     pipleNodeInit(&context->pipleNode, decodePacketFunc);
     context->decodeSetup             = decodeSetup;
     context->decodeUnSetup           = decodeUnSetup;
+    context->decodeStart             = decodeStart;
+    context->decodeStop              = decodeStop;
     context->decodePacket            = GNULL;
 }
 GVoid GJ_H264DecodeContextDealloc(GJH264DecodeContext **context) {

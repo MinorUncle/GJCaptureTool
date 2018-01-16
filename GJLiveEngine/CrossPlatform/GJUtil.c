@@ -146,6 +146,15 @@ GFloat32 GJ_GetCPUUsage(){
 //}
 
 
+
+#define ADTS_SAMPLERATE_LEN 13
+#define AST_SAMPLERATE_LEN 4
+
+const GUInt32 astFrequency[AST_SAMPLERATE_LEN] = {5510,11025,22050,44100};
+const GUInt32 adtsFrequency[ADTS_SAMPLERATE_LEN] = {96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350};
+
+
+
 GInt32 writeADTS(GUInt8* buffer,GUInt8 size,const ADTS* adts){
     if (size < 7 || adts == GNULL) {
         return GFalse;

@@ -25,17 +25,10 @@ typedef struct _AVCC{
 }AVCC;
 
 typedef struct _GASC{
-    GUInt8 frameLengthFlag;//1 b
+    GUInt8 frameLengthFlag;//1 b,0表示帧长为1024，1表示帧长为960
     GUInt8 dependsOnCoreCorer;//1 b
     GUInt8 extensionFlag;//1 b
 }GASC;
-
-#define ADTS_SAMPLERATE_LEN 13
-#define AST_SAMPLERATE_LEN 4
-
-const GUInt32 astFrequency[AST_SAMPLERATE_LEN] = {5510,11025,22050,44100};
-const GUInt32 adtsFrequency[ADTS_SAMPLERATE_LEN] = {96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350};
-
 
 typedef enum GJAudioObjectType {
     kGJ_AOT_NULL,

@@ -88,6 +88,7 @@ GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
                 break;
             }
             context->startPullClock = GJ_Gettime();
+            context->videoDecoder->decodeStart(context->videoDecoder);
             pipleConnectNode((GJPipleNode*)context->streamPull, &context->videoDecoder->pipleNode);
             pipleConnectNode((GJPipleNode*)context->streamPull, &context->audioDecoder->pipleNode);
 
@@ -102,6 +103,7 @@ GVoid GJLivePull_StopPull(GJLivePullContext *context) {
     if (context->streamPull) {
         pipleDisConnectNode((GJPipleNode*)context->streamPull, &context->audioDecoder->pipleNode);
         pipleDisConnectNode((GJPipleNode*)context->streamPull, &context->videoDecoder->pipleNode);
+        context->videoDecoder->decodeStop(context->videoDecoder);
 
         GJStreamPull_CloseAndRelease(context->streamPull);
         context->streamPull = GNULL;
