@@ -158,15 +158,15 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (_decodeConvert == nil) {
         if (packet->extendDataSize > 0) {
             uint8_t *astBuffer                 = packet->extendDataOffset + R_BufferStart(&packet->retain);
-            AST ast = {0};
+            ASC asc = {0};
             int astLen = 0;
-            if ((astLen = readASC(astBuffer, packet->extendDataSize, &ast)) > 0) {
+            if ((astLen = readASC(astBuffer, packet->extendDataSize, &asc)) > 0) {
    
-                int     sampleRate            = ast.sampleRate;
-                uint8_t channel               = ast.channelConfig;
-                
+                int     sampleRate            = asc.sampleRate;
+                uint8_t channel               = asc.channelConfig;
+                int framePerPacket = asc.gas.frameLengthFlag ?960 : 1024;
                 AudioStreamBasicDescription s = {0};
-                s.mFramesPerPacket            = 1024;
+                s.mFramesPerPacket            = framePerPacket;
                 s.mSampleRate                 = sampleRate;
                 s.mFormatID                   = kAudioFormatMPEG4AAC;
                 s.mChannelsPerFrame           = channel;

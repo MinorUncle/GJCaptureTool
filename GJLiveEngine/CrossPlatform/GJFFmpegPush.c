@@ -121,22 +121,14 @@ static GHandle sendRunloop(GHandle parm) {
 
     if (push->audioFormat) {
         GUInt8 aactype = 2;
-        GUInt8 srIndex = 0;
-        if (push->audioFormat->format.mSampleRate == 44100) {
-            srIndex = 4;
-        } else if (push->audioFormat->format.mSampleRate == 22050) {
-            srIndex = 7;
-        } else if (push->audioFormat->format.mSampleRate == 11025) {
-            srIndex = 10;
-        } else {
-            GJLOG(STREAM_PUSH_LOG, GJ_LOGFORBID, "sampleRate error");
-            return GFalse;
-        }
-        GUInt8 channels                         = push->audioFormat->format.mChannelsPerFrame;
+
         push->aStream->codecpar->extradata_size = 2;
         push->aStream->codecpar->extradata      = av_malloc(2);
-        push->aStream->codecpar->extradata[0]   = (aactype << 3) | ((srIndex & 0xe) >> 1);
-        push->aStream->codecpar->extradata[1]   = ((srIndex & 0x1) << 7) | (channels << 3);
+        ASC asc = {0};
+        asc.channelConfig = push->audioFormat->format.mChannelsPerFrame;
+        asc.audioType = aactype;
+        asc.sampleRate = push->audioFormat->format.mSampleRate;
+        writeASC(push->aStream->codecpar->extradata, 2, &asc);
     }
 
     ret = avformat_write_header(push->formatContext, GNULL);

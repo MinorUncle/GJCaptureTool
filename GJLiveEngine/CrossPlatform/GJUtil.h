@@ -39,12 +39,12 @@ typedef enum GJAudioObjectType {
     kGJ_AOT_AAC_LTP,               ///< Y                       Long Term Prediction
     kGJ_AOT_SBR,                   ///< Y                       Spectral Band Replication
 }GJAudioObjectType;
-typedef struct _AST{
+typedef struct _ASC{
     GJAudioObjectType audioType;//5 b
     GUInt32 sampleRate;//4 b
     GUInt8 channelConfig;//4 b
-    GASC asc;//3 b
-}AST;
+    GASC gas;//3 b
+}ASC;
 
 typedef struct _ADTS_VAR_H{
     GUInt16 aac_frame_length;//13 b
@@ -65,6 +65,6 @@ typedef struct _ADTS{
 //返回处理的长度，小于等于0表示内存不够或者不符合该结构
 GInt32 writeADTS(GUInt8* buffer,GUInt8 size,const ADTS* adts);
 GInt32 readADTS(const GUInt8* data,GUInt8 size,ADTS* adts);
-GInt32 readASC(const GUInt8* data,GUInt8 size,AST* ast);
-GInt32 writeASC(GUInt8* buffer,GUInt8 size,const AST* ast);
+GInt32 readASC(const GUInt8* data,GUInt8 size,ASC* asc);
+GInt32 writeASC(GUInt8* buffer,GUInt8 size,const ASC* asc);
 #endif /* GJUtil_h */

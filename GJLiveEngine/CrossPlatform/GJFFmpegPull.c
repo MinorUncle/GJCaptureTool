@@ -232,7 +232,7 @@ static GHandle pullRunloop(GHandle parm) {
         GUInt8 *  aacc     = aStream->codecpar->extradata;
         GInt32    aaccSize = aStream->codecpar->extradata_size;
         if (aaccSize >= 2) {
-            AST asc = {0};
+            ASC asc = {0};
             GInt32 ascLen = 0;
             if ((ascLen = readASC(aacc, aaccSize, &asc)) > 0) {
                 R_GJPacket *aaccPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, ascLen);
@@ -389,12 +389,12 @@ static GHandle pullRunloop(GHandle parm) {
                 aacPacket->dataSize = aacPacket->extendDataOffset = 0;
                 aacPacket->dataOffset = adtsLen;
                 GUInt8 ascBuffer[10] ;
-                AST ast = {0};
+                ASC asc = {0};
                 GInt32 astLen = 0;
-                ast.channelConfig = adts.channelConfig;
-                ast.sampleRate = adts.sampleRate;
-                ast.audioType = adts.profile;
-                if((astLen = writeASC(ascBuffer, 10, &ast)) > 0){
+                asc.channelConfig = adts.channelConfig;
+                asc.sampleRate = adts.sampleRate;
+                asc.audioType = adts.profile;
+                if((astLen = writeASC(ascBuffer, 10, &asc)) > 0){
                     aacPacket->dataSize = aacPacket->extendDataOffset = 0;
                     R_BufferWrite(&aacPacket->retain, ascBuffer, astLen);
                     aacPacket->extendDataSize = astLen;
@@ -404,7 +404,7 @@ static GHandle pullRunloop(GHandle parm) {
                 aacPacket->dataSize = pkt.size - adtsLen;
             }else{
                 if(extendData && extendDataSize >= 2){
-                    AST asc = {0};
+                    ASC asc = {0};
                     GInt32 ascLen = 0;
                     if ((ascLen = readASC(extendData, extendDataSize, &asc)) > 0) {
                         R_GJPacket *aaccPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool,pkt.size + ascLen);

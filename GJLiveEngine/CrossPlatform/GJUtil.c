@@ -147,11 +147,9 @@ GFloat32 GJ_GetCPUUsage(){
 
 
 
-#define ADTS_SAMPLERATE_LEN 13
-#define AST_SAMPLERATE_LEN 4
+#define SAMPLERATE_LEN 13
 
-const GUInt32 astFrequency[AST_SAMPLERATE_LEN] = {5510,11025,22050,44100};
-const GUInt32 adtsFrequency[ADTS_SAMPLERATE_LEN] = {96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350};
+const GUInt32 adtsFrequency[SAMPLERATE_LEN] = {96000,88200,64000,48000,44100,32000,24000,22050,16000,12000,11025,8000,7350};
 
 
 
@@ -160,7 +158,7 @@ GInt32 writeADTS(GUInt8* buffer,GUInt8 size,const ADTS* adts){
         return GFalse;
     }
     GInt8 frequencyIndex = -1;
-    for (GUInt8 i = 0; i< ADTS_SAMPLERATE_LEN; i++) {
+    for (GUInt8 i = 0; i< SAMPLERATE_LEN; i++) {
         if (adtsFrequency[i] == adts->sampleRate) {
             frequencyIndex = i;
             break;
@@ -188,7 +186,7 @@ GInt32 readADTS(const GUInt8* data,GUInt8 size,ADTS* adts){
     if(data[0] != 0xff || (data[1] & 0xf0) != 0xf0 || (data[1] & 0x0f) > 1)return GFalse;
     GUInt8  sampleIndex          = data[2] << 2;
     sampleIndex                   = sampleIndex >> 4;
-    if (sampleIndex > ADTS_SAMPLERATE_LEN) {
+    if (sampleIndex > SAMPLERATE_LEN) {
         return GFalse;
     }
     adts->protection_absent = data[1] & 0x1;
@@ -205,27 +203,28 @@ GInt32 readADTS(const GUInt8* data,GUInt8 size,ADTS* adts){
     return adts->protection_absent ? 7:9;
 }
 
-GInt32 readASC(const GUInt8* data,GUInt8 size,AST* ast){
-    if (size < 2 || ast == GNULL) {
+GInt32 readASC(const GUInt8* data,GUInt8 size,ASC* asc){
+    if (size < 2 || asc == GNULL) {
         return GFalse;
     }
-    ast->audioType = (data[0] & 0xF8) >> 3;
+    asc->audioType = (data[0] & 0xF8) >> 3;
     GUInt16 frequencyIndex = ((data[0] & 0x07) << 1) | (data[1] >> 7);
-    if (frequencyIndex > AST_SAMPLERATE_LEN) {
+    if (frequencyIndex > SAMPLERATE_LEN) {
         return GFalse;
     }
-    ast->sampleRate = astFrequency[frequencyIndex];
-    ast->channelConfig = (data[1] >> 3) & 0x0f;
+    asc->sampleRate = adtsFrequency[frequencyIndex];
+    asc->channelConfig = (data[1] >> 3) & 0x0f;
+    asc->gas.frameLengthFlag = (data[1] & 0x04) >> 2;
     return 2;
 }
 
-GInt32 writeASC(GUInt8* buffer,GUInt8 size,const AST* ast){
-    if (size < 2 || ast == GNULL) {
+GInt32 writeASC(GUInt8* buffer,GUInt8 size,const ASC* asc){
+    if (size < 2 || asc == GNULL) {
         return GFalse;
     }
     GInt8 frequencyIndex = -1;
-    for (GUInt8 i = 0; i< AST_SAMPLERATE_LEN; i++) {
-        if (astFrequency[i] == ast->sampleRate) {
+    for (GUInt8 i = 0; i< SAMPLERATE_LEN; i++) {
+        if (adtsFrequency[i] == asc->sampleRate) {
             frequencyIndex = i;
             break;
         }
@@ -233,7 +232,7 @@ GInt32 writeASC(GUInt8* buffer,GUInt8 size,const AST* ast){
     if (frequencyIndex < 0) {
         return GFalse;
     }
-    buffer[0]   = (ast->audioType << 3) | ((frequencyIndex & 0xe) >> 1);
-    buffer[1]   = ((frequencyIndex & 0x1) << 7) | (ast->channelConfig << 3);
+    buffer[0]   = (asc->audioType << 3) | ((frequencyIndex & 0xe) >> 1);
+    buffer[1]   = ((frequencyIndex & 0x1) << 7) | (asc->channelConfig << 3);
     return 2;
 }
