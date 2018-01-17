@@ -271,10 +271,10 @@ static GHandle pullRunloop(GHandle parm) {
         }
 
 #ifdef DEBUG
-        GLong preDTS[2];
-        GInt32 type = pkt.stream_index == asIndex;
-        GJLOG(GNULL,GJ_LOGINFO,"receive type:%d pts:%lld dts:%lld dpts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
-        preDTS[type] = pkt.pts;
+//        GLong preDTS[2];
+//        GInt32 type = pkt.stream_index == asIndex;
+//        GJLOG(GNULL,GJ_LOGINFO,"receive type:%d pts:%lld dts:%lld dpts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
+//        preDTS[type] = pkt.pts;
 #endif
         
         av_packet_split_side_data(&pkt);

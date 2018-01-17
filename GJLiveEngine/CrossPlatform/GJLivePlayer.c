@@ -224,7 +224,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         }
     }
 #endif
-    GJLOG(GNULL, GJ_LOGINFO, "new shake:%ld,max:%ld ,preMax:%ld",shake,netShake->maxDownShake,netShake->preMaxDownShake);
+//    GJLOG(GNULL, GJ_LOGINFO, "new shake:%ld,max:%ld ,preMax:%ld",shake,netShake->maxDownShake,netShake->preMaxDownShake);
     if (shake > netShake->maxDownShake) {
         netShake->maxDownShake = shake;
 #ifdef NETWORK_DELAY
@@ -473,12 +473,12 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
 
     GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "start play runloop");
 
-    R_GJPixelFrame watiBuffer[2] = {0};
+//    R_GJPixelFrame watiBuffer[2] = {0};
 
     if (_playControl->status == kPlayStatusStop) {
         goto END;
     }
-    queuePeekWaitValue(_playControl->imageQueue, 2, (GHandle *) &watiBuffer, 100); ///等待至少两帧
+//    queuePeekWaitValue(_playControl->imageQueue, 2, (GHandle *) &watiBuffer, 100); ///等待至少两帧//不等了
     _syncControl->videoInfo.startTime = GJ_Gettime();
 
     while ((_playControl->status != kPlayStatusStop)) {
