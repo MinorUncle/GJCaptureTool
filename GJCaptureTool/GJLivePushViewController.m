@@ -86,7 +86,7 @@
         if (type == kGJCaptureTypePaint) {
             config.mFps = 30;
         }else{
-            config.mFps = 15;
+            config.mFps = 30;
         }
         config.mAudioBitrate = 128*1000;
         _livePush = [[GJLivePush alloc]init];
@@ -120,21 +120,6 @@
     [_pushStartBtn setShowsTouchWhenHighlighted:YES];
     [_pushStartBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_pushStartBtn];
-    
-    if (_livePush.captureType == kGJCaptureTypePaint) {
-        _paintBtn = [[UIButton alloc]init];
-        [_paintBtn setTitle:@"全屏" forState:UIControlStateNormal];
-        [_paintBtn setTitle:@"恢复" forState:UIControlStateSelected];
-        [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
-        [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateSelected];
-        [_paintBtn setShowsTouchWhenHighlighted:YES];
-        [_paintBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-        [self.view addSubview:_paintBtn];
-    }else{
-        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
-        [_view addGestureRecognizer:tap];
-        
-    }
 
     _pushStateLab = [[UILabel alloc]init];
     _pushStateLab.text = @"推流未连接";
@@ -288,7 +273,7 @@
     _inputGain = [[UISlider alloc]init];
     _inputGain.maximumValue = 1.0;
     _inputGain.minimumValue = 0.0;
-    _inputGain.continuous = NO;
+//    _inputGain.continuous = NO;
     _inputGain.value = 1.0;
     [_inputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_inputGain];
@@ -303,7 +288,7 @@
     _mixGain.maximumValue = 1.0;
     _mixGain.minimumValue = 0.0;
     _mixGain.value = 1.0;
-    _mixGain.continuous = NO;
+//    _mixGain.continuous = NO;
     [_mixGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_mixGain];
     
@@ -316,10 +301,36 @@
     _outputGain = [[UISlider alloc]init];
     _outputGain.maximumValue = 1.0;
     _outputGain.minimumValue = 0.0;
-    _outputGain.continuous = NO;
+//    _outputGain.continuous = NO;
     _outputGain.value = 1.0;
     [_outputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_outputGain];
+    
+    if (_livePush.captureType == kGJCaptureTypePaint) {
+        _paintBtn = [[UIButton alloc]init];
+        [_paintBtn setTitle:@"全屏" forState:UIControlStateNormal];
+        [_paintBtn setTitle:@"恢复" forState:UIControlStateSelected];
+        [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
+        [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateSelected];
+        [_paintBtn setShowsTouchWhenHighlighted:YES];
+        [_paintBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+        [self.view addSubview:_paintBtn];
+    }else{
+        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+        [_view addGestureRecognizer:tap];
+        
+        for (UIGestureRecognizer* g in _outputGain.gestureRecognizers) {
+            [tap requireGestureRecognizerToFail:g];
+        }
+        
+        for (UIGestureRecognizer* g in _inputGain.gestureRecognizers) {
+            [tap requireGestureRecognizerToFail:g];
+        }
+        
+        for (UIGestureRecognizer* g in _mixGain.gestureRecognizers) {
+            [tap requireGestureRecognizerToFail:g];
+        }
+    }
     
     
 }

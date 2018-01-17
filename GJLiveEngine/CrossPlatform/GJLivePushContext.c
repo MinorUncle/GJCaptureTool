@@ -752,7 +752,7 @@ GBool _livePushSetupAudioEncodeIfNeed(GJLivePushContext *context){
 
 GBool _livePushSetupVideoEncodeIfNeed(GJLivePushContext *context){
     GBool result = GTrue;
-    GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "SetupAudioEncode");
+    GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "SetupVideoEncode");
     GJPixelFormat vFormat = {0};
     vFormat.mHeight       = (GUInt32) context->pushConfig->mPushSize.height;
     vFormat.mWidth        = (GUInt32) context->pushConfig->mPushSize.width;
