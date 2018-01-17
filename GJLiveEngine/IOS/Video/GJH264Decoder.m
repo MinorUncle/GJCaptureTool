@@ -138,18 +138,20 @@ void decodeOutputCallback(
     return YES;
 }
 -(void)stopDecode{
-    _isRunning = NO;
-    queueEnablePop(_inputQueue, GFalse);
-    queueBroadcastPop(_inputQueue);
-    GInt32 length = 0;
-    queueClean(_inputQueue, GNULL, &length);
-    if (length > 0) {
-        GHandle* buffer = malloc(sizeof(GHandle)*length);
-        queueClean(_inputQueue, buffer, &length);
-        for (int i = 0; i<length; i++) {
-            R_BufferUnRetain((GJRetainBuffer*)(buffer[i]));
+    if (_isRunning) {
+        _isRunning = NO;
+        queueEnablePop(_inputQueue, GFalse);
+        queueBroadcastPop(_inputQueue);
+        GInt32 length = 0;
+        queueClean(_inputQueue, GNULL, &length);
+        if (length > 0) {
+            GHandle* buffer = malloc(sizeof(GHandle)*length);
+            queueClean(_inputQueue, buffer, &length);
+            for (int i = 0; i<length; i++) {
+                R_BufferUnRetain((GJRetainBuffer*)(buffer[i]));
+            }
+            free(buffer);
         }
-        free(buffer);
     }
 }
 - (void)decodePacket:(R_GJPacket *)packet {

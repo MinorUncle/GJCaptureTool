@@ -309,7 +309,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         dts = encoder->_preDTS + 1;
     }
     if (dts > pts) {
-        if (encoder->_preDTS + 1 >= pts) {
+        if (encoder->_preDTS + 1 > pts) {
             //如果比上一次解dts还要早，则直接推迟pts到dts,并扩大差距
             GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pts:%lld小于preDts:%lld，修改pts为：%lld",pts,encoder->_preDTS,encoder->_preDTS + 2);
             encoder->_dtsDelta *= 1.2;
@@ -326,15 +326,19 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 
 #ifdef DEBUG
 //    static GTimeValue preDTS;
-//    GJLOG(GNULL,GJ_LOGDEBUG,"encode type:video pts:%lld dts:%lld ddts:%d size:%d\n", pushPacket->pts.value, pushPacket->dts.value,pushPacket->pts.value - preDTS, pushPacket->dataSize);
+//    GJLOG(GNULL,GJ_LOGDEBUG,"encode type:video pts:%lld dts:%lld ddts:%lld size:%d\n", pushPacket->pts.value, pushPacket->dts.value,pushPacket->pts.value - preDTS, pushPacket->dataSize);
 //    preDTS = pushPacket->pts.value;
-//    GJAssert(pushPacket->dataSize>0, "");
+//    GJAssert(pushPacket->dts.value > encoder->_preDTS, "");
+//
+//    static GTimeValue prePTS;
+//    if (prePTS == pts) {
+//        printf("pts:%lld\n",prePTS);
+//    }
+//    prePTS = pts;
     
 //    static GInt32 index = 0;
 //    GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"encode video index:%d size:%d:",index++, pushPacket->dataSize);
 //    GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&pushPacket->retain)+pushPacket->dataOffset+pushPacket->dataSize-20, (GUInt32) 20);
-    
-
 #endif
 
     

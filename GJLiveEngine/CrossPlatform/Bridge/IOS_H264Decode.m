@@ -61,7 +61,7 @@ inline static GVoid decodeUnSetup(struct _GJH264DecodeContext *context) {
 inline static  GBool  decodeStart(struct _GJH264DecodeContext* context){
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
-        GJH264Decoder *decode = (__bridge_transfer GJH264Decoder *) (context->obaque);
+        GJH264Decoder *decode = (__bridge GJH264Decoder *) (context->obaque);
         [decode startDecode];
         GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder decodeStart");
     }
@@ -72,7 +72,7 @@ inline static  GBool  decodeStart(struct _GJH264DecodeContext* context){
 inline static  GVoid  decodeStop(struct _GJH264DecodeContext* context){
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
-        GJH264Decoder *decode = (__bridge_transfer GJH264Decoder *) (context->obaque);
+        GJH264Decoder *decode = (__bridge GJH264Decoder *) (context->obaque);
         if (decode.isRunning) {
             [decode stopDecode];
         }

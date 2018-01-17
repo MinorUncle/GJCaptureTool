@@ -29,6 +29,8 @@
 typedef struct TrafficUnit{
     GTime ts;//ms,最新pts，排序后
     GTime clock;//ms,最新的系统时间
+    GTime firstTs;//第一帧，pts
+    GTime firstClock;//第一帧时间
 //    GLong dts;//dts只能单调上升，否则重新开始计算
     GLong count;
     GLong byte;

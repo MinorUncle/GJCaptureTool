@@ -203,12 +203,10 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
 //            GJAssert(packet->flag && GJPacketFlag_KEY, "第一帧非关键帧");
             context->preCheckVideoTraffic = GJStreamPush_GetVideoBufferCacheInfo(context->streamPush);
             context->firstVideoEncodeClock = GJ_Gettime();
-            GJStreamPush_SendVideoData(context->streamPush, packet);
         }
     } else {
         GJTrafficStatus vbufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->streamPush);
         GJTrafficStatus aBufferStatus = GJStreamPush_GetAudioBufferCacheInfo(context->streamPush);
-        GJStreamPush_SendVideoData(context->streamPush, packet);
         _GJLivePush_CheckBufferCache(context,vbufferStatus,aBufferStatus);
     }
 }

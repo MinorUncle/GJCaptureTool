@@ -179,21 +179,30 @@ static GHandle sendRunloop(GHandle parm) {
                 memcpy(start, "\x00\x00\x00\x01", 4);
                 start += nalSize + 4;
             }
+            if(G_TIME_IS_INVALID(push->videoStatus.leave.firstTs)){
+                push->videoStatus.leave.firstTs = packet->dts;
+                push->videoStatus.leave.firstClock = GJ_Gettime();
+            }
         } else {
             sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
             sendPacket->size = packet->dataSize;
             sendPacket->stream_index = push->aStream->index;
+            
+            if(G_TIME_IS_INVALID(push->audioStatus.leave.firstTs)){
+                push->audioStatus.leave.firstTs = packet->dts;
+                push->audioStatus.leave.firstClock = GJ_Gettime();
+            }
         }
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
         
 #ifdef DEBUG
-//        static GLong preDTS[2];
-//        GInt32 type = sendPacket->stream_index == push->aStream->index;
-//        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld ddts:%lld size:%d isKey:%d\n",type, sendPacket->pts, sendPacket->dts,sendPacket->pts - preDTS[type], sendPacket->size,(packet->flag & GJPacketFlag_KEY)==GJPacketFlag_KEY);
-//
-//        preDTS[type] = sendPacket->pts;
+        static GLong preDTS[2];
+        GInt32 type = sendPacket->stream_index == push->aStream->index;
+        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld dpts:%lld size:%d isKey:%d\n",type, sendPacket->pts, sendPacket->dts,sendPacket->pts - preDTS[type], sendPacket->size,(packet->flag & GJPacketFlag_KEY)==GJPacketFlag_KEY);
+
+        preDTS[type] = sendPacket->pts;
 #endif
 
 
@@ -484,14 +493,18 @@ GVoid GJStreamPush_CloseAndDealloc(GJStreamPush **push) {
 GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
 
     if (push == GNULL) return GFalse;
-    R_BufferRetain(&packet->retain);
     
+    if (G_TIME_IS_INVALID(push->videoStatus.enter.firstTs)) {
+        push->videoStatus.enter.firstTs = packet->dts;
+        push->videoStatus.enter.firstClock = GJ_Gettime();
+        
 #ifndef NETWORK_DELAY
-    if (push->startMS <= 0) {
-        push->startMS = GTimeMSValue(packet->dts);
-    }
+        if (push->startMS <= 0) {
+            push->startMS = GTimeMSValue(packet->dts);
+        }
 #endif
-
+    }
+    R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         
         push->videoStatus.enter.ts = packet->dts;
@@ -506,8 +519,17 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
     return GTrue;
 }
 GBool GJStreamPush_SendAudioData(GJStreamPush *push, R_GJPacket *packet) {
-    if (push == GNULL || push->videoStatus.enter.clock.value <= 0) return GFalse;
+    if (push == GNULL || G_TIME_IS_INVALID(push->videoStatus.enter.firstTs))return GFalse;
 
+    if (G_TIME_IS_INVALID(push->audioStatus.enter.firstTs)) {
+        if (GTimeMSValue(packet->dts) < GTimeMSValue(push->videoStatus.enter.firstTs)) {
+            return GFalse;
+        }else{
+            push->audioStatus.enter.firstTs = packet->dts;
+            push->audioStatus.enter.firstClock = GJ_Gettime();
+        }
+    }
+    
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
 
