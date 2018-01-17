@@ -37,7 +37,7 @@ NodeFlowDataFunc pipleNodeInit(GJPipleNode* node,NodeFlowDataFunc receiveData){
 }
 
 GBool pipleNodeUnInit(GJPipleNode* node){
-    GJAssert(node->subCount == 0 && node->subNodes == GNULL, "存在连接的节点未初始化");
+    GJAssert(node->subCount == 0 && node->subNodes == GNULL, "存在连接的节点未初始化,或者没有断开连接");
     if (node->lock) {
         pthread_mutex_destroy(node->lock);
         free(node->lock);

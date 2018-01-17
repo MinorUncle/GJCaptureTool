@@ -226,21 +226,20 @@ static GVoid streamRecodeMessageCallback(GJStreamPush* push, GHandle userData, k
         }
         case kStreamPushMessageType_closeComplete: {
             pthread_mutex_lock(&context->lock);
-            GJStreamPush_CloseAndDealloc(&context->streamRecode);
-             context->callback(context->userData, GJLivePush_recodeSuccess, GNULL);
+            context->callback(context->userData, GJLivePush_recodeSuccess, GNULL);
             pthread_mutex_unlock(&context->lock);
             break;
         }
         case kStreamPushMessageType_urlPraseError:{
             pthread_mutex_lock(&context->lock);
-            GJStreamPush_CloseAndDealloc(&context->streamRecode);
+            GJLivePush_StopRecode(context);
             context->callback(context->userData, GJLivePush_recodeFaile, GNULL);
             pthread_mutex_unlock(&context->lock);
             break;
         }
         case kStreamPushMessageType_sendPacketError:{
             pthread_mutex_lock(&context->lock);
-            GJStreamPush_CloseAndDealloc(&context->streamRecode);
+            GJLivePush_StopRecode(context);
             context->callback(context->userData, GJLivePush_recodeFaile, GNULL);
             pthread_mutex_unlock(&context->lock);
             break;
@@ -863,7 +862,7 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
             if (!GJStreamPush_StartConnect(context->streamPush, url)) {
                 GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "GJStreamPush_StartConnect error");
                 result = GFalse;
-                GJStreamPush_CloseAndDealloc(&context->streamRecode);
+                GJLivePush_StopPush(context);
                 break;
             };
 
@@ -888,20 +887,12 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context) {
         context->audioProducer->audioProduceStop(context->audioProducer);
         context->videoProducer->stopProduce(context->videoProducer);
        
-        //确保没有下一帧数据到达刷新模块
-
-
-        
         //确保没有下一帧数据到发送模块
         pipleDisConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamPush);
-//        pipleDisConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamPush);
+        pipleDisConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamPush);
         
         if (context->streamRecode) {
-            GJStreamPush_CloseAndDealloc(&context->streamRecode);
-            while (context->streamRecode) {
-                GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "GJLivePush_StopPush wait stream recode 100 us");
-                usleep(500);
-            }
+            GJLivePush_StopRecode(context);
         }
         GJStreamPush_CloseAndDealloc(&context->streamPush);
     } else {
@@ -1243,7 +1234,7 @@ GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps,
         if (!GJStreamPush_StartConnect(context->streamRecode, fileUrl)) {
             GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "Recode_Connect error");
             result = GFalse;
-            GJStreamPush_CloseAndDealloc(&context->streamRecode);
+            GJLivePush_StopRecode(context);
             break;
         };
         result = GTrue;
@@ -1256,9 +1247,11 @@ GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps,
 GVoid GJLivePush_StopRecode(GJLivePushContext *context) {
     GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StopRecode:%p",context);
     pthread_mutex_lock(&context->lock);
-    pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamRecode);
-    pipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamRecode);
-    GJStreamPush_CloseAndDealloc(&context->streamRecode);
+    if (context->streamRecode) {
+        pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamRecode);
+        pipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamRecode);
+        GJStreamPush_CloseAndDealloc(&context->streamRecode);
+    }
     pthread_mutex_unlock(&context->lock);
 }
 
