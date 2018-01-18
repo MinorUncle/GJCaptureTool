@@ -407,12 +407,12 @@ static GHandle pullRunloop(GHandle parm) {
                     ASC asc = {0};
                     GInt32 ascLen = 0;
                     if ((ascLen = readASC(extendData, extendDataSize, &asc)) > 0) {
-                        R_GJPacket *aaccPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool,pkt.size + ascLen);
-                        aaccPacket->type = GJMediaType_Audio;
-                        aaccPacket->flag = GJPacketFlag_KEY;
-                        R_BufferWrite(&aaccPacket->retain, extendData, ascLen);
-                        aaccPacket->dataSize = aaccPacket->extendDataOffset = 0;
-                        aaccPacket->extendDataSize   = ascLen;
+                        aacPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool,pkt.size + ascLen);
+                        aacPacket->type = GJMediaType_Audio;
+                        aacPacket->flag = GJPacketFlag_KEY;
+                        R_BufferWrite(&aacPacket->retain, extendData, ascLen);
+                        aacPacket->dataSize = aacPacket->extendDataOffset = 0;
+                        aacPacket->extendDataSize   = ascLen;
                     }else{
                         GJLOG(GNULL, GJ_LOGFORBID, "extendData解析有误");
                         aacPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, pkt.size);

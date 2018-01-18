@@ -487,10 +487,12 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
     if (push == GNULL) return GFalse;
     
     if (G_TIME_IS_INVALID(push->videoStatus.enter.firstTs)) {
-        push->videoStatus.enter.firstTs = packet->dts;
-        push->videoStatus.enter.firstClock = GJ_Gettime();
         if (packet->extendDataSize <= 0) {
             GJLOG(GNULL, GJ_LOGWARNING, "第一帧非关键帧 丢帧");
+            return GTrue;
+        }else{
+            push->videoStatus.enter.firstTs = packet->dts;
+            push->videoStatus.enter.firstClock = GJ_Gettime();
         }
 #ifndef NETWORK_DELAY
         if (push->startMS <= 0) {
