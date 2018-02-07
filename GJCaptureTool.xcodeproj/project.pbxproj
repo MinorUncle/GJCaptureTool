@@ -48,6 +48,8 @@
 		6A435CA11F2757300046CEA3 /* GJH264Encoder.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4FC1ECB4DFE0009E49A /* GJH264Encoder.m */; };
 		6A435CCD1F2883D30046CEA3 /* IOS_Recoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A435CCB1F2883D30046CEA3 /* IOS_Recoder.h */; };
 		6A559C311F3D3A3500698C19 /* GJStreamPull.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453841F14C16C0009FB64 /* GJStreamPull.h */; };
+		6A58221E202AF2C5002AFF76 /* libkcptun.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A582206202AF29D002AFF76 /* libkcptun.a */; settings = {ATTRIBUTES = (Required, ); }; };
+		6A582239202AF473002AFF76 /* client.json in Resources */ = {isa = PBXBuildFile; fileRef = 6A582238202AF473002AFF76 /* client.json */; };
 		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
 		6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85F9E91F0140AF0037A64F /* AEAudioSender.h */; };
@@ -269,6 +271,20 @@
 			remoteGlobalIDString = 17BB5B401BECD101007A2892;
 			remoteInfo = "TheAmazingAudioEngine tvOS";
 		};
+		6A582203202AF29D002AFF76 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 6A58215F202AAD12002AFF76;
+			remoteInfo = kcpTunDemo;
+		};
+		6A582205202AF29D002AFF76 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 6A58217C202AAD2B002AFF76;
+			remoteInfo = kcptun;
+		};
 		6A96CD541F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
@@ -338,13 +354,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = C58157021D9E537800B9118F;
 			remoteInfo = swscale;
-		};
-		AECA5E0920014F8E005E2D9F /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = AEA704B01E745D8500C2E36B;
-			remoteInfo = ffplayer;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -461,6 +470,8 @@
 		6A435CCB1F2883D30046CEA3 /* IOS_Recoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_Recoder.h; sourceTree = "<group>"; };
 		6A435CCC1F2883D30046CEA3 /* IOS_Recoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_Recoder.m; sourceTree = "<group>"; };
 		6A435D381F29841C0046CEA3 /* AEReverbFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEReverbFilter.h; sourceTree = "<group>"; };
+		6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = kcpTunDemo.xcodeproj; path = ../kcptunCode/kcpTunDemo/kcpTunDemo.xcodeproj; sourceTree = "<group>"; };
+		6A582238202AF473002AFF76 /* client.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = client.json; sourceTree = "<group>"; };
 		6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrganRun.m4a; sourceTree = "<group>"; };
 		6A85F9941F00F0B00037A64F /* MixTest.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MixTest.mp3; sourceTree = "<group>"; };
 		6A85F9E91F0140AF0037A64F /* AEAudioSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEAudioSender.h; path = TheAmazingAudioEngine/AEAudioSender.h; sourceTree = SOURCE_ROOT; };
@@ -688,6 +699,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6A58221E202AF2C5002AFF76 /* libkcptun.a in Frameworks */,
 				6A96CD681F258750000DC4FE /* libavcodec.a in Frameworks */,
 				6A96CD691F258750000DC4FE /* libavformat.a in Frameworks */,
 				6A96CD6A1F258750000DC4FE /* libavutil.a in Frameworks */,
@@ -967,6 +979,15 @@
 			name = Tool;
 			sourceTree = "<group>";
 		};
+		6A5821F1202AF29D002AFF76 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6A582204202AF29D002AFF76 /* kcpTunDemo.app */,
+				6A582206202AF29D002AFF76 /* libkcptun.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		6A85FA121F01FA7F0037A64F /* libQueue */ = {
 			isa = PBXGroup;
 			children = (
@@ -995,7 +1016,6 @@
 				6A96CD631F258740000DC4FE /* libavutil.a */,
 				6A96CD651F258740000DC4FE /* libpostproc.a */,
 				6A96CD671F258740000DC4FE /* libswscale.a */,
-				AECA5E0A20014F8E005E2D9F /* ffplayer */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1307,6 +1327,7 @@
 			children = (
 				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
 				6A34882A1F453803008223AA /* Image */,
+				6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */,
 				6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */,
 				6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */,
 				6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */,
@@ -1345,6 +1366,7 @@
 				C561ABFC1D51D3DC00113453 /* Main.storyboard */,
 				C561AC8B1D51D3DC00113453 /* Info.plist */,
 				C561AC8C1D51D3DC00113453 /* main.m */,
+				6A582238202AF473002AFF76 /* client.json */,
 				6A03892A1FF13004005AC7CE /* Particle.png */,
 				6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */,
 				C561AC8D1D51D3DC00113453 /* OpenGLPlayer */,
@@ -1572,6 +1594,10 @@
 					ProjectRef = 045E4E121E343F3A00289523 /* GJQueue.xcodeproj */;
 				},
 				{
+					ProductGroup = 6A5821F1202AF29D002AFF76 /* Products */;
+					ProjectRef = 6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */;
+				},
+				{
 					ProductGroup = 6A0200DE1F0621E000F4255B /* Products */;
 					ProjectRef = 6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */;
 				},
@@ -1702,6 +1728,20 @@
 			remoteRef = 6A40DFB71EE8DA4D0047E0F0 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		6A582204202AF29D002AFF76 /* kcpTunDemo.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = kcpTunDemo.app;
+			remoteRef = 6A582203202AF29D002AFF76 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A582206202AF29D002AFF76 /* libkcptun.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libkcptun.a;
+			remoteRef = 6A582205202AF29D002AFF76 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		6A96CD551F258740000DC4FE /* ffmpegCode.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
@@ -1772,13 +1812,6 @@
 			remoteRef = 6A96CD661F258740000DC4FE /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		AECA5E0A20014F8E005E2D9F /* ffplayer */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = ffplayer;
-			remoteRef = AECA5E0920014F8E005E2D9F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -1808,6 +1841,7 @@
 				6A34884D1F453803008223AA /* index3.png in Resources */,
 				6A3488461F453803008223AA /* 3.png in Resources */,
 				6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */,
+				6A582239202AF473002AFF76 /* client.json in Resources */,
 				C561AC9C1D51D3DC00113453 /* Assets.xcassets in Resources */,
 				C561ACA31D51D3DC00113453 /* LaunchScreen.storyboard in Resources */,
 				6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */,
@@ -1936,6 +1970,7 @@
 					"\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"",
 					"\"$(SRCROOT)/../GJMp4Demo/Mp4v2Code/include\"/**",
 					"\"$(SRCROOT)/../GJImage/GPUImage-master/framework/Source\"/**",
+					"\"$(SRCROOT)/../kcptunCode/xkcptun\"",
 				);
 				INFOPLIST_FILE = GJLiveEngine/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1975,6 +2010,7 @@
 					"\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"",
 					"\"$(SRCROOT)/../GJMp4Demo/Mp4v2Code/include\"/**",
 					"\"$(SRCROOT)/../GJImage/GPUImage-master/framework/Source\"/**",
+					"\"$(SRCROOT)/../kcptunCode/xkcptun\"",
 				);
 				INFOPLIST_FILE = GJLiveEngine/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";

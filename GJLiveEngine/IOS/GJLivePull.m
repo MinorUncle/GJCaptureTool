@@ -14,6 +14,12 @@
 #import "GJPCMDecodeFromAAC.h"
 #import <CoreImage/CoreImage.h>
 #import <AVFoundation/AVFoundation.h>
+
+#ifdef USE_KCP
+#include <xkcp_client.h>
+#include <xkcp_config.h>
+#endif
+
 @interface GJLivePull () {
     NSThread *          _playThread;
     GJPullSessionStatus _pullSessionStatus;
@@ -44,6 +50,27 @@ static GVoid livePullCallback(GHandle userDate, GJLivePullMessageType message, G
         _enablePreview  = YES;
         _gaterFrequency = 2.0;
         _lock           = [[NSRecursiveLock alloc] init];
+        
+#ifdef USE_KCP
+        dispatch_once(&kcpOnceToken, ^{
+            static dispatch_queue_t kcpQueue;
+            kcpQueue = dispatch_queue_create("KCP_LOOP", DISPATCH_QUEUE_SERIAL);
+            dispatch_async(kcpQueue, ^{
+                struct xkcp_config *config = xkcp_get_config();
+                config->main_loop = client_main_loop;
+                NSString* path = [[NSBundle mainBundle]pathForResource:@"client" ofType:@"json"];
+                if(![[NSFileManager defaultManager]fileExistsAtPath:path] || ![[NSFileManager defaultManager]isReadableFileAtPath:path]){
+                    assert(0);
+                }
+                path = [NSString stringWithFormat:@"-c%@",path];
+                char* arg[2];
+                arg[0] = "kcpTun";
+                arg[1] = (char*)path.UTF8String;
+                xkcp_main(2, arg);
+            });
+        });
+#endif
+        
     }
     return self;
 }

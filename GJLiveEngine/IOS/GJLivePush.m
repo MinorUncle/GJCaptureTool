@@ -9,6 +9,10 @@
 #import "GJLivePush.h"
 #import "GJLivePushContext.h"
 #import "GJLog.h"
+#ifdef USE_KCP
+#include <xkcp_client.h>
+#include <xkcp_config.h>
+#endif
 
 @interface GJLivePush () {
 
@@ -117,6 +121,25 @@ static GVoid livePushCallback(GHandle               userDate,
         _livePush            = NULL;
         _mixFileNeedToStream = YES;
         GJLivePush_Create(&_livePush, livePushCallback, (__bridge GHandle)(self));
+#ifdef USE_KCP
+        dispatch_once(&kcpOnceToken, ^{
+            static dispatch_queue_t kcpQueue;
+            kcpQueue = dispatch_queue_create("KCP_LOOP", DISPATCH_QUEUE_SERIAL);
+            dispatch_async(kcpQueue, ^{
+                struct xkcp_config *config = xkcp_get_config();
+                config->main_loop = client_main_loop;
+                NSString* path = [[NSBundle mainBundle]pathForResource:@"client" ofType:@"json"];
+                if(![[NSFileManager defaultManager]fileExistsAtPath:path] || ![[NSFileManager defaultManager]isReadableFileAtPath:path]){
+                    assert(0);
+                }
+                path = [NSString stringWithFormat:@"-c%@",path];
+                char* arg[2];
+                arg[0] = "kcpTun";
+                arg[1] = (char*)path.UTF8String;
+                xkcp_main(2, arg);
+            });
+        });
+#endif
     }
     return self;
 }

@@ -557,16 +557,16 @@
                 }
                 static CGFloat r;
                 r += 1;
-                static UIImage* image ;
-                if (image != nil) {
-                    ioAttr.image = image;
-                    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-                        image = [wkSelf getSnapshotImageWithSize:rect.size];
-                    });
-                }else{
-                    image = [wkSelf getSnapshotImageWithSize:rect.size];
-                }
-
+//                static UIImage* image ;
+//                if (image != nil) {
+//                    ioAttr.image = image;
+//                    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+//                        image = [wkSelf getSnapshotImageWithSize:rect.size];
+//                    });
+//                }else{
+//                    image = [wkSelf getSnapshotImageWithSize:rect.size];
+//                }
+                ioAttr.image = [wkSelf getSnapshotImageWithSize:rect.size];
                 ioAttr.rotate = r;
             }];
             

@@ -8,6 +8,8 @@
 
 #include "GJLiveDefine+internal.h"
 #include <stdlib.h>
+long kcpOnceToken;
+
 //GBool R_RetainBufferRelease(GJRetainBuffer* buffer){
 //    if (buffer->data) {
 //        free(buffer->data);
