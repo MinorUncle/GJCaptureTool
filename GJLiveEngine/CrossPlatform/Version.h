@@ -1,5 +1,5 @@
 #ifndef Version_h
 #define Version_h
-static char GJLiveEngineVersion[] = "1.01.02";
-static char GJLiveEngineBuild[] = "00.47";
+static char GJLiveEngineVersion[] = "1.02.08";
+static char GJLiveEngineBuild[] = "18.01";
 #endif /* Version_h */

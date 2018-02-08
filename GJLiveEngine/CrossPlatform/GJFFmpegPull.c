@@ -304,7 +304,7 @@ static GHandle pullRunloop(GHandle parm) {
                                     i+=2;
                                 }//否则//1-1
                             }else if(pkt.data[i+2] == 1){//匹配成功0x000001，3-1,
-                                pkt.data = GRealloc(pkt.data,pkt.size);
+                                pkt.data = realloc(pkt.data,pkt.size);
                                 memmove(pkt.data+i+1, pkt.data+i, pkt.size-i);
                                 pkt.size++;
                                 if (preNal != GNULL) {

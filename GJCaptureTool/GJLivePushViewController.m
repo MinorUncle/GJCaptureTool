@@ -116,8 +116,7 @@
     [_pushStartBtn setTitle:@"推流开始" forState:UIControlStateNormal];
     [_pushStartBtn setTitle:@"推流结束" forState:UIControlStateSelected];
     [_pushStartBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
-    [_pushStartBtn setTitleColor:[UIColor redColor] forState:UIControlStateSelected];
-    [_pushStartBtn setShowsTouchWhenHighlighted:YES];
+    [_pushStartBtn setTitleColor:[UIColor grayColor] forState:UIControlStateSelected];
     [_pushStartBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_pushStartBtn];
 
@@ -164,7 +163,6 @@
     [_audioMixBtn setTitle:@"结束混音" forState:UIControlStateSelected];
     [_audioMixBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_audioMixBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _audioMixBtn.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_audioMixBtn];
     
     _earPlay = [[UIButton alloc]init];
@@ -173,7 +171,6 @@
     [_earPlay setTitle:@"结束耳返" forState:UIControlStateSelected];
     [_earPlay setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_earPlay addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _earPlay.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_earPlay];
     
     _mixStream = [[UIButton alloc]init];
@@ -182,7 +179,6 @@
     [_mixStream setTitle:@"允许混音入流" forState:UIControlStateSelected];
     [_mixStream setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_mixStream addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _mixStream.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_mixStream];
     
     _changeCamera = [[UIButton alloc]init];
@@ -190,7 +186,6 @@
     [_changeCamera setTitle:@"切换相机" forState:UIControlStateNormal];
     [_changeCamera setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_changeCamera addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _changeCamera.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_changeCamera];
     
     _videoMute = [[UIButton alloc]init];
@@ -199,7 +194,6 @@
     [_videoMute setTitle:@"开启视频" forState:UIControlStateSelected];
     [_videoMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_videoMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _videoMute.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_videoMute];
     
     _audioMute = [[UIButton alloc]init];
@@ -208,7 +202,6 @@
     [_audioMute setTitle:@"开启音频" forState:UIControlStateSelected];
     [_audioMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_audioMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _audioMute.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_audioMute];
     
 //    _uiRecode = [[UIButton alloc]init];
@@ -226,7 +219,6 @@
     [_reverb setTitle:@"关闭混响" forState:UIControlStateSelected];
     [_reverb setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_reverb addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _reverb.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_reverb];
     
     _messureModel = [[UIButton alloc]init];
@@ -235,7 +227,6 @@
     [_messureModel setTitle:@"关闭messure模式" forState:UIControlStateSelected];
     [_messureModel setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_messureModel addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _messureModel.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_messureModel];
     
     _sticker = [[UIButton alloc]init];
@@ -244,7 +235,6 @@
     [_sticker setTitle:@"结束贴纸" forState:UIControlStateSelected];
     [_sticker setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_sticker addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _sticker.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_sticker];
     
     _aecBtn = [[UIButton alloc]init];
@@ -253,7 +243,6 @@
     [_aecBtn setTitle:@"关闭回声消除" forState:UIControlStateSelected];
     [_aecBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_aecBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    _aecBtn.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_aecBtn];
     
     _sizeChangeBtn = [[UIButton alloc]init];
@@ -311,8 +300,7 @@
         [_paintBtn setTitle:@"全屏" forState:UIControlStateNormal];
         [_paintBtn setTitle:@"恢复" forState:UIControlStateSelected];
         [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
-        [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateSelected];
-        [_paintBtn setShowsTouchWhenHighlighted:YES];
+        [_paintBtn setTitleColor:[UIColor grayColor] forState:UIControlStateSelected];
         [_paintBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
         [self.view addSubview:_paintBtn];
     }else{
@@ -826,9 +814,8 @@
     _pullBtn.layer.borderColor = [UIColor blackColor].CGColor;
     [_pullBtn setTitle:@"拉流1开始" forState:UIControlStateNormal];
     [_pullBtn setTitle:@"拉流1结束" forState:UIControlStateSelected];
-    [_pullBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    [_pullBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
     [_pullBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
-    [_pullBtn setShowsTouchWhenHighlighted:YES];
     [_pullBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     _pullBtn.backgroundColor = [UIColor whiteColor];
     
