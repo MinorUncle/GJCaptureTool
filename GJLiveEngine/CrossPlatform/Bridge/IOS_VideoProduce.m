@@ -693,7 +693,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     if (![self.camera isRunning]) {
         [self.camera startCameraCapture];
     }
-    runAsynchronouslyOnVideoProcessingQueue(^{
+    runSynchronouslyOnVideoProcessingQueue(^{
 
         GPUImageOutput *parentFilter = _sticker;
         if (parentFilter == nil) {

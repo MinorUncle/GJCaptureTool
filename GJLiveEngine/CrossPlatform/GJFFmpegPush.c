@@ -548,10 +548,18 @@ GFloat32 GJStreamPush_GetBufferRate(GJStreamPush *push) {
 }
 GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush *push) {
     if (!push) return error_Status;
-
-    return push->videoStatus;
+    GJTrafficStatus status = push->videoStatus;
+    if(G_TIME_IS_INVALID(status.leave.ts)){
+        status.leave = status.enter;
+    }
+    return status;
 }
 GJTrafficStatus GJStreamPush_GetAudioBufferCacheInfo(GJStreamPush *push) {
     if (!push) return error_Status;
-    return push->audioStatus;
+    GJTrafficStatus status = push->audioStatus;
+    if(G_TIME_IS_INVALID(status.leave.ts)){
+        status.leave = status.enter;
+    }
+    return status;
+    
 }

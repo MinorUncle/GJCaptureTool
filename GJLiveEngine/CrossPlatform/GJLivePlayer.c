@@ -22,7 +22,7 @@
 //#define UIIMAGE_SHOW
 
 #define VIDEO_PTS_PRECISION 400
-#define AUDIO_PTS_PRECISION 200
+#define AUDIO_PTS_PRECISION 100  //200太长，改为100，5帧
 
 #define MAX_CACHE_DUR 5000 //抖动最大缓存控制
 #define MIN_CACHE_DUR 100  //抖动最小缓存控制
@@ -443,22 +443,26 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
         _playControl->freshAudioFrame = audioBuffer;
         return GTrue;
     } else {
-        GLong shake = GMAX(_syncControl->netShake.maxDownShake, _syncControl->netShake.preMaxDownShake);
-        GLong currentTime = GTimeMSValue(GJ_Gettime());
-        GLong lastClock = GTimeMSValue(_syncControl->audioInfo.trafficStatus.leave.clock);
-        if(shake < AUDIO_PTS_PRECISION && shake-(currentTime - lastClock)< AUDIO_PTS_PRECISION){
-            *outSize = R_BufferSize(&_playControl->freshAudioFrame->retain);
-            memcpy(data, R_BufferStart(&_playControl->freshAudioFrame->retain), *outSize);
-        }else{
-            *outSize = 0;
-            if (_playControl->status == kPlayStatusRunning) {
+        if(_playControl->status == kPlayStatusRunning){//播放状态表示没有数据再播放了，才考虑填充
+            GLong shake = GMAX(_syncControl->netShake.maxDownShake, _syncControl->netShake.preMaxDownShake);
+            GLong currentTime = GTimeMSValue(GJ_Gettime());
+            GLong lastClock = GTimeMSValue(_syncControl->audioInfo.trafficStatus.leave.clock);
+            if(shake-(currentTime - lastClock)< AUDIO_PTS_PRECISION){//去除抖动限制，因为可能抖动大于AUDIO_PTS_PRECISION，但是播放缓存也会消耗时间，
+                *outSize = R_BufferSize(&_playControl->freshAudioFrame->retain);
+                memcpy(data, R_BufferStart(&_playControl->freshAudioFrame->retain), *outSize);
+                return GTrue;
+            }else{//需要等待时间太久，不补充了，直接暂停播放吧。
+                *outSize = 0;
                 GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "audio player queue empty");
                 if (_syncControl->syncType == kTimeSYNCAudio) {
                     GJLivePlay_StartBuffering(player);
                 }
+                return GFalse;
             }
+        }else{//否则表示已经开始缓存了，就算预计很快会有数据来也不会播放老数据
+            *outSize = 0;
+            return GFalse;
         }
-        return GFalse;
     }
 }
 
@@ -729,12 +733,12 @@ GVoid GJLivePlay_Stop(GJLivePlayer *player) {
 
         queueBroadcastPop(player->playControl.imageQueue);
         queueBroadcastPop(player->playControl.audioQueue);
+        player->audioPlayer->audioStop(player->audioPlayer);//可能会等待一会，移到前面，防止过多的等待
         pthread_mutex_unlock(&player->playControl.oLock);
 
         pthread_join(player->playControl.playVideoThread, GNULL);
 
         pthread_mutex_lock(&player->playControl.oLock);
-        player->audioPlayer->audioStop(player->audioPlayer);
         
         if (player->playControl.freshAudioFrame) {
             R_BufferUnRetain(&player->playControl.freshAudioFrame->retain);
