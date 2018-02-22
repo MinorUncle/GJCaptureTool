@@ -122,7 +122,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
                     }
                     context->videoNetSpeed /= fullCount;
                     //count越大越准确
-                    GJLOG(GNULL, GJ_LOGDEBUG,"busy status, avgRate :%f kB/s currentRate:%f sendCount:%d sendByte:%ld cacheCount:%ld cacheTime:%ld ms speedUnitCount:%d",context->videoNetSpeed / 8.0 / 1024,currentBitRate / 8.0 / 1024, fullCount,sendByte,cacheInCount,cacheInPts,fullCount);
+                    GJLOG(GNULL, GJ_LOGDEBUG,"busy status, avgRate :%f kB/s currentRate:%f sendByte:%ld cacheCount:%ld cacheTime:%ld ms speedUnitCount:%d",context->videoNetSpeed / 8.0 / 1024,currentBitRate / 8.0 / 1024 ,sendByte,cacheInCount,cacheInPts,fullCount);
                     GJAssert(context->videoNetSpeed >= 0, "错误");
                     GJAssert(sendTs > 0 || sendByte == 0 , "错误");
                     GJAssert(cacheInPts <= 50000, "错误");
@@ -303,52 +303,58 @@ static void _GJLivePush_SetCodeBitrate(GJLivePushContext *context, GInt32 destRa
     }
 }
 
-static void _GJLivePush_UpdateQualityInfo(GJLivePushContext *context, GInt32 bitrate){
+static void _GJLivePush_UpdateQualityInfo(GJLivePushContext *context, GInt32 destRate){
     GJNetworkQuality quality = GJNetworkQualityGood;
-    GInt32 destRate = bitrate;
     GRational videoDropStep = GRationalMake(0, 1);
     if (destRate >= context->pushConfig->mVideoBitrate - 0.001) {
+        
         quality = GJNetworkQualityExcellent;
         destRate = context->pushConfig->mVideoBitrate;
-        videoDropStep = GRationalMake(0, 1);
-    }else if(destRate >= context->videoMinBitrate){
-        if (destRate * 2 >= context->videoMinBitrate + context->pushConfig->mVideoBitrate) {
-            quality = GJNetworkQualityGood;
-        }else{
-            quality = GJNetworkQualitybad;
-        }
-        videoDropStep = GRationalMake(0, 1);
-
+    }else if(destRate >= context->videoMinBitrate){//大于不丢帧最小允许码率
+        
+//        if (destRate * 2 >= context->videoMinBitrate + context->pushConfig->mVideoBitrate) {
+//            quality = GJNetworkQualityGood;
+//        }else{
+//            quality = GJNetworkQualitybad;
+//        }
+        //修改为不丢帧则是good
+        quality = GJNetworkQualityGood;
     }else{
         GInt32 minLimit = context->videoMinBitrate * (1 - GRationalValue(context->videoMaxDropRate));
         if(destRate < minLimit)destRate = minLimit;
         if (destRate <= 0.00001) {
+            //表示一直丢帧，Terrible
             videoDropStep.den = videoDropStep.num = 1;
+            quality = GJNetworkQualityTerrible;
         }else if (destRate <= context->videoMinBitrate * 0.5) {
             videoDropStep.den = context->videoMinBitrate/destRate;
             videoDropStep.num = videoDropStep.den - 1;
+            //丢帧大于一半，Terrible
+            quality = GJNetworkQualityTerrible;
         }else{
             videoDropStep = GRationalMake(1, 1.0/(1.0-destRate*1.0/context->videoMinBitrate));
+            //丢帧小于一半，bad，
+            quality = GJNetworkQualitybad;
         }
-        quality = GJNetworkQualityTerrible;
     }
     
     if (quality != context->netQuality) {
         context->callback(context->userData, GJLivePush_updateNetQuality, &quality);
         context->netQuality = quality;
     }
-    if (context->videoBitrate != bitrate) {
-        context->videoBitrate = bitrate;
-        _GJLivePush_SetCodeBitrate(context, bitrate);
+    if (context->videoBitrate != destRate) {
+        context->videoBitrate = destRate;
+        _GJLivePush_SetCodeBitrate(context, destRate);
     }
-
-    if (context->videoDropStep.num != context->videoDropStep.den) {
+    if(!GRationalEqual(videoDropStep, context->videoDropStep)){
+        if (videoDropStep.num == videoDropStep.den && context->videoDropStep.num != context->videoDropStep.den) {
+            context->videoDropStepBack = context->videoDropStep;
+        }
         context->videoDropStep = videoDropStep;
         GJLOG(LOG_DEBUG, GJ_LOGDEBUG,"update drop step num:%d,den:%d", videoDropStep.num,videoDropStep.den);
         context->videoProducer->setDropStep(context->videoProducer,videoDropStep);
-    }else{
-        context->videoDropStepBack = videoDropStep;
     }
+
 }
 
 //快降慢升，最高升到GMIN(context->pushConfig->mVideoBitrate, context->videoNetSpeed)

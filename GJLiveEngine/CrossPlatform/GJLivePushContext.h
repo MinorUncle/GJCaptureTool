@@ -64,7 +64,7 @@ typedef struct _GJLivePushContext {
 
     GRational videoDropStep; //每den帧丢num帧
     //     表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
-    GRational videoMaxDropRate; //
+    GRational videoMaxDropRate; //默认fps-1/fps.表示1s至少有1帧数据
     GRational videoDropStepBack; //保存丢帧率，用于连续丢帧时保存，恢复时候恢复到此丢帧率
     GInt32    videoBitrate;     //当前编码码率
     GInt32    maxVideoDelay;     //默认最大的延时，超过此延时，则启动连续丢帧，直到延迟恢复到3/4,默认500ms；

@@ -25,6 +25,7 @@
 
 #define GRationalMake(num,den)  (GRational){(GInt32)(num),(GInt32)(den)}
 #define GRationalValue(rational) (GFloat32)(rational).num*1.0/(rational).den
+#define GRationalEqual(rational1,rational2) ((rational1).num == (rational2).num && (rational1).den == (rational2).den)
 
 typedef struct TrafficUnit{
     GTime ts;//ms,最新pts，排序后
