@@ -9,6 +9,7 @@
 #import "GJLivePush.h"
 #import "GJLivePushContext.h"
 #import "GJLog.h"
+#import <UIKit/UIApplication.h>
 #ifdef USE_KCP
 #include <xkcp_client.h>
 #include <xkcp_config.h>
@@ -120,6 +121,9 @@ static GVoid livePushCallback(GHandle               userDate,
         _gaterFrequency      = 2.0;
         _livePush            = NULL;
         _mixFileNeedToStream = YES;
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
+        
         GJLivePush_Create(&_livePush, livePushCallback, (__bridge GHandle)(self));
 #ifdef USE_KCP
         dispatch_once(&kcpOnceToken, ^{
@@ -144,6 +148,13 @@ static GVoid livePushCallback(GHandle               userDate,
     return self;
 }
 
+-(void)receiveNotification:(NSNotification*)notic{
+    if ([notic.name isEqualToString:UIApplicationWillResignActiveNotification]) {
+
+    }else if([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]){
+
+    }
+}
 
 
 -(void)setARScene:(id<GJImageARScene>)ARScene{

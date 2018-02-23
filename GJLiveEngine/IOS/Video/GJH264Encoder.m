@@ -11,7 +11,6 @@
 #import "GJLog.h"
 #import "GJRetainBufferPool.h"
 #import "GJUtil.h"
-#import <UIKit/UIApplication.h>
 //#define DEFAULT_DELAY  10
 //默认i帧是p帧的I_P_RATE+1倍。越小丢帧时码率降低越大
 
@@ -23,7 +22,6 @@
     BOOL   requestFlush;
     GInt64 _preDTS;
     GInt64 _dtsDelta;
-    BOOL   _enable;
 }
 @property (nonatomic, assign) VTCompressionSessionRef enCodeSession;
 @property (nonatomic, assign) GJRetainBufferPool *    bufferPool;
@@ -46,45 +44,17 @@
         _entropyMode  = kEntropyMode_CABAC;
         _dtsDelta     = 0;
         _preDTS     = -1;
-        if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive) {
-            _enable = YES;
-            [self creatEnCodeSession];
-        }else{
-            _enable = NO;
-        }
-        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
-        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
+        [self creatEnCodeSession];
     }
     return self;
 }
 
--(void)receiveNotification:(NSNotification*)notic{
-    if ([notic.name isEqualToString:UIApplicationWillResignActiveNotification]) {
-        _enable = NO;
-        if(_enCodeSession){
-            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "进入后台，销毁编码器");
-            VTCompressionSessionInvalidate(_enCodeSession);
-            _enCodeSession = nil;
-        }
-    }else if([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]){
-        _enable = YES;
-        if (_enCodeSession == nil) {
-            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "进入前台，创建编码器");
-            [self creatEnCodeSession];
-            [self setAllParm];
-        }
-    }
-}
 //编码
 - (BOOL)encodeImageBuffer:(CVImageBufferRef)imageBuffer pts:(GTime)pts {
     //RETRY:
     {
         //    CMTime presentationTimeStamp = CMTimeMake(encoderFrameCount*1000.0/_destFormat.baseFormat.fps, 1000);
 
-        if (_enable == NO) {
-            return YES;
-        }
-        
         NSMutableDictionary *properties = NULL;
         if (_enCodeSession == nil) {
             [self creatEnCodeSession];
@@ -95,7 +65,7 @@
             [properties setObject:@YES forKey:(__bridge NSString *) kVTEncodeFrameOptionKey_ForceKeyFrame];
             requestFlush = NO;
         }
-
+        //        printf("encode pts:%lld\n",pts);
         OSStatus status = VTCompressionSessionEncodeFrame(
             _enCodeSession,
             imageBuffer,
@@ -141,12 +111,10 @@
         encodeOutputCallback,
         (__bridge void *_Nullable)(self),
         &_enCodeSession);
-    
     if (!_enCodeSession) {
         NSLog(@"VTCompressionSessionCreate 失败------------------status:%d", (int) result);
         return;
     }
-    
     _sps = _pps = nil;
     if (_bufferPool != NULL) {
         GJRetainBufferPool *pool = _bufferPool;
@@ -162,48 +130,63 @@
 }
 - (void)setGop:(int)gop {
     _gop                         = gop;
-    if (!_enable) {return;}
     CFNumberRef frameIntervalRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &(_gop));
     OSStatus    result           = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_MaxKeyFrameInterval, frameIntervalRef);
     CFRelease(frameIntervalRef);
-    if (result != 0) {
+    if (result == kVTInvalidSessionErr) {
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "编码器失效，setGop 失败，重启");
+        VTCompressionSessionInvalidate(_enCodeSession);
+        _enCodeSession = nil;
+        [self creatEnCodeSession];
+        [self setAllParm];
+    } else if (result != 0) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_MaxKeyFrameInterval set error");
     }
 }
-
 - (void)setProfileLevel:(ProfileLevel)profileLevel {
     _profileLevel   = profileLevel;
-    if (!_enable) {return;}
     OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_ProfileLevel, getCFStrByLevel(_profileLevel));
-    if (result != 0) {
+    if (result == kVTInvalidSessionErr) {
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "编码器失效，setProfileLevel 失败，重启");
+        VTCompressionSessionInvalidate(_enCodeSession);
+        _enCodeSession = nil;
+        [self creatEnCodeSession];
+        [self setAllParm];
+    } else if(result != 0) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_ProfileLevel set error");
     }
 }
-
 - (void)setEntropyMode:(EntropyMode)entropyMode {
     _entropyMode    = entropyMode;
-    if (!_enable) {return;}
     OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_H264EntropyMode, getCFStrByEntropyMode(_entropyMode));
-    if (result != 0) {
+    if (result == kVTInvalidSessionErr) {
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "编码器失效，setEntropyMode 失败，重启");
+        VTCompressionSessionInvalidate(_enCodeSession);
+        _enCodeSession = nil;
+        [self creatEnCodeSession];
+        [self setAllParm];
+    } else if(result != 0){
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_H264EntropyMode set error");
     }
 }
-
 - (void)setAllowBFrame:(BOOL)allowBFrame {
     _allowBFrame    = allowBFrame;
-    if (!_enable) {return;}
     OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AllowFrameReordering, _allowBFrame ? kCFBooleanTrue : kCFBooleanFalse);
-    if (result != 0) {
+    if (result == kVTInvalidSessionErr) {
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "编码器失效，setAllowBFrame 失败，重启");
+        VTCompressionSessionInvalidate(_enCodeSession);
+        _enCodeSession = nil;
+        [self creatEnCodeSession];
+        [self setAllParm];
+    } else if(result != 0){
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_AllowFrameReordering set error");
     }
 }
-
 - (void)setAllParm {
     //    kVTCompressionPropertyKey_MaxFrameDelayCount
     //    kVTCompressionPropertyKey_MaxH264SliceBytes
     //    kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder
     //    kVTCompressionPropertyKey_RealTime
-    if (!_enable) {return;}
 
     self.allowBFrame  = _allowBFrame;
     self.profileLevel = _profileLevel;
@@ -211,18 +194,21 @@
     self.gop          = _gop;
     self.bitrate      = _bitrate;
 }
-
 - (void)setBitrate:(int)bitrate {
-    if (!_enable) {return;}
-
     if (bitrate >= 0 && _enCodeSession) {
         _bitrate            = bitrate;
         CFNumberRef bitRate = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt32Type, &(_bitrate));
         OSStatus    result  = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_AverageBitRate, bitRate);
         CFRelease(bitRate);
-        if (result != noErr) {
+        if (result == kVTInvalidSessionErr) {
+            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "编码器失效，setBitrate 失败，重启");
+            VTCompressionSessionInvalidate(_enCodeSession);
+            _enCodeSession = nil;
+            [self creatEnCodeSession];
+            [self setAllParm];
+        } else if(result != noErr) {
             GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_AverageBitRate set error:%d", result);
-        } else {
+        } else if(result != 0){
             GJLOG(DEFAULT_LOG, GJ_LOGINFO, "set video bitrate:%0.2f kB/s", bitrate / 1024.0 / 8.0);
         }
     }
@@ -429,7 +415,6 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 
 - (void)dealloc {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJH264Encoder：%p", self);
-    [[NSNotificationCenter defaultCenter]removeObserver:self];
     if (_enCodeSession) VTCompressionSessionInvalidate(_enCodeSession);
     if (_bufferPool) {
         GJRetainBufferPool *pool = _bufferPool;

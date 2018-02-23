@@ -98,6 +98,15 @@ GVoid GJLivePush_StopPreview(GJLivePushContext *context);
 GBool GJLivePush_SetAudioMute(GJLivePushContext *context, GBool mute);
 GBool GJLivePush_SetVideoMute(GJLivePushContext *context, GBool mute);
 
+/**
+ 是否禁止编码器,与GJLivePush_SetVideoMute类似，但是GJLivePush_SetVideoMute更轻量级，不会销毁编码器，此函数会，iOS进入后台时会使用。
+
+ @param context context description
+ @param disable disable description
+ @return return value description
+ */
+GBool GJLivePush_SetVideoCodeDisable(GJLivePushContext *context, GBool disable);
+
 
 
 GVoid GJLivePush_Dealloc(GJLivePushContext **context);
