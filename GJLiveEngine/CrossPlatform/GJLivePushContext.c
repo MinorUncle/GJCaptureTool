@@ -24,7 +24,7 @@
 #define NET_AVG_DURING 3000   //平均带宽估计所需时间
 #define NET_INCERASE_DURING (NET_AVG_DURING/NET_SENSITIVITY)*1  //网速增加速度
 
-#define MAX_DELAY -1        //in ms，最大延迟，全速丢帧，
+#define MAX_DELAY -1        //in ms，最大延迟，全速丢帧，小于0表示没有最大限制，根据动态调整
 #define RESTORE_DROP_RATE  (3/4.0)   //延迟减少到MAX_DELAY *  RESTORE_DROP_RATE后恢复连续丢帧
 #ifdef RVOP
 static rvop_server_p rvopserver;
@@ -165,7 +165,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
     if (context->maxVideoDelay > 0 && cacheInPts >= context->maxVideoDelay && context->videoDropStep.num != context->videoDropStep.den) {
         context->videoDropStepBack = context->videoDropStep;
         context->videoDropStep = GRationalMake(1, 1);
-        GJLOG(GNULL, GJ_LOGDEBUG,"set video drop step (1,1)\n");
+        GJLOG(GNULL, GJ_LOGDEBUG,"缓存大于maxVideoDelay set video drop step (1,1)\n");
     }
 }
 

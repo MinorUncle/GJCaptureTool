@@ -11,7 +11,7 @@
 //static NSString* pullUlr = @"rtmp://192.168.199.187/live/room";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/132399872.flv";
 //static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
-static NSString* pullUlr = @"rtmp://10.0.20.240/live/room";
+static NSString* pullUlr = @"rtmp://10.0.22.75/live/room";
 //static NSString* pullUlr = @"http://10.0.21.39/hls/room.m3u8";
 //static NSString* pullUlr = @"rtmp://10.0.22.74/live/room";
 //static NSString* url = @"rtmp://192.168.199.187/live/room";
@@ -22,7 +22,7 @@ static NSString* pullUlr = @"rtmp://10.0.20.240/live/room";
 
 
 //static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/73257119";//kk服务器地址
-static NSString* pushUrl = @"rtmp://10.0.20.240/live/room";
+static NSString* pushUrl = @"rtmp://10.0.22.75/live/room";
 //static NSString* pushUrl = @"rtmp://10.0.21.228/live/room";
 //static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务器地址
 //static NSString* pushUrl = @"rtmp://192.168.199.187/live/room";
