@@ -23,7 +23,6 @@
 		6A0C84671FA84A00007C7CEA /* Version.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0C84661FA84A00007C7CEA /* Version.h */; };
 		6A1A1B0A1F2ED67A0043595F /* AACEncoderFromPCM_OLD.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */; };
 		6A1A1B111F2F36F10043595F /* IOS_RAOPPlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A9856C41F2B3D2500128480 /* IOS_RAOPPlay.m */; };
-		6A2EC41F1FAB61A600A33BF1 /* GJFFmpegPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA453861F14D4950009FB64 /* GJFFmpegPull.c */; };
 		6A3488431F453803008223AA /* 0.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A34882B1F453803008223AA /* 0.png */; };
 		6A3488441F453803008223AA /* 1.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A34882C1F453803008223AA /* 1.png */; };
 		6A3488451F453803008223AA /* 2.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A34882D1F453803008223AA /* 2.png */; };
@@ -71,6 +70,7 @@
 		6A96CD691F258750000DC4FE /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A96CD591F258740000DC4FE /* libavformat.a */; };
 		6A96CD6A1F258750000DC4FE /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A96CD631F258740000DC4FE /* libavutil.a */; };
 		6A9856C51F2B3D2500128480 /* IOS_RAOPPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */; };
+		6A9D8F732040035F000EF85C /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4CF1ECB4DFE0009E49A /* GJRtmpPull.m */; };
 		6AA453681F146A1A0009FB64 /* GJStreamPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453661F146A1A0009FB64 /* GJStreamPush.h */; };
 		6AA649011FC2C99F00AA3CAC /* LIveStartViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB297E41F4D8A9C00115220 /* LIveStartViewController.m */; };
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
@@ -1879,7 +1879,6 @@
 			files = (
 				AE70A5191ECB4DFE0009E49A /* GJUtil.c in Sources */,
 				6ABF2B291F0B413600721DB3 /* IOS_VideoProduce.m in Sources */,
-				6A2EC41F1FAB61A600A33BF1 /* GJFFmpegPull.c in Sources */,
 				AE70A51B1ECB4DFE0009E49A /* sps_decode.c in Sources */,
 				6ABF2B1B1F0B413600721DB3 /* IOS_AACDecode.m in Sources */,
 				AE8AADFE1FF7BDE100964479 /* GJBridgeContext.c in Sources */,
@@ -1902,6 +1901,7 @@
 				6A1A1B111F2F36F10043595F /* IOS_RAOPPlay.m in Sources */,
 				AE70A5201ECB4DFE0009E49A /* AACEncoderFromPCM.m in Sources */,
 				AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */,
+				6A9D8F732040035F000EF85C /* GJRtmpPull.m in Sources */,
 				6ABF2B211F0B413600721DB3 /* IOS_AudioProduce.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
 				6ABF2B251F0B413600721DB3 /* IOS_H264Encode.m in Sources */,

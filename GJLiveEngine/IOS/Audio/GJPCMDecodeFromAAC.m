@@ -11,6 +11,7 @@
 #import "GJRetainBufferPool.h"
 #import "GJUtil.h"
 
+
 @interface GJPCMDecodeFromAAC () {
     AudioConverterRef   _decodeConvert;
     GJRetainBufferPool *_bufferPool;
@@ -20,6 +21,7 @@
 
     R_GJPacket *                 _prePacket;
     AudioStreamPacketDescription tPacketDesc;
+    ASC   _asc;
 }
 
 @property (nonatomic, assign) int64_t currentPts;
@@ -155,13 +157,15 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (!_running) {
         return;
     }
-    if (_decodeConvert == nil) {
-        if (packet->extendDataSize > 0) {
-            uint8_t *astBuffer                 = packet->extendDataOffset + R_BufferStart(&packet->retain);
-            ASC asc = {0};
-            int astLen = 0;
-            if ((astLen = readASC(astBuffer, packet->extendDataSize, &asc)) > 0) {
-   
+    uint8_t *astBuffer                 = packet->extendDataOffset + R_BufferStart(&packet->retain);
+    ASC asc = {0};
+    int astLen = 0;
+    if (packet->extendDataSize > 0 && (astLen = readASC(astBuffer, packet->extendDataSize, &asc)) > 0){
+        if (_decodeConvert==nil || memcmp(&asc, &_asc, sizeof(asc)) != 0) {
+                if (_decodeConvert) {
+                    [self stop];
+                }
+                _asc = asc;
                 int     sampleRate            = asc.sampleRate;
                 uint8_t channel               = asc.channelConfig;
                 int framePerPacket = asc.gas.frameLengthFlag ?960 : 1024;
@@ -181,9 +185,6 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
                 if (packet->dataSize <= 0) {
                     return;
                 }
-            }
-        }else{
-            return;
         }
     }
     R_BufferRetain(&packet->retain);
@@ -222,6 +223,9 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (status != noErr) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioConverterNew error:%d", status);
         return NO;
+    }else{
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "_createEncodeConverter%p", _decodeConvert);
+
     }
     _destMaxOutSize = 0;
     status          = AudioConverterGetProperty(_decodeConvert, kAudioConverterPropertyMaximumOutputPacketSize, &size, &_destMaxOutSize);
