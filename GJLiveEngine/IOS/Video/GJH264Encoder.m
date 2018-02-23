@@ -67,12 +67,12 @@
             _enCodeSession = nil;
         }
     }else if([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]){
+        _enable = YES;
         if (_enCodeSession == nil) {
             GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "进入前台，创建编码器");
             [self creatEnCodeSession];
             [self setAllParm];
         }
-        _enable = YES;
     }
 }
 //编码
