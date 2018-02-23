@@ -20,6 +20,9 @@ GTime GJ_Gettime();
 GInt32 GJ_GetCPUCount();
 GFloat32 GJ_GetCPUUsage();
 
+//快排
+void quickSort(int* a,int len);
+
 typedef struct _AVCC{
     
 }AVCC;

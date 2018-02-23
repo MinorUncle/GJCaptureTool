@@ -236,3 +236,32 @@ GInt32 writeASC(GUInt8* buffer,GUInt8 size,const ASC* asc){
     buffer[1]   = ((frequencyIndex & 0x1) << 7) | (asc->channelConfig << 3);
     return 2;
 }
+
+
+void quickSort(int* a,int len){
+    if (len <= 1) {
+        return;
+    }
+    int l = 0;
+    int r = len-1;
+    int x = a[l];
+    while (l < r) {
+        for (; l<r; r--) {//找到右边大于x的位置，并与交换到左边位置
+            if (a[r] < x) {
+                a[l++] = a[r];
+                break;
+            }
+        }
+        
+        for ( ; l<r; l++) {//找到左边边大于x的位置，并与交换到右边位置
+            if (a[l] > x) {
+                a[r--] = a[l];
+                break;
+            }
+        }
+    }
+    a[l] = x;
+    
+    quickSort(a, l);
+    quickSort(a+l+1, len-(l+1));
+}

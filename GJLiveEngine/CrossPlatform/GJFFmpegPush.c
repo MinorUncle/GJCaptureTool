@@ -190,11 +190,11 @@ static GHandle sendRunloop(GHandle parm) {
         }
         
 #ifdef DEBUG
-        static GLong preDTS[2];
-        GInt32 type = sendPacket->stream_index == push->aStream->index;
-        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld dpts:%lld size:%d isKey:%d\n",type, sendPacket->pts, sendPacket->dts,sendPacket->pts - preDTS[type], sendPacket->size,(packet->flag & GJPacketFlag_KEY)==GJPacketFlag_KEY);
-
-        preDTS[type] = sendPacket->pts;
+//        static GLong preDTS[2];
+//        GInt32 type = sendPacket->stream_index == push->aStream->index;
+//        GJLOG(GNULL,GJ_LOGDEBUG,"send type:%d pts:%lld dts:%lld dpts:%lld size:%d isKey:%d\n",type, sendPacket->pts, sendPacket->dts,sendPacket->pts - preDTS[type], sendPacket->size,(packet->flag & GJPacketFlag_KEY)==GJPacketFlag_KEY);
+//
+//        preDTS[type] = sendPacket->pts;
 #endif
 
 
