@@ -284,51 +284,48 @@ static GHandle pullRunloop(GHandle parm) {
         if (pkt.stream_index == vsIndex) {
 //#if MENORY_CHECK
             ////<-----conversion
-//            if (((GUInt16*)pkt.data)[0] == 0 &&
-//                (pkt.data[2] == 1 || ((GUInt16*)pkt.data)[1]) == 1) {
-//
-//                GUInt8* preNal = GNULL;
-//                for (int i = 0; i<pkt.size-4; i++) {
-//                    if (pkt.data[i] == 0) {
-//                        if (pkt.data[i+1] == 0) {
-//                            if (pkt.data[i+2] == 0) {
-//                                if (pkt.data[i+3] == 1) {
-//                                    printf("0000 0001%x\n",pkt.data[i+4]);
-//                                    if (preNal != GNULL) {
-//                                        GInt32 nalSize = (GInt32)(pkt.data + i - preNal);
-//                                        nalSize = htonl(nalSize);
-//                                        memcpy(preNal-4, &nalSize, 4);
-//                                    }
-//                                    preNal = pkt.data + i+4;
-//                                    i+=3;//跳过4-1个
-//                                }else if(pkt.data[i+3] != 0){//3-1
-//                                    i+=2;
-//                                }//否则//1-1
-//                            }else if(pkt.data[i+2] == 1){//匹配成功0x000001，3-1,
-//                                av_grow_packet(&pkt,1);
-//                                memmove(pkt.data+i+1, pkt.data+i, pkt.size-i);
-//                                printf("0000 01%x\n",pkt.data[i+4]);
-//                                if (preNal != GNULL) {
-//                                    GInt32 nalSize = (GInt32)(pkt.data + i - preNal);
-//                                    nalSize = htonl(nalSize);
-//                                    memcpy(preNal-4, &nalSize, 4);
-//                                }
-//                                preNal = pkt.data + i +4;
-//                                i+=3;
-//                            }else{
-//                                i+=2;
-//                            }
-//                        }else{
-//                            i++;
-//                        }
-//                    }
-//                }
-//                if (preNal) {
-//                    GInt32 nalSize = (GInt32)(pkt.data + pkt.size - preNal);
-//                    nalSize = htonl(nalSize);
-//                    memcpy(preNal-4, &nalSize, 4);
-//                }
-//            }
+            if (((GUInt16*)pkt.data)[0] == 0 && pkt.data[2] == 0 && pkt.data[3] == 1) {
+
+                GUInt8* preNal = GNULL;
+                for (int i = 0; i<pkt.size-4; i++) {
+                    if (pkt.data[i] == 0) {
+                        if (pkt.data[i+1] == 0) {
+                            if (pkt.data[i+2] == 0) {
+                                if (pkt.data[i+3] == 1) {
+                                    if (preNal != GNULL) {
+                                        GInt32 nalSize = (GInt32)(pkt.data + i - preNal);
+                                        nalSize = htonl(nalSize);
+                                        memcpy(preNal-4, &nalSize, 4);
+                                    }
+                                    preNal = pkt.data + i+4;
+                                    i+=3;//跳过4-1个
+                                }else if(pkt.data[i+3] != 0){//3-1
+                                    i+=2;
+                                }//否则//1-1
+                            }else if(pkt.data[i+2] == 1){//匹配成功0x000001，3-1,
+                                av_grow_packet(&pkt,1);
+                                memmove(pkt.data+i+1, pkt.data+i, pkt.size-i);
+                                if (preNal != GNULL) {
+                                    GInt32 nalSize = (GInt32)(pkt.data + i - preNal);
+                                    nalSize = htonl(nalSize);
+                                    memcpy(preNal-4, &nalSize, 4);
+                                }
+                                preNal = pkt.data + i +4;
+                                i+=3;
+                            }else{
+                                i+=2;
+                            }
+                        }else{
+                            i++;
+                        }
+                    }
+                }
+                if (preNal) {
+                    GInt32 nalSize = (GInt32)(pkt.data + pkt.size - preNal);
+                    nalSize = htonl(nalSize);
+                    memcpy(preNal-4, &nalSize, 4);
+                }
+            }
             ///->>>
             
             

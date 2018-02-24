@@ -530,7 +530,6 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
             if (_playControl->status == kPlayStatusStop) {
                 goto DROP;
             }
-            printf("");
             if (_syncControl->syncType == kTimeSYNCVideo) {
                 
                 GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待视频时间过长 delay:%ld PTS:%lld clock:%ld,重置同步管理", delay, cImageBuf->pts.value, timeStandards);
