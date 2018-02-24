@@ -33,7 +33,7 @@ struct _GJStreamPull {
     GJTrafficUnit videoPullInfo;
     GJTrafficUnit audioPullInfo;
 
-    StreamPullMessageCallback messageCallback;
+    MessageHandle messageCallback;
     StreamPullDataCallback    dataCallback;
 
     GHandle messageCallbackParm;
@@ -67,7 +67,6 @@ static GHandle pullRunloop(GHandle parm) {
     pthread_setname_np("Loop.GJStreamPull");
     GJStreamPull *         pull    = (GJStreamPull *) parm;
     kStreamPullMessageType errType = kStreamPullMessageType_connectError;
-    GHandle                errParm = NULL;
     GInt32                 ret;
     pull->rtmp->Link.timeout = RTMP_RECEIVE_TIMEOUT;
 
@@ -84,9 +83,13 @@ static GHandle pullRunloop(GHandle parm) {
         goto ERROR;
     } else {
         GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "RTMP_Connect success");
+        pthread_mutex_lock(&pull->mutex);
         if (pull->messageCallback) {
-            pull->messageCallback(pull, kStreamPullMessageType_connectSuccess, pull->messageCallbackParm, NULL);
+            defauleDeliveryMessage0(pull->messageCallback, pull, pull->messageCallbackParm, kStreamPullMessageType_connectSuccess);
+//            pull->messageCallback(pull, kStreamPullMessageType_connectSuccess, pull->messageCallbackParm, NULL);
         }
+        pthread_mutex_unlock(&pull->mutex);
+
     }
 
     while (!pull->stopRequest) {
@@ -288,11 +291,13 @@ END:
     errType = kStreamPullMessageType_closeComplete;
 ERROR:
     RTMP_Close(pull->rtmp);
-    if (pull->messageCallback) {
-        pull->messageCallback(pull, errType, pull->messageCallbackParm, errParm);
-    }
+
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
+    if (pull->messageCallback) {
+        defauleDeliveryMessage0(pull->messageCallback, pull, pull->messageCallbackParm, kStreamPullMessageType_connectSuccess);
+        //        pull->messageCallback(pull, errType, pull->messageCallbackParm, errParm);
+    }
     pull->pullThread = NULL;
     if (pull->releaseRequest == GTrue) {
         shouldDelloc = GTrue;
@@ -304,7 +309,7 @@ ERROR:
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pullRunloop end");
     return NULL;
 }
-GBool GJStreamPull_Create(GJStreamPull **pullP, StreamPullMessageCallback callback, GHandle rtmpPullParm) {
+GBool GJStreamPull_Create(GJStreamPull **pullP, MessageHandle callback, GHandle rtmpPullParm) {
     GJStreamPull *pull = NULL;
     if (*pullP == NULL) {
         pull = (GJStreamPull *) malloc(sizeof(GJStreamPull));
