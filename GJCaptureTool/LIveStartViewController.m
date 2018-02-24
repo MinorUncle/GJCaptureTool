@@ -22,7 +22,7 @@ static NSString* pullUlr = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
 
 
 //static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/73257119";//kk服务器地址
-static NSString* pushUrl = @"rtmp://10.0.22.75/live/room";
+static NSString* pushUrl = @"rtmp://10.0.23.238/live/room";
 //static NSString* pushUrl = @"rtmp://10.0.21.228/live/room";
 //static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务器地址
 //static NSString* pushUrl = @"rtmp://192.168.199.187/live/room";

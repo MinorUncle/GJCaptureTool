@@ -472,8 +472,6 @@ GVoid GJStreamPush_Close(GJStreamPush *sender) {
         sender->stopRequest = GTrue;
         queueEnablePush(sender->sendBufferQueue, GFalse);
         queueEnablePop(sender->sendBufferQueue, GFalse);
-        queueBroadcastPush(sender->sendBufferQueue);
-        queueBroadcastPop(sender->sendBufferQueue);
     }
 }
 GVoid GJStreamPush_CloseAndDealloc(GJStreamPush **push) {

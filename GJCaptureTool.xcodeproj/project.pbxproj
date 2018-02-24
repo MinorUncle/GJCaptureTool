@@ -51,6 +51,8 @@
 		6A58221E202AF2C5002AFF76 /* libkcptun.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A582206202AF29D002AFF76 /* libkcptun.a */; settings = {ATTRIBUTES = (Required, ); }; };
 		6A582239202AF473002AFF76 /* client.json in Resources */ = {isa = PBXBuildFile; fileRef = 6A582238202AF473002AFF76 /* client.json */; };
 		6A63463920413037000F14E2 /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4CF1ECB4DFE0009E49A /* GJRtmpPull.m */; };
+		6A63463C20414074000F14E2 /* GJMessageDispatcher.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A63463A20414074000F14E2 /* GJMessageDispatcher.c */; };
+		6A63463D20414074000F14E2 /* GJMessageDispatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A63463B20414074000F14E2 /* GJMessageDispatcher.h */; };
 		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
 		6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85F9E91F0140AF0037A64F /* AEAudioSender.h */; };
@@ -474,6 +476,8 @@
 		6A435D381F29841C0046CEA3 /* AEReverbFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEReverbFilter.h; sourceTree = "<group>"; };
 		6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = kcpTunDemo.xcodeproj; path = ../kcptunCode/kcpTunDemo/kcpTunDemo.xcodeproj; sourceTree = "<group>"; };
 		6A582238202AF473002AFF76 /* client.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = client.json; sourceTree = "<group>"; };
+		6A63463A20414074000F14E2 /* GJMessageDispatcher.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GJMessageDispatcher.c; sourceTree = "<group>"; };
+		6A63463B20414074000F14E2 /* GJMessageDispatcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJMessageDispatcher.h; sourceTree = "<group>"; };
 		6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrganRun.m4a; sourceTree = "<group>"; };
 		6A85F9941F00F0B00037A64F /* MixTest.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MixTest.mp3; sourceTree = "<group>"; };
 		6A85F9E91F0140AF0037A64F /* AEAudioSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEAudioSender.h; path = TheAmazingAudioEngine/AEAudioSender.h; sourceTree = SOURCE_ROOT; };
@@ -977,6 +981,8 @@
 				AE70A4CA1ECB4DFE0009E49A /* GJLive.h */,
 				6AE37BD21ED5956800B049EB /* Mp4Writer.c */,
 				6AE37BD31ED5956800B049EB /* Mp4Writer.h */,
+				6A63463A20414074000F14E2 /* GJMessageDispatcher.c */,
+				6A63463B20414074000F14E2 /* GJMessageDispatcher.h */,
 			);
 			name = Tool;
 			sourceTree = "<group>";
@@ -1431,6 +1437,7 @@
 				AE70A52B1ECB4DFE0009E49A /* GJAudioQueueRecoder.h in Headers */,
 				6A0201031F06227800F4255B /* webserver.h in Headers */,
 				6AB6860D1FE91664009B7032 /* GJImageUICapture.h in Headers */,
+				6A63463D20414074000F14E2 /* GJMessageDispatcher.h in Headers */,
 				6A0201041F06227800F4255B /* webserverconnection.h in Headers */,
 				AE3A2C2F1F07F8C200C24BAA /* audioqueue.h in Headers */,
 				6A41C98C202C571D0041B2DE /* GMemCheck.h in Headers */,
@@ -1883,6 +1890,7 @@
 				6ABF2B1B1F0B413600721DB3 /* IOS_AACDecode.m in Sources */,
 				AE8AADFE1FF7BDE100964479 /* GJBridgeContext.c in Sources */,
 				6AF217781FBD98A1004732D1 /* GJFFmpegPush.c in Sources */,
+				6A63463C20414074000F14E2 /* GJMessageDispatcher.c in Sources */,
 				6ABF2B1F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m in Sources */,
 				6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */,
 				6ABF2B1D1F0B413600721DB3 /* IOS_AACEncode.m in Sources */,

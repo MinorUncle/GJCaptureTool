@@ -774,7 +774,7 @@ GBool _livePushSetupAudioRecodeIfNeed(GJLivePushContext *context){
 
 GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
 
-    GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "GJLivePush_StartPush url:%s", url);
+    GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "GJLivePush_StartPush url:%s", url);
     GBool result = GTrue;
     pthread_mutex_lock(&context->lock);
     do {
