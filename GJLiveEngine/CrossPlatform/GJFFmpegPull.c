@@ -455,7 +455,7 @@ END:
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
     if (pull->messageCallback) {
-        defauleDeliveryMessage0(pull->messageCallback, pull, pull->messageCallbackParm, kStreamPullMessageType_connectSuccess);
+        defauleDeliveryMessage0(pull->messageCallback, pull, pull->messageCallbackParm, message);
         //        pull->messageCallback(pull, message, pull->messageCallbackParm, pull->messageCallbackParm);
     }
     pull->pullThread = NULL;

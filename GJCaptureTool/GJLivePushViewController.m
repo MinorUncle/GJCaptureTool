@@ -1002,8 +1002,8 @@
             [livePull stopStreamPull];
             sleep(1);
             dispatch_async(dispatch_get_main_queue(), ^{
-                _pullStateLab.text = @"尝试重连中";
                 if(_pullBtn.selected){
+                    _pullStateLab.text = @"尝试重连中";
                     [livePull startStreamPullWithUrl:_pullAddr];
                 }
             });

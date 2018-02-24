@@ -89,7 +89,6 @@ static GHandle pullRunloop(GHandle parm) {
 //            pull->messageCallback(pull, kStreamPullMessageType_connectSuccess, pull->messageCallbackParm, NULL);
         }
         pthread_mutex_unlock(&pull->mutex);
-
     }
 
     while (!pull->stopRequest) {
@@ -295,7 +294,7 @@ ERROR:
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
     if (pull->messageCallback) {
-        defauleDeliveryMessage0(pull->messageCallback, pull, pull->messageCallbackParm, kStreamPullMessageType_connectSuccess);
+        defauleDeliveryMessage0(pull->messageCallback, pull, pull->messageCallbackParm, errType);
         //        pull->messageCallback(pull, errType, pull->messageCallbackParm, errParm);
     }
     pull->pullThread = NULL;
