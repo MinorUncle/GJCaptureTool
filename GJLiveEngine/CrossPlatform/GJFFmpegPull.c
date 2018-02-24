@@ -24,7 +24,7 @@ struct _GJStreamPull {
     GJTrafficUnit videoPullInfo;
     GJTrafficUnit audioPullInfo;
 
-    StreamPullMessageCallback messageCallback;
+    MessageHandle messageCallback;
     StreamPullDataCallback    dataCallback;
 
     GHandle messageCallbackParm;
@@ -166,10 +166,13 @@ static GHandle pullRunloop(GHandle parm) {
         goto END;
     }
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "end avformat_find_stream_info");
-
+    pthread_mutex_lock(&pull->mutex);
     if (pull->messageCallback) {
-        pull->messageCallback(pull, kStreamPullMessageType_connectSuccess, pull->messageCallbackParm, NULL);
+        defauleDeliveryMessage0(pull->messageCallback, pull, pull->messageCallbackParm, kStreamPullMessageType_connectSuccess);
+//        pull->messageCallback(pull, kStreamPullMessageType_connectSuccess, pull->messageCallbackParm, NULL);
     }
+    pthread_mutex_unlock(&pull->mutex);
+    
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "start av_find_best_stream vindex");
 
     GInt32 vsIndex = av_find_best_stream(pull->formatContext, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
@@ -448,11 +451,13 @@ static GHandle pullRunloop(GHandle parm) {
 END:
     avformat_close_input(&pull->formatContext);
 
-    if (pull->messageCallback) {
-        pull->messageCallback(pull, message, pull->messageCallbackParm, pull->messageCallbackParm);
-    }
+
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&pull->mutex);
+    if (pull->messageCallback) {
+        defauleDeliveryMessage0(pull->messageCallback, pull, pull->messageCallbackParm, kStreamPullMessageType_connectSuccess);
+        //        pull->messageCallback(pull, message, pull->messageCallbackParm, pull->messageCallbackParm);
+    }
     pull->pullThread = NULL;
     if (pull->releaseRequest == GTrue) {
         shouldDelloc = GTrue;
@@ -470,7 +475,7 @@ static int interrupt_callback(void *parm) {
     return pull->stopRequest;
 }
 //所有不阻塞
-GBool GJStreamPull_Create(GJStreamPull **pullP, StreamPullMessageCallback callback, GHandle streamPullParm) {
+GBool GJStreamPull_Create(GJStreamPull **pullP, MessageHandle callback, GHandle streamPullParm) {
     GJStreamPull *pull = NULL;
     if (*pullP == NULL) {
         pull = (GJStreamPull *) malloc(sizeof(GJStreamPull));

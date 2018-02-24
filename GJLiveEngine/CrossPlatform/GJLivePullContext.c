@@ -16,9 +16,9 @@ static const GJClass LivePullContextClass = {
     .dLevel    = GJ_LOGDEBUG,
 };
 
-static void pullMessageCallback(GJStreamPull *pull, kStreamPullMessageType messageType, GHandle rtmpPullParm, GHandle messageParm);
+static GVoid pullMessageCallback(GJStreamPull *pull, GHandle receiver, kStreamPullMessageType messageType, GLong messageParm);
 static GVoid livePlayCallback(GHandle userDate, GJPlayMessage message, GHandle param);
-static void pullDataCallback(GJStreamPull *pull, R_GJPacket *packet, void *parm);
+static GVoid pullDataCallback(GJStreamPull *pull, R_GJPacket *packet, void *parm);
 
 static GVoid aacDecodeCompleteCallback(GHandle userData, R_GJPCMFrame *frame);
 static GVoid h264DecodeCompleteCallback(GHandle userData, R_GJPixelFrame *frame);
@@ -210,8 +210,8 @@ static GVoid livePlayCallback(GHandle userDate, GJPlayMessage message, GHandle p
     }
     livePull->callback(livePull->userData, pullMessage, param);
 }
-static GVoid pullMessageCallback(GJStreamPull *pull, kStreamPullMessageType messageType, GHandle rtmpPullParm, GHandle messageParm) {
-    GJLivePullContext *livePull = rtmpPullParm;
+static GVoid pullMessageCallback(GJStreamPull *pull, GHandle receiver, kStreamPullMessageType messageType, GLong messageParm) {
+    GJLivePullContext *livePull = receiver;
     if (pull != livePull->streamPull) {
         return;
     }

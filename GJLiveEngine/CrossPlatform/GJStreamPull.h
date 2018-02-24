@@ -10,6 +10,7 @@
 #define GJStreamPull_h
 
 #include "GJLiveDefine+internal.h"
+#include "GJMessageDispatcher.h"
 #include <stdlib.h>
 typedef enum _kStreamPullMessageType {
     kStreamPullMessageType_connectSuccess,
@@ -21,13 +22,13 @@ typedef enum _kStreamPullMessageType {
 
 typedef struct _GJStreamPull GJStreamPull;
 
-typedef GVoid (*StreamPullMessageCallback)(GJStreamPull *StreamPull, kStreamPullMessageType messageType, GHandle StreamPullParm, GHandle messageParm);
+//typedef GVoid (*StreamPullMessageCallback)(GJStreamPull *StreamPull, kStreamPullMessageType messageType, GHandle StreamPullParm, GHandle messageParm);
 typedef GVoid (*StreamPullDataCallback)(GJStreamPull *StreamPull, R_GJPacket *packet, GHandle StreamPullParm);
 
 #define MAX_URL_LENGTH 200
 
 //所有不阻塞
-GBool GJStreamPull_Create(GJStreamPull **pull, StreamPullMessageCallback callback, GHandle StreamPullParm);
+GBool GJStreamPull_Create(GJStreamPull **pull, MessageHandle callback, GHandle StreamPullParm);
 
 //保证不会再有回调
 GVoid GJStreamPull_CloseAndRelease(GJStreamPull *pull);
