@@ -215,6 +215,13 @@ static GHandle sendRunloop(GHandle parm) {
                 push->videoStatus.leave.ts =  packet->dts;
                 push->videoStatus.leave.clock = GJ_Gettime();
                 
+                pthread_mutex_lock(&push->mutex);
+                if (push->messageCallback) {
+                    //                push->messageCallback(push, push->streamPushParm,kStreamPushMessageType_packetSendSignal,&(packet->type));
+                    defauleDeliveryMessage1(push->messageCallback, push, push->streamPushParm, kStreamPushMessageType_packetSendSignal,packet->type);
+                }
+                pthread_mutex_unlock(&push->mutex);
+                
             } else {
 
                 GJLOG(GNULL,GJ_LOGALL,"send audio pts:%lld dts:%lld size:%d\n", packet->pts.value, packet->dts.value, packet->dataSize);
@@ -224,12 +231,7 @@ static GHandle sendRunloop(GHandle parm) {
                 push->audioStatus.leave.clock = GJ_Gettime();
             }
 
-            pthread_mutex_lock(&push->mutex);
-            if (push->messageCallback) {
-//                push->messageCallback(push, push->streamPushParm,kStreamPushMessageType_packetSendSignal,&(packet->type));
-                defauleDeliveryMessage1(push->messageCallback, push, push->streamPushParm, kStreamPushMessageType_packetSendSignal,packet->type);
-            }
-            pthread_mutex_unlock(&push->mutex);
+
 
             R_BufferUnRetain(&packet->retain);
         } else {
