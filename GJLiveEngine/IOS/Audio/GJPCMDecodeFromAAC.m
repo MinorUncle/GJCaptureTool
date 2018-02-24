@@ -182,10 +182,11 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
                 d.mFramesPerPacket                   = 1;
                 d.mFormatFlags                       = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
                 [self createCorverWithDescription:d SourceDescription:s];
-                if (packet->dataSize <= 0) {
-                    return;
-                }
+
         }
+    }
+    if (packet->dataSize <= 0) {
+        return;
     }
     R_BufferRetain(&packet->retain);
     if (!queuePush(_resumeQueue, packet, 0)) {

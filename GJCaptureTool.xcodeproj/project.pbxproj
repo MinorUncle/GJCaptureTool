@@ -50,6 +50,7 @@
 		6A559C311F3D3A3500698C19 /* GJStreamPull.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453841F14C16C0009FB64 /* GJStreamPull.h */; };
 		6A58221E202AF2C5002AFF76 /* libkcptun.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A582206202AF29D002AFF76 /* libkcptun.a */; settings = {ATTRIBUTES = (Required, ); }; };
 		6A582239202AF473002AFF76 /* client.json in Resources */ = {isa = PBXBuildFile; fileRef = 6A582238202AF473002AFF76 /* client.json */; };
+		6A63463920413037000F14E2 /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4CF1ECB4DFE0009E49A /* GJRtmpPull.m */; };
 		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
 		6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85F9E91F0140AF0037A64F /* AEAudioSender.h */; };
@@ -70,7 +71,6 @@
 		6A96CD691F258750000DC4FE /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A96CD591F258740000DC4FE /* libavformat.a */; };
 		6A96CD6A1F258750000DC4FE /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A96CD631F258740000DC4FE /* libavutil.a */; };
 		6A9856C51F2B3D2500128480 /* IOS_RAOPPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */; };
-		6A9D8F732040035F000EF85C /* GJRtmpPull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4CF1ECB4DFE0009E49A /* GJRtmpPull.m */; };
 		6AA453681F146A1A0009FB64 /* GJStreamPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453661F146A1A0009FB64 /* GJStreamPush.h */; };
 		6AA649011FC2C99F00AA3CAC /* LIveStartViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB297E41F4D8A9C00115220 /* LIveStartViewController.m */; };
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
@@ -1901,7 +1901,7 @@
 				6A1A1B111F2F36F10043595F /* IOS_RAOPPlay.m in Sources */,
 				AE70A5201ECB4DFE0009E49A /* AACEncoderFromPCM.m in Sources */,
 				AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */,
-				6A9D8F732040035F000EF85C /* GJRtmpPull.m in Sources */,
+				6A63463920413037000F14E2 /* GJRtmpPull.m in Sources */,
 				6ABF2B211F0B413600721DB3 /* IOS_AudioProduce.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
 				6ABF2B251F0B413600721DB3 /* IOS_H264Encode.m in Sources */,

@@ -304,9 +304,8 @@ static GHandle pullRunloop(GHandle parm) {
                                     i+=2;
                                 }//否则//1-1
                             }else if(pkt.data[i+2] == 1){//匹配成功0x000001，3-1,
-                                pkt.data = realloc(pkt.data,pkt.size);
+                                av_grow_packet(&pkt,1);
                                 memmove(pkt.data+i+1, pkt.data+i, pkt.size-i);
-                                pkt.size++;
                                 if (preNal != GNULL) {
                                     GInt32 nalSize = (GInt32)(pkt.data + i - preNal);
                                     nalSize = htonl(nalSize);
