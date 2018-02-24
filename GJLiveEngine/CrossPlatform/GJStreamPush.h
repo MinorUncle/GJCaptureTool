@@ -12,7 +12,7 @@
 #include "GJLiveDefine+internal.h"
 #include "GJQueue.h"
 #include <stdio.h>
-
+#include "GJMessageDispatcher.h"
 #define MAX_URL_LENGTH 100
 #define PUSH_PACKET_PRE_SIZE 23
 typedef struct _GJStreamPush GJStreamPush;
@@ -20,16 +20,16 @@ typedef struct _GJStreamPush GJStreamPush;
 typedef enum _kStreamPushMessageType {
     kStreamPushMessageType_connectSuccess,
     kStreamPushMessageType_closeComplete,
-    kStreamPushMessageType_packetSendSignal,  // GJMediaType*
+    kStreamPushMessageType_packetSendSignal,  // GJMediaType
     kStreamPushMessageType_connectError,
     kStreamPushMessageType_urlPraseError,
     kStreamPushMessageType_sendPacketError, //网络错误，发送失败
     
 } kStreamPushMessageType;
-typedef GVoid (*StreamPushMessageCallback)(GJStreamPush* push, GHandle userData, kStreamPushMessageType messageType,const GHandle messageParm);
+//typedef GVoid (*StreamPushMessageCallback)(GJStreamPush* push, GHandle receive, kStreamPushMessageType messageType, GLong messageParm);
 
 
-GBool GJStreamPush_Create(GJStreamPush **push, StreamPushMessageCallback callback, GHandle streamPushParm, const GJAudioStreamFormat *audioFormat, const GJVideoStreamFormat *videoFormat);
+GBool GJStreamPush_Create(GJStreamPush **push, MessageHandle callback, GHandle streamPushParm, const GJAudioStreamFormat *audioFormat, const GJVideoStreamFormat *videoFormat);
 GVoid GJStreamPush_CloseAndDealloc(GJStreamPush **push);
 
 GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *data);

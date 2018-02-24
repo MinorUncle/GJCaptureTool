@@ -223,8 +223,11 @@ static GVoid streamRecodeMessageCallback(GJStreamPush* push, GHandle userData, k
             
     }
 }
-static GVoid streamPushMessageCallback(GJStreamPush* push,GHandle userData, kStreamPushMessageType messageType, GHandle messageParm) {
-    GJLivePushContext *context = userData;
+static GVoid streamPushMessageCallback(GJStreamPush* sender,GJLivePushContext* receive, kStreamPushMessageType messageType, GLong messageParm) {
+
+    GJLivePushContext *context = receive;
+    if (sender != context->streamPush )return;
+    
     switch (messageType) {
         case kStreamPushMessageType_connectSuccess: {
             GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "推流连接成功");
@@ -260,7 +263,7 @@ static GVoid streamPushMessageCallback(GJStreamPush* push,GHandle userData, kStr
             context->callback(context->userData, GJLivePush_sendPacketError, "发送失败");
             break;
         case kStreamPushMessageType_packetSendSignal:{
-            GJMediaType packetType = *(GJMediaType*)messageParm;
+            GJMediaType packetType = (GJMediaType)messageParm;
             if (packetType == GJMediaType_Video && GRationalValue(context->videoDropStep) >= 0.9999) {
                 GJTrafficStatus vbufferStatus = GJStreamPush_GetVideoBufferCacheInfo(context->streamPush);
                 GJTrafficStatus abufferStatus = GJStreamPush_GetAudioBufferCacheInfo(context->streamPush);

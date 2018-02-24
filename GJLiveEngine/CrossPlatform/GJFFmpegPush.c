@@ -12,6 +12,7 @@
 #include "GJStreamPush.h"
 #include "GJUtil.h"
 #include "GJBridegContext.h"
+#include "GJMessageDispatcher.h"
 #include <libavformat/avformat.h>
 #define STREAM_PUSH_LOG GNULL
 struct _GJStreamPush {
@@ -28,7 +29,7 @@ struct _GJStreamPush {
     pthread_t       sendThread;
     pthread_mutex_t mutex;
 
-    StreamPushMessageCallback messageCallback;
+    MessageHandle messageCallback;
     void *                    streamPushParm;
     int                       stopRequest;
     int                       releaseRequest;
@@ -47,7 +48,6 @@ static GHandle sendRunloop(GHandle parm) {
     pthread_setname_np("Loop.GJStreamPush");
     GJStreamPush *         push    = (GJStreamPush *) parm;
     kStreamPushMessageType errType = kStreamPushMessageType_connectError;
-    GHandle                errParm = GNULL;
     AVDictionary *         option  = GNULL;
     av_dict_set_int(&option, "send_buffer_size", 30000, 0);
     GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl, AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, &option);
@@ -60,7 +60,8 @@ static GHandle sendRunloop(GHandle parm) {
     }
     pthread_mutex_lock(&push->mutex);
     if (push->messageCallback) {
-        push->messageCallback(push, push->streamPushParm, kStreamPushMessageType_connectSuccess, GNULL);
+//        push->messageCallback(push, push->streamPushParm, kStreamPushMessageType_connectSuccess, GNULL);
+        defauleDeliveryMessage0(push->messageCallback, push, push->streamPushParm, kStreamPushMessageType_connectSuccess);
     }
     pthread_mutex_unlock(&push->mutex);
 
@@ -225,7 +226,8 @@ static GHandle sendRunloop(GHandle parm) {
 
             pthread_mutex_lock(&push->mutex);
             if (push->messageCallback) {
-                push->messageCallback(push, push->streamPushParm,kStreamPushMessageType_packetSendSignal,&(packet->type));
+//                push->messageCallback(push, push->streamPushParm,kStreamPushMessageType_packetSendSignal,&(packet->type));
+                defauleDeliveryMessage1(push->messageCallback, push, push->streamPushParm, kStreamPushMessageType_packetSendSignal,packet->type);
             }
             pthread_mutex_unlock(&push->mutex);
 
@@ -268,7 +270,8 @@ END:
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&push->mutex);
     if (push->messageCallback) {
-        push->messageCallback(push, push->streamPushParm, errType, errParm);
+        defauleDeliveryMessage0(push->messageCallback, push, push->streamPushParm, errType);
+//        push->messageCallback(push, push->streamPushParm, errType, errParm);
     }
     push->sendThread = GNULL;
     if (push->releaseRequest == GTrue) {
@@ -282,7 +285,7 @@ END:
     return GNULL;
 }
 
-GBool GJStreamPush_Create(GJStreamPush **sender, StreamPushMessageCallback callback, void *streamPushParm, const GJAudioStreamFormat *audioFormat, const GJVideoStreamFormat *videoFormat) {
+GBool GJStreamPush_Create(GJStreamPush **sender, MessageHandle callback, void *streamPushParm, const GJAudioStreamFormat *audioFormat, const GJVideoStreamFormat *videoFormat) {
     GJStreamPush *push = GNULL;
     if (*sender == GNULL) {
         push = (GJStreamPush *) malloc(sizeof(GJStreamPush));

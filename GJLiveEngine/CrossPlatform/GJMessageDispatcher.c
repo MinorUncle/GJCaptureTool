@@ -12,23 +12,26 @@
 
 struct _GJMessage{
     MessageHandle handle;
-    GHandle receive;
+    GHandle sender;
+    GHandle receiver;
     GInt8 type;
-    GHandle arg;
+    GLong arg;
 };
 
 struct _GJMessageDispatcher{
     pthread_t thread;
     GBool   running;
+    GChar*  threadName;
     GJQueue* messageQueue;
 };
 
 static GJMessageDispatcher* staticDispatcher;
 static int dispatcherGuard;
-GJMessage* createMessage(MessageHandle handle,GHandle receive,GInt32 type,GVoid* arg){
+GJMessage* createMessage(MessageHandle handle,GHandle sender,GHandle receive,GInt32 type,GLong arg){
     GJMessage* message = malloc(sizeof(GJMessage));
     message->handle = handle;
-    message->receive = receive;
+    message->sender = sender;
+    message->receiver = receive;
     message->type = type;
     message->arg = arg;
     return message;
@@ -37,8 +40,9 @@ GJMessage* createMessage(MessageHandle handle,GHandle receive,GInt32 type,GVoid*
 static GHandle messageRunLoop(GHandle parm) {
     GJMessageDispatcher* dispatcher = parm;
     GJMessage* message;
+    pthread_setname_np(dispatcher->threadName);
     while (dispatcher->running && queuePop(dispatcher->messageQueue, (GHandle*)&message, GINT32_MAX)) {
-        message->handle(message->receive,message->type,message->arg);
+        message->handle(message->sender,message->receiver,message->type,message->arg);
         free(message);
     }
     return GNULL;
@@ -50,7 +54,8 @@ GJMessageDispatcher* defaultDispatcher(){
             staticDispatcher = (GJMessageDispatcher*)calloc(sizeof(GJMessageDispatcher),1);
             queueCreate(&staticDispatcher->messageQueue, 10, GTrue, GTrue);
             staticDispatcher->running = GTrue;
-            GResult result = pthread_create(&staticDispatcher->thread , GNULL, messageRunLoop, &defaultDispatcher);
+            staticDispatcher->threadName = "messageRunLoop";
+            GResult result = pthread_create(&staticDispatcher->thread , GNULL, messageRunLoop, staticDispatcher);
             if (result) {
                 free(staticDispatcher);
                 staticDispatcher = GNULL;
@@ -76,6 +81,14 @@ void destroyDispatcher(GJMessageDispatcher* dispatcher){
     }
 }
 
-void deliveryMessage(GJMessageDispatcher* dispatcher,GJMessage* message){
-    queuePush(dispatcher->messageQueue, message, GINT32_MAX);
+void deliveryMessage(GJMessageDispatcher* dispatcher,MessageHandle handle,GHandle sender,GHandle receive,GInt32 type,GLong arg){
+    
+    queuePush(dispatcher->messageQueue, createMessage(handle, sender, receive, type, arg), GINT32_MAX);
+}
+
+void defauleDeliveryMessage0(MessageHandle handle,GHandle sender,GHandle receive,GInt32 type){
+    queuePush(defaultDispatcher()->messageQueue, createMessage(handle, sender, receive, type, 0), GINT32_MAX);
+}
+void defauleDeliveryMessage1(MessageHandle handle,GHandle sender,GHandle receive,GInt32 type,GLong arg){
+    queuePush(defaultDispatcher()->messageQueue, createMessage(handle, sender, receive, type, arg), GINT32_MAX);
 }
