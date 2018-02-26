@@ -9,6 +9,7 @@
 #ifndef GJLiveDefine_h
 #define GJLiveDefine_h
 #import <CoreGraphics/CGGeometry.h>
+#import <CoreVideo/CVPixelBuffer.h>
 #import "GJRetainBuffer.h"
 
 //延迟收集，只有在同一收集同时推拉流才准确，
@@ -183,11 +184,11 @@ typedef struct _PullFristFrameInfo{
 }GJPullFristFrameInfo;
 
 typedef enum {
-    GJPixelType_32BGRA                   ,
-    GJPixelType_YpCbCr8Planar            ,                  //yyyyyyyyuuvv
-    GJPixelType_YpCbCr8BiPlanar          ,      //yyyyyyyyuvuv
-    GJPixelType_YpCbCr8Planar_Full       ,         //yyyyyyyyuuvv
-    GJPixelType_YpCbCr8BiPlanar_Full     ,       //yyyyyyyyuvuv
+    GJPixelType_32BGRA         = kCVPixelFormatType_32BGRA          ,
+    GJPixelType_YpCbCr8Planar  =kCVPixelFormatType_420YpCbCr8Planar ,                  //yyyyyyyyuuvv
+    GJPixelType_YpCbCr8BiPlanar =kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange         ,      //yyyyyyyyuvuv
+    GJPixelType_YpCbCr8Planar_Full=kCVPixelFormatType_420YpCbCr8PlanarFullRange ,         //yyyyyyyyuuvv
+    GJPixelType_YpCbCr8BiPlanar_Full=kCVPixelFormatType_420YpCbCr8BiPlanarFullRange ,       //yyyyyyyyuvuv
 } GJPixelType;
 typedef enum {
     GJAudioType_AAC,

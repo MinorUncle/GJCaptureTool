@@ -71,6 +71,13 @@ typedef enum _GJPlayStatus {
 //    GInt32 aacSize;
 //}R_GJAACPacket;
 
+typedef enum _CODEC_TYPE{
+    GJ_CODEC_TYPE_AAC,
+    GJ_CODEC_TYPE_H264,
+    GJ_CODEC_TYPE_MPEG4,
+    GJ_CODEC_TYPE_MPEG2VIDEO,
+}GJ_CODEC_TYPE;
+
 typedef struct PCMFrame{
     GJRetainBuffer retain;
     GTime pts;
@@ -91,8 +98,11 @@ typedef enum _GJMediaType{
     GJMediaType_Video,
     GJMediaType_Audio,
 }GJMediaType;
+
+//#define GJPacketFlag_KEY 1 << 0
 typedef enum _GJPacketFlag{
     GJPacketFlag_KEY = 1 << 0,
+    GJPacketFlag_DecoderType = 1 << 1,
 }GJPacketFlag;
 typedef struct GJPacket{
     GJRetainBuffer retain;

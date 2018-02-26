@@ -183,6 +183,27 @@ static GHandle pullRunloop(GHandle parm) {
         AVStream *vStream  = pull->formatContext->streams[vsIndex];
         GUInt8 *  avcc     = vStream->codecpar->extradata;
         GInt32    avccSize = vStream->codecpar->extradata_size;
+        
+        R_GJPacket *codecPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, sizeof(GJ_CODEC_TYPE));
+        codecPacket->type = GJMediaType_Video;
+        codecPacket->flag = GJPacketFlag_DecoderType;
+        GJ_CODEC_TYPE codecType;
+        switch (vStream->codecpar->codec_id) {
+            case AV_CODEC_ID_H264:
+                codecType = GJ_CODEC_TYPE_H264;
+                break;
+            case AV_CODEC_ID_MPEG4:
+                codecType = GJ_CODEC_TYPE_MPEG4;
+                break;
+            default:
+                GJAssert(0, "格式不支持");
+                break;
+        }
+        R_BufferWrite(&codecPacket->retain, (GHandle)&codecType, sizeof(GJ_CODEC_TYPE));
+        codecPacket->extendDataSize = sizeof(GJ_CODEC_TYPE);
+        pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&codecPacket->retain,GJMediaType_Video);
+        R_BufferUnRetain(&codecPacket->retain);
+        
         if (avccSize > 9 && (avcc[8] & 0x1f) == 7) {
             GUInt8 *sps     = avcc + 8;
             GInt32  spsSize = avcc[6] << 8;
