@@ -120,8 +120,8 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
                     currentBitRate = sendByte * 8  / (sendTs / 1000.0);
                 }
                 context->netSpeedUnit[context->collectCount++ % context->netSpeedCheckInterval] = currentBitRate;
-                GJLOG(GNULL, GJ_LOGINFO,"add speed:%d ,index:%d",currentBitRate,context->collectCount);
-                if (sendCount < context->rateCheckStep && cacheInPts > context->sensitivity && cacheInCount > NET_MIN_SENSITIVITY_FRAME) {
+                //允许1帧的抖动，（会导致丢帧率大（网速低）时，rateCheckStep比较小，稍微不容易降低网速）
+                if (sendCount < context->rateCheckStep - 1 && cacheInPts > context->sensitivity && cacheInCount > NET_MIN_SENSITIVITY_FRAME) {
                     GInt32 fullCount   = 0;
                     GInt32 totalCount = 0;
                     context->videoNetSpeed = 0;
