@@ -21,11 +21,11 @@
 
 //#define UIIMAGE_SHOW
 
-#define VIDEO_PTS_PRECISION 400
-#define AUDIO_PTS_PRECISION 100  //200太长，改为100，5帧
+#define VIDEO_PTS_PRECISION 140  //视频最多延迟两帧精度播放
+#define AUDIO_PTS_PRECISION 60  //改为100，2帧
 
 #define MAX_CACHE_DUR 5000 //抖动最大缓存控制
-#define MIN_CACHE_DUR 100  //抖动最小缓存控制
+#define MIN_CACHE_DUR 0  //抖动最小缓存控制
 #define MAX_CACHE_RATIO 3
 #define HIGHT_PASS_FILTER 0.5 //高通滤波
 
@@ -42,6 +42,9 @@ GLong getClockLine(GJSyncControl *sync) {
         GLong timeDiff = GTimeSubtractMSValue(time, sync->audioInfo.trafficStatus.leave.clock) * sync->speed;
         return GTimeMSValue(sync->audioInfo.trafficStatus.leave.ts) + timeDiff;
     } else {
+        if (sync->speed > 1.0) {
+            sync->bufferInfo.speedTotalDuration += (sync->speed - 1.0) * GTimeSubtractMSValue(GJ_Gettime(), sync->videoInfo.trafficStatus.leave.clock);
+        }
         //不能采用上面的方法，应为time - sync->audioInfo.clock每次回产生误差， * sync->speed也会产生误差
         GTime time     = GJ_Gettime();
         GLong timeDiff = GTimeSubtractMSValue(time, sync->videoInfo.startTime);
@@ -129,12 +132,16 @@ static GBool GJLivePlay_StopDewatering(GJLivePlayer *player) {
     //    return;
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->syncControl.speed > 1.0) {
+        GJSyncControl*      syncControl = &player->syncControl;
+        syncControl->bufferInfo.speedTotalDuration += (syncControl->speed - 1.0) * GTimeSubtractMSValue(GJ_Gettime(), syncControl->videoInfo.trafficStatus.leave.clock);
+
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "stopDewatering");
         if (player->callback) {
             GFloat32 speed = 1.0f;
             player->callback(player->userDate,GJPlayMessage_DewateringUpdate,&speed);
         }
-        player->syncControl.speed = 1.0f;
+        
+        syncControl->speed = 1.0f;
         player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.0f);
     }
     pthread_mutex_unlock(&player->playControl.oLock);
@@ -521,68 +528,78 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
             continue;
         }
 
+
+        
         GLong timeStandards = getClockLine(_syncControl);
         
         //速度的时空变化
         GLong delay         = (GLong)((GTimeMSValue(cImageBuf->pts) - timeStandards)/_syncControl->speed);
-        if (delay > VIDEO_PTS_PRECISION) {
-
+        
+        while (delay > VIDEO_PTS_PRECISION + 5){
+            //可以及时退出和防止pts重启
             if (_playControl->status == kPlayStatusStop) {
                 goto DROP;
             }
-            if (_syncControl->syncType == kTimeSYNCVideo) {
-                
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待视频时间过长 delay:%ld PTS:%lld clock:%ld,重置同步管理", delay, cImageBuf->pts.value, timeStandards);
-                resetSyncToStartPts(_syncControl,cImageBuf->pts);
-                delay = 0;
-            } else {
-                
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待音频时间过长 delay:%ld PTS:%lld clock:%ld，等待下一帧视频做判断处理", delay, cImageBuf->pts.value, timeStandards);
-                R_GJPixelFrame nextBuffer = {0};
-                //会一直等待，知道超时，或者stop or buffering广播，1ms用于执行时间
-                if(queuePeekWaitCopyValue(_playControl->imageQueue, 0, (GHandle) &nextBuffer, sizeof(R_GJPixelFrame), (GUInt32)delay - 1)) {
-                    if (_playControl->status == kPlayStatusStop) {
-                        goto DROP;
-                    }
-                    if( getClockLine(_syncControl) > GTimeMSValue(nextBuffer.pts)-1){
-                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束，超过下一帧显示时间，直接丢帧");
-                        delay = 0;
-                        goto DROP;
-                    }else{
-                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束,正常显示");
-                    }
-                    
-                }else{
-                    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束,没有下一帧，直接显示");
+            usleep(VIDEO_PTS_PRECISION * 1000);
+            timeStandards = getClockLine(_syncControl);
+            delay         = (GLong)((GTimeMSValue(cImageBuf->pts) - timeStandards)/_syncControl->speed);
+        }
+//        if (delay > VIDEO_PTS_PRECISION + 5) {
+//            if (_syncControl->syncType == kTimeSYNCVideo) {
+//
+//                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待视频时间过长 delay:%ld PTS:%lld clock:%ld,重置同步管理", delay, cImageBuf->pts.value, timeStandards);
+//                resetSyncToStartPts(_syncControl,cImageBuf->pts);
+//                delay = 0;
+//            } else {
+//
+//                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频等待音频时间过长 delay:%ld PTS:%lld clock:%ld，等待下一帧视频做判断处理", delay, cImageBuf->pts.value, timeStandards);
+//                R_GJPixelFrame nextBuffer = {0};
+//                //会一直等待，知道超时，或者stop or buffering广播，1ms用于执行时间
+//                if(queuePeekWaitCopyValue(_playControl->imageQueue, 0, (GHandle) &nextBuffer, sizeof(R_GJPixelFrame), (GUInt32)delay - 1)) {
+//                    if (_playControl->status == kPlayStatusStop) {
+//                        goto DROP;
+//                    }
+//                    if( getClockLine(_syncControl) > GTimeMSValue(nextBuffer.pts)-1){
+//                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束，超过下一帧显示时间，直接丢帧");
+//                        delay = 0;
+//                        goto DROP;
+//                    }else{
+//                        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束,正常显示");
+//                    }
+//
+//                }else{
+//                    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频长时间等待音频结束,没有下一帧，直接显示");
+//                    delay = 0;
+//                }
+//            }
+//        } else
+        if (delay < -VIDEO_PTS_PRECISION) {
+            
+            GInt32 queueLenth = queueGetLength(_playControl->imageQueue);
+            if (queueLenth > 0) {
+                if (_syncControl->syncType == kTimeSYNCVideo ) {
+                    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频落后视频严重，delay：%ld, PTS:%lld clock:%ld，重置同步管理", delay, cImageBuf->pts.value, timeStandards);
+                    resetSyncToStartPts(_syncControl,cImageBuf->pts);
                     delay = 0;
+                } else {
+                    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频落后音频严重，delay：%ld, PTS:%lld clock:%ld，丢视频帧", delay, cImageBuf->pts.value, timeStandards);
+                    _syncControl->videoInfo.trafficStatus.leave.ts                   = cImageBuf->pts;
+                    _syncControl->videoInfo.trafficStatus.leave.clock                  = GJ_Gettime();
+                    goto DROP;
                 }
-            }
-        } else if (delay < -VIDEO_PTS_PRECISION) {
-
-            if (_syncControl->syncType == kTimeSYNCVideo) {
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频落后视频严重，delay：%ld, PTS:%lld clock:%ld，重置同步管理", delay, cImageBuf->pts.value, timeStandards);
-                resetSyncToStartPts(_syncControl,cImageBuf->pts);
-                delay = 0;
-            } else {
-                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频落后音频严重，delay：%ld, PTS:%lld clock:%ld，丢视频帧", delay, cImageBuf->pts.value, timeStandards);
-                _syncControl->videoInfo.trafficStatus.leave.ts                   = cImageBuf->pts;
-                _syncControl->videoInfo.trafficStatus.leave.clock                  = GJ_Gettime();
-                goto DROP;
+            }else{
+                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频落后严重，delay：%ld, PTS:%lld clock:%ld，并且没有下一帧，直接显示", delay, cImageBuf->pts.value, timeStandards);
             }
         }
 
     DISPLAY:
         if (delay > 1) {
-            GJLOG(GNULL, GJ_LOGALL,"play wait:%ld, video pts:%lld", delay, _syncControl->videoInfo.trafficStatus.leave.ts.value);
+//            GJLOG(GNULL, GJ_LOGINFO,"play wait:%ld, video pts:%lld", delay, _syncControl->videoInfo.trafficStatus.leave.ts.value);
             usleep((GUInt32) delay * 1000);
             if (_playControl->status == kPlayStatusStop) {
                 //减少退出时的时间。
                 goto DROP;
             }
-        }
-
-        if (_syncControl->speed > 1.0) {
-            _syncControl->bufferInfo.speedTotalDuration += (_syncControl->speed - 1.0) * GTimeSubtractMSValue(GJ_Gettime(), _syncControl->videoInfo.trafficStatus.leave.clock);
         }
 
         _syncControl->videoInfo.trafficStatus.leave.clock                  = GJ_Gettime();
