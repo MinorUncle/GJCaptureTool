@@ -61,6 +61,9 @@ typedef struct _GJLivePushContext {
     GJTrafficStatus  preCheckVideoTraffic;
     // 网速检查速率单元，默认等于fps，表示1s检查一次。（越大越准确，但是越迟钝，越小越敏感）
     GInt32 rateCheckStep;
+//    敏感参数，
+    GInt32 sensitivity;
+    
 
     GRational videoDropStep; //每den帧丢num帧
     //     表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
@@ -70,13 +73,13 @@ typedef struct _GJLivePushContext {
     GInt32    maxVideoDelay;     //默认最大的延时，超过此延时，则启动连续丢帧，直到延迟恢复到3/4,默认500ms；
     //不丢帧情况下允许的最小码率,主要用来控制质量，实际码率可能低于此。用于动态码率
     GInt32  videoMinBitrate;
-    GInt32  videoNetSpeed;         //当前视频网络速度
-    GInt32  netSpeedCheckInterval; //最近netSpeedCheckInterval次rateCheck网速为平均网速
-    GInt32  increaseSpeedStep; //连续increaseSpeedStep步空闲则增加速度
+    GInt32  videoNetSpeed;         //最近netSpeedCheckInterval次rateCheck网速为平均网速
+    GFloat32  increaseSpeedRate; //连续检查网络空闲次数大于rateCheckStep的increaseSpeedRate倍，则增加码率
 
-    GInt32 *netSpeedUnit;
+    GInt32 *netSpeedUnit;//表示当前发送码率bps，（负数表示受码率限制的发送速率，正数表示不受码率限制的满速速率）
+    GInt32  netSpeedCheckInterval; //netSpeedUnit数组长度
     GInt32  collectCount; //已经收集的个数
-    GInt32  favorableCount;//连续良好网速的个数
+    GInt32  favorableCount;//连续良好网速的帧数
     GInt32  increaseCount;//连续增加网速的个数
     GInt32  checkCount;//用于控制检查间隔
     GInt32  captureVideoCount;
