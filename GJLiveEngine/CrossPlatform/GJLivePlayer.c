@@ -24,17 +24,19 @@
 #define VIDEO_PTS_PRECISION 140  //视频最多延迟两帧精度播放
 #define AUDIO_PTS_PRECISION 60  //改为100，2帧
 
-#define MAX_CACHE_DUR 5000 //抖动最大缓存控制
+#define MAX_CACHE_DUR 4000 //抖动最大缓存控制
 #define MIN_CACHE_DUR 0  //抖动最小缓存控制
 #define MAX_CACHE_RATIO 3
 #define HIGHT_PASS_FILTER 0.5 //高通滤波
 
-#define UPDATE_SHAKE_TIME_MIN 2*MAX_CACHE_DUR //
+#define UPDATE_SHAKE_TIME_MIN 1*MAX_CACHE_DUR //
 #define UPDATE_SHAKE_TIME_MAX 10*MAX_CACHE_DUR //
 
 
 #define VIDEO_MAX_CACHE_COUNT 100 //初始化缓存空间
 #define AUDIO_MAX_CACHE_COUNT 200
+
+#define CHASE_SPEED 1.1f
 
 GLong getClockLine(GJSyncControl *sync) {
     if (sync->syncType == kTimeSYNCAudio) {
@@ -115,8 +117,8 @@ static GBool GJLivePlay_StartDewatering(GJLivePlayer *player) {
                 GFloat32 speed = 1.2f;
                 player->callback(player->userDate,GJPlayMessage_DewateringUpdate,&speed);
             }
-            player->syncControl.speed = 1.2;
-            player->audioPlayer->audioSetSpeed(player->audioPlayer, 1.2);
+            player->syncControl.speed = CHASE_SPEED;
+            player->audioPlayer->audioSetSpeed(player->audioPlayer, CHASE_SPEED);
         }
         //减小最大抖动更新间隔
         GInt32 collectUpdateDur = player->syncControl.netShake.collectUpdateDur - UPDATE_SHAKE_TIME_MIN/2;
