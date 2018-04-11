@@ -177,6 +177,7 @@
         if (_mixPlayers.count == 0) {
             [_audioController removeOutputReceiver:_audioMixer];
         }
+        [player teardown];
         [_audioController removeChannels:@[player]];
     }
 }

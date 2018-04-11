@@ -60,4 +60,8 @@ static OSStatus renderCallback(__unsafe_unretained AEBlockChannel *THIS,
     return renderCallback;
 }
 
+-(void)teardown{
+    self.channelIsPlaying = NO;
+}
+
 @end

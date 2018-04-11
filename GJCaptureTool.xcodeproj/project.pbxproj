@@ -289,6 +289,34 @@
 			remoteGlobalIDString = 6A58217C202AAD2B002AFF76;
 			remoteInfo = kcptun;
 		};
+		6A6B1A36207C474E00BFC8FA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = A1D0DC4F1950378A004717F5;
+			remoteInfo = libairfloat;
+		};
+		6A6B1A38207C474E00BFC8FA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4C215CEB1523A7D500D36CAD;
+			remoteInfo = TheAmazingAudioEngine;
+		};
+		6A6B1A3A207C474E00BFC8FA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 0417FCBC1E5EC74E00D5B5D9;
+			remoteInfo = GJImageFilters;
+		};
+		6A6B1A3C207C474E00BFC8FA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 045E4E121E343F3A00289523 /* GJQueue.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 04300FD91E13669C0059262A;
+			remoteInfo = libQueue;
+		};
 		6A96CD541F258740000DC4FE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */;
@@ -1525,6 +1553,10 @@
 			buildRules = (
 			);
 			dependencies = (
+				6A6B1A37207C474E00BFC8FA /* PBXTargetDependency */,
+				6A6B1A39207C474E00BFC8FA /* PBXTargetDependency */,
+				6A6B1A3B207C474E00BFC8FA /* PBXTargetDependency */,
+				6A6B1A3D207C474E00BFC8FA /* PBXTargetDependency */,
 			);
 			name = GJLiveEngine;
 			productName = GJLiveEngine;
@@ -1935,6 +1967,29 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		6A6B1A37207C474E00BFC8FA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libairfloat;
+			targetProxy = 6A6B1A36207C474E00BFC8FA /* PBXContainerItemProxy */;
+		};
+		6A6B1A39207C474E00BFC8FA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = TheAmazingAudioEngine;
+			targetProxy = 6A6B1A38207C474E00BFC8FA /* PBXContainerItemProxy */;
+		};
+		6A6B1A3B207C474E00BFC8FA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = GJImageFilters;
+			targetProxy = 6A6B1A3A207C474E00BFC8FA /* PBXContainerItemProxy */;
+		};
+		6A6B1A3D207C474E00BFC8FA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libQueue;
+			targetProxy = 6A6B1A3C207C474E00BFC8FA /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C561ABFA1D51D3DC00113453 /* LaunchScreen.storyboard */ = {

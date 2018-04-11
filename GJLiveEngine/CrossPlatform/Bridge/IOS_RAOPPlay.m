@@ -96,14 +96,15 @@ struct audio_output_t *audio_output_create(struct decoder_output_format_t decode
 
     AEBlockChannel *blockChannel = [AEBlockChannel channelWithBlock:^(const AudioTimeStamp *time, UInt32 frames, AudioBufferList *audio) {
 
-        if (ao->_convert) {
-            ao->convertInBuffer = audio;
-            AudioConverterFillComplexBuffer(ao->_convert, decodeInputDataProc, ao, &frames, &ao->convertOutBuffer, nil);
-        }
-        if (ao->callback) {
-            ao->callback(ao, audio->mBuffers[0].mData, audio->mBuffers[0].mDataByteSize, hardware_host_time_to_seconds(time->mHostTime), ao->callback_ctx);
-        }
-
+//        @synchronized(blockChannel) {
+            if (ao->_convert) {
+                ao->convertInBuffer = audio;
+                AudioConverterFillComplexBuffer(ao->_convert, decodeInputDataProc, ao, &frames, &ao->convertOutBuffer, nil);
+            }
+            if (ao->callback) {
+                ao->callback(ao, audio->mBuffers[0].mData, audio->mBuffers[0].mDataByteSize, hardware_host_time_to_seconds(time->mHostTime), ao->callback_ctx);
+            }
+//        }
     }];
 
     ao->blockChannel = (__bridge_retained void *) (blockChannel);

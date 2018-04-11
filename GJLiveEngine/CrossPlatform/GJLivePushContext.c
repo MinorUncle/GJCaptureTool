@@ -1190,6 +1190,7 @@ GVoid GJLivePush_Dealloc(GJLivePushContext **pushContext) {
 #ifdef RAOP
             raop_server_stop(server);
             raop_server_destroy(server);
+            server = GNULL;
 #endif
 #ifdef RVOP
             rvop_server_stop(rvopserver);
