@@ -131,6 +131,10 @@
         GJLOG(GNULL, GJ_LOGWARNING, "采集数据过多，丢帧");
         return;
     }
+    if (_mute) {
+        memset(frame->mBuffers[0].mData, 0, frame->mBuffers[0].mDataByteSize);
+    }
+    
     while (timeCount > _sendFrameCount + 2*PCM_FRAME_COUNT) {
         R_BufferWriteConst(&_alignCacheFrame->retain, 0, PCM_FRAME_COUNT* _audioFormat.mBytesPerFrame-R_BufferSize(&_alignCacheFrame->retain));
         _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
@@ -402,6 +406,7 @@
         _mixfilePlay = nil;
     }
 }
+
 
 - (void)dealloc {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "GJAudioManager dealloc");

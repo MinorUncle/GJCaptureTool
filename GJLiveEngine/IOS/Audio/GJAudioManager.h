@@ -37,6 +37,7 @@ typedef void(^MixFinishBlock)(GBool finish);
 @property (nonatomic, assign)BOOL enableReverb;//default false
 @property (nonatomic, assign)BOOL ace;//default false
 @property (nonatomic, assign)BOOL useMeasurementMode;//default false
+@property (nonatomic, assign)BOOL mute;//default false
 
 @property (nonatomic, retain)AEPlaythroughChannel* playthrough;
 @property (nonatomic, retain)AEAudioFilePlayer* mixfilePlay;

@@ -942,6 +942,11 @@ inline static GSize getCaptureSize(struct _GJVideoProduceContext *context) {
     return size;
 }
 
+GBool   setMute(struct _GJVideoProduceContext* context, GBool enable){
+    setDropStep(context, GRationalMake(enable == GTrue, 1));
+    return GTrue;
+}
+
 GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     if (*produceContext == NULL) {
         *produceContext = (GJVideoProduceContext *) malloc(sizeof(GJVideoProduceContext));
@@ -974,6 +979,7 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     context->stopTrackImage        = stopTrackImage;
     context->getFreshDisplayImage  = getFreshDisplayImage;
     context->setDropStep           = setDropStep;
+    context->setMute               = setMute;
 }
 
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {

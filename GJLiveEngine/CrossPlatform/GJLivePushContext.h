@@ -93,13 +93,9 @@ GBool GJLivePush_Create(GJLivePushContext **context, GJLivePushCallback callback
 GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url);
 GVoid GJLivePush_StopPush(GJLivePushContext *context);
 GVoid GJLivePush_SetConfig(GJLivePushContext *context, const GJPushConfig *config);
-GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene);
-GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view);
-GBool GJLivePush_SetCaptureType(GJLivePushContext *context, GJCaptureType type);
-GBool GJLivePush_StartPreview(GJLivePushContext *context);
-GVoid GJLivePush_StopPreview(GJLivePushContext *context);
-GBool GJLivePush_SetAudioMute(GJLivePushContext *context, GBool mute);
-GBool GJLivePush_SetVideoMute(GJLivePushContext *context, GBool mute);
+
+
+
 
 /**
  是否禁止编码器,与GJLivePush_SetVideoMute类似，但是GJLivePush_SetVideoMute更轻量级，不会销毁编码器，此函数会，iOS进入后台时会使用。
@@ -110,52 +106,51 @@ GBool GJLivePush_SetVideoMute(GJLivePushContext *context, GBool mute);
  */
 GBool GJLivePush_SetVideoCodeDisable(GJLivePushContext *context, GBool disable);
 
-
-
 GVoid GJLivePush_Dealloc(GJLivePushContext **context);
 GJTrafficStatus GJLivePush_GetVideoTrafficStatus(GJLivePushContext *context);
 GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext *context);
+GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps, const GChar *fileUrl);
+GVoid GJLivePush_StopRecode(GJLivePushContext *context);
 
 
 #pragma mark 音频
 GVoid GJLivePush_AttachAudioProducer(GJLivePushContext* context,GJAudioProduceContext* audioProducer);
 GVoid GJLivePush_DetachAudioProducer(GJLivePushContext* context);
-
-GBool GJLivePush_EnableAudioEchoCancellation(GJLivePushContext *context, GBool enable);
-GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext *context, GBool enable);
-GBool GJLivePush_EnableReverb(GJLivePushContext *context, GBool enable);
-GVoid GJLivePush_StopAudioMix(GJLivePushContext *context);
-GBool GJLivePush_StartMixFile(GJLivePushContext *context, const GChar *fileName,AudioMixFinishCallback finishCallback);
-GBool GJLivePush_SetMixVolume(GJLivePushContext *context, GFloat32 volume);
-GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext *context, GBool should);
-GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat32 volume);
-GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat32 gain);
+//GBool GJLivePush_SetAudioMute(GJLivePushContext *context, GBool mute);
+//GBool GJLivePush_EnableAudioEchoCancellation(GJLivePushContext *context, GBool enable);
+//GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext *context, GBool enable);
+//GBool GJLivePush_EnableReverb(GJLivePushContext *context, GBool enable);
+//GVoid GJLivePush_StopAudioMix(GJLivePushContext *context);
+//GBool GJLivePush_StartMixFile(GJLivePushContext *context, const GChar *fileName,AudioMixFinishCallback finishCallback);
+//GBool GJLivePush_SetMixVolume(GJLivePushContext *context, GFloat32 volume);
+//GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext *context, GBool should);
+//GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat32 volume);
+//GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat32 gain);
+//GBool GJLivePush_SetMeasurementMode(GJLivePushContext *context, GBool measurementMode);
 
 #pragma mark 视频
+
 GVoid GJLivePush_AttachVideoProducer(GJLivePushContext* context,GJVideoProduceContext* videoProducer);
 GVoid GJLivePush_DetachVideoProducer(GJLivePushContext* context);
+//GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene);
+//GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view);
+//GBool GJLivePush_SetCaptureType(GJLivePushContext *context, GJCaptureType type);
+//GBool GJLivePush_StartPreview(GJLivePushContext *context);
+//GVoid GJLivePush_StopPreview(GJLivePushContext *context);
+//GHandle GJLivePush_GetDisplayView(GJLivePushContext *context);
+//GBool GJLivePush_SetVideoMute(GJLivePushContext *context, GBool mute);
+//GVoid GJLivePush_SetCameraPosition(GJLivePushContext *context, GJCameraPosition position);
+//GVoid GJLivePush_SetOutOrientation(GJLivePushContext *context, GJInterfaceOrientation orientation);
+//GVoid GJLivePush_SetPreviewHMirror(GJLivePushContext *context, GBool preViewMirror);
+//GBool GJLivePush_SetCameraMirror(GJLivePushContext *context, GBool mirror);
+//GBool GJLivePush_SetStreamMirror(GJLivePushContext *context, GBool mirror);
+//GBool GJLivePush_SetPreviewMirror(GJLivePushContext *context, GBool mirror);
+//GHandle GJLivePush_CaptureFreshDisplayImage(GJLivePushContext *context);
+//GBool GJLivePush_StartSticker(GJLivePushContext *context, const GVoid *images, GInt32 fps, GJStickerUpdateCallback callback, const GHandle userData);
+//GVoid GJLivePush_StopSticker(GJLivePushContext *context);
+//GBool GJLivePush_StartTrackImage(GJLivePushContext *context, const GVoid *images, GCRect initFrame);
+//GVoid GJLivePush_StopTrack(GJLivePushContext *context);
+//GSize GJLivePush_GetCaptureSize(GJLivePushContext *context);
 
-GHandle GJLivePush_GetDisplayView(GJLivePushContext *context);
-
-GVoid GJLivePush_SetCameraPosition(GJLivePushContext *context, GJCameraPosition position);
-GVoid GJLivePush_SetOutOrientation(GJLivePushContext *context, GJInterfaceOrientation orientation);
-GVoid GJLivePush_SetPreviewHMirror(GJLivePushContext *context, GBool preViewMirror);
-GBool GJLivePush_SetCameraMirror(GJLivePushContext *context, GBool mirror);
-GBool GJLivePush_SetStreamMirror(GJLivePushContext *context, GBool mirror);
-GBool GJLivePush_SetPreviewMirror(GJLivePushContext *context, GBool mirror);
-
-GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps, const GChar *fileUrl);
-GVoid GJLivePush_StopRecode(GJLivePushContext *context);
-
-GHandle GJLivePush_CaptureFreshDisplayImage(GJLivePushContext *context);
-GBool GJLivePush_StartSticker(GJLivePushContext *context, const GVoid *images, GInt32 fps, GJStickerUpdateCallback callback, const GHandle userData);
-GVoid GJLivePush_StopSticker(GJLivePushContext *context);
-
-GBool GJLivePush_StartTrackImage(GJLivePushContext *context, const GVoid *images, GCRect initFrame);
-GVoid GJLivePush_StopTrack(GJLivePushContext *context);
-
-GSize GJLivePush_GetCaptureSize(GJLivePushContext *context);
-
-GBool GJLivePush_SetMeasurementMode(GJLivePushContext *context, GBool measurementMode);
 
 #endif /* GJLivePushContext_h */

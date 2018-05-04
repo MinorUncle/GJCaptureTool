@@ -111,6 +111,7 @@ typedef struct _GJVideoProduceContext{
     GBool   (*startTrackImage)        (struct _GJVideoProduceContext* context, const GVoid* images,GCRect initFrame);
     GVoid   (*stopTrackImage)         (struct _GJVideoProduceContext* context);
     GVoid   (*setDropStep)            (struct _GJVideoProduceContext* context, GRational videoDropStep);
+    GBool   (*setMute)                (struct _GJVideoProduceContext* context, GBool enable);
 
 }GJVideoProduceContext;
 
@@ -132,7 +133,8 @@ typedef struct _GJAudioProduceContext{
     GVoid   (*stopMixAudioFile)       (struct _GJAudioProduceContext* context);
     GBool   (*setMixToStream)         (struct _GJAudioProduceContext* context, GBool should);
     GBool   (*enableReverb)           (struct _GJAudioProduceContext* context, GBool enable);
-    GBool   (*enableMeasurementMode)     (struct _GJAudioProduceContext* context, GBool enable);
+    GBool   (*enableMeasurementMode)  (struct _GJAudioProduceContext* context, GBool enable);
+    GBool   (*setMute)                (struct _GJAudioProduceContext* context, GBool enable);
 
 }GJAudioProduceContext;
 

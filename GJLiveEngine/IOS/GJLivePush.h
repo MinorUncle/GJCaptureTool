@@ -67,6 +67,12 @@ typedef void(^OverlaysUpdate)(NSInteger index,const GJOverlayAttribute* _Nullabl
 
 
 @interface GJLivePush : NSObject
+
+@property (nonatomic,weak           ) id  <GJLivePushDelegate> _Nullable delegate;
+
+@property (nonatomic,assign         ) BOOL                   videoMute;
+
+#pragma mark video
 @property (nonatomic,assign         ) GJCameraPosition       cameraPosition;
 
 @property (nonatomic,assign         ) BOOL       previewMirror;//预览镜像，不镜像流
@@ -77,9 +83,6 @@ typedef void(^OverlaysUpdate)(NSInteger index,const GJOverlayAttribute* _Nullabl
 
 @property (nonatomic,assign         ) GJInterfaceOrientation outOrientation;
 
-@property (nonatomic,assign         ) BOOL                   mixFileNeedToStream;
-
-
 @property (nonatomic,strong,readonly) UIView                 * _Nonnull previewView;
 
 @property (nonatomic,assign,readonly) GJPushConfig           pushConfig;
@@ -87,24 +90,31 @@ typedef void(^OverlaysUpdate)(NSInteger index,const GJOverlayAttribute* _Nullabl
 //只读，根据pushConfig中的push size自动选择最优.outOrientation 和 pushsize会改变改值，
 @property (nonatomic,assign,readonly) CGSize                 captureSize;
 
-@property (nonatomic,weak           ) id  <GJLivePushDelegate> _Nullable delegate;
-
-
-@property (nonatomic,assign         ) BOOL                   videoMute;
-@property (nonatomic,assign         ) BOOL                   audioMute;
-@property (nonatomic,assign         ) BOOL                   measurementMode;
-@property (nonatomic,assign         ) BOOL                   enableAec;//default NO
-
 //配置ar场景，开启ar模式，预览和推流前配置。scene= nil表示取消;
 @property (nonatomic,retain         ) id  <GJImageARScene> _Nullable                    ARScene;
 //录屏直播
 @property (nonatomic,retain         ) UIView*              _Nullable                    captureView;
 
 @property (nonatomic,assign         ) GJCaptureType captureType;
-//- (bool)startCaptureWithSizeType:(CaptureSizeType)sizeType fps:(NSInteger)fps position:(enum AVCaptureDevicePosition)cameraPosition;
 
-//- (void)stopCapture;
+#pragma mark audio
+@property (nonatomic,assign         ) BOOL                   audioMute;
 
+@property (nonatomic,assign         ) BOOL                   measurementMode;
+
+@property (nonatomic,assign         ) BOOL                   enableAec;//default NO
+
+@property (nonatomic,assign         ) float                  inputVolume;
+
+@property (nonatomic,assign         ) float                  mixVolume;
+
+@property (nonatomic,assign         ) float                  masterOutVolume;
+
+@property (nonatomic,assign,setter=enableReverb:) BOOL       reverb;
+
+@property (nonatomic,assign,setter=enableAudioInEarMonitoring:) BOOL audioInEarMonitoring;
+
+@property (nonatomic,assign         ) BOOL                   mixFileNeedToStream;
 
 - (void)startPreview;
 
@@ -116,19 +126,9 @@ typedef void(^OverlaysUpdate)(NSInteger index,const GJOverlayAttribute* _Nullabl
 
 - (void)stopStreamPush;
 
-- (BOOL)enableAudioInEarMonitoring:(BOOL)enable;
-
-- (BOOL)enableReverb:(BOOL)enable;
-
 - (BOOL)startAudioMixWithFile:(NSURL*_Nonnull)fileUrl;
 
 - (void)stopAudioMix;
-
-- (void)setInputVolume:(float)volume;
-
-- (void)setMixVolume:(float)volume;
-
-- (void)setMasterOutVolume:(float)volume;
 
 - (BOOL)startUIRecodeWithRootView:(UIView*_Nonnull)view fps:(NSInteger)fps filePath:(NSURL*_Nonnull)file;
 

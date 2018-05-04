@@ -246,6 +246,16 @@ GBool setMixToStream(struct _GJAudioProduceContext *context, GBool should) {
 #endif
     return GTrue;
 }
+
+GBool   setMute(struct _GJAudioProduceContext* context, GBool mute){
+#ifdef AMAZING_AUDIO_ENGINE
+    GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
+    manager.mute      = mute;
+#endif
+    return GTrue;
+}
+
+
 GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext **recodeContext) {
     if (*recodeContext == NULL) {
         *recodeContext = (GJAudioProduceContext *) malloc(sizeof(GJAudioProduceContext));
@@ -271,6 +281,7 @@ GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext **recodeContext) {
     context->enableReverb          = enableReverb;
     context->enableMeasurementMode = enableMeasurementMode;
     context->enableAudioEchoCancellation = enableAudioEchoCancellation;
+    context->setMute = setMute;
 }
 GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext **context) {
     if ((*context)->obaque) {
