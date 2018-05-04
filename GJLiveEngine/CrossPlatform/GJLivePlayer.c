@@ -536,16 +536,16 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
         
         //速度的时空变化
         GLong delay         = (GLong)((GTimeMSValue(cImageBuf->pts) - timeStandards)/_syncControl->speed);
-        
-        while (delay > VIDEO_PTS_PRECISION + 5){
-            //可以及时退出和防止pts重启
-            if (_playControl->status == kPlayStatusStop) {
-                goto DROP;
-            }
-            usleep(VIDEO_PTS_PRECISION * 1000);
-            timeStandards = getClockLine(_syncControl);
-            delay         = (GLong)((GTimeMSValue(cImageBuf->pts) - timeStandards)/_syncControl->speed);
-        }
+
+//        while (delay > VIDEO_PTS_PRECISION + 5){
+//            //可以及时退出和防止pts重启
+//            if (_playControl->status == kPlayStatusStop) {
+//                goto DROP;
+//            }
+//            usleep(VIDEO_PTS_PRECISION * 1000);
+//            timeStandards = getClockLine(_syncControl);
+//            delay         = (GLong)((GTimeMSValue(cImageBuf->pts) - timeStandards)/_syncControl->speed);
+//        }
 //        if (delay > VIDEO_PTS_PRECISION + 5) {
 //            if (_syncControl->syncType == kTimeSYNCVideo) {
 //
@@ -597,9 +597,9 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
     DISPLAY:
         if (delay > 1) {
 //            GJLOG(GNULL, GJ_LOGINFO,"play wait:%ld, video pts:%lld", delay, _syncControl->videoInfo.trafficStatus.leave.ts.value);
-            usleep((GUInt32) delay * 1000);
-            if (_playControl->status == kPlayStatusStop) {
-                //减少退出时的时间。
+            if (signalWait(_playControl->stopSignal, (GUInt32)delay)) {
+                //bug 等待过程中速度变化无法感知，会有误差
+                GJAssert(_playControl->status == kPlayStatusStop, "err signal emit");
                 goto DROP;
             }
         }
@@ -677,6 +677,7 @@ GBool GJLivePlay_Create(GJLivePlayer **liveplayer, GJLivePlayCallback callback, 
     pthread_mutex_init(&player->playControl.oLock, GNULL);
     queueCreate(&player->playControl.imageQueue, VIDEO_MAX_CACHE_COUNT, GTrue, GTrue); //150为暂停时视频最大缓冲
     queueCreate(&player->playControl.audioQueue, AUDIO_MAX_CACHE_COUNT, GTrue, GTrue);
+    signalCreate(&player->playControl.stopSignal);
     return GTrue;
 }
 GVoid GJLivePlay_AddAudioSourceFormat(GJLivePlayer *player, GJAudioFormat audioFormat) {
@@ -744,6 +745,8 @@ GVoid GJLivePlay_Stop(GJLivePlayer *player) {
         GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_Stop:%p",player);
         pthread_mutex_lock(&player->playControl.oLock);
         player->playControl.status = kPlayStatusStop;
+        signalEmit(player->playControl.stopSignal);
+        
         queueEnablePush(player->playControl.audioQueue, GFalse);
         queueEnablePush(player->playControl.imageQueue, GFalse);
         queueEnablePop(player->playControl.audioQueue, GFalse);
@@ -1136,6 +1139,7 @@ GVoid GJLivePlay_Dealloc(GJLivePlayer **livePlayer) {
     GJ_AudioPlayContextDealloc(&player->audioPlayer);
     queueFree(&player->playControl.audioQueue);
     queueFree(&player->playControl.imageQueue);
+    signalDestory(&player->playControl.stopSignal);
     free(player);
     *livePlayer = GNULL;
 }

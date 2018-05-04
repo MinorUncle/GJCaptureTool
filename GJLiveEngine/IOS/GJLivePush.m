@@ -30,18 +30,6 @@
 
 @end
 
-//@implementation GJStickerAttribute
-//
-//+(instancetype)stickerAttributWithImage:(UIImage*)image frame:(GCRect)frame rotate:(CGFloat)rotate{
-//    GJStickerAttribute *attribute = [[GJStickerAttribute alloc] init];
-//    attribute.frame               = frame;
-//    attribute.rotate              = rotate;
-//    attribute.image               = image;
-//    return attribute;
-//}
-//
-//@end
-
 @implementation GJLivePush
 @synthesize     previewView = _previewView;
 

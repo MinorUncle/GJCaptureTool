@@ -66,6 +66,7 @@
 		6A85FA211F01FA990037A64F /* GJRetainBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA191F01FA990037A64F /* GJRetainBuffer.h */; };
 		6A85FA221F01FA990037A64F /* GJRetainBufferPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA1A1F01FA990037A64F /* GJRetainBufferPool.h */; };
 		6A85FA281F02397F0037A64F /* GJAudioMixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA271F02397F0037A64F /* GJAudioMixer.h */; };
+		6A8B5796207DAB26006E59DB /* GJSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A8B577E207DAB26006E59DB /* GJSignal.h */; };
 		6A8F5E351F340E3C00FA57A4 /* GJAudioQueuePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4E51ECB4DFE0009E49A /* GJAudioQueuePlayer.m */; };
 		6A8F5E361F341FFC00FA57A4 /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6A96CCA41F2195C5000DC4FE /* GJScreenRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */; };
@@ -519,6 +520,7 @@
 		6A85FA191F01FA990037A64F /* GJRetainBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJRetainBuffer.h; path = ../../../../GJQueue/GJRetainBuffer.h; sourceTree = "<group>"; };
 		6A85FA1A1F01FA990037A64F /* GJRetainBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJRetainBufferPool.h; path = ../../../../GJQueue/GJRetainBufferPool.h; sourceTree = "<group>"; };
 		6A85FA271F02397F0037A64F /* GJAudioMixer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJAudioMixer.h; path = TheAmazingAudioEngine/GJAudioMixer.h; sourceTree = SOURCE_ROOT; };
+		6A8B577E207DAB26006E59DB /* GJSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJSignal.h; path = ../../../../GJQueue/GJSignal.h; sourceTree = "<group>"; };
 		6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJScreenRecorder.h; path = ../GJScreenRecorder.h; sourceTree = "<group>"; };
 		6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GJScreenRecorder.m; path = ../GJScreenRecorder.m; sourceTree = "<group>"; };
 		6A96CD471F25873E000DC4FE /* ffmpegCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ffmpegCode.xcodeproj; path = ../ffmpegCode/ffmpegCode.xcodeproj; sourceTree = "<group>"; };
@@ -1030,6 +1032,7 @@
 			children = (
 				6A85FA131F01FA990037A64F /* GJBufferPool.h */,
 				6A85FA141F01FA990037A64F /* GJBufferPool+cplus.h */,
+				6A8B577E207DAB26006E59DB /* GJSignal.h */,
 				6A85FA151F01FA990037A64F /* GJLog.h */,
 				6A85FA161F01FA990037A64F /* GJPlatformHeader.h */,
 				6A85FA171F01FA990037A64F /* GJQueue.h */,
@@ -1494,6 +1497,7 @@
 				6A0C84671FA84A00007C7CEA /* Version.h in Headers */,
 				6A40E1A51EEAA2D70047E0F0 /* AEPlaythroughChannel.h in Headers */,
 				6AF9DDB61FA9763D00F6B4F7 /* SCNViewController.h in Headers */,
+				6A8B5796207DAB26006E59DB /* GJSignal.h in Headers */,
 				6A0389291FF12AEA005AC7CE /* GJImageView.h in Headers */,
 				6A85FA1B1F01FA990037A64F /* GJBufferPool.h in Headers */,
 				AE70A5271ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h in Headers */,

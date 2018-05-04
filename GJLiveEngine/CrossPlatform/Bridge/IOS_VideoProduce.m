@@ -575,8 +575,9 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         }
         [parentFilter addTarget:self.cropFilter];
         self.cropFilter.frameProcessingCompletionBlock = ^(GPUImageOutput *imageOutput, CMTime time) {
-            CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].pixelBuffer;
-            CVPixelBufferRetain(pixel_buffer);
+            CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].newPixelBufferFromFramebufferContents;
+//            CVPixelBufferRetain(pixel_buffer);
+
             R_GJPixelFrame *frame                                   = (R_GJPixelFrame *) GJRetainBufferPoolGetData(wkSelf.bufferPool);
             R_BufferWrite(&frame->retain, (GUInt8*)&pixel_buffer, sizeof(CVPixelBufferRef));
             frame->height                                           = (GInt32) wkSelf.destSize.height;

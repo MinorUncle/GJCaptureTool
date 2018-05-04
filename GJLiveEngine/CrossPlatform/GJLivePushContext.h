@@ -9,7 +9,7 @@
 #ifndef GJLivePushContext_h
 #define GJLivePushContext_h
 #include "webserver.h"
-#define RAOP
+//#define RAOP
 //#define RVOP
 
 #ifdef RAOP
@@ -115,9 +115,12 @@ GBool GJLivePush_SetVideoCodeDisable(GJLivePushContext *context, GBool disable);
 GVoid GJLivePush_Dealloc(GJLivePushContext **context);
 GJTrafficStatus GJLivePush_GetVideoTrafficStatus(GJLivePushContext *context);
 GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext *context);
-GHandle GJLivePush_GetDisplayView(GJLivePushContext *context);
+
 
 #pragma mark 音频
+GVoid GJLivePush_AttachAudioProducer(GJLivePushContext* context,GJAudioProduceContext* audioProducer);
+GVoid GJLivePush_DetachAudioProducer(GJLivePushContext* context);
+
 GBool GJLivePush_EnableAudioEchoCancellation(GJLivePushContext *context, GBool enable);
 GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext *context, GBool enable);
 GBool GJLivePush_EnableReverb(GJLivePushContext *context, GBool enable);
@@ -129,6 +132,11 @@ GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat32 volume);
 GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat32 gain);
 
 #pragma mark 视频
+GVoid GJLivePush_AttachVideoProducer(GJLivePushContext* context,GJVideoProduceContext* videoProducer);
+GVoid GJLivePush_DetachVideoProducer(GJLivePushContext* context);
+
+GHandle GJLivePush_GetDisplayView(GJLivePushContext *context);
+
 GVoid GJLivePush_SetCameraPosition(GJLivePushContext *context, GJCameraPosition position);
 GVoid GJLivePush_SetOutOrientation(GJLivePushContext *context, GJInterfaceOrientation orientation);
 GVoid GJLivePush_SetPreviewHMirror(GJLivePushContext *context, GBool preViewMirror);

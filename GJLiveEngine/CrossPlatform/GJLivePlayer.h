@@ -10,6 +10,7 @@
 #import "GJLiveDefine+internal.h"
 #import "GJLiveDefine.h"
 #import "GJRetainBuffer.h"
+#import "GJSignal.h"
 
 
 //音频存在时，不会产生视频缓冲
@@ -56,6 +57,8 @@ typedef struct PlayControl {
     
     R_GJPCMFrame*   freshAudioFrame;
     GInt32          videoQueueWaitTime;
+    
+    GJSignal*       stopSignal;//停止信号，可以不用sleep；
     //视频出队列等待时间(因为需要知道是否没有数据了，主动去缓存。也可以修改为还剩1帧时去缓存，就可以一直等待了)，音频不等待
 } GJPlayControl;
 typedef struct _GJNetShakeInfo {
