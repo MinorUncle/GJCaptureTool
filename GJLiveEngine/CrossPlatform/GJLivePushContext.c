@@ -58,39 +58,6 @@ static GVoid _GJLivePush_SetCodeBitrate(GJLivePushContext *context, GInt32 destR
 static GVoid _GJLivePush_UpdateQualityInfo(GJLivePushContext *context, GInt32 bitrate);
 static GVoid _livePushUpdateCongestion(GJLivePushContext *context,GInt32 netSpeed);
 
-static GVoid videoCaptureFrameOutCallback(GHandle userData, R_GJPixelFrame *frame) {
-    
-//    GJLivePushContext *context = userData;
-//    if (G_TIME_IS_INVALID(context->stopPushClock)) {
-//        if (!context->videoMute && (context->captureVideoCount++) % context->videoDropStep.den >= context->videoDropStep.num) {
-//
-//            context->videoEncoder->encodeFrame(context->videoEncoder, frame);
-//        } else {
-//            GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "丢视频帧");
-//            context->dropVideoCount++;
-//        }
-//    }
-}
-
-//static GVoid audioCaptureFrameOutCallback(GHandle userData, R_GJPCMFrame *frame) {
-//
-//    GJLivePushContext *context = userData;
-//    if (G_TIME_IS_INVALID(context->stopPushClock)) {
-//
-//        if (!context->audioMute) {
-//#ifdef NETWORK_DELAY
-//            if (NeedTestNetwork) {
-//                frame->pts = GJ_Gettime() / 1000;
-//            }else{
-//                frame->pts = GJ_Gettime() / 1000 - context->connentClock;
-//            }
-//#else
-//            frame->pts = GTimeSubtract(GJ_Gettime(), context->connentClock) ;
-//#endif
-//            context->audioEncoder->encodeFrame(context->audioEncoder, frame);
-//        }
-//    }
-//}
 static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficStatus vBufferStatus,GJTrafficStatus aBufferStatus) {
 //    static  int checkCount = 0;
 //    GJLOG(GNULL, GJ_LOGDEBUG,"checkCount:%d",checkCount++);
@@ -211,16 +178,11 @@ static GVoid h264PacketOutCallback(GHandle userData, R_GJPacket *packet) {
     }
 }
 
-//static GVoid aacPacketOutCallback(GHandle userData, R_GJPacket *packet) {
-//    GJLivePushContext *context = userData;
-//    GJStreamPush_SendAudioData(context->streamPush, packet);
-//}
-
 static GVoid streamRecodeMessageCallback(GJStreamPush* push, GHandle userData, kStreamPushMessageType messageType, GHandle messageParm) {
     GJLivePushContext *context = userData;
     switch (messageType) {
         case kStreamPushMessageType_connectSuccess: {
-            pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamRecode);
+            pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamRecode);//录制是生产器和编码器已经连接好了，如果没有，则无法录制，连接成功后再连接到录制器
             pipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamRecode);
             break;
         }
@@ -257,15 +219,9 @@ static GVoid streamPushMessageCallback(GJStreamPush* sender,GJLivePushContext* r
     switch (messageType) {
         case kStreamPushMessageType_connectSuccess: {
             GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "推流连接成功");
-            context->connentClock = GJ_Gettime();
-            
-            pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamPush);
-            pipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamPush);
-            
-            pthread_mutex_lock(&context->lock);
-            context->audioProducer->audioProduceStart(context->audioProducer);
-            context->videoProducer->startProduce(context->videoProducer);
-            pthread_mutex_unlock(&context->lock);
+            context->connentClock = GJ_Gettime();//推流是先连接流与解码器管道，连接成功后再连接生产器和编码器
+            pipleConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
+            pipleConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
             
             GTime time = GTimeSubtract(context->connentClock , context->startPushClock);
             GLong during = (GLong)GTimeMSValue(time);
@@ -472,12 +428,10 @@ GVoid GJLivePush_AttachAudioProducer(GJLivePushContext* context,GJAudioProduceCo
     GJAssert(context->audioEncoder != GNULL && context->audioProducer == GNULL && audioProducer != GNULL, "状态错误");
     context->audioProducer = audioProducer;
     context->audioProducer->audioProduceSetup(context->audioProducer, GNULL, context);
-    pipleConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
 
 }
 GVoid GJLivePush_DetachAudioProducer(GJLivePushContext* context){
     if (context->audioProducer) {
-        pipleDisConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
         context->audioProducer->audioProduceUnSetup(context->audioProducer);
         context->audioProducer = GNULL;
     }
@@ -485,12 +439,10 @@ GVoid GJLivePush_DetachAudioProducer(GJLivePushContext* context){
 GVoid GJLivePush_AttachVideoProducer(GJLivePushContext* context,GJVideoProduceContext* videoProducer){
     GJAssert(context->videoEncoder != GNULL && context->videoProducer == GNULL && videoProducer != GNULL, "状态错误");
     context->videoProducer = videoProducer;
-    context->videoProducer->videoProduceSetup(context->videoProducer, videoCaptureFrameOutCallback, context);
-    pipleConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
+    context->videoProducer->videoProduceSetup(context->videoProducer, GNULL, context);
 }
 GVoid GJLivePush_DetachVideoProducer(GJLivePushContext* context){
     if (context->videoProducer) {
-        pipleDisConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
         context->videoProducer->videoProduceUnSetup(context->videoProducer);
         context->videoProducer = GNULL;
     }
@@ -514,9 +466,7 @@ GVoid GJLivePush_SetConfig(GJLivePushContext *context, const GJPushConfig *confi
                 if (context->audioEncoder) {
                     context->audioEncoder->encodeUnSetup(context->audioEncoder);
                 }
-                if (context->audioProducer) {
-                    context->audioProducer->audioProduceUnSetup(context->audioProducer);
-                }
+
             } else if (config->mAudioBitrate != context->pushConfig->mAudioBitrate) {
                 if (context->audioEncoder) {
                     context->audioEncoder->encodeUnSetup(context->audioEncoder);
@@ -545,7 +495,7 @@ GVoid GJLivePush_SetConfig(GJLivePushContext *context, const GJPushConfig *confi
 //        aFormat.mSampleRate       = config->mAudioSampleRate;
 //        aFormat.mChannelsPerFrame = config->mAudioChannel;
 //        context->audioProducer->setAudioFormat(context->audioProducer,aFormat);
-//        
+        
         *(context->pushConfig) = *config;
     }
     pthread_mutex_unlock(&context->lock);
@@ -675,6 +625,8 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
             context->videoEncoder->encodeFlush(context->videoEncoder);
             context->audioEncoder->encodeFlush(context->audioEncoder);
             
+
+            
             GJAudioFormat aFormat     = {0};
             aFormat.mBitsPerChannel   = 16;
             aFormat.mType             = GJAudioType_PCM;
@@ -701,12 +653,15 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
             vf.format.mType   = GJVideoType_H264;
             vf.bitrate        = context->pushConfig->mVideoBitrate;
 
-            if (!GJStreamPush_Create(&context->streamPush, streamPushMessageCallback, (GHandle) context, &aDFormat, &vf)) {
+            if (!GJStreamPush_Create(&context->streamPush, (MessageHandle)streamPushMessageCallback, (GHandle) context, &aDFormat, &vf)) {
                 GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "GJStreamPush_Create error");
                 result = GFalse;
                 break;
             };
-
+            
+            pipleConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamPush);
+            pipleConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamPush);
+            
             if (!GJStreamPush_StartConnect(context->streamPush, url)) {
                 GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "GJStreamPush_StartConnect error");
                 result = GFalse;
@@ -732,12 +687,15 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context) {
     }
     if (context->streamPush) {
         context->stopPushClock = GJ_Gettime();
-        context->audioProducer->audioProduceStop(context->audioProducer);
-        context->videoProducer->stopProduce(context->videoProducer);
+
        
         //确保没有下一帧数据到发送模块
         pipleDisConnectNode((GJPipleNode*)context->audioEncoder, (GJPipleNode*)context->streamPush);
         pipleDisConnectNode((GJPipleNode*)context->videoEncoder, (GJPipleNode*)context->streamPush);
+        
+        //停止推流也需要停止编码器
+        pipleDisConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
+        pipleDisConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
         
         if (context->streamRecode) {
             GJLivePush_StopRecode(context);
@@ -747,219 +705,6 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context) {
         GJLOG(LIVEPUSH_LOG, GJ_LOGWARNING, "重复停止推流流");
     }
     pthread_mutex_unlock(&context->lock);
-}
-
-GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene){
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetARScene:%p",context);
-    pthread_mutex_lock(&context->lock);
-    GBool result = context->videoProducer->setARScene(context->videoProducer,scene);
-    pthread_mutex_unlock(&context->lock);
-    return result;
-}
-
-GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view){
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetCaptureView:%p",context);
-    pthread_mutex_lock(&context->lock);
-    GBool result = context->videoProducer->setCaptureView(context->videoProducer,view);
-    pthread_mutex_unlock(&context->lock);
-    return result;
-}
-
-GBool GJLivePush_SetCaptureType(GJLivePushContext *context, GJCaptureType type){
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetCaptureType:%p",context);
-    pthread_mutex_lock(&context->lock);
-    GBool result = context->videoProducer->setCaptureType(context->videoProducer,type);
-    pthread_mutex_unlock(&context->lock);
-    return result;
-}
-
-GBool GJLivePush_StartPreview(GJLivePushContext *context) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StartPreview:%p",context);
-    pthread_mutex_lock(&context->lock);
-    GBool result = context->videoProducer->startPreview(context->videoProducer);
-    pthread_mutex_unlock(&context->lock);
-    
-    return result;
-}
-
-GVoid GJLivePush_StopPreview(GJLivePushContext *context) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StopPreview:%p",context);
-    pthread_mutex_lock(&context->lock);
-    context->videoProducer->stopPreview(context->videoProducer);
-    pthread_mutex_unlock(&context->lock);
-}
-
-GBool GJLivePush_SetAudioMute(GJLivePushContext *context, GBool mute) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetAudioMute:%p",context);
-
-    pthread_mutex_lock(&context->lock);
-    context->audioMute = mute;
-    if(mute){
-        pipleDisConnectNode(&context->audioProducer->pipleNode, &context->audioEncoder->pipleNode);
-    }else{
-        pipleConnectNode(&context->audioProducer->pipleNode, &context->audioEncoder->pipleNode);
-    }
-    pthread_mutex_unlock(&context->lock);
-
-    return GTrue;
-}
-
-GBool GJLivePush_SetVideoMute(GJLivePushContext *context, GBool mute) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetVideoMute:%p",context);
-
-    pthread_mutex_lock(&context->lock);
-    context->videoMute = mute;
-    if(mute){
-        pipleDisConnectNode(&context->videoProducer->pipleNode, &context->videoEncoder->pipleNode);
-    }else{
-        pipleConnectNode(&context->videoProducer->pipleNode, &context->videoEncoder->pipleNode);
-    }
-    pthread_mutex_unlock(&context->lock);
-    return GTrue;
-}
-
-GBool GJLivePush_StartMixFile(GJLivePushContext *context, const GChar *fileName,AudioMixFinishCallback finishCallback) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StartMixFile:%p",context);
-
-    pthread_mutex_lock(&context->lock);
-    GBool result = context->audioProducer->setupMixAudioFile(context->audioProducer, fileName, GFalse,finishCallback,context->userData);
-    if (result != GFalse) {
-        result = context->audioProducer->startMixAudioFileAtTime(context->audioProducer, 0);
-    }
-    pthread_mutex_unlock(&context->lock);
-
-    return result;
-}
-
-GBool GJLivePush_SetMixVolume(GJLivePushContext *context, GFloat32 volume) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetMixVolume:%p",context);
-
-    return GJCheckBool(context->audioProducer->setMixVolume(context->audioProducer, volume), "setMixVolume");
-}
-
-GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext *context, GBool should) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_ShouldMixAudioToStream:%p",context);
-
-    return GJCheckBool(context->audioProducer->setMixToStream(context->audioProducer, should), "setMixToStream");
-}
-
-GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat32 volume) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetOutVolume:%p",context);
-    return GJCheckBool(context->audioProducer->setOutVolume(context->audioProducer, volume), "setOutVolume");
-}
-
-GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat32 gain) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetInputGain:%p",context);
-    return GJCheckBool(context->audioProducer->setInputGain(context->audioProducer, gain), "setInputGain");
-}
-
-GBool GJLivePush_SetCameraMirror(GJLivePushContext *context, GBool mirror){
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetCameraMirror:%p",context);
-    GBool result = GFalse;
-    pthread_mutex_lock(&context->lock);
-    result = context->videoProducer->setHorizontallyMirror(context->videoProducer, mirror);
-    pthread_mutex_unlock(&context->lock);
-    return result;
-}
-GBool GJLivePush_SetStreamMirror(GJLivePushContext *context, GBool mirror){
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetStreamMirror:%p",context);
-    GBool result = GFalse;
-    pthread_mutex_lock(&context->lock);
-    result = context->videoProducer->setStreamMirror(context->videoProducer, mirror);
-    pthread_mutex_unlock(&context->lock);
-    return result;
-}
-GBool GJLivePush_SetPreviewMirror(GJLivePushContext *context, GBool mirror){
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetPreviewMirror:%p",context);
-    GBool result = GFalse;
-    pthread_mutex_lock(&context->lock);
-    result = context->videoProducer->setPreviewMirror(context->videoProducer, mirror);
-    pthread_mutex_unlock(&context->lock);
-    return result;
-}
-
-GBool GJLivePush_EnableAudioEchoCancellation(GJLivePushContext *context, GBool enable){
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_EnableAudioEchoCancellation:%p",context);
-    GBool result = GFalse;
-    
-    pthread_mutex_lock(&context->lock);
-    if (context->audioProducer->obaque == GNULL) {
-        result = GFalse;
-    } else {
-        result = context->audioProducer->enableAudioEchoCancellation(context->audioProducer, enable);
-    }
-    pthread_mutex_unlock(&context->lock);
-    
-    return result;
-}
-
-GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext *context, GBool enable) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_EnableAudioInEarMonitoring:%p",context);
-
-    GBool result = GFalse;
-    
-    pthread_mutex_lock(&context->lock);
-    if (context->audioProducer->obaque == GNULL) {
-        result = GFalse;
-    } else {
-        result = context->audioProducer->enableAudioInEarMonitoring(context->audioProducer, enable);
-    }
-    pthread_mutex_unlock(&context->lock);
-    
-    return result;
-}
-
-GBool GJLivePush_EnableReverb(GJLivePushContext *context, GBool enable) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_EnableReverb:%p",context);
-
-    GBool result = GFalse;
-    
-    pthread_mutex_lock(&context->lock);
-    if (context->audioProducer->obaque == GNULL) {
-         result = GFalse;
-    } else {
-         result = context->audioProducer->enableReverb(context->audioProducer, enable);
-    }
-    pthread_mutex_unlock(&context->lock);
-    
-    return result;
-
-}
-GVoid GJLivePush_StopAudioMix(GJLivePushContext *context) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StopAudioMix:%p",context);
-
-    pthread_mutex_lock(&context->lock);
-
-    context->audioProducer->stopMixAudioFile(context->audioProducer);
-    pthread_mutex_unlock(&context->lock);
-
-}
-
-GVoid GJLivePush_SetCameraPosition(GJLivePushContext *context, GJCameraPosition position) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetCameraPosition:%p",context);
-
-    pthread_mutex_lock(&context->lock);
-    context->videoProducer->setCameraPosition(context->videoProducer, position);
-    pthread_mutex_unlock(&context->lock);
-
-}
-
-GVoid GJLivePush_SetOutOrientation(GJLivePushContext *context, GJInterfaceOrientation orientation) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetOutOrientation:%p",context);
-
-    pthread_mutex_lock(&context->lock);
-    context->videoProducer->setOrientation(context->videoProducer, orientation);
-    pthread_mutex_unlock(&context->lock);
-
-}
-
-GVoid GJLivePush_SetPreviewHMirror(GJLivePushContext *context, GBool preViewMirror) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetPreviewHMirror:%p",context);
-
-    pthread_mutex_lock(&context->lock);
-    context->videoProducer->setHorizontallyMirror(context->videoProducer, preViewMirror);
-    pthread_mutex_unlock(&context->lock);
-    
 }
 
 GVoid GJLivePush_Dealloc(GJLivePushContext **pushContext) {
@@ -1026,19 +771,6 @@ GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext *context) {
     return GJStreamPush_GetAudioBufferCacheInfo(context->streamPush);
 }
 
-GHandle GJLivePush_GetDisplayView(GJLivePushContext *context) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_GetDisplayView:%p",context);
-
-    pthread_mutex_lock(&context->lock);
-    GHandle result = NULL;
-    if (context->videoProducer->obaque != GNULL) {
-        result = context->videoProducer->getRenderView(context->videoProducer);
-    }
-    pthread_mutex_unlock(&context->lock);
-
-    return result;
-}
-
 GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps, const GChar *fileUrl) {
     GBool result = GFalse;
     GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StartRecode:%p",context);
@@ -1070,7 +802,7 @@ GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps,
         vf.format.mType   = GJVideoType_H264;
         vf.bitrate        = context->pushConfig->mVideoBitrate;
         
-        if(!GJStreamPush_Create(&context->streamRecode, streamRecodeMessageCallback, context, &aDFormat, &vf)){
+        if(!GJStreamPush_Create(&context->streamRecode, (MessageHandle)streamRecodeMessageCallback, context, &aDFormat, &vf)){
             GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "Recode_Create error");
             result = GFalse;
             break;
@@ -1100,77 +832,302 @@ GVoid GJLivePush_StopRecode(GJLivePushContext *context) {
     pthread_mutex_unlock(&context->lock);
 }
 
-GHandle GJLivePush_CaptureFreshDisplayImage(GJLivePushContext *context){
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_CaptureFreshDisplayImage:%p",context);
-    GHandle image = GNULL;
-    pthread_mutex_lock(&context->lock);
-    if (context->videoProducer) {
-        image = context->videoProducer->getFreshDisplayImage(context->videoProducer);
-    }
-    pthread_mutex_unlock(&context->lock);
-    return image;
-}
-
-GBool GJLivePush_StartSticker(GJLivePushContext *context, const GVoid *images, GInt32 fps, GJStickerUpdateCallback callback, const GHandle userData) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StartSticker:%p",context);
-    GBool result = GFalse;
-    pthread_mutex_lock(&context->lock);
-    if (context->videoProducer) {
-        result = context->videoProducer->addSticker(context->videoProducer, images, fps, callback, userData);
-    }
-    pthread_mutex_unlock(&context->lock);
-    return result;
-}
-GVoid GJLivePush_StopSticker(GJLivePushContext *context) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StopSticker:%p",context);
-    pthread_mutex_lock(&context->lock);
-    if (context->videoProducer) {
-        context->videoProducer->chanceSticker(context->videoProducer);
-    }
-    pthread_mutex_unlock(&context->lock);
-}
-
-GBool GJLivePush_StartTrackImage(GJLivePushContext *context, const GVoid *images, GCRect initFrame){
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StartTrackImage:%p",context);
-    GBool result = GFalse;
-    pthread_mutex_lock(&context->lock);
-    if (context->videoProducer) {
-        result = context->videoProducer->startTrackImage(context->videoProducer,images,initFrame);
-    }
-    pthread_mutex_unlock(&context->lock);
-    return result;
-}
-
-GVoid GJLivePush_StopTrack(GJLivePushContext *context){
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StopTrack:%p",context);
-
-    pthread_mutex_lock(&context->lock);
-    if (context->videoProducer) {
-        context->videoProducer->stopTrackImage(context->videoProducer);
-    }
-    pthread_mutex_unlock(&context->lock);
-}
-
-GSize GJLivePush_GetCaptureSize(GJLivePushContext *context) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_GetCaptureSize:%p",context);
-    GSize size = {0};
-    pthread_mutex_lock(&context->lock);
-
-    if (context->videoProducer) {
-        size = context->videoProducer->getCaptureSize(context->videoProducer);
-    }
-    pthread_mutex_unlock(&context->lock);
-
-    return size;
-}
-
-GBool GJLivePush_SetMeasurementMode(GJLivePushContext *context, GBool measurementMode) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetMeasurementMode:%p",context);
-    GBool ret = GFalse;
-    pthread_mutex_lock(&context->lock);
-    if (context->audioProducer) {
-        ret = context->audioProducer->enableMeasurementMode(context->audioProducer, measurementMode);
-    }
-    pthread_mutex_unlock(&context->lock);
-    return ret;
-}
+//GHandle GJLivePush_GetDisplayView(GJLivePushContext *context) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_GetDisplayView:%p",context);
+//
+//    pthread_mutex_lock(&context->lock);
+//    GHandle result = NULL;
+//    if (context->videoProducer->obaque != GNULL) {
+//        result = context->videoProducer->getRenderView(context->videoProducer);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//
+//    return result;
+//}
+//GHandle GJLivePush_CaptureFreshDisplayImage(GJLivePushContext *context){
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_CaptureFreshDisplayImage:%p",context);
+//    GHandle image = GNULL;
+//    pthread_mutex_lock(&context->lock);
+//    if (context->videoProducer) {
+//        image = context->videoProducer->getFreshDisplayImage(context->videoProducer);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//    return image;
+//}
+//
+//GBool GJLivePush_StartSticker(GJLivePushContext *context, const GVoid *images, GInt32 fps, GJStickerUpdateCallback callback, const GHandle userData) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StartSticker:%p",context);
+//    GBool result = GFalse;
+//    pthread_mutex_lock(&context->lock);
+//    if (context->videoProducer) {
+//        result = context->videoProducer->addSticker(context->videoProducer, images, fps, callback, userData);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//    return result;
+//}
+//GVoid GJLivePush_StopSticker(GJLivePushContext *context) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StopSticker:%p",context);
+//    pthread_mutex_lock(&context->lock);
+//    if (context->videoProducer) {
+//        context->videoProducer->chanceSticker(context->videoProducer);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//}
+//
+//GBool GJLivePush_StartTrackImage(GJLivePushContext *context, const GVoid *images, GCRect initFrame){
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StartTrackImage:%p",context);
+//    GBool result = GFalse;
+//    pthread_mutex_lock(&context->lock);
+//    if (context->videoProducer) {
+//        result = context->videoProducer->startTrackImage(context->videoProducer,images,initFrame);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//    return result;
+//}
+//
+//GVoid GJLivePush_StopTrack(GJLivePushContext *context){
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StopTrack:%p",context);
+//
+//    pthread_mutex_lock(&context->lock);
+//    if (context->videoProducer) {
+//        context->videoProducer->stopTrackImage(context->videoProducer);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//}
+//
+//GSize GJLivePush_GetCaptureSize(GJLivePushContext *context) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_GetCaptureSize:%p",context);
+//    GSize size = {0};
+//    pthread_mutex_lock(&context->lock);
+//
+//    if (context->videoProducer) {
+//        size = context->videoProducer->getCaptureSize(context->videoProducer);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//
+//    return size;
+//}
+//
+//GBool GJLivePush_SetMeasurementMode(GJLivePushContext *context, GBool measurementMode) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetMeasurementMode:%p",context);
+//    GBool ret = GFalse;
+//    pthread_mutex_lock(&context->lock);
+//    if (context->audioProducer) {
+//        ret = context->audioProducer->enableMeasurementMode(context->audioProducer, measurementMode);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//    return ret;
+//}
+//
+//GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene){
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetARScene:%p",context);
+//    pthread_mutex_lock(&context->lock);
+//    GBool result = context->videoProducer->setARScene(context->videoProducer,scene);
+//    pthread_mutex_unlock(&context->lock);
+//    return result;
+//}
+//
+//GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view){
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetCaptureView:%p",context);
+//    pthread_mutex_lock(&context->lock);
+//    GBool result = context->videoProducer->setCaptureView(context->videoProducer,view);
+//    pthread_mutex_unlock(&context->lock);
+//    return result;
+//}
+//
+//GBool GJLivePush_SetCaptureType(GJLivePushContext *context, GJCaptureType type){
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetCaptureType:%p",context);
+//    pthread_mutex_lock(&context->lock);
+//    GBool result = context->videoProducer->setCaptureType(context->videoProducer,type);
+//    pthread_mutex_unlock(&context->lock);
+//    return result;
+//}
+//
+//GBool GJLivePush_StartPreview(GJLivePushContext *context) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StartPreview:%p",context);
+//    pthread_mutex_lock(&context->lock);
+//    GBool result = context->videoProducer->startPreview(context->videoProducer);
+//    pthread_mutex_unlock(&context->lock);
+//
+//    return result;
+//}
+//
+//GVoid GJLivePush_StopPreview(GJLivePushContext *context) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StopPreview:%p",context);
+//    pthread_mutex_lock(&context->lock);
+//    context->videoProducer->stopPreview(context->videoProducer);
+//    pthread_mutex_unlock(&context->lock);
+//}
+//
+//GBool GJLivePush_SetAudioMute(GJLivePushContext *context, GBool mute) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetAudioMute:%p",context);
+//
+//    pthread_mutex_lock(&context->lock);
+//    context->audioMute = mute;
+//    if(mute){
+//        pipleDisConnectNode(&context->audioProducer->pipleNode, &context->audioEncoder->pipleNode);
+//    }else{
+//        pipleConnectNode(&context->audioProducer->pipleNode, &context->audioEncoder->pipleNode);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//
+//    return GTrue;
+//}
+//
+//GBool GJLivePush_SetVideoMute(GJLivePushContext *context, GBool mute) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetVideoMute:%p",context);
+//
+//    pthread_mutex_lock(&context->lock);
+//    context->videoMute = mute;
+//    if(mute){
+//        pipleDisConnectNode(&context->videoProducer->pipleNode, &context->videoEncoder->pipleNode);
+//    }else{
+//        pipleConnectNode(&context->videoProducer->pipleNode, &context->videoEncoder->pipleNode);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//    return GTrue;
+//}
+//
+//GBool GJLivePush_StartMixFile(GJLivePushContext *context, const GChar *fileName,AudioMixFinishCallback finishCallback) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StartMixFile:%p",context);
+//
+//    pthread_mutex_lock(&context->lock);
+//    GBool result = context->audioProducer->setupMixAudioFile(context->audioProducer, fileName, GFalse,finishCallback,context->userData);
+//    if (result != GFalse) {
+//        result = context->audioProducer->startMixAudioFileAtTime(context->audioProducer, 0);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//
+//    return result;
+//}
+//
+//GBool GJLivePush_SetMixVolume(GJLivePushContext *context, GFloat32 volume) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetMixVolume:%p",context);
+//
+//    return GJCheckBool(context->audioProducer->setMixVolume(context->audioProducer, volume), "setMixVolume");
+//}
+//
+//GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext *context, GBool should) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_ShouldMixAudioToStream:%p",context);
+//
+//    return GJCheckBool(context->audioProducer->setMixToStream(context->audioProducer, should), "setMixToStream");
+//}
+//
+//GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat32 volume) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetOutVolume:%p",context);
+//    return GJCheckBool(context->audioProducer->setOutVolume(context->audioProducer, volume), "setOutVolume");
+//}
+//
+//GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat32 gain) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetInputGain:%p",context);
+//    return GJCheckBool(context->audioProducer->setInputGain(context->audioProducer, gain), "setInputGain");
+//}
+//
+//GBool GJLivePush_SetCameraMirror(GJLivePushContext *context, GBool mirror){
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetCameraMirror:%p",context);
+//    GBool result = GFalse;
+//    pthread_mutex_lock(&context->lock);
+//    result = context->videoProducer->setHorizontallyMirror(context->videoProducer, mirror);
+//    pthread_mutex_unlock(&context->lock);
+//    return result;
+//}
+//GBool GJLivePush_SetStreamMirror(GJLivePushContext *context, GBool mirror){
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetStreamMirror:%p",context);
+//    GBool result = GFalse;
+//    pthread_mutex_lock(&context->lock);
+//    result = context->videoProducer->setStreamMirror(context->videoProducer, mirror);
+//    pthread_mutex_unlock(&context->lock);
+//    return result;
+//}
+//GBool GJLivePush_SetPreviewMirror(GJLivePushContext *context, GBool mirror){
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetPreviewMirror:%p",context);
+//    GBool result = GFalse;
+//    pthread_mutex_lock(&context->lock);
+//    result = context->videoProducer->setPreviewMirror(context->videoProducer, mirror);
+//    pthread_mutex_unlock(&context->lock);
+//    return result;
+//}
+//
+//GBool GJLivePush_EnableAudioEchoCancellation(GJLivePushContext *context, GBool enable){
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_EnableAudioEchoCancellation:%p",context);
+//    GBool result = GFalse;
+//
+//    pthread_mutex_lock(&context->lock);
+//    if (context->audioProducer->obaque == GNULL) {
+//        result = GFalse;
+//    } else {
+//        result = context->audioProducer->enableAudioEchoCancellation(context->audioProducer, enable);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//
+//    return result;
+//}
+//
+//GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext *context, GBool enable) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_EnableAudioInEarMonitoring:%p",context);
+//
+//    GBool result = GFalse;
+//
+//    pthread_mutex_lock(&context->lock);
+//    if (context->audioProducer->obaque == GNULL) {
+//        result = GFalse;
+//    } else {
+//        result = context->audioProducer->enableAudioInEarMonitoring(context->audioProducer, enable);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//
+//    return result;
+//}
+//
+//GBool GJLivePush_EnableReverb(GJLivePushContext *context, GBool enable) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_EnableReverb:%p",context);
+//
+//    GBool result = GFalse;
+//
+//    pthread_mutex_lock(&context->lock);
+//    if (context->audioProducer->obaque == GNULL) {
+//        result = GFalse;
+//    } else {
+//        result = context->audioProducer->enableReverb(context->audioProducer, enable);
+//    }
+//    pthread_mutex_unlock(&context->lock);
+//
+//    return result;
+//
+//}
+//GVoid GJLivePush_StopAudioMix(GJLivePushContext *context) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_StopAudioMix:%p",context);
+//
+//    pthread_mutex_lock(&context->lock);
+//
+//    context->audioProducer->stopMixAudioFile(context->audioProducer);
+//    pthread_mutex_unlock(&context->lock);
+//
+//}
+//
+//GVoid GJLivePush_SetCameraPosition(GJLivePushContext *context, GJCameraPosition position) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetCameraPosition:%p",context);
+//
+//    pthread_mutex_lock(&context->lock);
+//    context->videoProducer->setCameraPosition(context->videoProducer, position);
+//    pthread_mutex_unlock(&context->lock);
+//
+//}
+//
+//GVoid GJLivePush_SetOutOrientation(GJLivePushContext *context, GJInterfaceOrientation orientation) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetOutOrientation:%p",context);
+//
+//    pthread_mutex_lock(&context->lock);
+//    context->videoProducer->setOrientation(context->videoProducer, orientation);
+//    pthread_mutex_unlock(&context->lock);
+//
+//}
+//
+//GVoid GJLivePush_SetPreviewHMirror(GJLivePushContext *context, GBool preViewMirror) {
+//    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetPreviewHMirror:%p",context);
+//
+//    pthread_mutex_lock(&context->lock);
+//    context->videoProducer->setHorizontallyMirror(context->videoProducer, preViewMirror);
+//    pthread_mutex_unlock(&context->lock);
+//
+//}

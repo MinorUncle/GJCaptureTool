@@ -120,7 +120,8 @@
                                                            repeats:YES];
             });
         }
-       
+        _audioProducer->audioProduceStart(_audioProducer);
+        _videoProducer->startProduce(_videoProducer);
         return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
     }
 }
@@ -135,6 +136,8 @@
             _timer = nil;
         });
     }
+    _audioProducer->audioProduceStop(_audioProducer);
+    _videoProducer->stopProduce(_videoProducer);
     GJLivePush_StopPush(_livePush);
 }
 
@@ -354,7 +357,7 @@
     return CGSizeMake(size.width, size.height);
 }
 
-#pragma mark callback
+#pragma mark GJLIvePush callback
 static GVoid audioMixFinishCallback(GHandle userData,const GChar* filePath, GHandle error){
     GJLivePush* self = (__bridge GJLivePush *)(userData);
     if ([self.delegate respondsToSelector:@selector(livePush:mixFileFinish:)]) {

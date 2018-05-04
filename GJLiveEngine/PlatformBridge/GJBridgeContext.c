@@ -48,7 +48,7 @@ GBool pipleNodeUnInit(GJPipleNode* node){
 
 
 GBool pipleConnectNode(GJPipleNode* superNode,GJPipleNode* subNode){
-    GJAssert(superNode && superNode->lock != GNULL, "GJPipleConnectNode error");
+    GJAssert(superNode && superNode->lock != GNULL && subNode, "GJPipleConnectNode error");
     pthread_mutex_lock(superNode->lock);
     GBool find = GFalse;
     for (int i = 0; i< superNode->subCount; i++) {
