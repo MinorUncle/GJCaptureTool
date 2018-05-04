@@ -195,14 +195,14 @@
     if (_livePush) {
         
         GJLivePush_DetachVideoProducer(_livePush);
-        GJLivePush_DetachVideoProducer(_livePush);
+        GJLivePush_DetachAudioProducer(_livePush);
         GJLivePush_Dealloc(&_livePush);
     }
-    if (_videoProducer) {
-        GJ_AudioProduceContextDealloc(&_audioProducer);
-        _videoProducer = GNULL;
-    }
     if (_audioProducer) {
+        GJ_AudioProduceContextDealloc(&_audioProducer);
+        _audioProducer = GNULL;
+    }
+    if (_videoProducer) {
         GJ_VideoProduceContextDealloc(&_videoProducer);
         _videoProducer = GNULL;
     }

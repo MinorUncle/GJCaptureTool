@@ -469,26 +469,30 @@ GBool GJLivePush_Create(GJLivePushContext **pushContext, GJLivePushCallback call
 }
 
 GVoid GJLivePush_AttachAudioProducer(GJLivePushContext* context,GJAudioProduceContext* audioProducer){
-    GJAssert(context->audioEncoder != GNULL, "请先打开音频编码器");
+    GJAssert(context->audioEncoder != GNULL && context->audioProducer == GNULL && audioProducer != GNULL, "状态错误");
+    context->audioProducer = audioProducer;
     context->audioProducer->audioProduceSetup(context->audioProducer, GNULL, context);
     pipleConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
 
 }
 GVoid GJLivePush_DetachAudioProducer(GJLivePushContext* context){
-    GJAssert(context->videoEncoder != GNULL, "请先打开视频编码器");
-    pipleDisConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
     if (context->audioProducer) {
+        pipleDisConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
         context->audioProducer->audioProduceUnSetup(context->audioProducer);
+        context->audioProducer = GNULL;
     }
 }
 GVoid GJLivePush_AttachVideoProducer(GJLivePushContext* context,GJVideoProduceContext* videoProducer){
+    GJAssert(context->videoEncoder != GNULL && context->videoProducer == GNULL && videoProducer != GNULL, "状态错误");
+    context->videoProducer = videoProducer;
     context->videoProducer->videoProduceSetup(context->videoProducer, videoCaptureFrameOutCallback, context);
     pipleConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
 }
 GVoid GJLivePush_DetachVideoProducer(GJLivePushContext* context){
-    pipleDisConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
     if (context->videoProducer) {
+        pipleDisConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
         context->videoProducer->videoProduceUnSetup(context->videoProducer);
+        context->videoProducer = GNULL;
     }
 }
 
@@ -965,8 +969,6 @@ GVoid GJLivePush_Dealloc(GJLivePushContext **pushContext) {
     if (context == GNULL) {
         GJLOG(LIVEPUSH_LOG, GJ_LOGERROR, "非法释放");
     } else {
-        pipleDisConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
-        pipleDisConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
         
         if (context->audioEncoder) {
             context->audioEncoder->encodeUnSetup(context->audioEncoder);
@@ -977,10 +979,10 @@ GVoid GJLivePush_Dealloc(GJLivePushContext **pushContext) {
             GJ_H264EncodeContextDealloc(&context->videoEncoder);
         }
         if (context->audioProducer) {
-            context->audioProducer->audioProduceUnSetup(context->audioProducer);
+            GJLivePush_DetachAudioProducer(context);
         }
         if (context->videoProducer) {
-            context->videoProducer->videoProduceUnSetup(context->videoProducer);
+            GJLivePush_DetachVideoProducer(context);
         }
 
         if (serverThread == GNULL) {

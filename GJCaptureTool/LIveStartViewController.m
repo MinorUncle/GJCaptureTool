@@ -14,7 +14,7 @@
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/50020.flv";
 //static NSString* pullUlr = @"http://10.0.21.39/hls/room.m3u8";
 //static NSString* pullUlr = @"rtmp://192.168.199.187/live/room";
-static NSString* pullUlr = @"rtmp://10.0.22.217/live/room";
+static NSString* pullUlr = @"rtmp://10.0.21.232/live/room";
 //static NSString* pullUlr = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
 //static NSString* url = @"rtsp://10.0.23.65/sample_100kbit.mp4";
 //static NSString* pullUlr = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
@@ -26,7 +26,7 @@ static NSString* pullUlr = @"rtmp://10.0.22.217/live/room";
 //static NSString* pushUrl = @"rtmp://10.0.21.228/live/room";
 //static NSString* pushUrl = @"rtmp://push.kktv8.com/livekktv/73257119";//kk服务器地址
 //static NSString* pushUrl = @"rtmp://192.168.199.187/live/room";
-static NSString* pushUrl = @"rtmp://10.0.22.217/live/room";
+static NSString* pushUrl = @"rtmp://10.0.21.232/live/room";
 //static NSString* pushUrl = @"rtmp://10.0.20.150/live/room";
 
 @interface LIveStartViewController ()
