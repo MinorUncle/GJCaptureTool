@@ -8,19 +8,14 @@
 
 #import "IOS_VideoProduce.h"
 #import "GJBufferPool.h"
-#import "GJImageBeautifyFilter.h"
-#import "GJImagePictureOverlay.h"
-#import "GJImageTrackImage.h"
-#import "GJImageView.h"
+#import "GJImageFilters.h"
 #import "GJLiveDefine.h"
 #import "GJLog.h"
 #import "GPUImageVideoCamera.h"
-#import "GJImageARCapture.h"
-#import "GJImageUICapture.h"
-#import "GJPaintingCamera.h"
 #import <stdlib.h>
 typedef enum { //filter深度
     kFilterCamera = 0,
+    kFilterFaceSticker,
     kFilterBeauty,
     kFilterTrack,
     kFilterSticker,
@@ -116,6 +111,10 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property (nonatomic, strong) GPUImageOutput<GJCameraProtocal>*    camera;
 @property (nonatomic, strong) GJImageView *           imageView;
 @property (nonatomic, strong) GPUImageCropFilter *    cropFilter;
+@property (nonatomic, strong) ARCSoftFaceHandle *     faceHandle;
+@property (nonatomic, strong) ARCSoftFaceSticker *    faceSticker;
+
+
 @property (nonatomic, strong) GPUImageBeautifyFilter *beautifyFilter;
 @property (nonatomic, strong) GPUImageFilter *        videoSender;
 @property (nonatomic, assign) AVCaptureDevicePosition cameraPosition;
@@ -135,6 +134,32 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property (nonatomic, assign) GRational               dropStep;
 @property (nonatomic, assign) long                  captureCount;
 @property (nonatomic, assign) long                  dropCount;
+
+#pragma mark 美颜参数设置，请先开启任意一种美颜
+/**
+ 美白：0-100
+ */
+@property(assign,nonatomic)NSInteger brightness;
+
+/**
+ 磨皮：0-100
+ */
+@property(assign,nonatomic)NSInteger skinSoften;
+
+/**
+ 皮肤红润：0--100
+ */
+@property(nonatomic,assign)NSInteger skinRuddy;
+
+/**
+ 瘦脸：0--100
+ */
+@property(nonatomic,assign)NSInteger faceSlender;     //
+
+/**
+ 大眼：0--100
+ */
+@property(nonatomic,assign)NSInteger eyeEnlargement;  //
 
 
 @property (nonatomic, copy) VideoRecodeCallback callback;
@@ -269,6 +294,34 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return _camera;
 }
 
+-(void)setSkinRuddy:(NSInteger)skinRuddy{
+    _faceHandle.skinRuddy = skinRuddy;
+}
+-(NSInteger)skinRuddy{
+    return _faceHandle.skinRuddy;
+}
+
+-(void)setSkinSoften:(NSInteger)skinSoften{
+    _faceHandle.skinSoftn = skinSoften;
+}
+-(NSInteger)skinSoften{
+    return _faceHandle.skinSoftn;
+}
+
+-(void)setBrightness:(NSInteger)brightness{
+    _faceHandle.skinBright = brightness;
+}
+-(NSInteger)brightness{
+    return _faceHandle.skinBright;
+}
+
+-(void)setEyeEnlargement:(NSInteger)eyeEnlargement{
+    _faceHandle.eyesEnlargement = eyeEnlargement;
+}
+-(NSInteger)eyeEnlargement{
+    return _faceHandle.eyesEnlargement;
+}
+
 -(void)deleteShowImage{
     [_imageView removeObserver:self forKeyPath:@"frame"];
     _imageView = nil;
@@ -320,8 +373,14 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
                 break;
             }
         case kFilterBeauty:
-            outFiter = _camera;
+            if (_faceSticker) {
+                outFiter = _faceSticker;
+                break;
+            }
             break;
+        case kFilterFaceSticker:
+            GJAssert(_camera != nil, "camera还没有创建");
+            outFiter = _camera;
         default:
             GJAssert(0, "错误");
             break;
@@ -341,6 +400,9 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         case kFilterBeauty:
             outFiter = _beautifyFilter;
             break;
+        case kFilterFaceSticker:
+            outFiter = _faceSticker;
+            break;
         case kFilterCamera:
             outFiter = _camera;
             break;
@@ -356,6 +418,11 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     GPUImageOutput *outFiter = nil;
     switch (deep) {
         case kFilterCamera:
+            if (_faceSticker) {
+                outFiter = _faceSticker;
+                break;
+            }
+        case kFilterFaceSticker:
             if (_beautifyFilter) {
                 outFiter = _beautifyFilter;
                 break;
@@ -404,9 +471,11 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         [parentFilter removeAllTargets];
         [parentFilter addTarget:filter];
     }else{
+        assert(0);
         [[self getSonFilterWithDeep:deep] addTarget:filter];
     }
 }
+
 
 - (BOOL)startStickerWithImages:(NSArray<GJOverlayAttribute *> *)images fps:(NSInteger)fps updateBlock:(OverlaysUpdate)updateBlock {
     
@@ -438,6 +507,30 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         [self.sticker stop];
         self.sticker = nil;
     });
+}
+
+-(BOOL)prepareVideoEffectWithBaseData:(NSString *)baseDataPath{
+    runAsynchronouslyOnVideoProcessingQueue(^{
+        _faceHandle = [[ARCSoftFaceHandle alloc]initWithDataPath:baseDataPath];
+        self.camera.delegate = _faceHandle;
+        _faceSticker = [[ARCSoftFaceSticker alloc]init];
+        [self addFilter:_faceSticker deep:kFilterFaceSticker];
+    });
+    return YES;
+}
+/**
+ 取消视频处理
+ */
+-(void)chanceVideoEffect{
+    self.camera.delegate = nil;
+    _faceHandle = nil;
+    runSynchronouslyOnVideoProcessingQueue(^{
+        [self removeFilterWithdeep:kFilterFaceSticker];
+    });
+}
+
+-(BOOL)updateFaceStickerWithTemplatePath:(NSString*)path{
+    return [_faceSticker updateTemplatePath:path];
 }
 
 - (BOOL)startTrackingImageWithImages:(NSArray<GJOverlayAttribute*>*)images{

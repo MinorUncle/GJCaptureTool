@@ -1277,7 +1277,6 @@ static OSStatus CreateCGImageFromCVPixelBuffer(CVPixelBufferRef pixelBuffer, CGI
     }
 }
 
-
 -(void)dealloc{
     
     NSLog(@"dealloc:%@",self);
