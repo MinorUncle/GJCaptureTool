@@ -38,8 +38,8 @@ GVoid GJStreamPull_Delloc(GJStreamPull *pull);
 GVoid  packetRecycleNoticeCallback(GJRetainBuffer* buffer,GHandle userData){
     R_GJPacket* packet = (R_GJPacket*)buffer;
     if ((packet->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType) {
-        AVPacket* avPacket = (AVPacket*)R_BufferStart(packet) + packet->extendDataOffset;
-        av_packet_unref(avPacket);
+        AVPacket avPacket = ((AVPacket*)R_BufferStart(packet) + packet->extendDataOffset)[0];
+        av_packet_unref(&avPacket);
     }
 }
 
@@ -102,7 +102,7 @@ static GHandle pullRunloop(GHandle parm) {
         AVStream *vStream  = pull->formatContext->streams[vsIndex];
         R_GJPacket *streamPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, sizeof(AVStream*));
         streamPacket->type = GJMediaType_Video;
-        streamPacket->flag = GJPacketFlag_AVStreamType;
+        streamPacket->flag = GJPacketFlag_P_AVStreamType;
     
         ((AVStream**)(R_BufferStart(streamPacket)))[0] = vStream;
         R_BufferUseSize(streamPacket, sizeof(vStream));
@@ -127,9 +127,10 @@ static GHandle pullRunloop(GHandle parm) {
         AVStream *aStream  = pull->formatContext->streams[asIndex];
         R_GJPacket *streamPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(pull->memoryCachePool, sizeof(AVStream*));
         streamPacket->type = GJMediaType_Audio;
-        streamPacket->flag = GJPacketFlag_AVStreamType;
+        streamPacket->flag = GJPacketFlag_P_AVStreamType;
         
-        R_BufferWrite(&streamPacket->retain, (GHandle)aStream, sizeof(aStream));
+        ((AVStream**)(R_BufferStart(streamPacket)))[0] = aStream;
+        R_BufferUseSize(streamPacket, sizeof(aStream));
         streamPacket->extendDataSize = sizeof(aStream);
         
         pthread_mutex_lock(&pull->mutex);
@@ -137,7 +138,7 @@ static GHandle pullRunloop(GHandle parm) {
             pull->dataCallback(pull, streamPacket, pull->dataCallbackParm);
         }
         pthread_mutex_unlock(&pull->mutex);
-        pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&streamPacket->retain,GJMediaType_Video);
+        pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&streamPacket->retain,GJMediaType_Audio);
         R_BufferUnRetain(&streamPacket->retain);
     }
     
@@ -153,7 +154,9 @@ static GHandle pullRunloop(GHandle parm) {
         packet->flag = GJPacketFlag_AVPacketType;
         GInt32 ret = av_read_frame(pull->formatContext, &pkt);
         av_packet_split_side_data(&pkt);
-        R_BufferWrite(packet, &pkt, sizeof(pkt));//转移了内存引用，所以不用了av_packet_unref;
+        
+        ((AVPacket*)(R_BufferStart(packet)))[0] = pkt;//转移了内存引用，所以不用了av_packet_unref;
+        R_BufferUseSize(packet, sizeof(pkt));
         packet->extendDataSize = sizeof(pkt);
         
         if (ret < 0) {

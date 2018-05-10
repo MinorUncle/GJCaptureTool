@@ -6,8 +6,8 @@
 //  Copyright © 2018年 MinorUncle. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
+#include "GJLiveDefine+internal.h"
+#include "GJBridegContext.h"
 
-@interface FFAudioDecoder : NSObject
-
-@end
+GVoid FFAudioDecodeContextCreate(FFAudioDecodeContext** context);
+GVoid FFAudioDecodeContextDealloc(FFAudioDecodeContext** context);

@@ -8,6 +8,4 @@
 
 #import "FFAudioDecoder.h"
 
-@implementation FFAudioDecoder
 
-@end

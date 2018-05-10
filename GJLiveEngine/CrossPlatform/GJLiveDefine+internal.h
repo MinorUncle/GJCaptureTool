@@ -103,8 +103,8 @@ typedef enum _GJMediaType{
 typedef enum _GJPacketFlag{
     GJPacketFlag_KEY = 1 << 0,
     GJPacketFlag_DecoderType = 1 << 1,
-    GJPacketFlag_AVStreamType = 1 << 2,
-    GJPacketFlag_AVPacketType = 1 << 3,
+    GJPacketFlag_P_AVStreamType = 1 << 2,//AVStream*
+    GJPacketFlag_AVPacketType = 1 << 3,//AVPacket
 }GJPacketFlag;
 
 typedef struct GJPacket{

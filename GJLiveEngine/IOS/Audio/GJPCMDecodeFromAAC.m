@@ -10,6 +10,7 @@
 #import "GJLog.h"
 #import "GJRetainBufferPool.h"
 #import "GJUtil.h"
+#import "libavformat/avformat.h"
 
 
 @interface GJPCMDecodeFromAAC () {
@@ -118,17 +119,21 @@ static int stopCount;
 static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData, AudioStreamPacketDescription **outDataPacketDescription, void *inUserData) {
     GJPCMDecodeFromAAC *decode = (__bridge GJPCMDecodeFromAAC *) inUserData;
     if (decode->_prePacket) {
-        R_BufferUnRetain(&decode->_prePacket->retain);
+        R_BufferUnRetain(decode->_prePacket);
         decode->_prePacket = NULL;
     }
     GJQueue *       param = decode->_resumeQueue;
-    GJRetainBuffer *buffer;
     R_GJPacket *    packet;
     if (decode.running && queuePop(param, (void **) &packet, INT_MAX)) {
-        buffer                              = &packet->retain;
-        ioData->mBuffers[0].mData           = R_BufferStart(&packet->retain) + packet->dataOffset;
+        if((packet->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType){
+            AVPacket* avpacket = ((AVPacket*)R_BufferStart(packet)+packet->extendDataOffset);
+            ioData->mBuffers[0].mData           = avpacket->data;
+            ioData->mBuffers[0].mDataByteSize   = avpacket->size;
+        }else{
+            ioData->mBuffers[0].mData           = R_BufferStart(packet) + packet->dataOffset;
+            ioData->mBuffers[0].mDataByteSize   = packet->dataSize;
+        }
         ioData->mBuffers[0].mNumberChannels = decode->_sourceFormat.mChannelsPerFrame;
-        ioData->mBuffers[0].mDataByteSize   = packet->dataSize;
         *ioNumberDataPackets                = 1;
     } else {
         *ioNumberDataPackets = 0;
@@ -143,7 +148,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
     if (outDataPacketDescription) {
         decode->tPacketDesc.mStartOffset = decode->tPacketDesc.mVariableFramesInPacket = 0;
-        decode->tPacketDesc.mDataByteSize                                              = packet->dataSize;
+        decode->tPacketDesc.mDataByteSize                                              = ioData->mBuffers[0].mDataByteSize;
         outDataPacketDescription[0]                                                    = &(decode->tPacketDesc);
     }
     if (decode.currentPts <= 0) {
@@ -157,11 +162,38 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (!_running) {
         return;
     }
-    uint8_t *astBuffer                 = packet->extendDataOffset + R_BufferStart(&packet->retain);
-    ASC asc = {0};
-    int astLen = 0;
-    if (packet->extendDataSize > 0 && (astLen = readASC(astBuffer, packet->extendDataSize, &asc)) > 0){
-        if (_decodeConvert==nil || memcmp(&asc, &_asc, sizeof(asc)) != 0) {
+    if ((packet->flag & GJPacketFlag_P_AVStreamType) == GJPacketFlag_P_AVStreamType) {
+        AVStream* stream = ((AVStream**)(R_BufferStart(packet)+packet->extendDataOffset))[0];
+        GJAssert(_decodeConvert == GNULL, "待优化");
+        AudioStreamBasicDescription s = {0};
+        s.mFramesPerPacket            = stream->codecpar->frame_size;
+        s.mSampleRate                 =  stream->codecpar->sample_rate;
+        switch (stream->codecpar->codec_id) {
+            case AV_CODEC_ID_AAC:
+                s.mFormatID                   = kAudioFormatMPEG4AAC;
+                break;
+                
+            default:
+                GJAssert(0, "不支持");
+                break;
+        }
+        s.mChannelsPerFrame           =  stream->codecpar->channels;
+        
+        AudioStreamBasicDescription d = s;
+        d.mBitsPerChannel =16;
+        d.mFormatID                   = kAudioFormatLinearPCM; //PCM
+        d.mBytesPerPacket = d.mBytesPerFrame = d.mChannelsPerFrame * d.mBitsPerChannel/8;
+        d.mFramesPerPacket                   = 1;
+        d.mFormatFlags                       = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
+        [self createCorverWithDescription:d SourceDescription:s];
+
+        if (packet->dataSize <= 0)return;
+    }else if((packet->flag & GJPacketFlag_AVPacketType) != GJPacketFlag_AVPacketType){
+        uint8_t *astBuffer                 = packet->extendDataOffset + R_BufferStart(&packet->retain);
+        ASC asc = {0};
+        int astLen = 0;
+        if (packet->extendDataSize > 0 && (astLen = readASC(astBuffer, packet->extendDataSize, &asc)) > 0){
+            if (_decodeConvert==nil || memcmp(&asc, &_asc, sizeof(asc)) != 0) {
                 if (_decodeConvert) {
                     [self stop];
                 }
@@ -182,12 +214,15 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
                 d.mFramesPerPacket                   = 1;
                 d.mFormatFlags                       = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
                 [self createCorverWithDescription:d SourceDescription:s];
-
+                
+            }
+        }
+        
+        if (packet->dataSize <= 0) {
+            return;
         }
     }
-    if (packet->dataSize <= 0) {
-        return;
-    }
+
     R_BufferRetain(&packet->retain);
     if (!queuePush(_resumeQueue, packet, 0)) {
         R_BufferUnRetain(&packet->retain);
