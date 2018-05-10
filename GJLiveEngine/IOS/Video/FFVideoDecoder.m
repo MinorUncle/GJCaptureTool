@@ -12,7 +12,7 @@
 
 #import "GJQueue.h"
 #include "GJBufferPool.h"
-#import "H264Decoder.h"
+#import "FFVideoDecoder.h"
 #include "sps_decode.h"
 struct _FFDecoder{
     GJPixelType             pixelFormat;
@@ -33,7 +33,7 @@ void pixelBufferReleasePlanarBytesCallback( void * CV_NULLABLE releaseRefCon, co
 static void* FFDecoder_DecodeRunloop(GHandle arg){
     FFDecoder* decoder = (FFDecoder*)arg;
     R_GJPacket* packetData;
-    AVPacket* packet = av_packet_alloc();
+    AVPacket packet;
     size_t width = decoder->decoderContext->width;
     size_t height = decoder->decoderContext->height;
     NSDictionary *attributes = @{(id) kCVPixelBufferOpenGLESCompatibilityKey : @YES};
@@ -42,88 +42,121 @@ static void* FFDecoder_DecodeRunloop(GHandle arg){
     size_t planeBytesPerRow[2] = {width*height,width*height/2};
     while (decoder->isRunning && queuePop(decoder->cacheQueue, (GHandle*)&packetData, GINT32_MAX)) {
         AVFrame* frame  = av_frame_alloc();
-        int errorCode = av_packet_from_data(packet, R_BufferStart(&packetData->retain)+packetData->dataOffset, packetData->dataSize);
-        
-        errorCode = avcodec_send_packet(decoder->decoderContext, packet);
-        if (errorCode <0) {
-            printf("avcodec_send_packet error:%d\n",errorCode);
+        AVPacket* sendPacket = GNULL;
+        if ((packetData->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType) {
+            sendPacket = (AVPacket*)(R_BufferStart(packetData) + packetData->extendDataOffset);
+        }else{
+            av_init_packet(&packet);
+            packet.data = GNULL;
+            packet.size = 0;
+            
+            av_packet_from_data(&packet, R_BufferStart(&packetData->retain)+packetData->dataOffset, packetData->dataSize);
+            sendPacket = &packet;
         }
+        int errorCode = avcodec_send_packet(decoder->decoderContext, sendPacket);
+        GJAssert(errorCode >= 0, "avcodec_send_packet error:%s\n",av_err2str(errorCode));
         errorCode = avcodec_receive_frame(decoder->decoderContext, frame);
         if (errorCode <0) {
-            printf("avcodec_receive_frame error:%d\n",errorCode);
+            GJLOG(GNULL, GJ_LOGDEBUG, "avcodec_receive_frame error:%s\n",av_err2str(errorCode));
+        }else{
+            CVPixelBufferRef pixelbuffer;
+            //        CVReturn result = CVPixelBufferCreate(GNULL, width, height, (OSType)decoder->pixelFormat, (__bridge CFDictionaryRef)attributes, &pixelbuffer);
+            CVReturn result = CVPixelBufferCreateWithPlanarBytes(GNULL, width, height, (OSType)decoder->pixelFormat, GNULL, 0, 2, (GVoid**)frame->data, pixelWidth, pixelHeight, planeBytesPerRow, pixelBufferReleasePlanarBytesCallback, frame, (__bridge CFDictionaryRef)attributes, &pixelbuffer);
+            GJAssert(result == kCVReturnSuccess, "error");
+            R_GJPixelFrame* pixelFrame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
+            pixelFrame->width = (GInt)width;
+            pixelFrame->height = (GInt)height;
+            pixelFrame->type = decoder->pixelFormat;
+            pixelFrame->pts =  GTimeMake(frame->pts*decoder->decoderContext->time_base.num/decoder->decoderContext->time_base.den*1000, 1000);
+            ((CVImageBufferRef *) R_BufferStart(&pixelFrame->retain))[0] = pixelbuffer;
+            if (errorCode == 0 && decoder->callback) {
+                decoder->callback(decoder->userData,pixelFrame);
+            }
         }
-        CVPixelBufferRef pixelbuffer;
-//        CVReturn result = CVPixelBufferCreate(GNULL, width, height, (OSType)decoder->pixelFormat, (__bridge CFDictionaryRef)attributes, &pixelbuffer);
-        CVReturn result = CVPixelBufferCreateWithPlanarBytes(GNULL, width, height, (OSType)decoder->pixelFormat, GNULL, 0, 2, (GVoid**)frame->data, pixelWidth, pixelHeight, planeBytesPerRow, pixelBufferReleasePlanarBytesCallback, frame, (__bridge CFDictionaryRef)attributes, &pixelbuffer);
-        GJAssert(result == kCVReturnSuccess, "error");
-        R_GJPixelFrame* pixelFrame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
-        pixelFrame->width = (GInt)width;
-        pixelFrame->height = (GInt)height;
-        pixelFrame->type = decoder->pixelFormat;
-        pixelFrame->pts =  GTimeMake(frame->pts*decoder->decoderContext->time_base.num/decoder->decoderContext->time_base.den*1000, 1000);
-        ((CVImageBufferRef *) R_BufferStart(&pixelFrame->retain))[0] = pixelbuffer;
-        if (errorCode == 0 && decoder->callback) {
-            decoder->callback(decoder->userData,pixelFrame);
-        }
-        av_packet_free_side_data(packet);
-        av_init_packet(packet);
-        packet->data = NULL;
-        packet->size = 0;
+       //sendPacket的内存都可以不用管，因为都是引用别人的内存。
         R_BufferUnRetain(&packetData->retain);
     }
+    avcodec_close(decoder->decoderContext);
+    avcodec_free_context(&decoder->decoderContext);
     return GNULL;
 }
 
 GBool FFDecoder_DecodePacket(FFDecoder* decoder,R_GJPacket *packet){
-    
-    if (decoder->isRunning && packet->flag & GJPacketFlag_DecoderType && decoder->decoder == GNULL) {
-        GJ_CODEC_TYPE codecType;
-        enum AVCodecID codecID = AV_CODEC_ID_NONE;
-        memcpy(&codecType, R_BufferStart(&packet->retain), sizeof(GJ_CODEC_TYPE));
-        switch (codecType) {
-            case GJ_CODEC_TYPE_H264:
-                codecID = AV_CODEC_ID_H264;
-                break;
-            case GJ_CODEC_TYPE_MPEG4:
-                codecID = AV_CODEC_ID_MPEG4;
-                break;
-            default:
-                GJAssert(0, "格式不支持");
-                break;
-        }
-        decoder->decoder     = avcodec_find_decoder(codecID);
-        decoder->decoderContext          = avcodec_alloc_context3(decoder->decoder);
-        switch (decoder->pixelFormat) {
-//            case GJPixelType_YpCbCr8Planar:
-//            case GJPixelType_YpCbCr8Planar_Full:
-//                decoder->decoderContext->pix_fmt = AV_PIX_FMT_YUV420P;
-//                break;
-            case GJPixelType_YpCbCr8BiPlanar:
-            case GJPixelType_YpCbCr8BiPlanar_Full:
-                decoder->decoderContext->pix_fmt = AV_PIX_FMT_NV12;
-                break;
-            default:
-                GJAssert(0, "格式不支持");
-                return GFalse;
-                break;
-        }
-        if (packet->dataSize <= 0) {
-            return GTrue;
-        }
-    }
-    if (decoder->isRunning && packet->flag & GJPacketFlag_KEY && packet->extendDataSize > 0) {
-        GInt width,height,fps;
-        if(decoder->decoderContext && !avcodec_is_open(decoder->decoderContext) && h264_decode_sps(R_BufferStart(&packet->retain)+packet->extendDataOffset+4, packet->extendDataSize-4, &width, &height, &fps)){
-            decoder->decoderContext->width = width;
-            decoder->decoderContext->height = height;
-            if(avcodec_open2(decoder->decoderContext, decoder->decoder, GNULL) < 0){
-                GJAssert(0, "格式不支持");
-                return GFalse;
+    if (decoder->isRunning ) {
+        if (decoder->decoderContext == GNULL) {
+            if ((packet->flag & GJPacketFlag_AVStreamType) == GJPacketFlag_AVStreamType) {
+                GJAssert(decoder->decoderContext == GNULL, "待优化");
+                AVStream* stream = ((AVStream**)(R_BufferStart(packet)+packet->extendDataOffset))[0];
+                decoder->decoder = avcodec_find_decoder(stream->codecpar->codec_id);
+                decoder->decoderContext          = avcodec_alloc_context3(decoder->decoder);
+                GJAssert(avcodec_parameters_to_context(decoder->decoderContext, stream->codecpar) >= 0, "avcodec_parameters_to_context error")  ;
+                //直接起飞了
+                if(avcodec_open2(decoder->decoderContext, decoder->decoder, GNULL) < 0){
+                    GJAssert(0, "格式不支持");
+                    return GFalse;
+                }
+                GJAssert(decoder->runloopThread == GNULL, "已经飞过了，出问题了");
+                pthread_create(&decoder->runloopThread, GNULL, FFDecoder_DecodeRunloop, decoder);
+            }else if ((packet->flag & GJPacketFlag_DecoderType) == GJPacketFlag_DecoderType) {
+                GJAssert(decoder->decoderContext == GNULL, "待优化");
+                GJ_CODEC_TYPE codecType;
+                enum AVCodecID codecID = AV_CODEC_ID_NONE;
+                memcpy(&codecType, R_BufferStart(&packet->retain), sizeof(GJ_CODEC_TYPE));
+                switch (codecType) {
+                    case GJ_CODEC_TYPE_H264:
+                        codecID = AV_CODEC_ID_H264;
+                        break;
+                    case GJ_CODEC_TYPE_MPEG4:
+                        codecID = AV_CODEC_ID_MPEG4;
+                        break;
+                    default:
+                        GJAssert(0, "格式不支持");
+                        break;
+                }
+                decoder->decoder     = avcodec_find_decoder(codecID);
+                decoder->decoderContext          = avcodec_alloc_context3(decoder->decoder);
+                switch (decoder->pixelFormat) {
+                    case GJPixelType_YpCbCr8BiPlanar:
+                    case GJPixelType_YpCbCr8BiPlanar_Full:
+                        decoder->decoderContext->pix_fmt = AV_PIX_FMT_NV12;
+                        break;
+                    default:
+                        GJAssert(0, "格式不支持");
+                        return GFalse;
+                        break;
+                }
+                
+            }else{
+                GJAssert(0, "没有初始化信息包");
             }
-            pthread_create(&decoder->runloopThread, GNULL, FFDecoder_DecodeRunloop, decoder);
-        };
+        }else{
+            if (!avcodec_is_open(decoder->decoderContext)) {
+                //还没有打开加码器，一般是非ffmpeg拉流，还没有收到extendData。在这里必须收到
+                GInt width,height,fps;
+                if((packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY &&
+                   packet->extendDataSize > 0 &&
+                   h264_decode_sps(R_BufferStart(&packet->retain)+packet->extendDataOffset+4, packet->extendDataSize-4, &width, &height, &fps)){
+                    decoder->decoderContext->width = width;
+                    decoder->decoderContext->height = height;
+                    if(avcodec_open2(decoder->decoderContext, decoder->decoder, GNULL) < 0){
+                        GJAssert(0, "格式不支持");
+                        return GFalse;
+                    }
+                    GJAssert(decoder->runloopThread == GNULL, "已经飞过了，出问题了");
+                    //起飞了
+                    pthread_create(&decoder->runloopThread, GNULL, FFDecoder_DecodeRunloop, decoder);
+                }else{
+                    GJAssert(0, "编码器还没有办法打开，确实extendData");
+
+                }
+            }
+        }
+
+    }else{
+        GJAssert(0, "解码器没有开始");
     }
-    R_BufferRetain(&packet->retain);
+    if (packet->dataSize <= 0)return GTrue;
+    R_BufferRetain(packet);
     if (!decoder->isRunning || !queuePush(decoder->cacheQueue, packet, GINT32_MAX)) {
         R_BufferUnRetain(&packet->retain);
     };
@@ -168,7 +201,7 @@ GVoid FFDecoder_DecodeDealloc(FFDecoder** decoderH){
 }
 
 static void decodeCallback(GHandle userdata,R_GJPixelFrame* frame){
-    struct _GJH264DecodeContext* context = userdata;
+    struct _FFVideoDecodeContext* context = userdata;
     NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
     if (context->callback) {
         context->callback(context->userData, frame);
@@ -176,7 +209,7 @@ static void decodeCallback(GHandle userdata,R_GJPixelFrame* frame){
     callFunc(&context->pipleNode,&frame->retain,GJMediaType_Video);
 }
 
-inline static GBool decodeSetup(struct _GJH264DecodeContext *context, GJPixelType format, VideoFrameOutCallback callback, GHandle userData) {
+inline static GBool decodeSetup(struct _FFVideoDecodeContext *context, GJPixelType format, VideoFrameOutCallback callback, GHandle userData) {
     pipleNodeLock(&context->pipleNode);
     GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
     GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder setup");
@@ -191,7 +224,7 @@ inline static GBool decodeSetup(struct _GJH264DecodeContext *context, GJPixelTyp
     
     return GTrue;
 }
-inline static GVoid decodeUnSetup(struct _GJH264DecodeContext *context) {
+inline static GVoid decodeUnSetup(struct _FFVideoDecodeContext *context) {
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
         FFDecoder* decoder  = (context->obaque);
@@ -204,7 +237,7 @@ inline static GVoid decodeUnSetup(struct _GJH264DecodeContext *context) {
     pipleNodeUnLock(&context->pipleNode);
 }
 
-inline static  GBool  decodeStart(struct _GJH264DecodeContext* context){
+inline static  GBool  decodeStart(struct _FFVideoDecodeContext* context){
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
         FFDecoder* decoder  = (context->obaque);
@@ -216,7 +249,7 @@ inline static  GBool  decodeStart(struct _GJH264DecodeContext* context){
     return GTrue;
 };
 
-inline static  GVoid  decodeStop(struct _GJH264DecodeContext* context){
+inline static  GVoid  decodeStop(struct _FFVideoDecodeContext* context){
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
         FFDecoder* decoder  = (context->obaque);
@@ -228,7 +261,7 @@ inline static  GVoid  decodeStop(struct _GJH264DecodeContext* context){
     pipleNodeUnLock(&context->pipleNode);
 };
 
-inline static GBool decodePacket(struct _GJH264DecodeContext *context, R_GJPacket *packet) {
+inline static GBool decodePacket(struct _FFVideoDecodeContext *context, R_GJPacket *packet) {
     pipleNodeLock(&context->pipleNode);
     FFDecoder* decoder  = (context->obaque);
     FFDecoder_DecodePacket(decoder, packet);
@@ -239,18 +272,18 @@ inline static GBool decodePacket(struct _GJH264DecodeContext *context, R_GJPacke
 inline static GBool decodePacketFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
     GBool result = GFalse;
     if (dataType == GJMediaType_Video) {
-        result = decodePacket((GJH264DecodeContext*)context,(R_GJPacket*)data);
+        result = decodePacket((FFVideoDecodeContext*)context,(R_GJPacket*)data);
     }
     return  result;
     
 }
 
-GVoid GJ_FFDecodeContextCreate(GJH264DecodeContext **decodeContext) {
+GVoid GJ_FFDecodeContextCreate(FFVideoDecodeContext **decodeContext) {
     if (*decodeContext == NULL) {
-        *decodeContext = (GJH264DecodeContext *) malloc(sizeof(GJH264DecodeContext));
+        *decodeContext = (FFVideoDecodeContext *) malloc(sizeof(FFVideoDecodeContext));
     }
-    GJH264DecodeContext *context     = *decodeContext;
-    memset(context, 0, sizeof(GJH264DecodeContext));
+    FFVideoDecodeContext *context     = *decodeContext;
+    memset(context, 0, sizeof(FFVideoDecodeContext));
     pipleNodeInit(&context->pipleNode, decodePacketFunc);
     context->decodeSetup             = decodeSetup;
     context->decodeUnSetup           = decodeUnSetup;
@@ -258,7 +291,7 @@ GVoid GJ_FFDecodeContextCreate(GJH264DecodeContext **decodeContext) {
     context->decodeStop              = decodeStop;
     context->decodePacket            = GNULL;
 }
-GVoid GJ_FFDecodeContextDealloc(GJH264DecodeContext **context) {
+GVoid GJ_FFDecodeContextDealloc(FFVideoDecodeContext **context) {
     if ((*context)->obaque) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "decodeUnSetup 没有调用，自动调用");
         (*context)->decodeUnSetup(*context);

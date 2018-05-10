@@ -377,10 +377,10 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
                 outFiter = _faceSticker;
                 break;
             }
-            break;
         case kFilterFaceSticker:
             GJAssert(_camera != nil, "camera还没有创建");
             outFiter = _camera;
+            break;
         default:
             GJAssert(0, "错误");
             break;
@@ -692,13 +692,19 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (void)stopProduce {
+    //主要重复stop导致新创建camera;
+    if (_cropFilter.frameProcessingCompletionBlock == nil) {
+        return;
+    }
+    GJAssert(_camera != nil, "camera管理待优化");
+
     GPUImageOutput *parentFilter = _sticker;
     if (parentFilter == nil) {
         parentFilter = [self getParentFilterWithDeep:kFilterSticker];
     }
     if (![parentFilter.targets containsObject:_imageView]) {
         [_camera stopCameraCapture];
-        [self deleteCamera];
+//        [self deleteCamera];
         if (_trackImage) {
             [self stopTracking];
         }
@@ -799,9 +805,14 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return YES;
 }
 - (void)stopPreview {
+    if (_imageView == nil) {
+        return;
+    }
+    GJAssert(_camera != nil, "camera管理待优化");
+    
     if (_cropFilter.frameProcessingCompletionBlock == nil && [_camera isRunning]) {
         [_camera stopCameraCapture];
-        [self deleteCamera];
+//        [self deleteCamera];
         if (_trackImage) {
             [self stopTracking];
         }

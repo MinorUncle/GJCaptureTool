@@ -41,10 +41,12 @@
 		6A559C311F3D3A3500698C19 /* GJStreamPull.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453841F14C16C0009FB64 /* GJStreamPull.h */; };
 		6A58221E202AF2C5002AFF76 /* libkcptun.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A582206202AF29D002AFF76 /* libkcptun.a */; settings = {ATTRIBUTES = (Required, ); }; };
 		6A582239202AF473002AFF76 /* client.json in Resources */ = {isa = PBXBuildFile; fileRef = 6A582238202AF473002AFF76 /* client.json */; };
+		6A5E04C520A44AE20030A0B8 /* FFAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */; };
+		6A5E04C620A44AE20030A0B8 /* FFAudioDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */; };
 		6A63463C20414074000F14E2 /* GJMessageDispatcher.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A63463A20414074000F14E2 /* GJMessageDispatcher.c */; };
 		6A63463D20414074000F14E2 /* GJMessageDispatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A63463B20414074000F14E2 /* GJMessageDispatcher.h */; };
 		6A63464320417942000F14E2 /* GJFFmpegPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA453861F14D4950009FB64 /* GJFFmpegPull.c */; };
-		6A70C2FB2043A5C90070E347 /* H264Decoder.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4FE1ECB4DFE0009E49A /* H264Decoder.m */; };
+		6A70C2FB2043A5C90070E347 /* FFVideoDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4FE1ECB4DFE0009E49A /* FFVideoDecoder.m */; };
 		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
 		6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85F9E91F0140AF0037A64F /* AEAudioSender.h */; };
@@ -486,6 +488,8 @@
 		6A435D381F29841C0046CEA3 /* AEReverbFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEReverbFilter.h; sourceTree = "<group>"; };
 		6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = kcpTunDemo.xcodeproj; path = ../kcptunCode/kcpTunDemo/kcpTunDemo.xcodeproj; sourceTree = "<group>"; };
 		6A582238202AF473002AFF76 /* client.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = client.json; sourceTree = "<group>"; };
+		6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FFAudioDecoder.h; path = GJLiveEngine/IOS/Audio/FFAudioDecoder.h; sourceTree = SOURCE_ROOT; };
+		6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FFAudioDecoder.m; path = GJLiveEngine/IOS/Audio/FFAudioDecoder.m; sourceTree = SOURCE_ROOT; };
 		6A63463A20414074000F14E2 /* GJMessageDispatcher.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GJMessageDispatcher.c; sourceTree = "<group>"; };
 		6A63463B20414074000F14E2 /* GJMessageDispatcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJMessageDispatcher.h; sourceTree = "<group>"; };
 		6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrganRun.m4a; sourceTree = "<group>"; };
@@ -603,8 +607,8 @@
 		AE70A4FA1ECB4DFE0009E49A /* GJH264Decoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJH264Decoder.m; sourceTree = "<group>"; };
 		AE70A4FB1ECB4DFE0009E49A /* GJH264Encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJH264Encoder.h; sourceTree = "<group>"; };
 		AE70A4FC1ECB4DFE0009E49A /* GJH264Encoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJH264Encoder.m; sourceTree = "<group>"; };
-		AE70A4FD1ECB4DFE0009E49A /* H264Decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264Decoder.h; sourceTree = "<group>"; };
-		AE70A4FE1ECB4DFE0009E49A /* H264Decoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = H264Decoder.m; sourceTree = "<group>"; };
+		AE70A4FD1ECB4DFE0009E49A /* FFVideoDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFVideoDecoder.h; sourceTree = "<group>"; };
+		AE70A4FE1ECB4DFE0009E49A /* FFVideoDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFVideoDecoder.m; sourceTree = "<group>"; };
 		AE70A4FF1ECB4DFE0009E49A /* H264Encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264Encoder.h; sourceTree = "<group>"; };
 		AE70A5001ECB4DFE0009E49A /* H264Encoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = H264Encoder.m; sourceTree = "<group>"; };
 		AE70A5011ECB4DFE0009E49A /* H264StreamToTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264StreamToTS.h; sourceTree = "<group>"; };
@@ -1138,6 +1142,8 @@
 		AE70A4D91ECB4DFE0009E49A /* Audio */ = {
 			isa = PBXGroup;
 			children = (
+				6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */,
+				6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */,
 				AE70A4DA1ECB4DFE0009E49A /* AACEncoderFromPCM.h */,
 				AE70A4DB1ECB4DFE0009E49A /* AACEncoderFromPCM.m */,
 				6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */,
@@ -1176,8 +1182,8 @@
 				AE70A4FA1ECB4DFE0009E49A /* GJH264Decoder.m */,
 				AE70A4FB1ECB4DFE0009E49A /* GJH264Encoder.h */,
 				AE70A4FC1ECB4DFE0009E49A /* GJH264Encoder.m */,
-				AE70A4FD1ECB4DFE0009E49A /* H264Decoder.h */,
-				AE70A4FE1ECB4DFE0009E49A /* H264Decoder.m */,
+				AE70A4FD1ECB4DFE0009E49A /* FFVideoDecoder.h */,
+				AE70A4FE1ECB4DFE0009E49A /* FFVideoDecoder.m */,
 				AE70A4FF1ECB4DFE0009E49A /* H264Encoder.h */,
 				AE70A5001ECB4DFE0009E49A /* H264Encoder.m */,
 				AE70A5011ECB4DFE0009E49A /* H264StreamToTS.h */,
@@ -1475,6 +1481,7 @@
 				AE70A53D1ECB4DFE0009E49A /* GJH264Decoder.h in Headers */,
 				6ABF2B1A1F0B413600721DB3 /* IOS_AACDecode.h in Headers */,
 				AE3A2C2C1F07F74500C24BAA /* GJAudioManager.h in Headers */,
+				6A5E04C520A44AE20030A0B8 /* FFAudioDecoder.h in Headers */,
 				6A85FA1C1F01FA990037A64F /* GJBufferPool+cplus.h in Headers */,
 				AE70A5141ECB4DFE0009E49A /* GJLiveDefine.h in Headers */,
 				AE70A51A1ECB4DFE0009E49A /* GJUtil.h in Headers */,
@@ -1903,8 +1910,9 @@
 				6A1A1B111F2F36F10043595F /* IOS_RAOPPlay.m in Sources */,
 				AE70A5201ECB4DFE0009E49A /* AACEncoderFromPCM.m in Sources */,
 				AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */,
-				6A70C2FB2043A5C90070E347 /* H264Decoder.m in Sources */,
+				6A70C2FB2043A5C90070E347 /* FFVideoDecoder.m in Sources */,
 				6ABF2B211F0B413600721DB3 /* IOS_AudioProduce.m in Sources */,
+				6A5E04C620A44AE20030A0B8 /* FFAudioDecoder.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
 				6ABF2B251F0B413600721DB3 /* IOS_H264Encode.m in Sources */,
 				6A96CCA51F2195C5000DC4FE /* GJScreenRecorder.m in Sources */,
@@ -2015,7 +2023,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../Library/Developer/Xcode/DerivedData/GJCaptureTool-evimmlzqlgoilqeetljgavdidbfl/Build/Products/Debug-iphoneos/include/GJImageFilters\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../GJImage/GJImageFilters\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft/include/arcsoft\"";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -2057,7 +2065,7 @@
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SKIP_INSTALL = YES;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../Library/Developer/Xcode/DerivedData/GJCaptureTool-evimmlzqlgoilqeetljgavdidbfl/Build/Products/Debug-iphoneos/include/GJImageFilters\"";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../GJImage/GJImageFilters\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft/include/arcsoft\"";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -2186,6 +2194,7 @@
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../GJImage/GJImageFilters\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft\"";
 			};
 			name = Debug;
 		};
@@ -2216,6 +2225,7 @@
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../GJImage/GJImageFilters\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft\"";
 			};
 			name = Release;
 		};

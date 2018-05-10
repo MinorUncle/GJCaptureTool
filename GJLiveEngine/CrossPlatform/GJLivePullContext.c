@@ -10,6 +10,7 @@
 #include "GJLog.h"
 #include "GJUtil.h"
 #include <string.h>
+#include <libavformat/avformat.h>
 
 static const GJClass LivePullContextClass = {
     .className = "live pull context",
@@ -41,7 +42,8 @@ GBool GJLivePull_Create(GJLivePullContext **pullContext, GJLivePullCallback call
             result = GFalse;
             break;
         };
-        GJ_H264DecodeContextCreate(&context->videoDecoder);
+        GJ_FFDecodeContextCreate(&context->videoDecoder);
+//       GJ_H264DecodeContextCreate(&context->videoDecoder);
         GJ_AACDecodeContextCreate(&context->audioDecoder);
 
         if (!context->videoDecoder->decodeSetup(context->videoDecoder, GJPixelType_YpCbCr8BiPlanar_Full, h264DecodeCompleteCallback, context)) {
@@ -59,6 +61,7 @@ GBool GJLivePull_Create(GJLivePullContext **pullContext, GJLivePullCallback call
     } while (0);
     return result;
 }
+
 GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
     GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePull_StartPull:%p",context);
     GBool result = GTrue;
@@ -104,7 +107,6 @@ GVoid GJLivePull_StopPull(GJLivePullContext *context) {
         pipleDisConnectNode((GJPipleNode*)context->streamPull, &context->audioDecoder->pipleNode);
         pipleDisConnectNode((GJPipleNode*)context->streamPull, &context->videoDecoder->pipleNode);
         context->videoDecoder->decodeStop(context->videoDecoder);
-
         GJStreamPull_CloseAndRelease(context->streamPull);
         context->streamPull = GNULL;
     } else {
@@ -167,7 +169,8 @@ GVoid GJLivePull_Dealloc(GJLivePullContext **pullContext) {
         context->videoDecoder->decodeUnSetup(context->videoDecoder);
         context->audioDecoder->decodeUnSetup(context->audioDecoder);
 
-        GJ_H264DecodeContextDealloc(&context->videoDecoder);
+//        GJ_H264DecodeContextDealloc(&context->videoDecoder);
+        GJ_FFDecodeContextDealloc(&context->videoDecoder);
         GJ_AACDecodeContextDealloc(&context->audioDecoder);
         free(context);
         *pullContext = GNULL;
@@ -240,6 +243,18 @@ static GVoid pullMessageCallback(GJStreamPull *pull, GHandle receiver, kStreamPu
             info.sessionDuring     = GTimeMSValue(GTimeSubtract(GJ_Gettime(), livePull->startPullClock));
             livePull->callback(livePull->userData, GJLivePull_closeComplete, (GHandle) &info);
         } break;
+        case kStreamPullMessageType_receiveStream:{
+            AVStream* stream = (AVStream*)messageParm;
+            if (stream->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+                GJAssert(livePull->videoDecoder == GNULL, "视频解码器管理错误");
+                GJ_FFDecodeContextCreate(&livePull->videoDecoder);
+                
+            }else if (stream->codecpar->codec_type == AVMEDIA_TYPE_AUDIO){
+                
+            }else{
+                GJAssert(0, "收到不支持的流格式");
+            }
+        }break;
         default:
             GJLOG(livePull, GJ_LOGFORBID, "not catch info：%d", messageType);
             break;

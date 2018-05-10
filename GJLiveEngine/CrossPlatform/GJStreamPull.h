@@ -14,6 +14,7 @@
 #include <stdlib.h>
 typedef enum _kStreamPullMessageType {
     kStreamPullMessageType_connectSuccess,
+    kStreamPullMessageType_receiveStream,//avstream
     kStreamPullMessageType_closeComplete,
     kStreamPullMessageType_connectError,
     kStreamPullMessageType_urlPraseError,
