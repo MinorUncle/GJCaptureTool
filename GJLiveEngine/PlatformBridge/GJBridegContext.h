@@ -74,9 +74,8 @@ typedef struct _GJRecodeContext{
 typedef struct _GJPictureDisplayContext{
     GHandle obaque;
     GBool   (*displaySetup)           (struct _GJPictureDisplayContext* context);
-    GBool   (*displaySetFormat)       (struct _GJPictureDisplayContext* context, GJPixelType format);
     GVoid   (*displayUnSetup)         (struct _GJPictureDisplayContext* context);
-    GVoid   (*displayView)            (struct _GJPictureDisplayContext* context, GJRetainBuffer* image);
+    GVoid   (*renderFrame)            (struct _GJPictureDisplayContext* context, R_GJPixelFrame* image);
     GHandle (*getDispayView)          (struct _GJPictureDisplayContext* context);
 }GJPictureDisplayContext;
 

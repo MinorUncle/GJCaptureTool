@@ -89,12 +89,12 @@
             config.mFps = 15;
         }
         config.mAudioBitrate = 128*1000;
-        _livePush = [[GJLivePush alloc]init];
-        _livePush.captureType = type;
-        [_livePush setPushConfig:config];
-        //        _livePush.enableAec = YES;
-        _livePush.delegate = self;
-        _livePush.cameraPosition = GJCameraPositionFront;
+//        _livePush = [[GJLivePush alloc]init];
+//        _livePush.captureType = type;
+//        [_livePush setPushConfig:config];
+//        //        _livePush.enableAec = YES;
+//        _livePush.delegate = self;
+//        _livePush.cameraPosition = GJCameraPositionFront;
         
         
         [self buildUI];

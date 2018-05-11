@@ -101,9 +101,9 @@ void decodeOutputCallback(
     CVPixelBufferRetain(imageBuffer);
     ((CVImageBufferRef *) R_BufferStart(&frame->retain))[0] = imageBuffer;
 
-    static GTime prePts,preDts;
-    GJLOG(GNULL,GJ_LOGINFO,"receive type:video pts:%lld dts:%lld dpts:%lld ddts:%lld", pts.value,dts.value, dts.value - preDts.value,dts.value - preDts.value);
-    preDts = dts;prePts = pts;
+//    static GTime prePts,preDts;
+//    GJLOG(GNULL,GJ_LOGINFO,"receive type:video pts:%lld dts:%lld dpts:%lld ddts:%lld", pts.value,dts.value, dts.value - preDts.value,dts.value - preDts.value);
+//    preDts = dts;prePts = pts;
     decoder.completeCallback(frame);
     R_BufferUnRetain(&frame->retain);
 }

@@ -633,7 +633,7 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
         if (_syncControl->videoInfo.trafficStatus.leave.count == 0 && player->callback) {
             player->callback(player->userDate,GJPlayMessage_FristRender,GNULL);
         }
-        player->videoPlayer->displayView(player->videoPlayer, &cImageBuf->retain);
+        player->videoPlayer->renderFrame(player->videoPlayer, cImageBuf);
 #endif
 
     DROP:
@@ -691,9 +691,8 @@ GVoid GJLivePlay_AddAudioSourceFormat(GJLivePlayer *player, GJAudioFormat audioF
         player->audioPlayer->audioPlaySetup(player->audioPlayer, player->audioFormat, GJAudioDrivePlayerCallback, player);
     }
 }
-GVoid GJLivePlay_AddVideoSourceFormat(GJLivePlayer *player, GJPixelType audioFormat) {
+GVoid GJLivePlay_AddVideoSourceFormat(GJLivePlayer *player, GJPixelType pixelFormat) {
     GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_AddVideoSourceFormat:%p",player);
-    player->videoPlayer->displaySetFormat(player->videoPlayer, audioFormat);
 }
 GBool GJLivePlay_Start(GJLivePlayer *player) {
     GBool result = GTrue;

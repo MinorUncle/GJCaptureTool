@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
+		6A0095F120A5787A00772F2F /* GJPixelFrameRender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0095EF20A5787A00772F2F /* GJPixelFrameRender.h */; };
+		6A0095F220A5787A00772F2F /* GJPixelFrameRender.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A0095F020A5787A00772F2F /* GJPixelFrameRender.m */; };
 		6A0200F31F0621EF00F4255B /* liblibairfloat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0200E81F0621E000F4255B /* liblibairfloat.a */; };
 		6A0201001F06227800F4255B /* raopsession.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FA1F06227800F4255B /* raopsession.h */; };
 		6A0201011F06227800F4255B /* rtprecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FB1F06227800F4255B /* rtprecorder.h */; };
@@ -428,6 +430,8 @@
 		046F5B321E305714007901EB /* x264_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264_config.h; path = ../../../../x264Code/x264/include/x264_config.h; sourceTree = "<group>"; };
 		046F5B331E305714007901EB /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264.h; path = ../../../../x264Code/x264/include/x264.h; sourceTree = "<group>"; };
 		046F7E411E306C8E00712A2B /* libx264_back.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264_back.a; sourceTree = "<group>"; };
+		6A0095EF20A5787A00772F2F /* GJPixelFrameRender.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJPixelFrameRender.h; sourceTree = "<group>"; };
+		6A0095F020A5787A00772F2F /* GJPixelFrameRender.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GJPixelFrameRender.m; sourceTree = "<group>"; };
 		6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libairfloat.xcodeproj; path = libairfloat/libairfloat.xcodeproj; sourceTree = "<group>"; };
 		6A0200FA1F06227800F4255B /* raopsession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = raopsession.h; path = libairfloat/libairfloat/raopsession.h; sourceTree = SOURCE_ROOT; };
 		6A0200FB1F06227800F4255B /* rtprecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rtprecorder.h; path = libairfloat/libairfloat/rtprecorder.h; sourceTree = SOURCE_ROOT; };
@@ -1158,6 +1162,8 @@
 				AE70A4E11ECB4DFE0009E49A /* AudioUnitCapture.m */,
 				AE3634131F08120600E3C0AD /* decoder_alac_apple.m */,
 				AE70A4E21ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h */,
+				6A0095EF20A5787A00772F2F /* GJPixelFrameRender.h */,
+				6A0095F020A5787A00772F2F /* GJPixelFrameRender.m */,
 				AE70A4E31ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m */,
 				AE70A4E41ECB4DFE0009E49A /* GJAudioQueuePlayer.h */,
 				AE70A4E51ECB4DFE0009E49A /* GJAudioQueuePlayer.m */,
@@ -1470,6 +1476,7 @@
 				6A85FA1B1F01FA990037A64F /* GJBufferPool.h in Headers */,
 				AE70A5271ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h in Headers */,
 				6AE37BD51ED5956800B049EB /* GJLivePlayer.h in Headers */,
+				6A0095F120A5787A00772F2F /* GJPixelFrameRender.h in Headers */,
 				6A0201001F06227800F4255B /* raopsession.h in Headers */,
 				6ABF33511F0E5F7000721DB3 /* x264_config.h in Headers */,
 				6ABF2B1C1F0B413600721DB3 /* IOS_AACEncode.h in Headers */,
@@ -1893,6 +1900,7 @@
 				6A63463C20414074000F14E2 /* GJMessageDispatcher.c in Sources */,
 				6ABF2B1F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m in Sources */,
 				6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */,
+				6A0095F220A5787A00772F2F /* GJPixelFrameRender.m in Sources */,
 				6ABF2B1D1F0B413600721DB3 /* IOS_AACEncode.m in Sources */,
 				AE3A2C2D1F07F74500C24BAA /* GJAudioManager.m in Sources */,
 				6A8F5E351F340E3C00FA57A4 /* GJAudioQueuePlayer.m in Sources */,

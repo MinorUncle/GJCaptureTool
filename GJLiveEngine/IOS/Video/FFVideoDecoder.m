@@ -89,6 +89,9 @@ GBool _setupDecoderContext(FFDecoder* decoder,enum AVCodecID codecID){
         case GJPixelType_YpCbCr8BiPlanar_Full:
             decoder->decoderContext->pix_fmt = AV_PIX_FMT_NV12;
             break;
+        case GJPixelType_32BGRA:
+            decoder->decoderContext->pix_fmt = AV_PIX_FMT_BGRA;
+            break;
         default:
             GJAssert(0, "格式不支持");
             return GFalse;
