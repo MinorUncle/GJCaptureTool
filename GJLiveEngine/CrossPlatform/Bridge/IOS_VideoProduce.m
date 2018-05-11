@@ -675,6 +675,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             R_BufferWrite(&frame->retain, (GUInt8*)&pixel_buffer, sizeof(CVPixelBufferRef));
             frame->height                                           = (GInt32) wkSelf.destSize.height;
             frame->width                                            = (GInt32) wkSelf.destSize.width;
+            frame->flag                                             = kGJFrameFlag_P_CVPixelBuffer;
             frame->pts = GTimeMake(time.value, time.timescale);
             if (wkSelf.captureCount++ % wkSelf.dropStep.den >= wkSelf.dropStep.num) {
                 wkSelf.callback(frame);

@@ -97,6 +97,7 @@ void decodeOutputCallback(
     frame->pts            = pts;
     frame->dts            = dts;
     frame->type           = CVPixelBufferGetPixelFormatType(imageBuffer);
+    frame->flag           = kGJFrameFlag_P_CVPixelBuffer;
     CVPixelBufferRetain(imageBuffer);
     ((CVImageBufferRef *) R_BufferStart(&frame->retain))[0] = imageBuffer;
 

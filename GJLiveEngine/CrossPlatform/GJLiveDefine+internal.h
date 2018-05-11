@@ -85,6 +85,11 @@ typedef struct PCMFrame{
     GInt32 channel;
 }R_GJPCMFrame;
 
+typedef enum _GJFrameFlag{
+    kGJFrameFlag_P_CVPixelBuffer = 1 << 0,//CVPixelBufferRef
+    kGJFrameFlag_P_AVFrame = 1 << 1,//AVFrame*
+}GJFrameFlag;
+
 typedef struct PixelFrame{
     GJRetainBuffer retain;
     GJPixelType type;
@@ -92,6 +97,7 @@ typedef struct PixelFrame{
     GTime dts;
     GInt32 width;
     GInt32 height;
+    GJFrameFlag  flag;
 }R_GJPixelFrame;
 
 typedef enum _GJMediaType{

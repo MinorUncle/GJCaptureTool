@@ -8,6 +8,7 @@
 
 #import "libavformat/avformat.h"
 #import "libswscale/swscale.h"
+#import "libavcodec/videotoolbox.h"
 #import <CoreVideo/CVPixelBuffer.h>
 
 #import "GJQueue.h"
@@ -25,6 +26,7 @@ struct _FFDecoder{
     GJQueue*                cacheQueue;
     pthread_t               runloopThread;
     GJRetainBufferPool*     bufferPool;
+    AVRational              timebase;
 };
 void pixelBufferReleasePlanarBytesCallback( void * CV_NULLABLE releaseRefCon, const void * CV_NULLABLE dataPtr, size_t dataSize, size_t numberOfPlanes, const void * CV_NULLABLE planeAddresses[] ){
     AVFrame* frame = releaseRefCon;
@@ -35,12 +37,6 @@ static void* FFDecoder_DecodeRunloop(GHandle arg){
     FFDecoder* decoder = (FFDecoder*)arg;
     R_GJPacket* packetData;
     AVPacket packet;
-    size_t width = decoder->decoderContext->width;
-    size_t height = decoder->decoderContext->height;
-    NSDictionary *attributes = @{(id) kCVPixelBufferOpenGLESCompatibilityKey : @YES};
-    size_t pixelWidth[2] = {width,width/2};
-    size_t pixelHeight[2] = {height,height/2};
-    
     while (decoder->isRunning && queuePop(decoder->cacheQueue, (GHandle*)&packetData, GINT32_MAX)) {
         AVFrame* frame  = av_frame_alloc();
         AVPacket* sendPacket = GNULL;
@@ -60,62 +56,62 @@ static void* FFDecoder_DecodeRunloop(GHandle arg){
         if (errorCode <0) {
             GJLOG(GNULL, GJ_LOGDEBUG, "avcodec_receive_frame error:%s\n",av_err2str(errorCode));
         }else{
-            CVPixelBufferRef pixelbuffer;
-//                    CVReturn result = CVPixelBufferCreate(GNULL, width, height, (OSType)decoder->pixelFormat, (__bridge CFDictionaryRef)attributes, &pixelbuffer);
-            CVReturn result = CVPixelBufferCreateWithPlanarBytes(GNULL, width, height, (OSType)decoder->pixelFormat, GNULL, 0, 2, (GVoid**)frame->data, pixelWidth, pixelHeight, (size_t*)frame->linesize, pixelBufferReleasePlanarBytesCallback, frame, (__bridge CFDictionaryRef)attributes, &pixelbuffer);
-            GJAssert(result == kCVReturnSuccess, "error");
-            
+
             R_GJPixelFrame *pixelFrame = (R_GJPixelFrame *) GJRetainBufferPoolGetData(decoder->bufferPool);
-            pixelFrame->height         = (GInt32) CVPixelBufferGetHeight(pixelbuffer);
-            pixelFrame->width          = (GInt32) CVPixelBufferGetWidth(pixelbuffer);
-            pixelFrame->pts            = GTimeMake(frame->pkt_pts*1.0*decoder->decoderContext->time_base.num/decoder->decoderContext->time_base.den*1000, 1000);
-            pixelFrame->dts            = GTimeMake(frame->pkt_dts*1.0*decoder->decoderContext->time_base.num/decoder->decoderContext->time_base.den*1000, 1000);
-            pixelFrame->type           = CVPixelBufferGetPixelFormatType(pixelbuffer);
-            CVPixelBufferRetain(pixelbuffer);
-            ((CVImageBufferRef *) R_BufferStart(&pixelFrame->retain))[0] = pixelbuffer;
-//
-//            R_GJPixelFrame* pixelFrame = (R_GJPixelFrame*)GJBufferPoolGetSizeData(defauleBufferPool(), sizeof(R_GJPixelFrame));
-//            pixelFrame->width = (GInt)width;
-//            pixelFrame->height = (GInt)height;
-//            pixelFrame->type = decoder->pixelFormat;
-//            pixelFrame->pts =  GTimeMake(frame->pts*decoder->decoderContext->time_base.num/decoder->decoderContext->time_base.den*1000, 1000);
-//            ((CVImageBufferRef *) R_BufferStart(&pixelFrame->retain))[0] = pixelbuffer;
+            pixelFrame->height         = frame->width;
+            pixelFrame->width          = frame->height;
+            pixelFrame->pts            = GTimeMake(frame->pkt_pts*1.0*decoder->timebase.num/decoder->timebase.den*1000, 1000);
+            pixelFrame->dts            = GTimeMake(frame->pkt_dts*1.0*decoder->timebase.num/decoder->timebase.den*1000, 1000);
+            pixelFrame->type           = decoder->pixelFormat;
+            pixelFrame->flag           = kGJFrameFlag_P_AVFrame;
+            ((AVFrame **) R_BufferStart(&pixelFrame->retain))[0] = frame;
+
             if (errorCode == 0 && decoder->callback) {
                 decoder->callback(decoder->userData,pixelFrame);
             }
+            R_BufferUnRetain(pixelFrame);
         }
        //sendPacket的内存都可以不用管，因为都是引用别人的内存。
         R_BufferUnRetain(&packetData->retain);
     }
     avcodec_close(decoder->decoderContext);
     avcodec_free_context(&decoder->decoderContext);
+    decoder->runloopThread = GNULL;
     return GNULL;
 }
+GBool _setupDecoderContext(FFDecoder* decoder,enum AVCodecID codecID){
+    AVCodec* codec = avcodec_find_decoder(codecID);
+    GJAssert(codec != nil, "格式不支持");
+    decoder->decoder = codec;
+    decoder->decoderContext          = avcodec_alloc_context3(codec);
+    switch (decoder->pixelFormat) {
+        case GJPixelType_YpCbCr8BiPlanar:
+        case GJPixelType_YpCbCr8BiPlanar_Full:
+            decoder->decoderContext->pix_fmt = AV_PIX_FMT_NV12;
+            break;
+        default:
+            GJAssert(0, "格式不支持");
+            return GFalse;
+            break;
+    }
 
+    return GTrue;
+}
 GBool FFDecoder_DecodePacket(FFDecoder* decoder,R_GJPacket *packet){
     if (decoder->isRunning ) {
         if (decoder->decoderContext == GNULL) {
             if ((packet->flag & GJPacketFlag_P_AVStreamType) == GJPacketFlag_P_AVStreamType) {
                 GJAssert(decoder->decoderContext == GNULL, "待优化");
                 AVStream* stream = ((AVStream**)(R_BufferStart(packet)+packet->extendDataOffset))[0];
-                decoder->decoder = avcodec_find_decoder(stream->codecpar->codec_id);
-                decoder->decoderContext          = avcodec_alloc_context3(decoder->decoder);
+                decoder->timebase = stream->time_base;
+                _setupDecoderContext(decoder,stream->codecpar->codec_id);
                 GJAssert(avcodec_parameters_to_context(decoder->decoderContext, stream->codecpar) >= 0, "avcodec_parameters_to_context error")  ;
                 //直接起飞了
-                switch (decoder->pixelFormat) {
-                    case GJPixelType_YpCbCr8BiPlanar:
-                    case GJPixelType_YpCbCr8BiPlanar_Full:
-                        decoder->decoderContext->pix_fmt = AV_PIX_FMT_NV12;
-                        break;
-                    default:
-                        GJAssert(0, "格式不支持");
-                        return GFalse;
-                        break;
-                }
                 if(avcodec_open2(decoder->decoderContext, decoder->decoder, GNULL) < 0){
                     GJAssert(0, "格式不支持");
                     return GFalse;
                 }
+
                 GJAssert(decoder->runloopThread == GNULL, "已经飞过了，出问题了");
                 pthread_create(&decoder->runloopThread, GNULL, FFDecoder_DecodeRunloop, decoder);
                 return GTrue;
@@ -135,18 +131,7 @@ GBool FFDecoder_DecodePacket(FFDecoder* decoder,R_GJPacket *packet){
                         GJAssert(0, "格式不支持");
                         break;
                 }
-                decoder->decoder     = avcodec_find_decoder(codecID);
-                decoder->decoderContext          = avcodec_alloc_context3(decoder->decoder);
-                switch (decoder->pixelFormat) {
-                    case GJPixelType_YpCbCr8BiPlanar:
-                    case GJPixelType_YpCbCr8BiPlanar_Full:
-                        decoder->decoderContext->pix_fmt = AV_PIX_FMT_NV12;
-                        break;
-                    default:
-                        GJAssert(0, "格式不支持");
-                        return GFalse;
-                        break;
-                }
+                _setupDecoderContext(decoder, codecID);
                 if (packet->dataSize <= 0)return GTrue;
             }else{
                 GJAssert(0, "没有初始化信息包");
@@ -160,6 +145,7 @@ GBool FFDecoder_DecodePacket(FFDecoder* decoder,R_GJPacket *packet){
                    h264_decode_sps(R_BufferStart(&packet->retain)+packet->extendDataOffset+4, packet->extendDataSize-4, &width, &height, &fps)){
                     decoder->decoderContext->width = width;
                     decoder->decoderContext->height = height;
+                    decoder->timebase = av_make_q(1,1);
                     if(avcodec_open2(decoder->decoderContext, decoder->decoder, GNULL) < 0){
                         GJAssert(0, "格式不支持");
                         return GFalse;
@@ -209,13 +195,13 @@ GBool FFDecoder_DecodeStop(FFDecoder* decoder){
 }
 
 inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userData) {
-    CVImageBufferRef image = ((CVImageBufferRef *) R_BufferStart(buffer))[0];
-    CVPixelBufferRelease(image);
+    AVFrame* frame = ((AVFrame* *) R_BufferStart(buffer))[0];
+    av_frame_free(&frame);
 }
 GBool FFDecoder_DecodeCreate(FFDecoder** decoderH,GJPixelType pixelFormat){
     FFDecoder *decoder = calloc(sizeof(FFDecoder),1);
     decoder->pixelFormat = pixelFormat;
-    GJRetainBufferPoolCreate(&decoder->bufferPool, sizeof(CVPixelBufferRef), GTrue, R_GJPixelFrameMalloc, cvImagereleaseCallBack, GNULL);
+    GJRetainBufferPoolCreate(&decoder->bufferPool, sizeof(AVFrame*), GTrue, R_GJPixelFrameMalloc, cvImagereleaseCallBack, GNULL);
     queueCreate(&decoder->cacheQueue, 10, GTrue, GTrue);
     *decoderH = decoder;
     return GTrue;
