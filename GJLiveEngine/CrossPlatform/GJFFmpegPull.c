@@ -165,7 +165,10 @@ static GHandle pullRunloop(GHandle parm) {
             message = kStreamPullMessageType_receivePacketError;
             goto END;
         }
-        
+        AVStream* stream = pull->formatContext->streams[pkt.stream_index];
+        packet->pts            = GTimeMake(pkt.pts*1.0*stream->time_base.num/stream->time_base.den*1000, 1000);
+        packet->dts            = GTimeMake(pkt.dts*1.0*stream->time_base.num/stream->time_base.den*1000, 1000);
+
         pthread_mutex_lock(&pull->mutex);
         if (!pull->releaseRequest){
             pull->dataCallback(pull, packet, pull->dataCallbackParm);
@@ -175,10 +178,12 @@ static GHandle pullRunloop(GHandle parm) {
         R_BufferUnRetain(packet);
         
 #ifdef DEBUG
-//        GLong preDTS[2];
+//        GLong preDTS[2],prePTS[2];
 //        GInt32 type = pkt.stream_index == asIndex;
-//        GJLOG(GNULL,GJ_LOGINFO,"receive type:%d pts:%lld dts:%lld dpts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - preDTS[type], pkt.size);
-//        preDTS[type] = pkt.pts;
+//        GJLOG(GNULL,GJ_LOGINFO,"receive type:%d pts:%lld dts:%lld dpts:%lld ddts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - prePTS[type],pkt.dts - preDTS[type], pkt.size);
+//        preDTS[type] = pkt.dts;
+//        prePTS[type] = pkt.pts;
+
 #endif
 
     };

@@ -68,8 +68,8 @@ static void* FFDecoder_DecodeRunloop(GHandle arg){
             R_GJPixelFrame *pixelFrame = (R_GJPixelFrame *) GJRetainBufferPoolGetData(decoder->bufferPool);
             pixelFrame->height         = (GInt32) CVPixelBufferGetHeight(pixelbuffer);
             pixelFrame->width          = (GInt32) CVPixelBufferGetWidth(pixelbuffer);
-            pixelFrame->pts            = GTimeMake(frame->pkt_pts*decoder->decoderContext->time_base.num/decoder->decoderContext->time_base.den*1000, 1000);
-            pixelFrame->dts            = GTimeMake(frame->pkt_dts*decoder->decoderContext->time_base.num/decoder->decoderContext->time_base.den*1000, 1000);
+            pixelFrame->pts            = GTimeMake(frame->pkt_pts*1.0*decoder->decoderContext->time_base.num/decoder->decoderContext->time_base.den*1000, 1000);
+            pixelFrame->dts            = GTimeMake(frame->pkt_dts*1.0*decoder->decoderContext->time_base.num/decoder->decoderContext->time_base.den*1000, 1000);
             pixelFrame->type           = CVPixelBufferGetPixelFormatType(pixelbuffer);
             CVPixelBufferRetain(pixelbuffer);
             ((CVImageBufferRef *) R_BufferStart(&pixelFrame->retain))[0] = pixelbuffer;
