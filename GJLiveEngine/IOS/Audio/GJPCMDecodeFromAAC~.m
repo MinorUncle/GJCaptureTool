@@ -164,7 +164,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     if ((packet->flag & GJPacketFlag_P_AVStreamType) == GJPacketFlag_P_AVStreamType) {
         AVStream* stream = ((AVStream**)(R_BufferStart(packet)+packet->extendDataOffset))[0];
-//        GJAssert(_decodeConvert == GNULL, "待优化");
+        GJAssert(_decodeConvert == GNULL, "待优化");
         AudioStreamBasicDescription s = {0};
         s.mFramesPerPacket            = stream->codecpar->frame_size;
         s.mSampleRate                 =  stream->codecpar->sample_rate;
