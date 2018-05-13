@@ -68,7 +68,10 @@ typedef struct _GJNetShakeInfo {
     GLong maxDownShake;
     GLong preMaxDownShake;
     
-    GLong STDEV;//标准差
+    GLong variance;//方差
+    GLong expectation;//期望
+    GLong STDEV;
+    
     GLong *historyShake;
     GLong historyCap;
     GLong historyIndex;

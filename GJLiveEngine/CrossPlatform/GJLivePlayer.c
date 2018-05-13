@@ -20,6 +20,15 @@
 #define GJLivePlay_LOG_SWITCH LOG_INFO
 
 //#define UIIMAGE_SHOW
+//因为正态分布概率与平均数(u)和方差(Q)关系。
+//68.3%  u-Q<x<u+Q
+//95.4%  u-2Q<x<u+2Q
+//99.7%  u-3Q<x<u+3Q
+//但是方差太大，一般在3s以上，所以不适合用以上方案，直接采用标准差
+
+//标准差和极差表示抖动情况，可以用来自动控制抖动区间的控制，所以标准差越小，抖动更新区间越小，更新越快。
+//因为卡顿是由最大抖动引起的，所以本机制采用极差来表示抖动情况。
+//因为期望为0，所以极差约等于2*最大抖动值，所以最大抖动值可以控制抖动更新区间。
 
 #define VIDEO_PTS_PRECISION 140  //视频最多延迟两帧精度播放
 #define AUDIO_PTS_PRECISION 60  //改为100，2帧
@@ -29,7 +38,7 @@
 #define MAX_CACHE_RATIO 3
 #define HIGHT_PASS_FILTER 0.5 //高通滤波
 
-#define UPDATE_SHAKE_TIME_MIN 1.5*MAX_CACHE_DUR //
+#define UPDATE_SHAKE_TIME_MIN 8*MAX_CACHE_DUR //
 #define UPDATE_SHAKE_TIME_MAX 20*MAX_CACHE_DUR //
 
 
@@ -104,7 +113,7 @@ static void updateWater(GJSyncControl *syncControl, GLong shake){
     
     syncControl->bufferInfo.lowWaterFlag  = shake;
     
-    syncControl->bufferInfo.highWaterFlag = syncControl->bufferInfo.lowWaterFlag + 2* syncControl->netShake.STDEV;
+    syncControl->bufferInfo.highWaterFlag = syncControl->bufferInfo.lowWaterFlag + 2*syncControl->netShake.STDEV;
     GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "updateWater lowWaterFlag:%ld,highWaterFlag:%ld",syncControl->bufferInfo.lowWaterFlag,syncControl->bufferInfo.highWaterFlag);
 }
 
@@ -115,17 +124,18 @@ static GBool GJLivePlay_StartDewatering(GJLivePlayer *player) {
         if (player->syncControl.speed <= 1.00001) {
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "startDewatering");
             if (player->callback) {
-                GFloat32 speed = 1.2f;
+                GFloat32 speed = CHASE_SPEED;
                 player->callback(player->userDate,GJPlayMessage_DewateringUpdate,&speed);
             }
             player->syncControl.speed = CHASE_SPEED;
             player->audioPlayer->audioSetSpeed(player->audioPlayer, CHASE_SPEED);
         }
         //增加最大抖动更新间隔
-        GInt32 collectUpdateDur = player->syncControl.netShake.collectUpdateDur + UPDATE_SHAKE_TIME_MIN;
-        collectUpdateDur = GMIN(collectUpdateDur, UPDATE_SHAKE_TIME_MAX);
-        player->syncControl.netShake.collectUpdateDur = collectUpdateDur;
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "add collectUpdateDur to:%d",player->syncControl.netShake.collectUpdateDur);
+
+//        GInt32 collectUpdateDur = player->syncControl.netShake.collectUpdateDur + UPDATE_SHAKE_TIME_MIN;
+//        collectUpdateDur = GMIN(collectUpdateDur, UPDATE_SHAKE_TIME_MAX);
+//        player->syncControl.netShake.collectUpdateDur = collectUpdateDur;
+//        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "add collectUpdateDur to:%d",player->syncControl.netShake.collectUpdateDur);
     }
     pthread_mutex_unlock(&player->playControl.oLock);
     return GTrue;
@@ -164,10 +174,10 @@ static GBool GJLivePlay_StartBuffering(GJLivePlayer *player) {
         queueSetMinCacheSize(player->playControl.imageQueue, VIDEO_MAX_CACHE_COUNT);
         queueSetMinCacheSize(player->playControl.audioQueue, AUDIO_MAX_CACHE_COUNT);
         //每次缓冲时增大最大抖动更新间隔
-        GInt32 collectUpdateDur = player->syncControl.netShake.collectUpdateDur + UPDATE_SHAKE_TIME_MIN;
-        collectUpdateDur = GMIN(collectUpdateDur, UPDATE_SHAKE_TIME_MAX);
-        player->syncControl.netShake.collectUpdateDur = collectUpdateDur;
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "add collectUpdateDur to:%d",player->syncControl.netShake.collectUpdateDur);
+//        GInt32 collectUpdateDur = player->syncControl.netShake.collectUpdateDur + UPDATE_SHAKE_TIME_MIN;
+//        collectUpdateDur = GMIN(collectUpdateDur, UPDATE_SHAKE_TIME_MAX);
+//        player->syncControl.netShake.collectUpdateDur = collectUpdateDur;
+//        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "add collectUpdateDur to:%d",player->syncControl.netShake.collectUpdateDur);
     } else {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "buffer when status not in running");
     }
@@ -259,7 +269,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             for (int i = 0; i<netShake->historyIndex; i++) {
                 totalShake += netShake->historyShake[i];
             }
-            GLong avgShake = totalShake / netShake->historyIndex;
+            GLong avgShake = totalShake / (netShake->historyIndex+1);
             GLong variance = 0;
             for (int i = 0; i<netShake->historyIndex; i++) {
                 GLong del = netShake->historyShake[i] - avgShake;
@@ -270,8 +280,8 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             variance /= netShake->historyIndex;
             //因为可能时间比较短，所以选择最大的
             netShake->STDEV = GMAX(netShake->STDEV,(GLong)sqrtf(variance));
-            
-            GJLOG(GNULL, GJ_LOGDEBUG, "new max to update Standard Deviation:%ld\n",netShake->STDEV);
+//            GLong stdev = (GLong)sqrtf(variance);
+//            GJLOG(GNULL, GJ_LOGDEBUG, "最大值导致更新标准差:%ld 极差:%ld ，比值：%f\n",stdev,netShake->maxDownShake,stdev*1.0/netShake->maxDownShake);
             
             //增加是全额增加
             updateWater(_syncControl, shake);
@@ -332,7 +342,7 @@ else if ((shake < 0 && dClock >= netShake->collectUpdateDur)||
     for (int i = 0; i<netShake->historyIndex; i++) {
         totalShake += netShake->historyShake[i];
     }
-    GLong avgShake = totalShake / netShake->historyIndex;
+    GLong avgShake = totalShake / (netShake->historyIndex+1);
     GLong variance = 0;
     for (int i = 0; i<netShake->historyIndex; i++) {
         GLong del = netShake->historyShake[i] - avgShake;
@@ -340,9 +350,11 @@ else if ((shake < 0 && dClock >= netShake->collectUpdateDur)||
         variance += del;
     }
     variance /= netShake->historyIndex;//因为是样本方差，所以比个数i小1；
-    netShake->STDEV = (GLong)sqrtf(variance);
     netShake->historyIndex = 0;
-    GJLOG(GNULL, GJ_LOGDEBUG, "Time to update Standard Deviation:%ld\n",netShake->STDEV);
+    
+    netShake->STDEV = (GLong)sqrtf(variance);
+//    GLong stdev = (GLong)sqrtf(variance);
+//    GJLOG(GNULL, GJ_LOGDEBUG, "超时导致更新标准差:%ld 极差:%ld ，比值：%f\n",stdev,netShake->maxDownShake,stdev*1.0/netShake->maxDownShake);
         if (netShake->preMaxDownShake > netShake->maxDownShake) {
             //降低时采用滤波器缓冲
             GLong downShake =  netShake->preMaxDownShake*HIGHT_PASS_FILTER + netShake->maxDownShake*(1-HIGHT_PASS_FILTER);
