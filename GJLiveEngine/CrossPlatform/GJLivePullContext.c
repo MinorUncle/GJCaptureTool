@@ -270,14 +270,25 @@ void pullDataCallback(GJStreamPull *pull, R_GJPacket *packet, void *parm) {
     if (pull != livePull->streamPull) {
         return;
     }
-    
-    if (packet->type == GJMediaType_Video) {
-
-        livePull->videoUnDecodeByte += R_BufferSize(&packet->retain);
-    } else {
-
-        livePull->audioUnDecodeByte += R_BufferSize(&packet->retain);
+    if ((packet->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType) {
+        AVPacket avpacket = ((AVPacket*)R_BufferStart(packet))[0];
+        if (packet->type == GJMediaType_Video) {
+            
+            livePull->videoUnDecodeByte += avpacket.size;
+        } else {
+            
+            livePull->audioUnDecodeByte += avpacket.size;
+        }
+    }else{
+        if (packet->type == GJMediaType_Video) {
+            
+            livePull->videoUnDecodeByte += R_BufferSize(&packet->retain);
+        } else {
+            
+            livePull->audioUnDecodeByte += R_BufferSize(&packet->retain);
+        }
     }
+    
 }
 static GVoid aacDecodeCompleteCallback(GHandle userData, R_GJPCMFrame *frame) {
     GJLivePullContext *livePull = userData;

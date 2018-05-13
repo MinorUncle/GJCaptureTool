@@ -168,7 +168,7 @@ static GHandle pullRunloop(GHandle parm) {
         AVStream* stream = pull->formatContext->streams[pkt.stream_index];
         packet->pts            = GTimeMake(pkt.pts*1.0*stream->time_base.num/stream->time_base.den*1000, 1000);
         packet->dts            = GTimeMake(pkt.dts*1.0*stream->time_base.num/stream->time_base.den*1000, 1000);
-
+        packet->type = pkt.stream_index == asIndex;
         pthread_mutex_lock(&pull->mutex);
         if (!pull->releaseRequest){
             pull->dataCallback(pull, packet, pull->dataCallbackParm);

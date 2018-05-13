@@ -68,13 +68,16 @@ typedef struct _GJNetShakeInfo {
     GLong maxDownShake;
     GLong preMaxDownShake;
     
+    GLong STDEV;//标准差
+    GLong *historyShake;
+    GLong historyCap;
+    GLong historyIndex;
 #ifdef NETWORK_DELAY
     GLong networkDelay;
     GLong delayCount;
     GLong  collectStartDelay;
     GLong  maxTestDownShake;
     GLong  preMaxTestDownShake;
-
 #endif
 } GJNetShakeInfo;
 typedef struct _SyncInfo {
@@ -83,7 +86,7 @@ typedef struct _SyncInfo {
     GTime           startTime;
     GTime           startPts;
     GLong           inDtsSeries;
-    GJTrafficStatus trafficStatus;
+    GJTrafficStatus  trafficStatus;
 } SyncInfo;
 typedef struct SyncControl {
     SyncInfo       videoInfo;

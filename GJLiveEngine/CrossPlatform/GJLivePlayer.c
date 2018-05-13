@@ -29,8 +29,8 @@
 #define MAX_CACHE_RATIO 3
 #define HIGHT_PASS_FILTER 0.5 //高通滤波
 
-#define UPDATE_SHAKE_TIME_MIN 1*MAX_CACHE_DUR //
-#define UPDATE_SHAKE_TIME_MAX 10*MAX_CACHE_DUR //
+#define UPDATE_SHAKE_TIME_MIN 1.5*MAX_CACHE_DUR //
+#define UPDATE_SHAKE_TIME_MAX 20*MAX_CACHE_DUR //
 
 
 #define VIDEO_MAX_CACHE_COUNT 100 //初始化缓存空间
@@ -94,6 +94,7 @@ static GBool changeSyncType(GJSyncControl *sync, TimeSYNCType syncType) {
 }
 
 static void updateWater(GJSyncControl *syncControl, GLong shake){
+    shake += syncControl->netShake.STDEV;
     if (shake > MAX_CACHE_DUR) {
         shake = MAX_CACHE_DUR;
     } else if (shake < MIN_CACHE_DUR) {
@@ -103,7 +104,7 @@ static void updateWater(GJSyncControl *syncControl, GLong shake){
     
     syncControl->bufferInfo.lowWaterFlag  = shake;
     
-    syncControl->bufferInfo.highWaterFlag = syncControl->bufferInfo.lowWaterFlag * MAX_CACHE_RATIO;
+    syncControl->bufferInfo.highWaterFlag = syncControl->bufferInfo.lowWaterFlag + 2* syncControl->netShake.STDEV;
     GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "updateWater lowWaterFlag:%ld,highWaterFlag:%ld",syncControl->bufferInfo.lowWaterFlag,syncControl->bufferInfo.highWaterFlag);
 }
 
@@ -120,11 +121,11 @@ static GBool GJLivePlay_StartDewatering(GJLivePlayer *player) {
             player->syncControl.speed = CHASE_SPEED;
             player->audioPlayer->audioSetSpeed(player->audioPlayer, CHASE_SPEED);
         }
-        //减小最大抖动更新间隔
-        GInt32 collectUpdateDur = player->syncControl.netShake.collectUpdateDur - UPDATE_SHAKE_TIME_MIN/2;
-        collectUpdateDur = GMAX(collectUpdateDur, UPDATE_SHAKE_TIME_MIN);
+        //增加最大抖动更新间隔
+        GInt32 collectUpdateDur = player->syncControl.netShake.collectUpdateDur + UPDATE_SHAKE_TIME_MIN;
+        collectUpdateDur = GMIN(collectUpdateDur, UPDATE_SHAKE_TIME_MAX);
         player->syncControl.netShake.collectUpdateDur = collectUpdateDur;
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "reduce collectUpdateDur to:%d",player->syncControl.netShake.collectUpdateDur);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "add collectUpdateDur to:%d",player->syncControl.netShake.collectUpdateDur);
     }
     pthread_mutex_unlock(&player->playControl.oLock);
     return GTrue;
@@ -234,6 +235,13 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         }
     }
 #endif
+//    if (shake>=0) {
+        if (netShake->historyIndex == netShake->historyCap) {
+            netShake->historyCap *= 2;
+            netShake->historyShake = realloc(netShake->historyShake,netShake->historyCap*sizeof(GLong));
+        }
+        netShake->historyShake[netShake->historyIndex++] = shake;
+//    }
 //    GJLOG(GNULL, GJ_LOGINFO, "new shake:%ld,max:%ld ,preMax:%ld",shake,netShake->maxDownShake,netShake->preMaxDownShake);
     if (shake > netShake->maxDownShake) {
         netShake->maxDownShake = shake;
@@ -245,6 +253,26 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         }
 #endif
         if (netShake->maxDownShake > netShake->preMaxDownShake) {
+            //更新标准差，防止高频网络抖动时，更新时间比较长，标准差好比较长时间才能反应
+            //但是此阶段不会清除历史记录
+            GLong totalShake = 0;
+            for (int i = 0; i<netShake->historyIndex; i++) {
+                totalShake += netShake->historyShake[i];
+            }
+            GLong avgShake = totalShake / netShake->historyIndex;
+            GLong variance = 0;
+            for (int i = 0; i<netShake->historyIndex; i++) {
+                GLong del = netShake->historyShake[i] - avgShake;
+                del *= del;
+                variance += del;
+            }
+            //因为是样本方差，所以比个数i小1
+            variance /= netShake->historyIndex;
+            //因为可能时间比较短，所以选择最大的
+            netShake->STDEV = GMAX(netShake->STDEV,(GLong)sqrtf(variance));
+            
+            GJLOG(GNULL, GJ_LOGDEBUG, "new max to update Standard Deviation:%ld\n",netShake->STDEV);
+            
             //增加是全额增加
             updateWater(_syncControl, shake);
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "new shake to update waterFlage. max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
@@ -296,8 +324,25 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 #endif
 else if ((shake < 0 && dClock >= netShake->collectUpdateDur)||
          dClock >= 2 * netShake->collectUpdateDur) {
-        //要shake小于0才开始更新抖动计时器，否则表示该包已经有延时了，后面的抖动计算就会偏小。
+    //要shake小于0才开始更新抖动计时器，否则表示该包已经有延时了，后面的抖动计算就会偏小。
     //或者shake一直大于0，表示网络实在太差，也不需要高精度的抖动，则到达翻倍的超时时间也开始更新。
+    
+    //标准差
+    GLong totalShake = 0;
+    for (int i = 0; i<netShake->historyIndex; i++) {
+        totalShake += netShake->historyShake[i];
+    }
+    GLong avgShake = totalShake / netShake->historyIndex;
+    GLong variance = 0;
+    for (int i = 0; i<netShake->historyIndex; i++) {
+        GLong del = netShake->historyShake[i] - avgShake;
+        del *= del;
+        variance += del;
+    }
+    variance /= netShake->historyIndex;//因为是样本方差，所以比个数i小1；
+    netShake->STDEV = (GLong)sqrtf(variance);
+    netShake->historyIndex = 0;
+    GJLOG(GNULL, GJ_LOGDEBUG, "Time to update Standard Deviation:%ld\n",netShake->STDEV);
         if (netShake->preMaxDownShake > netShake->maxDownShake) {
             //降低时采用滤波器缓冲
             GLong downShake =  netShake->preMaxDownShake*HIGHT_PASS_FILTER + netShake->maxDownShake*(1-HIGHT_PASS_FILTER);
@@ -461,7 +506,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
             GLong lastClock = GTimeMSValue(_syncControl->audioInfo.trafficStatus.leave.clock);
             if(shake-(currentTime - lastClock)< AUDIO_PTS_PRECISION){//去除抖动限制，因为可能抖动大于AUDIO_PTS_PRECISION，但是播放缓存也会消耗时间，
                 *outSize = R_BufferSize(&_playControl->freshAudioFrame->retain);
-                memcpy(data, R_BufferStart(&_playControl->freshAudioFrame->retain), *outSize);
+                memcpy(data, R_BufferStart(_playControl->freshAudioFrame), *outSize);
                 return GTrue;
             }else{//需要等待时间太久，不补充了，直接暂停播放吧。
                 *outSize = 0;
@@ -677,6 +722,7 @@ GBool GJLivePlay_Create(GJLivePlayer **liveplayer, GJLivePlayCallback callback, 
     player->callback           = callback;
     player->userDate           = userData;
     player->playControl.status = kPlayStatusStop;
+
     pthread_mutex_init(&player->playControl.oLock, GNULL);
     queueCreate(&player->playControl.imageQueue, VIDEO_MAX_CACHE_COUNT, GTrue, GTrue); //150为暂停时视频最大缓冲
     queueCreate(&player->playControl.audioQueue, AUDIO_MAX_CACHE_COUNT, GTrue, GTrue);
@@ -719,6 +765,12 @@ GBool GJLivePlay_Start(GJLivePlayer *player) {
         player->syncControl.netShake.maxDownShake    = MIN_CACHE_DUR;
         player->syncControl.netShake.collectUpdateDur = UPDATE_SHAKE_TIME_MIN;
         player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&player->syncControl.netShake.maxDownShake);
+        
+#define DEFAULT_HISTORY_COUNT 100
+        player->syncControl.netShake.historyCap = DEFAULT_HISTORY_COUNT;
+        player->syncControl.netShake.historyShake = malloc(sizeof(GLong)*DEFAULT_HISTORY_COUNT);
+        player->syncControl.netShake.historyIndex = 0;
+        
 #ifdef NETWORK_DELAY
         player->syncControl.netShake.preMaxTestDownShake = MIN_CACHE_DUR;
         player->syncControl.netShake.maxTestDownShake    = MIN_CACHE_DUR;
@@ -762,6 +814,13 @@ GVoid GJLivePlay_Stop(GJLivePlayer *player) {
         pthread_join(player->playControl.playVideoThread, GNULL);
 
         pthread_mutex_lock(&player->playControl.oLock);
+        
+        if (player->syncControl.netShake.historyShake) {
+            free(player->syncControl.netShake.historyShake);
+            player->syncControl.netShake.historyShake = GNULL;
+            player->syncControl.netShake.historyCap = 0;
+            player->syncControl.netShake.historyIndex = 0;
+        }
         
         if (player->playControl.freshAudioFrame) {
             R_BufferUnRetain(&player->playControl.freshAudioFrame->retain);
@@ -1142,6 +1201,7 @@ GVoid GJLivePlay_Dealloc(GJLivePlayer **livePlayer) {
     queueFree(&player->playControl.audioQueue);
     queueFree(&player->playControl.imageQueue);
     signalDestory(&player->playControl.stopSignal);
+
     free(player);
     *livePlayer = GNULL;
 }
