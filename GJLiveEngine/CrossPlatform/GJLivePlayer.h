@@ -31,7 +31,8 @@ typedef enum _GJPlayMessage {
     GJPlayMessage_BufferStart,
     GJPlayMessage_BufferUpdate,
     GJPlayMessage_BufferEnd,
-    GJPlayMessage_NetShakeUpdate,//const GTime;
+    GJPlayMessage_NetShakeRangeUpdate,//const GLone*,网络抖动收集的时间范围更新
+    GJPlayMessage_NetShakeUpdate,//const GLone*，NetShakeRange时长内的网络抖动
 #ifdef NETWORK_DELAY
     GJPlayMessage_TestNetShakeUpdate,//同一手机下真正测试的抖动
     GJPlayMessage_TestKeyDelayUpdate,//影响抖动的关键延迟
@@ -68,13 +69,9 @@ typedef struct _GJNetShakeInfo {
     GLong maxDownShake;
     GLong preMaxDownShake;
     
-    GLong variance;//方差
-    GLong expectation;//期望
-    GLong STDEV;
-    
-    GLong *historyShake;
-    GLong historyCap;
-    GLong historyIndex;
+    GBool hasBuffer;
+    GBool hasDewater;
+    //用于控制增加collectUpdateDur，每次同时hasDewater和hasBuffer时则增大collectUpdateDur
 #ifdef NETWORK_DELAY
     GLong networkDelay;
     GLong delayCount;

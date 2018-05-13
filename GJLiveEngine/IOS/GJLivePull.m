@@ -115,9 +115,15 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
             }
         }break;
         case GJLivePull_netShakeUpdate:{
-            if ([livePull.delegate respondsToSelector:@selector(livePull:netShake:)]) {
+            if ([livePull.delegate respondsToSelector:@selector(livePull:netShakeUpdate:)]) {
                 GLong time = *(GLong*)parm;
-                [livePull.delegate livePull:livePull netShake:(GLong)time];
+                [livePull.delegate livePull:livePull netShakeUpdate:(GLong)time];
+            }
+        }break;
+        case GJLivePull_netShakeRangeUpdate:{
+            if ([livePull.delegate respondsToSelector:@selector(livePull:netShakeRangeUpdate:)]) {
+                GLong time = *(GLong*)parm;
+                [livePull.delegate livePull:livePull netShakeRangeUpdate:(GLong)time];
             }
         }break;
 #ifdef NETWORK_DELAY

@@ -36,6 +36,7 @@ typedef enum _GJLivePullMessageType {
     GJLivePull_testNetShakeUpdate,//GTime
     GJLivePull_testKeyDelayUpdate,//GTime
 #endif
+    GJLivePull_netShakeRangeUpdate,//GTime
     GJLivePull_netShakeUpdate,//GTime
     GJLivePull_dewateringUpdate,//GFloat
 } GJLivePullMessageType;

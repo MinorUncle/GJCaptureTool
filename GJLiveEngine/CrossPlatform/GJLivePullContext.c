@@ -196,6 +196,9 @@ static GVoid livePlayCallback(GHandle userDate, GJPlayMessage message, GHandle p
         case GJPlayMessage_NetShakeUpdate:
             pullMessage = GJLivePull_netShakeUpdate;
             break;
+        case GJPlayMessage_NetShakeRangeUpdate:
+            pullMessage = GJLivePull_netShakeRangeUpdate;
+            break;
 #ifdef NETWORK_DELAY
         case GJPlayMessage_TestNetShakeUpdate:
             pullMessage = GJLivePull_testNetShakeUpdate;

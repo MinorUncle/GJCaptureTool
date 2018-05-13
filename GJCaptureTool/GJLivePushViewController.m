@@ -758,7 +758,7 @@
 #define PULL_COUNT 2
 @interface PullManager : NSObject<GJLivePullDelegate>
 {
-    
+    NSMutableArray<UIView*>* _viewArr;
 }
 @property (copy, nonatomic) NSString    *pullAddr;
 @property (strong, nonatomic) UILabel    *pullRateLab;
@@ -767,7 +767,7 @@
 @property (strong, nonatomic) UILabel    *audioCacheLab;
 @property (strong, nonatomic) UILabel    *playerBufferLab;
 @property (strong, nonatomic) UILabel    *netDelay;
-@property (strong, nonatomic) UILabel    *keyDelay;
+@property (strong, nonatomic) UILabel    *shakeRange;
 @property (strong, nonatomic) UILabel    *netShake;
 @property (strong, nonatomic) UILabel    *testNetShake;
 @property (strong, nonatomic) UILabel    *dewaterStatus;
@@ -798,6 +798,7 @@
         _pullAddr = pullUrl;
         _pull = [[GJLivePull alloc]init];
         _pull.delegate = self;
+        _viewArr = [NSMutableArray array];
         [self buildUI];
     }
     return self;
@@ -827,6 +828,7 @@
     _pullStateLab.textColor = [UIColor redColor];
     _pullStateLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_pullStateLab];
+    [_viewArr addObject:_pullStateLab];
     
     _pullRateLab = [[UILabel alloc]init];
     _pullRateLab.textColor = [UIColor redColor];
@@ -834,6 +836,7 @@
     _pullRateLab.numberOfLines = 0;
     _pullRateLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_pullRateLab];
+    [_viewArr addObject:_pullStateLab];
     
     _videoCacheLab = [[UILabel alloc]init];
     _videoCacheLab.textColor = [UIColor redColor];
@@ -841,55 +844,64 @@
     _videoCacheLab.numberOfLines = 0;
     _videoCacheLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_videoCacheLab];
-    
+    [_viewArr addObject:_videoCacheLab];
+
     _audioCacheLab = [[UILabel alloc]init];
     _audioCacheLab.numberOfLines = 0;
     _audioCacheLab.textColor = [UIColor redColor];
     _audioCacheLab.text = @"cache A:0.0 ms f:0";
     _audioCacheLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_audioCacheLab];
-    
+    [_viewArr addObject:_audioCacheLab];
+
     _netDelay = [[UILabel alloc]init];
     _netDelay.numberOfLines = 0;
     _netDelay.textColor = [UIColor redColor];
     _netDelay.text = @"NetDelay Measure:未工作";
     _netDelay.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_netDelay];
-    
-    _keyDelay = [[UILabel alloc]init];
-    _keyDelay.numberOfLines = 0;
-    _keyDelay.textColor = [UIColor redColor];
-    _keyDelay.text = @"KeyNetDelay Measure:未工作";
-    _keyDelay.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_keyDelay];
-    
+    [_viewArr addObject:_netDelay];
+
     _testNetShake = [[UILabel alloc]init];
     _testNetShake.numberOfLines = 0;
     _testNetShake.textColor = [UIColor redColor];
     _testNetShake.text = @"Max netShake Measure:未工作";
     _testNetShake.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_testNetShake];
-    
+    [_viewArr addObject:_testNetShake];
+
+    _shakeRange = [[UILabel alloc]init];
+    _shakeRange.numberOfLines = 0;
+    _shakeRange.textColor = [UIColor redColor];
+    _shakeRange.text = @"shake collect duration:0";
+    _shakeRange.font = [UIFont systemFontOfSize:10];
+    [self.view addSubview:_shakeRange];
+    [_viewArr addObject:_shakeRange];
+
     _netShake = [[UILabel alloc]init];
     _netShake.numberOfLines = 0;
     _netShake.textColor = [UIColor redColor];
     _netShake.text = @"Max netShake:0 ms";
     _netShake.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_netShake];
-    
+    [_viewArr addObject:_netShake];
+
     _dewaterStatus = [[UILabel alloc]init];
     _dewaterStatus.numberOfLines = 0;
     _dewaterStatus.textColor = [UIColor redColor];
     _dewaterStatus.text = @"dewaterStatus:false";
     _dewaterStatus.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_dewaterStatus];
-    
+    [_viewArr addObject:_dewaterStatus];
+
     _playerBufferLab = [[UILabel alloc]init];
     _playerBufferLab.numberOfLines = 0;
     _playerBufferLab.textColor = [UIColor redColor];
     _playerBufferLab.text = @"buffer：未缓冲";
     _playerBufferLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_playerBufferLab];
+    [_viewArr addObject:_playerBufferLab];
+
 }
 -(void)setFrame:(CGRect)frame{
     _frame = frame;
@@ -904,36 +916,12 @@
     
     _pull.previewView.frame = rect;
     
-    int count = 10;
-    rect.size.height *= 1.0/count;
-    _pullStateLab.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _pullRateLab.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _videoCacheLab.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _audioCacheLab.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _netDelay.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _keyDelay.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _testNetShake.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _netShake.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _dewaterStatus.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _playerBufferLab.frame = rect;
+    rect.size.height *= 1.0/_viewArr.count;
+    for (int i = 0; i<_viewArr.count; i++) {
+        UIView* view = _viewArr[i];
+        rect.origin.y = rect.size.height*i;
+        view.frame = rect;
+    }
 }
 
 -(void)takeSelect:(UIButton*)btn{
@@ -958,7 +946,7 @@
 -(void)livePull:(GJLivePull *)livePull closeConnent:(GJPullSessionInfo *)info resion:(GJConnentCloceReason)reason{
     GJPullSessionInfo sInfo= *info;
     dispatch_async(dispatch_get_main_queue(), ^{
-        _pullStateLab.text = [NSString stringWithFormat:@"connent total：%lld ms",sInfo.sessionDuring];
+        _pullStateLab.text = [NSString stringWithFormat:@"connent total：%ld ms",sInfo.sessionDuring];
     });
 }
 -(void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullSessionStatus *)status{
@@ -970,9 +958,14 @@
     });
 }
 
--(void)livePull:(GJLivePull *)livePull netShake:(long)shake{
+-(void)livePull:(GJLivePull *)livePull netShakeUpdate:(long)shake{
     dispatch_async(dispatch_get_main_queue(), ^{
         _netShake.text = [NSString stringWithFormat:@"Max netShake:%ld ms",shake];
+    });
+}
+-(void)livePull:(GJLivePull *)livePull netShakeRangeUpdate:(long)shake{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        _shakeRange.text = [NSString stringWithFormat:@"shake collect duration:%ld ms",shake];
     });
 }
 
@@ -1026,11 +1019,6 @@
     });
 }
 
--(void)livePull:(GJLivePull *)livePull testKeyDelay:(long)delay{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        _keyDelay.text = [NSString stringWithFormat:@"KeyNetDelay Measure:%ld ms",delay];
-    });
-}
 
 @end
 @interface GJLivePushViewController ()

@@ -26,7 +26,9 @@
 -(void)livePull:(GJLivePull *)livePull testNetShake:(long)shake;
 -(void)livePull:(GJLivePull *)livePull testKeyDelay:(long)delay;
 #endif
--(void)livePull:(GJLivePull*)livePull netShake:(long)shake;
+-(void)livePull:(GJLivePull*)livePull netShakeUpdate:(long)shake;
+-(void)livePull:(GJLivePull*)livePull netShakeRangeUpdate:(long)range;
+
 -(void)livePull:(GJLivePull*)livePull isDewatering:(BOOL)isDewatering;
 
 
