@@ -29,8 +29,8 @@ typedef struct _GJBufferInfo {
 } GJBufferInfo;
 typedef enum _GJPlayMessage {
     GJPlayMessage_BufferStart,
-    GJPlayMessage_BufferUpdate,
-    GJPlayMessage_BufferEnd,
+    GJPlayMessage_BufferUpdate,//UnitBufferInfo
+    GJPlayMessage_BufferEnd,//GJCacheInfo
     GJPlayMessage_NetShakeRangeUpdate,//const GLone*,网络抖动收集的时间范围更新
     GJPlayMessage_NetShakeUpdate,//const GLone*，NetShakeRange时长内的网络抖动
 #ifdef NETWORK_DELAY

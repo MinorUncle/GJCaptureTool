@@ -759,6 +759,7 @@
 @interface PullManager : NSObject<GJLivePullDelegate>
 {
     NSMutableArray<UIView*>* _viewArr;
+    NSInteger _bufferTimes;
 }
 @property (copy, nonatomic) NSString    *pullAddr;
 @property (strong, nonatomic) UILabel    *pullRateLab;
@@ -1009,7 +1010,11 @@
 
 -(void)livePull:(GJLivePull *)livePull bufferUpdatePercent:(float)percent duration:(long)duration{
     dispatch_async(dispatch_get_main_queue(), ^{
-        _playerBufferLab.text = [NSString stringWithFormat:@"buffer：%0.2f  %ld ms",percent,duration];
+        
+        if (duration == 0.0) {
+            _bufferTimes ++;
+        }
+        _playerBufferLab.text = [NSString stringWithFormat:@"buffer：%0.2f %ld ms times:%ld",percent,duration,(long)_bufferTimes];
     });
 }
 

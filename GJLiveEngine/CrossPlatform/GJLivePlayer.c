@@ -211,11 +211,12 @@ static GVoid GJLivePlay_StopBuffering(GJLivePlayer *player) {
         if (queueGetLength(player->playControl.audioQueue) > 0) {
             queueBroadcastPop(player->playControl.audioQueue);
         }
-        if (player->syncControl.bufferInfo.lastPauseFlag != 0) {
-            player->syncControl.bufferInfo.lastBufferDuration = GTimeMSValue(GJ_Gettime()) - player->syncControl.bufferInfo.lastPauseFlag;
-            player->syncControl.bufferInfo.bufferTotalDuration += player->syncControl.bufferInfo.lastBufferDuration;
-            player->syncControl.bufferInfo.bufferTimes++;
-            player->syncControl.bufferInfo.lastPauseFlag = 0;
+        GJCacheInfo* bufferInfo = &player->syncControl.bufferInfo;
+        if (bufferInfo->lastPauseFlag != 0) {
+            bufferInfo->lastBufferDuration = GTimeMSValue(GJ_Gettime()) - bufferInfo->lastPauseFlag;
+            bufferInfo->bufferTotalDuration += bufferInfo->lastBufferDuration;
+            bufferInfo->bufferTimes++;
+            bufferInfo->lastPauseFlag = 0;
         } else {
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGFORBID, "暂停管理出现问题");
         }
@@ -223,7 +224,8 @@ static GVoid GJLivePlay_StopBuffering(GJLivePlayer *player) {
         if (player->syncControl.syncType == kTimeSYNCAudio) {
             player->audioPlayer->audioResume(player->audioPlayer);
         }
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "buffing times:%ld useDuring:%ld", player->syncControl.bufferInfo.bufferTimes, player->syncControl.bufferInfo.lastBufferDuration);
+        player->callback(player->userDate, GJPlayMessage_BufferEnd, bufferInfo);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "buffing times:%ld useDuring:%ld", bufferInfo->bufferTimes, bufferInfo->lastBufferDuration);
     } else {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "stopBuffering when status not buffering");
     }
@@ -416,8 +418,8 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer *player) {
             player->callback(player->userDate, GJPlayMessage_BufferUpdate, &bufferInfo);
         } else {
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "缓冲结束");
+            bufferInfo.percent = 1.0;
             player->callback(player->userDate, GJPlayMessage_BufferUpdate, &bufferInfo);
-            player->callback(player->userDate, GJPlayMessage_BufferEnd, &bufferInfo);
             player->playControl.videoQueueWaitTime = 0;
             GJLivePlay_StopBuffering(player);
         }

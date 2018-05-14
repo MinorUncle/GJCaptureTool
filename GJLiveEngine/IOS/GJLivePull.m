@@ -103,6 +103,15 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
                 [livePull.delegate livePull:livePull bufferUpdatePercent:info->percent duration:info->bufferDur];
             }
         } break;
+        case GJLivePull_bufferStart: {
+            UnitBufferInfo info = {0};
+            if ([livePull.delegate respondsToSelector:@selector(livePull:bufferUpdatePercent:duration:)]) {
+                [livePull.delegate livePull:livePull bufferUpdatePercent:info.percent duration:info.bufferDur];
+            }
+        } break;
+        case GJLivePull_bufferEnd: {
+//            GJCacheInfo info;
+        } break;
         case GJLivePull_decodeFristVideoFrame: {
             //                GJPullFristFrameInfo info = {0};
             //                info.size = *(GSize*)parm;
