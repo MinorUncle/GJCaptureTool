@@ -246,6 +246,10 @@ void decodeOutputCallback(
                                                                               (const uint8_t *const *) parameterSetPointers,
                                                                               parameterSetSizes, 4,
                                                                               &_formatDesc);
+        if (status != 0) {
+            GJAssert(0, "CMVideoFormatDescriptionCreateFromH264ParameterSets error:%d",status);
+            return;
+        }
 #if 0
         FourCharCode re = CMVideoFormatDescriptionGetCodecType(desc);
         

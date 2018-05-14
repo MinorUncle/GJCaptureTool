@@ -60,7 +60,7 @@ static void* FFDecoder_DecodeRunloop(GHandle arg){
             R_GJPixelFrame *pixelFrame = (R_GJPixelFrame *) GJRetainBufferPoolGetData(decoder->bufferPool);
             pixelFrame->height         = frame->width;
             pixelFrame->width          = frame->height;
-            pixelFrame->pts            = GTimeMake(frame->pkt_pts*1.0*decoder->timebase.num/decoder->timebase.den*1000, 1000);
+            pixelFrame->pts            = GTimeMake(av_frame_get_best_effort_timestamp(frame)*1.0*decoder->timebase.num/decoder->timebase.den*1000, 1000);
             pixelFrame->dts            = GTimeMake(frame->pkt_dts*1.0*decoder->timebase.num/decoder->timebase.den*1000, 1000);
             pixelFrame->type           = decoder->pixelFormat;
             pixelFrame->flag           = kGJFrameFlag_P_AVFrame;
@@ -109,6 +109,20 @@ GBool FFDecoder_DecodePacket(FFDecoder* decoder,R_GJPacket *packet){
                 decoder->timebase = stream->time_base;
                 _setupDecoderContext(decoder,stream->codecpar->codec_id);
                 GJAssert(avcodec_parameters_to_context(decoder->decoderContext, stream->codecpar) >= 0, "avcodec_parameters_to_context error")  ;
+                
+                switch (decoder->pixelFormat) {
+                    case GJPixelType_YpCbCr8BiPlanar:
+                    case GJPixelType_YpCbCr8BiPlanar_Full:
+                        decoder->decoderContext->pix_fmt = AV_PIX_FMT_NV12;
+                        break;
+                    case GJPixelType_32BGRA:
+                        decoder->decoderContext->pix_fmt = AV_PIX_FMT_BGRA;
+                        break;
+                    default:
+                        GJAssert(0, "格式不支持");
+                        return GFalse;
+                        break;
+                }
                 //直接起飞了
                 if(avcodec_open2(decoder->decoderContext, decoder->decoder, GNULL) < 0){
                     GJAssert(0, "格式不支持");

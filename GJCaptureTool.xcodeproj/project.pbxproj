@@ -2198,7 +2198,7 @@
 					"$(PROJECT_DIR)/lib",
 					"$(PROJECT_DIR)/fat-faac/lib",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.melot.engine;
+				PRODUCT_BUNDLE_IDENTIFIER = com.GJ.engine;
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -2229,7 +2229,7 @@
 					"$(PROJECT_DIR)/fat-faac/lib",
 				);
 				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = com.melot.engine;
+				PRODUCT_BUNDLE_IDENTIFIER = com.GJ.engine;
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";

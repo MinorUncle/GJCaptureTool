@@ -241,7 +241,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
 -(void)receiveNotic:(NSNotification*)notic{
     if ([notic.name isEqualToString:AVAudioSessionInterruptionNotification]) {
         AVAudioSessionInterruptionType type = [notic.userInfo[AVAudioSessionInterruptionTypeKey] integerValue];
-        AVAudioSessionInterruptionOptions option = [notic.userInfo[AVAudioSessionInterruptionOptionKey] integerValue];
+//        AVAudioSessionInterruptionOptions option = [notic.userInfo[AVAudioSessionInterruptionOptionKey] integerValue];
         switch (type) {
             case AVAudioSessionInterruptionTypeBegan:{
                 if (_timer != nil) {

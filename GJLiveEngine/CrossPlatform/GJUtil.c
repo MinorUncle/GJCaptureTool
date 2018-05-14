@@ -26,10 +26,11 @@ GTime GJ_Gettime(){
 #ifdef CA_TIME
     return GTimeMake(CACurrentMediaTime()*1000, 1000);
 
-#endif
+#else
     struct timeval tv;
     gettimeofday(&tv, NULL);
     return GTimeMake(tv.tv_sec * 1000 + tv.tv_usec/1000, 1000);
+#endif
 }
 
 

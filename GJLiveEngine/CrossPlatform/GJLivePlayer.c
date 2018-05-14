@@ -38,8 +38,8 @@
 #define MAX_CACHE_RATIO 3
 #define HIGHT_PASS_FILTER 0.5 //高通滤波
 
-#define UPDATE_SHAKE_TIME_MIN 2*MAX_CACHE_DUR //
-#define UPDATE_SHAKE_TIME_MAX 10*MAX_CACHE_DUR //
+#define UPDATE_SHAKE_TIME_MIN (1.25*MAX_CACHE_DUR) //
+#define UPDATE_SHAKE_TIME_MAX (10*MAX_CACHE_DUR) //
 
 
 #define VIDEO_MAX_CACHE_COUNT 100 //初始化缓存空间
@@ -273,7 +273,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             //增加是全额增加
             updateWater(_syncControl, shake);
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "new shake to update waterFlage. max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
-            
+
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&shake);
 #ifdef NETWORK_DELAY
             if (testShake != shake) {
@@ -324,7 +324,7 @@ else if ((shake < 0 && dClock >= netShake->collectUpdateDur)||
     //要shake小于0才开始更新抖动计时器，否则表示该包已经有延时了，后面的抖动计算就会偏小。
     //或者shake一直大于0，表示网络实在太差，也不需要高精度的抖动，则到达翻倍的超时时间也开始更新。
 
-        if (netShake->preMaxDownShake > netShake->maxDownShake) {
+        if (netShake->preMaxDownShake >= netShake->maxDownShake) {//用>=而不是>，防止抖动比较小时，一直没有更新maxshake,导致要过两个周期才能进入此更新
             //降低时采用滤波器缓冲
             GLong downShake =  netShake->preMaxDownShake*HIGHT_PASS_FILTER + netShake->maxDownShake*(1-HIGHT_PASS_FILTER);
             updateWater(_syncControl,downShake);
@@ -771,6 +771,7 @@ GBool GJLivePlay_Start(GJLivePlayer *player) {
 }
 GVoid GJLivePlay_Stop(GJLivePlayer *player) {
     GJLivePlay_StopBuffering(player);
+    GJLivePlay_StopDewatering(player);
 
     if (player->playControl.status != kPlayStatusStop) {
         GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_Stop:%p",player);
@@ -964,7 +965,7 @@ RETRY:
 }
 GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
 
-    GJLOG(GNULL, GJ_LOGALL, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts.value,videoFrame->dts.value);
+//    GJLOG(GNULL, GJ_LOGDEBUG, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts.value,videoFrame->dts.value);
 
     if (videoFrame->dts.value < player->syncControl.videoInfo.inDtsSeries) {
 

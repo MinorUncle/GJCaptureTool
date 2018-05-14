@@ -43,7 +43,7 @@ GBool GJLivePull_Create(GJLivePullContext **pullContext, GJLivePullCallback call
             break;
         };
 //        GJ_FFDecodeContextCreate(&context->videoDecoder);
-       GJ_H264DecodeContextCreate(&context->videoDecoder);
+        GJ_H264DecodeContextCreate(&context->videoDecoder);
         GJ_AACDecodeContextCreate(&context->audioDecoder);
 
         if (!context->videoDecoder->decodeSetup(context->videoDecoder, GJPixelType_YpCbCr8BiPlanar_Full, h264DecodeCompleteCallback, context)) {
@@ -78,7 +78,7 @@ GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
             context->audioUnDecodeByte = context->videoUnDecodeByte = 0;
             context->audioTraffic = context->videoTraffic = (GJTrafficStatus){0};
 
-            if (!GJStreamPull_Create(&context->streamPull, pullMessageCallback, context)) {
+            if (!GJStreamPull_Create(&context->streamPull, (MessageHandle)pullMessageCallback, context)) {
                 result = GFalse;
                 break;
             };
@@ -169,8 +169,8 @@ GVoid GJLivePull_Dealloc(GJLivePullContext **pullContext) {
         context->videoDecoder->decodeUnSetup(context->videoDecoder);
         context->audioDecoder->decodeUnSetup(context->audioDecoder);
 
-        GJ_H264DecodeContextDealloc(&context->videoDecoder);
-//        GJ_FFDecodeContextDealloc(&context->videoDecoder);
+//        GJ_H264DecodeContextDealloc(&context->videoDecoder);
+        GJ_FFDecodeContextDealloc(&context->videoDecoder);
         GJ_AACDecodeContextDealloc(&context->audioDecoder);
         free(context);
         *pullContext = GNULL;
