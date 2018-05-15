@@ -9,6 +9,7 @@
 #ifndef GJUtil_h
 #define GJUtil_h
 #include "GJPlatformHeader.h"
+#include "GJList.h"
 
 /**
  获得当前时间
@@ -70,4 +71,6 @@ GInt32 writeADTS(GUInt8* buffer,GUInt8 size,const ADTS* adts);
 GInt32 readADTS(const GUInt8* data,GUInt8 size,ADTS* adts);
 GInt32 readASC(const GUInt8* data,GUInt8 size,ASC* asc);
 GInt32 writeASC(GUInt8* buffer,GUInt8 size,const ASC* asc);
+
+
 #endif /* GJUtil_h */

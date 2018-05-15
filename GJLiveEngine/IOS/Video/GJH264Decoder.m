@@ -342,6 +342,68 @@ void decodeOutputCallback(
         packetData  = packet->dataOffset + R_BufferStart(&packet->retain);
     }
     
+    //#if MENORY_CHECK
+    ////<-----conversion
+//    if (((GUInt16*)packetData)[0] == 0 && packetData[2] == 0 && packetData[3] == 1) {
+    
+//        GUInt8* preNal = GNULL;
+//        for (int i = 3; i<packetSize-4; i++) {
+//            if (packetData[i] == 0) {
+//                if (packetData[i+1] == 0) {
+//                    if (packetData[i+2] == 0) {
+//                        if (packetData[i+3] == 1) {
+//                            if (preNal != GNULL) {
+//                                GInt32 nalSize = (GInt32)(packetData + i - preNal);
+//                                nalSize = htonl(nalSize);
+//                                memcpy(preNal-4, &nalSize, 4);
+//                            }
+//                            preNal = packetData + i+4;
+//                            i+=3;//跳过4-1个
+//                        }else if(packetData[i+3] != 0){//3-1
+//                            i+=2;
+//                        }//否则//1-1
+//                    }else if(packetData[i+2] == 1){//匹配成功0x000001，3-1,
+//                        AVPacket* pkt = ((AVPacket*)(R_BufferStart(packet) + packet->extendDataOffset));
+//
+//                        av_grow_packet(pkt,1);
+//                        
+//                        memmove(packetData+i+1, packetData+i, packetSize-i);
+//                        if (preNal != GNULL) {
+//                            GInt32 nalSize = (GInt32)(packetData + i - preNal);
+//                            nalSize = htonl(nalSize);
+//                            memcpy(preNal-4, &nalSize, 4);
+//                        }
+//                        preNal = packetData + i +4;
+//                        i+=3;
+//                    }else{
+//                        i+=2;
+//                    }
+//                }else{
+//                    i++;
+//                }
+//            }
+//        }
+//        if (preNal) {
+//            GInt32 nalSize = (GInt32)(packetData + packetSize - preNal);
+//            nalSize = htonl(nalSize);
+//            memcpy(preNal-4, &nalSize, 4);
+//        }
+//    }
+    ///->>>
+    
+    //check
+    int32_t unitSize = 0;
+    uint8_t* current;
+    long totalSize = 0;
+    current = packetData;
+    while (totalSize < packetSize) {
+        memcpy(&unitSize, current, 4);
+        unitSize = ntohl(unitSize);
+        totalSize += unitSize+4;
+        current += unitSize+4;
+    }
+    assert(totalSize == packetSize);
+    
     if(packetSize > 0){
         //        uint32_t dataLength32 = htonl (blockLength - 4);
         //        memcpy (data, &dataLength32, sizeof (uint32_t));

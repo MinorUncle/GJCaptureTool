@@ -761,7 +761,7 @@ GBool GJLivePlay_Start(GJLivePlayer *player) {
         queueEnablePush(player->playControl.audioQueue, GTrue);
         queueEnablePop(player->playControl.audioQueue, GTrue);
         queueEnablePop(player->playControl.imageQueue, GTrue);
-
+        signalReset(player->playControl.stopSignal);
     } else {
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "GJLivePlayer 重复 start");
     }

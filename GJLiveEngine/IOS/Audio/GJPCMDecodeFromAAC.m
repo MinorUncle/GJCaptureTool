@@ -11,6 +11,7 @@
 #import "GJRetainBufferPool.h"
 #import "GJUtil.h"
 #import "libavformat/avformat.h"
+#import "GJSignal.h"
 
 
 @interface GJPCMDecodeFromAAC () {
@@ -23,6 +24,7 @@
     R_GJPacket *                 _prePacket;
     AudioStreamPacketDescription tPacketDesc;
     ASC   _asc;
+    GJSignal* _stopFinshSignal;
 }
 
 @property (nonatomic, assign) int64_t currentPts;
@@ -59,6 +61,7 @@ static int stopCount;
 - (void)initQueue {
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_SERIAL);
     queueCreate(&_resumeQueue, 20, true, true);
+    signalCreate(&_stopFinshSignal);
 }
 + (AudioStreamBasicDescription)defaultSourceFormateDescription {
     AudioStreamBasicDescription format = {0};
@@ -92,6 +95,8 @@ static int stopCount;
     queueEnablePop(_resumeQueue, GFalse);
     queueEnablePush(_resumeQueue, GFalse);
     queueBroadcastPop(_resumeQueue);
+
+    signalWait(_stopFinshSignal, INT_MAX);
 
     if (_decodeConvert) {
         AudioConverterDispose(_decodeConvert);
@@ -299,6 +304,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
     AudioStreamPacketDescription packetDesc;
     AudioBufferList              outCacheBufferList;
+    signalReset(_stopFinshSignal);
     while (_running) {
         memset(&packetDesc, 0, sizeof(packetDesc));
         memset(&outCacheBufferList, 0, sizeof(AudioBufferList));
@@ -331,6 +337,8 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         _currentPts = -1;
         R_BufferUnRetain(&frame->retain);
     }
+    GJLOG(GNULL, GJ_LOGDEBUG, "signalEmit：%p",_stopFinshSignal);
+    signalEmit(_stopFinshSignal);
 }
 
 - (void)dealloc {
@@ -348,7 +356,8 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (_resumeQueue) {
         queueFree(&(_resumeQueue));
     }
-    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "gjpcmdecodeformaac delloc");
+    signalDestory(&_stopFinshSignal);
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "gjpcmdecodeformaac delloc:%p",self);
 }
 
 #pragma mark - mutex
