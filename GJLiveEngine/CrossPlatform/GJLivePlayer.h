@@ -48,6 +48,11 @@ typedef struct CacheInfo {
     GLong lastBufferDuration;
     GLong bufferTimes;
     GLong lastPauseFlag;
+    
+    GBool hasBuffer;
+    GBool hasDewater;
+    //用于控制增加collectUpdateDur，每次同时hasDewater和hasBuffer时则增大collectUpdateDur
+    GLong dewaterTimes;
 } GJCacheInfo;
 typedef struct PlayControl {
     GJPlayStatus    status;
@@ -69,9 +74,7 @@ typedef struct _GJNetShakeInfo {
     GLong maxDownShake;
     GLong preMaxDownShake;
     
-    GBool hasBuffer;
-    GBool hasDewater;
-    //用于控制增加collectUpdateDur，每次同时hasDewater和hasBuffer时则增大collectUpdateDur
+
 #ifdef NETWORK_DELAY
     GLong networkDelay;
     GLong delayCount;

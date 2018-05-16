@@ -29,7 +29,7 @@
 -(void)livePull:(GJLivePull*)livePull netShakeUpdate:(long)shake;
 -(void)livePull:(GJLivePull*)livePull netShakeRangeUpdate:(long)range;
 
--(void)livePull:(GJLivePull*)livePull isDewatering:(BOOL)isDewatering;
+-(void)livePull:(GJLivePull*)livePull dewaterUpdate:(BOOL)isDewatering;
 
 
 -(void)livePull:(GJLivePull*)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString*)infoDesc;

@@ -14,7 +14,7 @@
 
 //延迟收集，只有在同一收集同时推拉流才准确，
 
-#define NETWORK_DELAY
+//#define NETWORK_DELAY
 //#define USE_KCP
 
 #ifdef USE_KCP

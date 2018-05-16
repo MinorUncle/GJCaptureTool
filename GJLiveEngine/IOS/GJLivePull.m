@@ -118,9 +118,9 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
             [livePull.delegate livePull:livePull fristFrameDecode:parm];
         } break;
         case GJLivePull_dewateringUpdate:{
-            if ([livePull.delegate respondsToSelector:@selector(livePull:isDewatering:)]) {
+            if ([livePull.delegate respondsToSelector:@selector(livePull:dewaterUpdate:)]) {
                 GBool dewatering = *(GBool*)parm;
-                [livePull.delegate livePull:livePull isDewatering:dewatering];
+                [livePull.delegate livePull:livePull dewaterUpdate:dewatering];
             }
         }break;
         case GJLivePull_netShakeUpdate:{

@@ -760,6 +760,7 @@
 {
     NSMutableArray<UIView*>* _viewArr;
     NSInteger _bufferTimes;
+    NSInteger _dewaterTimes;
 }
 @property (copy, nonatomic) NSString    *pullAddr;
 @property (strong, nonatomic) UILabel    *pullRateLab;
@@ -890,7 +891,7 @@
     _dewaterStatus = [[UILabel alloc]init];
     _dewaterStatus.numberOfLines = 0;
     _dewaterStatus.textColor = [UIColor redColor];
-    _dewaterStatus.text = @"dewaterStatus:false";
+    _dewaterStatus.text = @"dewaterStatus:false times:0";
     _dewaterStatus.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_dewaterStatus];
     [_viewArr addObject:_dewaterStatus];
@@ -898,7 +899,7 @@
     _playerBufferLab = [[UILabel alloc]init];
     _playerBufferLab.numberOfLines = 0;
     _playerBufferLab.textColor = [UIColor redColor];
-    _playerBufferLab.text = @"buffer：未缓冲";
+    _playerBufferLab.text = @"buffer：0 times:0";
     _playerBufferLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_playerBufferLab];
     [_viewArr addObject:_playerBufferLab];
@@ -976,12 +977,13 @@
     });
 }
 
--(void)livePull:(GJLivePull *)livePull isDewatering:(BOOL)isDewatering{
+-(void)livePull:(GJLivePull *)livePull dewaterUpdate:(BOOL)isDewatering{
     dispatch_async(dispatch_get_main_queue(), ^{
         if (isDewatering) {
-            _dewaterStatus.text = @"dewaterStatus:true";
+            _dewaterTimes++;
+            _dewaterStatus.text = [NSString stringWithFormat:@"dewaterStatus:true times:%ld",(long)_dewaterTimes];
         }else{
-            _dewaterStatus.text = @"dewaterStatus:false";
+            _dewaterStatus.text = [NSString stringWithFormat:@"dewaterStatus:false times:%ld",(long)_dewaterTimes];
         }
     });
 }
