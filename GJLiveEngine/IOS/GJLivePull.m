@@ -219,8 +219,9 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
             _timer = nil;
         });
     }
-
-    return GJLivePull_StopPull(_pullContext);
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        GJLivePull_StopPull(_pullContext);
+    });
 }
 
 - (UIView *)getPreviewView {

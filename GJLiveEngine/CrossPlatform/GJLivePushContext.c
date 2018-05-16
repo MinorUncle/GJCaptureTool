@@ -89,6 +89,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
                 if (sendTs != 0) {
                     currentBitRate = sendByte * 8  / (sendTs / 1000.0);
                 }
+                
                 context->netSpeedUnit[context->collectCount++ % context->netSpeedCheckInterval] = currentBitRate;
                 //允许1帧的抖动，（会导致丢帧率大（网速低）时，rateCheckStep比较小，稍微不容易降低网速）
                 if (sendCount < context->rateCheckStep - 1 && cacheInPts > context->sensitivity && cacheInCount > NET_MIN_SENSITIVITY_FRAME) {
@@ -101,7 +102,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
                             fullCount++;
                             totalCount++;
                         }else if(context->netSpeedUnit[i] != INVALID_SPEED){
-                            context->videoNetSpeed += -context->netSpeedUnit[i];
+                            context->videoNetSpeed += -context->netSpeedUnit[i];//受限网速是负数标志
                             totalCount++;
                         }
                     }
@@ -133,14 +134,17 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
                 GJLOG(GNULL, GJ_LOGINFO,"favorableCount count:%d",context->favorableCount);
                 GInt32 increaseStep = context->favorableCount / (context->rateCheckStep * context->increaseSpeedRate);
                 if (increaseStep > context->increaseCount) {
+                    GJAssert(context->increaseCount+1 == increaseStep, "都是一步一步加");
                     context->increaseCount = increaseStep;
-                    int collectCount = context->collectCount++;
                     GJLOG(GNULL, GJ_LOGINFO,"update space speed:%0.02f kBps，count:%d",-context->videoBitrate/8.0/1024,context->increaseCount);
-                    context->netSpeedUnit[collectCount-- % context->netSpeedCheckInterval] = -context->videoBitrate;//更新当前的
-                    if (context->netSpeedUnit[collectCount-- % context->netSpeedCheckInterval] != -context->videoBitrate) {//可能以前设置过，减少重复设置
+                    context->netSpeedUnit[context->collectCount++ % context->netSpeedCheckInterval] = -context->videoBitrate;//更新当前的网速到当前码率
+                    int collectCount = context->collectCount-1;//当前的collectCount，因为前面++了，所以需要-1,
+                    if (collectCount > 0 && context->netSpeedUnit[(collectCount-1) % context->netSpeedCheckInterval] != -context->videoBitrate) {//比较前一个码率，因为可能以前设置过,(当网络极好的时候会一直是最大码率)，可以减少重复设置
+                    
                         for (int i = 1; i < context->increaseCount; i++) {
-                            //因为一直有空闲，所以前面连续空闲的网速一定大于此网速，更新受限网速
-                            context->netSpeedUnit[collectCount-- % context->netSpeedCheckInterval] = -context->videoBitrate;
+                            //因为一直有空闲，所以前面连续空闲的网速一定大于此网速，更新前面的受限满速到当前码率（不是受限情况不更新）;
+                            
+                            context->netSpeedUnit[collectCount-i % context->netSpeedCheckInterval] = -context->videoBitrate;
                         }
                     }
 
@@ -411,15 +415,15 @@ GBool GJLivePush_Create(GJLivePushContext **pushContext, GJLivePushCallback call
         GJ_H264EncodeContextCreate(&context->videoEncoder);
         GJ_AACEncodeContextCreate(&context->audioEncoder);
         
-
-        
         pthread_mutex_init(&context->lock, GNULL);
         context->maxVideoDelay = MAX_DELAY;
         
+#ifdef RAOP
         requestStopServer = GFalse;
         if (serverThread == GNULL) {
             pthread_create(&serverThread, GNULL, thread_pthread_head, context);
         }
+#endif
     } while (0);
     return result;
 }
