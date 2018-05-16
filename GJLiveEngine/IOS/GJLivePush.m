@@ -136,9 +136,12 @@
             _timer = nil;
         });
     }
-    _audioProducer->audioProduceStop(_audioProducer);
-    _videoProducer->stopProduce(_videoProducer);
-    GJLivePush_StopPush(_livePush);
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        _audioProducer->audioProduceStop(_audioProducer);
+        _videoProducer->stopProduce(_videoProducer);
+        GJLivePush_StopPush(_livePush);
+    });
+
 }
 
 - (BOOL)startUIRecodeWithRootView:(UIView *)view
@@ -219,11 +222,14 @@
 #pragma mark audio property
 
 - (void)setAudioMute:(BOOL)audioMute {
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",audioMute);
     _audioMute = audioMute;
     _audioProducer->setMute(_audioProducer,audioMute);
 }
 
 - (BOOL)startAudioMixWithFile:(NSURL *)fileUrl {
+    GJLOG(GNULL, GJ_LOGDEBUG, "%s",fileUrl.description.UTF8String);
+
     GBool result =_audioProducer->setupMixAudioFile(_audioProducer, fileUrl.path.UTF8String, GFalse,audioMixFinishCallback,(__bridge GHandle)(self));
     if (result != GFalse) {
         result =_audioProducer->startMixAudioFileAtTime(_audioProducer, 0);
@@ -244,42 +250,55 @@
 }
 
 - (void)setInputVolume:(float)volume {
+    GJLOG(GNULL, GJ_LOGDEBUG, "%f",volume);
     if (_audioProducer->enableAudioEchoCancellation(_audioProducer, volume)) {
         _inputVolume = volume;
     }
 }
 
 -(void)setMixVolume:(float)mixVolume{
+    GJLOG(GNULL, GJ_LOGDEBUG, "%f",mixVolume);
+
     if (_audioProducer->setMixVolume(_audioProducer, mixVolume)) {
         _mixVolume = mixVolume;
     }
 }
 
 -(void)setMasterOutVolume:(float)masterOutVolume{
+    GJLOG(GNULL, GJ_LOGDEBUG, "%f",masterOutVolume);
+
     if (_audioProducer->setOutVolume(_audioProducer, masterOutVolume)) {
         _masterOutVolume = masterOutVolume;
     }
 }
 
 -(void)enableReverb:(BOOL)reverb{
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",reverb);
+
     if (_audioProducer->enableReverb(_audioProducer,reverb)) {
         _reverb = reverb;
     }
 }
 
 -(void)enableAudioInEarMonitoring:(BOOL)audioInEarMonitoring{
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",audioInEarMonitoring);
+
     if (_audioProducer->enableAudioInEarMonitoring(_audioProducer,audioInEarMonitoring)) {
         _audioInEarMonitoring = audioInEarMonitoring;
     }
 }
 
 - (void)setMeasurementMode:(BOOL)measurementMode {
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",measurementMode);
+
     if (_audioProducer->enableMeasurementMode(_audioProducer,measurementMode)) {
         _measurementMode = measurementMode;
     }
 }
 
 - (void)setMixFileNeedToStream:(BOOL)mixFileNeedToStream {
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",mixFileNeedToStream);
+
     if (_audioProducer->setMixToStream(_audioProducer, mixFileNeedToStream)) {
         _mixFileNeedToStream = mixFileNeedToStream;
     }
@@ -288,6 +307,8 @@
 #pragma mark video property
 
 - (void)setVideoMute:(BOOL)videoMute {
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",videoMute);
+
     _videoMute = videoMute;
     _audioProducer->setMute(_audioProducer,videoMute);
 }
@@ -298,55 +319,71 @@
 }
 
 -(void)setCaptureView:(UIView *)captureView{
+    GJLOG(GNULL, GJ_LOGDEBUG, "%s",captureView.description.UTF8String);
+
     _videoProducer->setCaptureView(_videoProducer,(__bridge GView)(captureView));
     _captureView = captureView;
 }
 
 -(void)setCaptureType:(GJCaptureType)captureType{
-    
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",captureType);
+
     if(_videoProducer->setCaptureType(_videoProducer,captureType)){
         _captureType = captureType;
     };
 }
 
 - (void)startPreview {
+    GJLOG(GNULL, GJ_LOGDEBUG, "%p",_videoProducer);
     _videoProducer->startPreview(_videoProducer);
 }
 
 - (void)stopPreview {
+    GJLOG(GNULL, GJ_LOGDEBUG, "%p",_videoProducer);
+
     _videoProducer->stopPreview(_videoProducer);
 }
 
 - (UIView *)previewView {
-    
+
     return (__bridge UIView *)_videoProducer->getRenderView(_videoProducer);
 }
 
 -(void)setCameraMirror:(BOOL)cameraMirror{
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",cameraMirror);
+
     if(_videoProducer->setHorizontallyMirror(_videoProducer,cameraMirror)){
         _cameraMirror = cameraMirror;
     }
 }
 
 -(void)setStreamMirror:(BOOL)streamMirror{
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",streamMirror);
+
     if(_videoProducer->setStreamMirror(_videoProducer,streamMirror)){
         _streamMirror = streamMirror;
     }
 }
 
 -(void)setPreviewMirror:(BOOL)previewMirror{
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",previewMirror);
+
     if(_videoProducer->setPreviewMirror(_videoProducer,previewMirror)){
         _previewMirror = previewMirror;
     }
 }
 
 - (void)setCameraPosition:(GJCameraPosition)cameraPosition {
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",cameraPosition);
+
     if(_videoProducer->setCameraPosition(_videoProducer,cameraPosition)){
         _cameraPosition = cameraPosition;
     }
 }
 
 - (void)setOutOrientation:(GJInterfaceOrientation)outOrientation {
+    GJLOG(GNULL, GJ_LOGDEBUG, "%d",outOrientation);
+
     if(_videoProducer->setOrientation(_videoProducer,outOrientation)){
         _outOrientation = outOrientation;
     }

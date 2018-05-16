@@ -605,7 +605,9 @@
     }else if(btn == _audioMixBtn){
         if (btn.selected) {
             NSURL* path = [[NSBundle mainBundle]URLForResource:@"MixTest" withExtension:@"mp3"];
-            [_livePush startAudioMixWithFile:path];
+            if(![_livePush startAudioMixWithFile:path]){
+                btn.selected = !btn.selected;
+            }
             
         }else{
             [_livePush stopAudioMix];

@@ -12,7 +12,7 @@
 - (instancetype)initWithLock:(NSObject<NSLocking>*)lock
 {
     self = [super init];
-    if (self) {
+    if (self && lock) {
         _lock = lock;
         [_lock lock];
     }

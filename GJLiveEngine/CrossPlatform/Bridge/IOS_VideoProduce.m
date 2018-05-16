@@ -444,7 +444,10 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     }
     return outFiter;
 }
+
+//必须videoprocess
 - (void)removeFilterWithdeep:(GJFilterDeep)deep {
+    
     GPUImageOutput *deleteFilter = [self getFilterWithDeep:deep];
     if (deleteFilter) {
         if (deep > 0) {
@@ -462,6 +465,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         
     }
 }
+
+//必须videoprocess
 - (void)addFilter:(GPUImageFilter *)filter deep:(GJFilterDeep)deep {
     GPUImageOutput *parentFilter = [self getParentFilterWithDeep:deep];
     if (parentFilter) {
@@ -697,20 +702,22 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     if (_cropFilter.frameProcessingCompletionBlock == nil) {
         return;
     }
-    GJAssert(_camera != nil, "camera管理待优化");
-
-    GPUImageOutput *parentFilter = _sticker;
-    if (parentFilter == nil) {
-        parentFilter = [self getParentFilterWithDeep:kFilterSticker];
-    }
-    if (![parentFilter.targets containsObject:_imageView]) {
-        [_camera stopCameraCapture];
-//        [self deleteCamera];
-        if (_trackImage) {
-            [self stopTracking];
-        }
-    }
+   
     runAsynchronouslyOnVideoProcessingQueue(^{
+        GJAssert(_camera != nil, "camera管理待优化");
+        
+        GPUImageOutput *parentFilter = _sticker;
+        if (parentFilter == nil) {
+            parentFilter = [self getParentFilterWithDeep:kFilterSticker];
+        }
+        if (![parentFilter.targets containsObject:_imageView]) {
+            [_camera stopCameraCapture];
+            //        [self deleteCamera];
+            if (_trackImage) {
+                [self stopTracking];
+            }
+        }
+        
         [parentFilter removeTarget:_cropFilter];
         _cropFilter.frameProcessingCompletionBlock = nil;
     });

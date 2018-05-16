@@ -10,6 +10,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "GJLog.h"
 #import "GJUtil.h"
+#import "AutoLock.h"
 
 #define PCM_FRAME_COUNT 1024
 
@@ -21,7 +22,9 @@
     GLong         _startTime;//ms
     NSMutableDictionary<id,id<AEAudioPlayable>>* _mixPlayers;
     BOOL          _needResumeEarMonitoring;
+
 }
+@property(nonatomic,retain) NSRecursiveLock* lock;
 @end
 
 @implementation GJAudioManager
@@ -33,6 +36,7 @@
     self = [super init];
     if (self) {
         _mixToSream = YES;
+        _lock = [[NSRecursiveLock alloc]init];
         _mixPlayers = [NSMutableDictionary dictionaryWithCapacity:2];
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotific:) name:AVAudioSessionRouteChangeNotification object:nil];
         GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc, GNULL, GNULL);
@@ -90,6 +94,7 @@
 }
 
 -(void)setAudioFormat:(AudioStreamBasicDescription)audioFormat{
+    AUTO_LOCK(_lock);
     if (_audioController && _audioController.running) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "运行状态无法修改格式");
         return;
@@ -125,7 +130,6 @@
 
 - (void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time {
     //time 为一帧结束时间，pts为一帧开始时间
-
     int64_t timeCount = (time-_startTime)*_audioFormat.mSampleRate/1000;
     if (timeCount < _sendFrameCount - PCM_FRAME_COUNT) {
         GJLOG(GNULL, GJ_LOGWARNING, "采集数据过多，丢帧");
@@ -187,6 +191,8 @@
 }
 
 - (BOOL)startRecode:(NSError **)error {
+    AUTO_LOCK(_lock);
+
     _sendFrameCount = 0;
     _startTime = GTimeMSValue( GJ_Gettime());
     NSError *configError;
@@ -234,6 +240,8 @@
 }
 
 - (void)stopRecode {
+    AUTO_LOCK(_lock);
+
     GJLOG(GNULL, GJ_LOGDEBUG, "stopRecode");
     if (_mixfilePlay) {
         [self stopMix];
@@ -270,6 +278,8 @@
 }
 
 -(void)setUseMeasurementMode:(BOOL)useMeasurementMode{
+    AUTO_LOCK(_lock);
+
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setUseMeasurementMode:%d", useMeasurementMode);
     _useMeasurementMode = useMeasurementMode;
     if (_audioController) {
@@ -280,6 +290,8 @@
 }
 
 -(void)setAce:(BOOL)ace{
+    AUTO_LOCK(_lock);
+
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setAce:%d", ace);
     _ace = ace;
     if (_audioController) {
@@ -290,6 +302,8 @@
 }
 
 -(void)setAudioInEarMonitoring:(BOOL)audioInEarMonitoring{
+    AUTO_LOCK(_lock);
+
     if (![self isHeadphones]) {
         _needResumeEarMonitoring = audioInEarMonitoring;
         
@@ -300,6 +314,7 @@
 }
 
 -(void)_setAudioInEarMonitoring:(BOOL)audioInEarMonitoring{
+    
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "_setAudioInEarMonitoring:%d", audioInEarMonitoring);
     _audioInEarMonitoring = audioInEarMonitoring;
     if (_audioController == nil) {
@@ -322,6 +337,8 @@
 }
 
 -(void)setEnableReverb:(BOOL)enable{
+    AUTO_LOCK(_lock);
+
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setEnableReverb:%d", enable);
     _enableReverb = enable;
     if (_reverb == nil) {
@@ -340,6 +357,8 @@
 }
 
 - (void)setMixToSream:(BOOL)mixToSream {
+    AUTO_LOCK(_lock);
+
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setMixToSream:%d", mixToSream);
     _mixToSream = mixToSream;
     
@@ -356,6 +375,8 @@
 }
 
 - (BOOL)setMixFile:(NSURL*)file finish:(MixFinishBlock)finishBlock {
+    AUTO_LOCK(_lock);
+
     if (_mixfilePlay != nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
         [self removeMixPlayerWithkey:_mixfilePlay.description];
@@ -374,6 +395,10 @@
     } else {
         __weak GJAudioManager* wkSelf = self;
         _mixfilePlay.completionBlock   = ^{
+            AUTO_LOCK(wkSelf.lock);
+
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "mixfile finsh callback");
+
             if (finishBlock) {
                 finishBlock(GTrue);
             }
@@ -397,6 +422,7 @@
 }
 
 - (void)stopMix {
+    AUTO_LOCK(_lock);
     if (_mixfilePlay == nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "重复stop mix");
     } else {
