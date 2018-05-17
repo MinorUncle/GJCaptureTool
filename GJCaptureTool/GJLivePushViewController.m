@@ -554,7 +554,10 @@
 //                }else{
 //                    image = [wkSelf getSnapshotImageWithSize:rect.size];
 //                }
-                ioAttr.image = [wkSelf getSnapshotImageWithSize:rect.size];
+                UIImage* image = [wkSelf getSnapshotImageWithSize:rect.size];
+                if (image) {
+                    ioAttr.image  = image;
+                }
                 ioAttr.rotate = r;
             }];
             

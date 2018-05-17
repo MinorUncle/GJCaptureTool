@@ -398,7 +398,9 @@
 static GVoid audioMixFinishCallback(GHandle userData,const GChar* filePath, GHandle error){
     GJLivePush* self = (__bridge GJLivePush *)(userData);
     if ([self.delegate respondsToSelector:@selector(livePush:mixFileFinish:)]) {
-        [self.delegate livePush:self mixFileFinish:[NSString stringWithUTF8String:filePath]];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.delegate livePush:self mixFileFinish:[NSString stringWithUTF8String:filePath]];
+        });
     }
 }
 static GVoid livePushCallback(GHandle               userDate,

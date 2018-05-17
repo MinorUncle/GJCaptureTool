@@ -41,6 +41,7 @@ typedef void(^MixFinishBlock)(GBool finish);
 
 @property (nonatomic, retain)AEPlaythroughChannel* playthrough;
 @property (nonatomic, retain)AEAudioFilePlayer* mixfilePlay;
+@property (nonatomic, assign)BOOL alignWithBlack;
 @property (nonatomic, retain)AEAudioController *audioController;
 @property (nonatomic, retain)AEReverbFilter *reverb;
 

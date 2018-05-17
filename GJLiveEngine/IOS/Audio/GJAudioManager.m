@@ -26,7 +26,7 @@
 }
 @property(nonatomic,retain) NSRecursiveLock* lock;
 @end
-
+static AEAudioController* shareAudioController;
 @implementation GJAudioManager
 //+(GJAudioManager*)shareAudioManager{
 //    return nil;
@@ -130,6 +130,7 @@
 
 - (void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time {
     //time 为一帧结束时间，pts为一帧开始时间
+    
     int64_t timeCount = (time-_startTime)*_audioFormat.mSampleRate/1000;
     if (timeCount < _sendFrameCount - PCM_FRAME_COUNT) {
         GJLOG(GNULL, GJ_LOGWARNING, "采集数据过多，丢帧");
@@ -138,24 +139,31 @@
     if (_mute) {
         memset(frame->mBuffers[0].mData, 0, frame->mBuffers[0].mDataByteSize);
     }
-    
-    while (timeCount > _sendFrameCount + 2*PCM_FRAME_COUNT) {
-        R_BufferWriteConst(&_alignCacheFrame->retain, 0, PCM_FRAME_COUNT* _audioFormat.mBytesPerFrame-R_BufferSize(&_alignCacheFrame->retain));
-        _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
-        _alignCacheFrame->pts     = GTimeMake(_sendFrameCount*1000/_audioFormat.mSampleRate+_startTime,1000);
-        self.audioCallback(_alignCacheFrame);
-        R_BufferUnRetain(&_alignCacheFrame->retain);
-        _sendFrameCount += PCM_FRAME_COUNT;
-        _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
-        GJLOG(GNULL, GJ_LOGINFO, "采集延迟，填充空白帧");
+    if (_alignWithBlack) {
+        while (timeCount > _sendFrameCount + 2*PCM_FRAME_COUNT) {
+            R_BufferWriteConst(&_alignCacheFrame->retain, 0, PCM_FRAME_COUNT* _audioFormat.mBytesPerFrame-R_BufferSize(&_alignCacheFrame->retain));
+            _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
+            _alignCacheFrame->pts     = GTimeMake(_sendFrameCount*1000/_audioFormat.mSampleRate+_startTime,1000);
+            self.audioCallback(_alignCacheFrame);
+            R_BufferUnRetain(&_alignCacheFrame->retain);
+            _sendFrameCount += PCM_FRAME_COUNT;
+            _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
+            GJLOG(GNULL, GJ_LOGINFO, "采集延迟，填充空白帧");
+        }
     }
+
     
     int blackSize = _sizePerPacket - R_BufferSize(&_alignCacheFrame->retain);
     int leftSize = frame->mBuffers[0].mDataByteSize;
     while (leftSize >= blackSize) {
         R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, blackSize);
         _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
-        _alignCacheFrame->pts     = GTimeMake(_sendFrameCount*1000/_audioFormat.mSampleRate+_startTime,1000);
+        if (_alignWithBlack) {
+            _alignCacheFrame->pts     = GTimeMake(_sendFrameCount*1000/_audioFormat.mSampleRate+_startTime,1000);
+
+        }else{
+            _alignCacheFrame->pts     = GTimeMake(time,1000);
+        }
         self.audioCallback(_alignCacheFrame);
         R_BufferUnRetain(&_alignCacheFrame->retain);
         _sendFrameCount += PCM_FRAME_COUNT;
@@ -169,6 +177,7 @@
 }
 
 -(void)addMixPlayer:(id<AEAudioPlayable>)player key:(id <NSCopying>)key{
+    AUTO_LOCK(_lock);
     if (![_mixPlayers.allKeys containsObject:key]) {
         [_mixPlayers setObject:player forKey:key];
         [_audioController addChannels:@[player]];
@@ -179,6 +188,7 @@
 }
 
 -(void)removeMixPlayerWithkey:(id <NSCopying>)key{
+    AUTO_LOCK(_lock);
     if ([_mixPlayers.allKeys containsObject:key]) {
         id<AEAudioPlayable> player = _mixPlayers[key];
         [_mixPlayers removeObjectForKey:key];
@@ -217,7 +227,12 @@
 #endif
     if(_audioController == nil){
         //第一次需要的时候才申请，并初始化所有参数
-        _audioController                    = [[AEAudioController alloc] initWithAudioDescription:_audioFormat inputEnabled:YES];
+        static dispatch_once_t onceToken;
+        dispatch_once(&onceToken, ^{
+            shareAudioController                    = [[AEAudioController alloc] initWithAudioDescription:_audioFormat inputEnabled:YES];
+        });
+        _audioController = shareAudioController;
+        [self setAudioFormat:_audioFormat];
         [_audioController addInputReceiver:_audioMixer];
         [self setAudioInEarMonitoring:_audioInEarMonitoring];
         [self setMixToSream:_mixToSream];
@@ -383,7 +398,7 @@
         _mixfilePlay = nil;
     }
     
-    if (_audioController == nil) {
+    if (_audioController == nil || !_audioController.running) {
         return NO;
     }
     
@@ -396,7 +411,6 @@
         __weak GJAudioManager* wkSelf = self;
         _mixfilePlay.completionBlock   = ^{
             AUTO_LOCK(wkSelf.lock);
-
             GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "mixfile finsh callback");
 
             if (finishBlock) {
