@@ -14,6 +14,9 @@
 #include "GJBridegContext.h"
 #include "GJMessageDispatcher.h"
 #include <libavformat/avformat.h>
+#include <libavutil/application.h>
+#include <sys/ioctl.h>
+
 #define STREAM_PUSH_LOG GNULL
 struct _GJStreamPush {
     GJPipleNode pipleNode;
@@ -37,19 +40,27 @@ struct _GJStreamPush {
     GJTrafficStatus audioStatus;
     GJTrafficStatus videoStatus;
     GTimeValue     startMS;
+    GInt  fd;
+    AVApplicationContext* app_ctx;
 };
 
 static GJTrafficStatus error_Status;
 
 GVoid GJStreamPush_Delloc(GJStreamPush *push);
 GVoid GJStreamPush_Close(GJStreamPush *sender);
-
+static int app_func_event(AVApplicationContext *h, int message ,void *data, size_t size);
 static GHandle sendRunloop(GHandle parm) {
     pthread_setname_np("Loop.GJStreamPush");
     GJStreamPush *         push    = (GJStreamPush *) parm;
     kStreamPushMessageType errType = kStreamPushMessageType_connectError;
     AVDictionary *         option  = GNULL;
+    
+    av_application_open(&push->app_ctx, push);
+    push->app_ctx->func_on_app_event = app_func_event;
     av_dict_set_int(&option, "send_buffer_size", 30000, 0);
+    av_dict_set_int(&option, "ijkapplication", (GInt64)push->app_ctx, 0);
+    av_dict_set_int(&option, "dns_cache", 1, 0);
+
     GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl, AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, &option);
     
     av_dict_free(&option);
@@ -280,6 +291,7 @@ END:
         shouldDelloc = GTrue;
     }
     pthread_mutex_unlock(&push->mutex);
+    av_application_closep(&push->app_ctx);
     GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "sendRunloop end:%p",push);
     if (shouldDelloc) {
         GJStreamPush_Delloc(push);
@@ -317,6 +329,7 @@ GBool GJStreamPush_Create(GJStreamPush **sender, MessageHandle callback, void *s
         push->videoFormat  = (GJVideoStreamFormat *) malloc(sizeof(GJVideoStreamFormat));
         *push->videoFormat = *videoFormat;
     }
+
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
@@ -329,6 +342,27 @@ static int interrupt_callback(void *parm) {
     GJStreamPush *push = (GJStreamPush *) parm;
     return push->stopRequest;
 }
+
+static int app_func_event(AVApplicationContext *h, int message ,void *data, size_t size){
+    if (!h || !h->opaque || !data)
+        return 0;
+    
+    GJStreamPush *push = (GJStreamPush *)h->opaque;
+
+    if (message == AVAPP_EVENT_IO_TRAFFIC && sizeof(AVAppIOTraffic) == size) {
+        AVAppIOTraffic *event = (AVAppIOTraffic *)(intptr_t)data;
+
+    } else if (message == AVAPP_EVENT_ASYNC_STATISTIC && sizeof(AVAppAsyncStatistic) == size) {
+        AVAppAsyncStatistic *statistic =  (AVAppAsyncStatistic *) (intptr_t)data;
+
+    }else if (message == AVAPP_CTRL_DID_TCP_OPEN) {
+        AVAppTcpIOControl *realData = data;
+        push->fd = realData->fd;
+        printf("fd:%d\n",push->fd);
+    }
+    return 0;
+}
+
 GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
 
     GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJStreamPush_StartConnect:%p", push);
@@ -551,6 +585,7 @@ GFloat32 GJStreamPush_GetBufferRate(GJStreamPush *push) {
 }
 GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush *push) {
     if (!push) return error_Status;
+
     GJTrafficStatus status = push->videoStatus;
     if(G_TIME_IS_INVALID(status.leave.ts)){
         status.leave = status.enter;

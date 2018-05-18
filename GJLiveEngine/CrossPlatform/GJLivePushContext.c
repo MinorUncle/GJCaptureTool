@@ -63,7 +63,6 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
 //    GJLOG(GNULL, GJ_LOGDEBUG,"checkCount:%d",checkCount++);
     GLong cacheInCount = vBufferStatus.enter.count - vBufferStatus.leave.count;
 //    cacheInCount = GMAX(cacheInCount,aBufferStatus.enter.count - aBufferStatus.leave.count);//只考虑视频，
-    //同时考虑音频，更加精确
     if(cacheInCount > 0){
         context->favorableCount = 0;
         context->increaseCount = 0;
