@@ -154,17 +154,21 @@ static GHandle pullRunloop(GHandle parm) {
         packet->flag = GJPacketFlag_AVPacketType;
         GInt32 ret = av_read_frame(pull->formatContext, &pkt);
         av_packet_split_side_data(&pkt);
-        
-        ((AVPacket*)(R_BufferStart(packet)))[0] = pkt;//转移了内存引用，所以不用了av_packet_unref;
-        R_BufferUseSize(packet, sizeof(pkt));
-        packet->extendDataSize = sizeof(pkt);
+        AVPacket* pktRef = (AVPacket*)R_BufferStart(packet);
+        av_init_packet(pktRef);
+        av_packet_ref(pktRef, &pkt);
+//        ((AVPacket*)(R_BufferStart(packet)))[0] = pkt;//转移了内存引用，所以不用了av_packet_unref;
+        R_BufferUseSize(packet, sizeof(AVPacket));
+        packet->extendDataSize = sizeof(AVPacket);
         
         if (ret < 0) {
             R_BufferUnRetain(packet);
             GJLOG(GNULL,GJ_LOGERROR,"av_read_frame error:%s\n", av_err2str(ret));
+            av_packet_unref(&pkt);
             message = kStreamPullMessageType_receivePacketError;
             goto END;
         }
+        
         AVStream* stream = pull->formatContext->streams[pkt.stream_index];
         packet->pts            = GTimeMake(pkt.pts*1.0*stream->time_base.num/stream->time_base.den*1000, 1000);
         packet->dts            = GTimeMake(pkt.dts*1.0*stream->time_base.num/stream->time_base.den*1000, 1000);
@@ -174,17 +178,24 @@ static GHandle pullRunloop(GHandle parm) {
             pull->dataCallback(pull, packet, pull->dataCallbackParm);
         }
         pthread_mutex_unlock(&pull->mutex);
-        pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&packet->retain,pkt.stream_index == asIndex);
+        if (pkt.stream_index == vsIndex) {
+            pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&packet->retain,GJMediaType_Video);
+        }else if (pkt.stream_index == asIndex){
+            pipleNodeFlowFunc(&pull->pipleNode)(&pull->pipleNode,&packet->retain,GJMediaType_Audio);
+        }else{
+            GJLOG(GNULL, GJ_LOGDEBUG, "receive unknow stream type:%d",stream->codecpar->codec_type);
+        }
         R_BufferUnRetain(packet);
         
 #ifdef DEBUG
-//        GLong preDTS[2],prePTS[2];
-//        GInt32 type = pkt.stream_index == asIndex;
-//        GJLOG(GNULL,GJ_LOGINFO,"receive type:%d pts:%lld dts:%lld dpts:%lld ddts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - prePTS[type],pkt.dts - preDTS[type], pkt.size);
-//        preDTS[type] = pkt.dts;
-//        prePTS[type] = pkt.pts;
+        GLong preDTS[2],prePTS[2];
+        GInt32 type = pkt.stream_index == asIndex;
+        GJLOG(GNULL,GJ_LOGINFO,"receive type:%d pts:%lld dts:%lld dpts:%lld ddts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - prePTS[type],pkt.dts - preDTS[type], pkt.size);
+        preDTS[type] = pkt.dts;
+        prePTS[type] = pkt.pts;
 
 #endif
+        av_packet_unref(&pkt);
 
     };
 

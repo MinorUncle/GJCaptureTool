@@ -279,7 +279,7 @@ void decodeOutputCallback(
     OSStatus          status;
     long              packetSize  = 0;
     GUInt8*            packetData  = 0;
-
+    AVPacket* pkt = NULL;
     CMSampleBufferRef sampleBuffer = NULL;
     CMBlockBufferRef  blockBuffer  = NULL;
 
@@ -327,7 +327,7 @@ void decodeOutputCallback(
     
     GJAssert(_decompressionSession != nil, "解码器没有初始化，请先传递sps,pps信息");
     if ((packet->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType){
-        AVPacket* pkt = ((AVPacket*)(R_BufferStart(packet) + packet->extendDataOffset));
+        pkt = ((AVPacket*)(R_BufferStart(packet) + packet->extendDataOffset));
         GInt32 extendDataSize = 0;
         GUInt8* extendData = av_packet_get_side_data(pkt, AV_PKT_DATA_NEW_EXTRADATA, &extendDataSize);
         [self findInfoWithAVCC:extendData dataSize:extendDataSize sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
@@ -392,6 +392,7 @@ void decodeOutputCallback(
     ///->>>
     
     //check
+#ifdef DEBUG
     int32_t unitSize = 0;
     uint8_t* current;
     long totalSize = 0;
@@ -402,7 +403,11 @@ void decodeOutputCallback(
         totalSize += unitSize+4;
         current += unitSize+4;
     }
-    assert(totalSize == packetSize);
+    if (totalSize != packetSize) {
+        NSLog(@"size error");
+    }
+#endif
+//    assert(totalSize == packetSize);
     
     if(packetSize > 0){
         //        uint32_t dataLength32 = htonl (blockLength - 4);

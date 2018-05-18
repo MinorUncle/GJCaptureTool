@@ -20,7 +20,7 @@
 //#define NET_ADD_STEP_B  1000  //每步增加的码率
 //#define NET_ADD_STEP_R  0.1   //每步增加的比例
 #define NET_SENSITIVITY 300
-#define NET_SENSITIVITY_MAX 1000
+#define NET_SENSITIVITY_MAX 2000
 
 /*表示每 NET_SENSITIVITY ms检查一次网速，并计算该时间段内平均值，同时缓存允许在此阈值之内，超过此阈值则开始降码率算法。此值越小，则检查间隔越断，检查频率高，网络反应更灵敏，适用于良好网络。此值越大则检查间隔越长，检查频率低，网络反应更迟钝，适用于差网络。
     所以灵敏度会根据网络状况修改，网络变差，此值增大，但是最大值为NET_SENSITIVITY_MAX
