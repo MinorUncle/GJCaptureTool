@@ -60,7 +60,7 @@ static int stopCount;
 }
 - (void)initQueue {
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_SERIAL);
-    queueCreate(&_resumeQueue, 20, true, true);
+    queueCreate(&_resumeQueue, 60, true, false);
     signalCreate(&_stopFinshSignal);
 }
 + (AudioStreamBasicDescription)defaultSourceFormateDescription {
@@ -235,7 +235,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
 
     R_BufferRetain(&packet->retain);
-    if (!queuePush(_resumeQueue, packet, 0)) {
+    if (!queuePush(_resumeQueue, packet, GINT32_MAX)) {
         R_BufferUnRetain(&packet->retain);
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "aac decode to pcm queuePush faile");
     }

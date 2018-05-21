@@ -69,6 +69,7 @@ inline static  GBool  decodeStart(struct _FFVideoDecodeContext* context){
     return GTrue;
 };
 
+//stop前一定要断开管道的连接。
 inline static  GVoid  decodeStop(struct _FFVideoDecodeContext* context){
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
@@ -82,10 +83,10 @@ inline static  GVoid  decodeStop(struct _FFVideoDecodeContext* context){
 };
 
 inline static GBool decodePacket(struct _FFVideoDecodeContext *context, R_GJPacket *packet) {
-    pipleNodeLock(&context->pipleNode);
+//    pipleNodeLock(&context->pipleNode);
     GJH264Decoder *decode = (__bridge GJH264Decoder *) (context->obaque);
     [decode decodePacket:packet];
-    pipleNodeUnLock(&context->pipleNode);
+//    pipleNodeUnLock(&context->pipleNode);
     return GTrue;
 }
 

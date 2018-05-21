@@ -37,7 +37,7 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
         GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVPixelBufferRef), GTrue, R_GJPixelFrameMalloc, cvImagereleaseCallBack, GNULL);
         _isRunning= NO;
         _decodeQueue       = dispatch_queue_create("videoDecodeQueue", DISPATCH_QUEUE_SERIAL);
-        queueCreate(&_inputQueue, 20, YES, YES);
+        queueCreate(&_inputQueue, 20, YES, GFalse);
         _isActive = [UIApplication sharedApplication].applicationState == UIApplicationStateActive;
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
@@ -175,7 +175,7 @@ void decodeOutputCallback(
 - (void)decodePacket:(R_GJPacket *)packet {
     if (_isActive) {
         R_BufferRetain(&packet->retain);
-        if (!_isRunning || !queuePush(_inputQueue, packet, 0)) {
+        if (!_isRunning || !queuePush(_inputQueue, packet, GINT32_MAX)) {
             R_BufferUnRetain(&packet->retain);
         }
     }

@@ -42,10 +42,10 @@ inline static GVoid decodeUnSetup(struct _FFAudioDecodeContext *context) {
     pipleNodeUnLock(&context->pipleNode);
 }
 inline static GBool decodePacket(struct _FFAudioDecodeContext *context, R_GJPacket *packet) {
-    pipleNodeLock(&context->pipleNode);
+//    pipleNodeLock(&context->pipleNode);
     GJPCMDecodeFromAAC *decode = (__bridge GJPCMDecodeFromAAC *) (context->obaque);
     [decode decodePacket:packet];
-    pipleNodeUnLock(&context->pipleNode);
+//    pipleNodeUnLock(&context->pipleNode);
     return GTrue;
 }
 GJAudioFormat decodeGetDestFormat(struct _FFAudioDecodeContext *context) {
