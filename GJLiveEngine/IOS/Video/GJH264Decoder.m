@@ -10,12 +10,14 @@
 #import "GJLog.h"
 #import "sps_decode.h"
 #import "libavformat/avformat.h"
+#import <UIKit/UIApplication.h>
 
 @interface GJH264Decoder () {
     dispatch_queue_t _decodeQueue; //解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
     NSData* _spsData;
     NSData* _ppsData;
     GJQueue* _inputQueue;
+    GBool _isActive;
 }
 @property (nonatomic) VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
@@ -36,8 +38,18 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
         _isRunning= NO;
         _decodeQueue       = dispatch_queue_create("videoDecodeQueue", DISPATCH_QUEUE_SERIAL);
         queueCreate(&_inputQueue, 20, YES, YES);
+        _isActive = [UIApplication sharedApplication].applicationState == UIApplicationStateActive;
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
     }
     return self;
+}
+-(void)receiveNotification:(NSNotification*)notic{
+    if ([notic.name isEqualToString:UIApplicationWillResignActiveNotification]) {
+        _isActive = NO;
+    }else if([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]){
+        _isActive = YES;
+    }
 }
 - (void)dealloc {
     queueFree(&_inputQueue);
@@ -46,6 +58,8 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
         GJRetainBufferPoolClean(temPool, GTrue);
         GJRetainBufferPoolFree(temPool);
     });
+    [[NSNotificationCenter defaultCenter]removeObserver:self];
+
 }
 - (void)createDecompSession {
     if (_decompressionSession != nil) {
@@ -87,7 +101,6 @@ void decodeOutputCallback(
     }
     GTime pts = GTimeMake(presentationTimeStamp.value, presentationTimeStamp.timescale);
     GTime  dts = GTimeMake((GInt64)sourceFrameRefCon, 1000);
-    GJLOGFREQ("decode packet output pts:%lld", pts.value);
 
     GJH264Decoder *decoder = (__bridge GJH264Decoder *) (decompressionOutputRefCon);
 
@@ -160,9 +173,11 @@ void decodeOutputCallback(
     }
 }
 - (void)decodePacket:(R_GJPacket *)packet {
-    R_BufferRetain(&packet->retain);
-    if (!_isRunning || !queuePush(_inputQueue, packet, 0)) {
-        R_BufferUnRetain(&packet->retain);
+    if (_isActive) {
+        R_BufferRetain(&packet->retain);
+        if (!_isRunning || !queuePush(_inputQueue, packet, 0)) {
+            R_BufferUnRetain(&packet->retain);
+        }
     }
 }
 

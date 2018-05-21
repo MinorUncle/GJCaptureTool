@@ -11,6 +11,7 @@
 #import "GJLog.h"
 #import "GJRetainBufferPool.h"
 #import "GJUtil.h"
+#import <UIKit/UIApplication.h>
 //#define DEFAULT_DELAY  10
 //默认i帧是p帧的I_P_RATE+1倍。越小丢帧时码率降低越大
 
@@ -22,6 +23,7 @@
     BOOL   requestFlush;
     GInt64 _preDTS;
     GInt64 _dtsDelta;
+    GBool _isActive;
 }
 @property (nonatomic, assign) VTCompressionSessionRef enCodeSession;
 @property (nonatomic, assign) GJRetainBufferPool *    bufferPool;
@@ -44,9 +46,20 @@
         _entropyMode  = kEntropyMode_CABAC;
         _dtsDelta     = 0;
         _preDTS     = -1;
+        _isActive = [UIApplication sharedApplication].applicationState == UIApplicationStateActive;
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
         [self creatEnCodeSession];
     }
     return self;
+}
+
+-(void)receiveNotification:(NSNotification*)notic{
+    if ([notic.name isEqualToString:UIApplicationWillResignActiveNotification]) {
+        _isActive = YES;
+    }else if([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]){
+        _isActive = NO;
+    }
 }
 
 //编码
@@ -423,6 +436,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
             GJRetainBufferPoolFree(pool);
         });
     }
+    [[NSNotificationCenter defaultCenter]removeObserver:self];
 }
 //-(void)restart{
 //

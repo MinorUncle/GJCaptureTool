@@ -247,6 +247,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
             case AVAudioSessionInterruptionTypeBegan:{
                 if (_timer != nil) {
                     _shouldResume = YES;
+//                    GJLivePull_StopPull(_pullContext);
                     GJLivePull_Pause(_pullContext);
                 }
                 GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeBegan should resulme:%d",_shouldResume);
@@ -255,6 +256,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
                 break;
             case AVAudioSessionInterruptionTypeEnded:
                 if (_shouldResume && _timer == nil) {
+//                    GJLivePull_StartPull(_pullContext, _pullUrl.UTF8String);
                     GJLivePull_Resume(_pullContext);
                 }
                 GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeBegan should resulme:%d",_shouldResume);

@@ -664,7 +664,6 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
         }
 #else
 
-        GJLOGFREQ("video show pts:%lld", cImageBuf->pts.value);
         if (_syncControl->videoInfo.trafficStatus.leave.count == 0 && player->callback) {
             player->callback(player->userDate,GJPlayMessage_FristRender,GNULL);
         }
