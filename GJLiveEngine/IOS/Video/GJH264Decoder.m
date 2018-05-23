@@ -105,6 +105,9 @@ void decodeOutputCallback(
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "解码error1:%d", (int) status);
         return;
     }
+    if ((GLong)sourceFrameRefCon < 0) {
+        return;
+    }
     GTime pts = GTimeMake(presentationTimeStamp.value, presentationTimeStamp.timescale);
     GTime  dts = GTimeMake((GInt64)sourceFrameRefCon, 1000);
 
@@ -378,6 +381,15 @@ void decodeOutputCallback(
         }
     }
     if (packetSize > 0) {
+        
+        if (isKeyPacket) {//刷新gop
+            queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
+        }
+        R_BufferRetain(packet);
+        if (!queuePush(_gopQueue, packet, 0)) {
+            R_BufferUnRetain(packet);
+        }
+        
         CMSampleBufferRef sampleBuffer = NULL;
         OSStatus status = kVTVideoDecoderMalfunctionErr;
         sampleBuffer = [self createSampleBufferWithData:packetData size:packetSize pts:GTimeMSValue(packet->pts)];
@@ -393,51 +405,47 @@ void decodeOutputCallback(
                 _decompressionSession = nil;
                 GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "无效解码器，重启解码器，恢复数据");
                 [self createDecompSession];
-
-                R_GJPacket* oldPacket = GNULL;
-                GInt32 oldPacketSize = 0;
-                GUInt8* oldPacketData = GNULL;
-                GLong index = 0;
-                OSStatus oldStatus = kVTVideoDecoderMalfunctionErr;
-                while(queuePeekValue(_gopQueue,index++, (GHandle*)&oldPacket)){
-                    if ((oldPacket->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType){
-                        AVPacket* oldPkt = ((AVPacket*)(R_BufferStart(oldPacket) + oldPacket->extendDataOffset));
-                        oldPacketSize = (int) oldPkt->size;
-                        oldPacketData = oldPkt->data;
-                        
-                    }else if (packet->dataSize > 0 ) {
-                        oldPacketSize = (int) (packet->dataSize);
-                        oldPacketData  = packet->dataOffset + R_BufferStart(&packet->retain);
-                    }
-                    
-                    if (oldPacketSize>0) {
-                        CMSampleBufferRef oldSampleBuffer = NULL;
-                        oldSampleBuffer = [self createSampleBufferWithData:oldPacketData size:oldPacketSize pts:GTimeMSValue(oldPacket->pts)];
-                        if (oldSampleBuffer) {
-                            oldStatus = [self decodeSampleBuffer:oldSampleBuffer dts:GTimeMSValue(oldPacket->dts) flag:kVTDecodeFrame_DoNotOutputFrame];
-                            CFRelease(oldSampleBuffer);
+                
+                OSStatus oldStatus = noErr;
+                if (!isKeyPacket) {//非i帧则需要恢复
+                    R_GJPacket* oldPacket = GNULL;
+                    GInt32 oldPacketSize = 0;
+                    GUInt8* oldPacketData = GNULL;
+                    GLong index = 0;
+                    oldStatus = kVTVideoDecoderMalfunctionErr;
+                    while(queuePeekValue(_gopQueue,index++, (GHandle*)&oldPacket)){
+                        if ((oldPacket->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType){
+                            AVPacket* oldPkt = ((AVPacket*)(R_BufferStart(oldPacket) + oldPacket->extendDataOffset));
+                            oldPacketSize = (int) oldPkt->size;
+                            oldPacketData = oldPkt->data;
+                            
+                        }else if (packet->dataSize > 0 ) {
+                            oldPacketSize = (int) (packet->dataSize);
+                            oldPacketData  = packet->dataOffset + R_BufferStart(&packet->retain);
                         }
-                        if (oldStatus != noErr) {
-                            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "恢复gop，gop数据有误， 无法刷新解码器,清除gop,error status：%d", oldStatus);
-                            queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
-                            [self flush];
-                            break;
+                        
+                        if (oldPacketSize>0) {
+                            CMSampleBufferRef oldSampleBuffer = NULL;
+                            oldSampleBuffer = [self createSampleBufferWithData:oldPacketData size:oldPacketSize pts:GTimeMSValue(oldPacket->pts)];
+                            if (oldSampleBuffer) {
+                                oldStatus = [self decodeSampleBuffer:oldSampleBuffer dts:-1 flag:kVTDecodeFrame_DoNotOutputFrame];
+                                CFRelease(oldSampleBuffer);
+                            }
+                            if (oldStatus != noErr) {
+                                GJLOG(DEFAULT_LOG, GJ_LOGERROR, "恢复gop，gop数据有误， 无法刷新解码器,清除gop,error status：%d", oldStatus);
+                                queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
+                                [self flush];
+                                break;
+                            }
                         }
                     }
                 }
-                
                 if (oldStatus == noErr && sampleBuffer) {
                     status = [self decodeSampleBuffer:sampleBuffer dts:GTimeMSValue(packet->dts) flag:0];
                     if (status != noErr) {
                         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "恢复gop错误,error status：%d", oldStatus);
-                    }else{
-                        if (isKeyPacket) {//刷新gop
-                            queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
-                        }
-                        R_BufferRetain(packet);
-                        if (!queuePush(_gopQueue, packet, 0)) {
-                            R_BufferUnRetain(packet);
-                        }
+                        queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
+                        [self flush];
                     }
                 }
    
@@ -454,14 +462,6 @@ void decodeOutputCallback(
             }
             if(sampleBuffer){
                 CFRelease(sampleBuffer);
-            }
-        }else{
-            if (isKeyPacket) {//刷新gop
-                queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
-            }
-            R_BufferRetain(packet);
-            if (!queuePush(_gopQueue, packet, 0)) {
-                R_BufferUnRetain(packet);
             }
         }
     }

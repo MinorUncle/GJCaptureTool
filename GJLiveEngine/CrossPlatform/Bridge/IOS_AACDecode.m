@@ -54,13 +54,13 @@ inline static  GBool  decodeStart(struct _FFAudioDecodeContext* context){
 
 //stop前一定要断开管道的连接。
 inline static  GVoid  decodeStop(struct _FFAudioDecodeContext* context){
-    pipleNodeLock(&context->pipleNode);
+//    pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
         GJPCMDecodeFromAAC *decode = (__bridge GJPCMDecodeFromAAC *) (context->obaque);
         [decode stop];
         GJLOG(DEFAULT_LOG, GJ_LOGINFO, "%p",decode);
     }
-    pipleNodeUnLock(&context->pipleNode);
+//    pipleNodeUnLock(&context->pipleNode);
 };
 
 inline static GBool decodePacket(struct _FFAudioDecodeContext *context, R_GJPacket *packet) {

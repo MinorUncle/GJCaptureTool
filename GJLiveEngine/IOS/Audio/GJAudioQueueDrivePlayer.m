@@ -30,13 +30,15 @@
         _maxBufferSize    = maxBufferSize;
         _speed            = 1.0;
         [self _init];
-        if (![[NSThread currentThread] isMainThread]) {
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                [self _createAudioOutputQueue:macgicCookie];
-            });
-        } else {
-            [self _createAudioOutputQueue:macgicCookie];
-        }
+        [self _createAudioOutputQueue:macgicCookie];
+
+//        if (![[NSThread currentThread] isMainThread]) {
+//            dispatch_sync(dispatch_get_main_queue(), ^{
+//                [self _createAudioOutputQueue:macgicCookie];
+//            });
+//        } else {
+//            [self _createAudioOutputQueue:macgicCookie];
+//        }
     }
     return self;
 }
@@ -111,7 +113,7 @@
             return;
             break;
     }
-    OSStatus status = AudioQueueNewOutput(&_format, callBack, (__bridge void *) (self), CFRunLoopGetCurrent(), kCFRunLoopDefaultMode, 0, &_audioQueue);
+    OSStatus status = AudioQueueNewOutput(&_format, callBack, (__bridge void *) (self), GNULL, kCFRunLoopCommonModes, 0, &_audioQueue);
     if (status != noErr) {
         _audioQueue = NULL;
         return;
@@ -155,12 +157,12 @@
 }
 
 - (BOOL)start {
-    if (![NSThread isMainThread]) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self start];
-        });
-        return YES;
-    }
+//    if (![NSThread isMainThread]) {
+//        dispatch_async(dispatch_get_main_queue(), ^{
+//            [self start];
+//        });
+//        return YES;
+//    }
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AudioQueueStart");
     if (_status != kPlayStatusRunning) {
         _status = kPlayStatusRunning;
@@ -273,18 +275,18 @@
 }
 
 - (BOOL)stop:(BOOL)immediately {
-    if (![NSThread isMainThread]) {
-        if (immediately) {
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                [self stop:immediately];
-            });
-        }else{
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self stop:immediately];
-            });
-        }
-        return YES;
-    }
+//    if (![NSThread isMainThread]) {
+//        if (immediately) {
+//            dispatch_sync(dispatch_get_main_queue(), ^{
+//                [self stop:immediately];
+//            });
+//        }else{
+//            dispatch_async(dispatch_get_main_queue(), ^{
+//                [self stop:immediately];
+//            });
+//        }
+//        return YES;
+//    }
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AudioQueuestop");
 
     GJPlayStatus pre  = _status; //防止监听部分重启
