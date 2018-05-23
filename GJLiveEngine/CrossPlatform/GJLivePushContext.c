@@ -112,7 +112,6 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context,GJTrafficSt
                     GJLOG(GNULL, GJ_LOGDEBUG,"busy status, avgRate :%f kB/s currentRate:%f sendByte:%ld cacheCount:%ld cacheTime:%ld ms speedUnitCount:%d",context->videoNetSpeed / 8.0 / 1024,currentBitRate / 8.0 / 1024 ,sendByte,cacheInCount,cacheInPts,fullCount);
                     GJAssert(context->videoNetSpeed >= 0, "错误");
                     GJAssert(sendUseTs > 0 || sendByte == 0 , "错误");
-                    GJAssert(cacheInPts <= 50000, "错误");
 
                     if (context->videoNetSpeed > context->videoBitrate) {
                         GJLOG(LOG_DEBUG, GJ_LOGDEBUG,"警告:平均网速（%f）大于码率（%f），仍然出现缓存上升（可能出现网速突然下降）,继续降速", context->videoNetSpeed / 8.0 / 1024,context->videoBitrate / 8.0 / 1024);
@@ -713,7 +712,7 @@ GVoid GJLivePush_StopPush(GJLivePushContext *context) {
         //停止推流也需要停止编码器
         pipleDisConnectNode((GJPipleNode*)context->videoProducer, (GJPipleNode*)context->videoEncoder);
         pipleDisConnectNode((GJPipleNode*)context->audioProducer, (GJPipleNode*)context->audioEncoder);
-        
+        context->videoEncoder->encodeFlush(context->videoEncoder);
         if (context->streamRecode) {
             GJLivePush_StopRecode(context);
         }

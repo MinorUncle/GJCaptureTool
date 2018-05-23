@@ -136,11 +136,9 @@
             _timer = nil;
         });
     }
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        _audioProducer->audioProduceStop(_audioProducer);
-        _videoProducer->stopProduce(_videoProducer);
-        GJLivePush_StopPush(_livePush);
-    });
+    _audioProducer->audioProduceStop(_audioProducer);
+    _videoProducer->stopProduce(_videoProducer);
+    GJLivePush_StopPush(_livePush);
 
 }
 

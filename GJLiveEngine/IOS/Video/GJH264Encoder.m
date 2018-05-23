@@ -42,7 +42,7 @@
         //        _allowMinBitRate = _currentBitRate;
         _allowBFrame = YES;
 
-        _profileLevel = profileLevelMain;
+        _profileLevel = profileLevelHigh;
         _entropyMode  = kEntropyMode_CABAC;
         _dtsDelta     = 0;
         _preDTS     = -1;

@@ -170,12 +170,24 @@ static GHandle sendRunloop(GHandle parm) {
         if (packet->type == GJMediaType_Video) {
             sendPacket->stream_index = push->vStream->index;
             if (packet->extendDataSize > 0 && (packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY) {
-                sendPacket->data = R_BufferStart(&packet->retain) + packet->extendDataOffset;
-                sendPacket->size = packet->dataSize+packet->extendDataSize;
-            }else{
-                sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
-                sendPacket->size = packet->dataSize;
+                
+                uint8_t *side = av_packet_new_side_data(sendPacket, AV_PKT_DATA_NEW_EXTRADATA,
+                                                        packet->extendDataSize);
+                if (side) {
+                    memcpy(side, R_BufferStart(&packet->retain) + packet->extendDataOffset,packet->extendDataSize);
+                    GUInt32 nalSize;
+                    GUInt8* start = side;
+                    GUInt8* end = side + packet->extendDataSize;
+                    while (end - start >= 4 ) {
+                        nalSize = ntohl(*(GUInt32*)(start));
+                        memcpy(start, "\x00\x00\x00\x01", 4);
+                        start += nalSize + 4;
+                    }
+                }
             }
+            
+            sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
+            sendPacket->size = packet->dataSize;
             GUInt32 nalSize;
             GUInt8* start = sendPacket->data;
             GUInt8* end = sendPacket->data + sendPacket->size;
@@ -218,6 +230,7 @@ static GHandle sendRunloop(GHandle parm) {
 //
 //        }
         GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
+        av_packet_free_side_data(sendPacket);
         if (iRet >= 0) {
             if (packet->type == GJMediaType_Video) {
 
@@ -525,7 +538,7 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
     if (push == GNULL) return GFalse;
     
     if (G_TIME_IS_INVALID(push->videoStatus.enter.firstTs)) {
-        if (packet->extendDataSize <= 0) {
+        if (packet->extendDataSize <= 0 || (packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY) {
             GJLOG(GNULL, GJ_LOGWARNING, "第一帧非关键帧 丢帧");
             return GTrue;
         }else{
