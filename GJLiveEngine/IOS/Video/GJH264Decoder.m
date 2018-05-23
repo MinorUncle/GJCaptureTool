@@ -379,6 +379,7 @@ void decodeOutputCallback(
         sampleBuffer = [self createSampleBufferWithData:packetData size:packetSize pts:GTimeMSValue(packet->pts)];
         if (sampleBuffer) {
             status = [self decodeSampleBuffer:sampleBuffer dts:GTimeMSValue(packet->dts) flag:0];
+            CFRelease(sampleBuffer);
         }
         
         if (status < 0) {
@@ -418,14 +419,6 @@ void decodeOutputCallback(
                         }
                     }
                 }
-                if (oldStatus == noErr && sampleBuffer) {
-                    status = [self decodeSampleBuffer:sampleBuffer dts:GTimeMSValue(packet->dts) flag:0];
-                    if (status != noErr) {
-                        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "恢复gop错误,error status：%d", oldStatus);
-                        queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
-                        [self flush];
-                    }
-                }
    
             } else  if (status == kVTVideoDecoderMalfunctionErr) {
                 if (isKeyPacket) {
@@ -437,9 +430,6 @@ void decodeOutputCallback(
                 [self flush];
             }else {
                 GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码错误0：%d  ,format:%p", status, _formatDesc);
-            }
-            if(sampleBuffer){
-                CFRelease(sampleBuffer);
             }
         }
     }

@@ -110,12 +110,12 @@ inline GBool queueSignalPush(GJQueue* queue)
 }
 inline GBool queueBroadcastPop(GJQueue* queue)
 {
-    GJLOG(GNULL, GJ_LOGDEBUG, "queueBroadcastPop:%p",queue);
+    GJLOG(GNULL, GJ_LOGALL, "queueBroadcastPop:%p",queue);
     return !pthread_cond_broadcast(&queue->outCond);
 }
 inline GBool queueBroadcastPush(GJQueue* queue)
 {
-    GJLOG(GNULL, GJ_LOGDEBUG, "queueBroadcastPush%p",queue);
+    GJLOG(GNULL, GJ_LOGALL, "queueBroadcastPush%p",queue);
     return !pthread_cond_broadcast(&queue->inCond);
 }
 inline GBool queueUnLockPop(GJQueue* q){
