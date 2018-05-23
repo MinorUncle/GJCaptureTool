@@ -250,20 +250,24 @@ GBool queuePop(GJQueue* q,GHandle* temBuffer,GUInt32 ms){
         queueUnLockPop(q);
         return GFalse;
     }
-    
+RETRY:
     if (q->inPointer - q->outPointer <= q->minCacheSize) {
         int ret = GFalse;
+        GJLOG(q->debugClass, GJ_LOGALL, "queue:%p begin pop wait with incount:%d  outcount:%d  minCacheSize:%d",q,q->inPointer,q->outPointer,q->minCacheSize);
         if (!(ret = queueWaitPop(q, ms)) || q->inPointer - q->outPointer <= q->minCacheSize) {
-            if (ret == GTrue) {
-                if (q->popEnable && q->minCacheSize == 0) {
-                    //可能是由于broadcast产生,所以如果需要停止等待，broadcast之前禁止pop,也可能是minCacheSize增大（临界条件）引起
-                    GJAssert(0, "error pop");
-                }
+            if (ret == GTrue && q->popEnable) {
+                //可能是由于broadcast产生,所以如果需要停止等待，请broadcast之前禁止pop,
+                //也可能是minCacheSize增大（临界条件）引起
+                //也可能是push的inpoint增加了，两次连续pop在push的inpoint增加和push signal之间调用，（临界调节），只需要重试，因为时间非常短，所以无需修改等待的时间
+
+                goto RETRY;
+//                if (q->popEnable && q->minCacheSize == 0) {
+//                }
             }
             queueUnLockPop(q);
             return GFalse;
         }
-        GJLOG(q->debugClass, GJ_LOGALL, "queue:%p wait pop with incount:%d  outcount:%d  minCacheSize:%d",q,q->inPointer,q->outPointer,q->minCacheSize);
+        GJLOG(q->debugClass, GJ_LOGALL, "queue:%p after pop wait with incount:%d  outcount:%d  minCacheSize:%d",q,q->inPointer,q->outPointer,q->minCacheSize);
     }
     GInt32 index = q->outPointer%q->capacity;
     q->outPointer++;
@@ -321,7 +325,7 @@ GBool queuePush(GJQueue* q,GHandle temBuffer,GUInt32 ms){
 //    __atomic_add_fetch();
 //    __sync_add_and_fetch();
     GJAssert(q->inPointer>=q->outPointer, "error");
-    GJLOG(q->debugClass, GJ_LOGALL, "queue:%p wait push wait with incount:%d  outcount:%d  minCacheSize:%d",q,q->inPointer,q->outPointer,q->minCacheSize);
+    GJLOG(q->debugClass, GJ_LOGALL, "queue:%p after push wait with incount:%d  outcount:%d  minCacheSize:%d",q,q->inPointer,q->outPointer,q->minCacheSize);
 
     q->inPointer++;
 

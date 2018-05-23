@@ -100,7 +100,6 @@
 		6AD06E8020B53B86004DF75B /* GJDebug.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5520B53B86004DF75B /* GJDebug.h */; };
 		6AD06E8120B53B86004DF75B /* GJList.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5620B53B86004DF75B /* GJList.c */; };
 		6AD06E8220B53B86004DF75B /* GJList.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5720B53B86004DF75B /* GJList.h */; };
-		6AD06E8320B53B86004DF75B /* GJLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5820B53B86004DF75B /* GJLog.h */; };
 		6AD06E8420B53B86004DF75B /* GJPlatformHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */; };
 		6AD06E8520B53B86004DF75B /* GJQueue+cplus.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5A20B53B86004DF75B /* GJQueue+cplus.h */; };
 		6AD06E8620B53B86004DF75B /* GJQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5B20B53B86004DF75B /* GJQueue.c */; };
@@ -538,7 +537,6 @@
 		6AD06E5520B53B86004DF75B /* GJDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJDebug.h; sourceTree = "<group>"; };
 		6AD06E5620B53B86004DF75B /* GJList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJList.c; sourceTree = "<group>"; };
 		6AD06E5720B53B86004DF75B /* GJList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJList.h; sourceTree = "<group>"; };
-		6AD06E5820B53B86004DF75B /* GJLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLog.h; sourceTree = "<group>"; };
 		6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPlatformHeader.h; sourceTree = "<group>"; };
 		6AD06E5A20B53B86004DF75B /* GJQueue+cplus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GJQueue+cplus.h"; sourceTree = "<group>"; };
 		6AD06E5B20B53B86004DF75B /* GJQueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJQueue.c; sourceTree = "<group>"; };
@@ -1092,7 +1090,6 @@
 				6AD06E5520B53B86004DF75B /* GJDebug.h */,
 				6AD06E5620B53B86004DF75B /* GJList.c */,
 				6AD06E5720B53B86004DF75B /* GJList.h */,
-				6AD06E5820B53B86004DF75B /* GJLog.h */,
 				6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */,
 				6AD06E5A20B53B86004DF75B /* GJQueue+cplus.h */,
 				6AD06E5B20B53B86004DF75B /* GJQueue.c */,
@@ -1531,7 +1528,6 @@
 				6AD06E8B20B53B86004DF75B /* GJRetainBufferPool.h in Headers */,
 				6ABF2B221F0B413600721DB3 /* IOS_H264Decode.h in Headers */,
 				AE3A2C331F07FDD900C24BAA /* audiooutput.h in Headers */,
-				6AD06E8320B53B86004DF75B /* GJLog.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

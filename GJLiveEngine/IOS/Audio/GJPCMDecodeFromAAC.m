@@ -61,7 +61,7 @@ static int stopCount;
 - (void)initQueue {
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_SERIAL);
     queueCreate(&_resumeQueue, 60, true, GFalse);
-    queueSetDebugLeval(_resumeQueue, GJ_LOGALL);
+//    queueSetDebugLeval(_resumeQueue, GJ_LOGALL);
     signalCreate(&_stopFinshSignal);
 }
 + (AudioStreamBasicDescription)defaultSourceFormateDescription {

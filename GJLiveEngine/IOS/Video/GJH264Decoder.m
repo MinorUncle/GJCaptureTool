@@ -321,27 +321,8 @@ void decodeOutputCallback(
 
 
     int32_t  spsSize = 0, ppsSize = 0;
-    uint8_t *sps = NULL, *pps = NULL, *start;
+    uint8_t *sps = NULL, *pps = NULL;
     GBool isKeyPacket = GFalse;
-    if ((packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY) {
-        if (packet->extendDataSize > 0) {
-            start = R_BufferStart(&packet->retain) + packet->extendDataOffset;
-        }else{
-            start = R_BufferStart(&packet->retain) + packet->dataOffset;
-        }
-        [self findInfoWithData:start dataSize:packet->extendDataSize sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
-        GJAssert(sps != GNULL && pps != NULL, "没有sps，pps");
-        [self updateSpsPps:sps spsSize:spsSize pps:pps ppsSize:ppsSize];
-        isKeyPacket = GTrue;
-    }else if ((packet->flag & GJPacketFlag_P_AVStreamType) == GJPacketFlag_P_AVStreamType) {
-        AVStream* stream = ((AVStream**)(R_BufferStart(packet)+packet->extendDataOffset))[0];
-        AVCodecParameters *codecpar = stream->codecpar;
-        [self findInfoWithAVCC:codecpar->extradata dataSize:codecpar->extradata_size sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
-        GJAssert(sps != GNULL && pps != NULL, "没有sps，pps");
-        [self updateSpsPps:sps spsSize:spsSize pps:pps ppsSize:ppsSize];
-    }
-    
-
     if ((packet->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType){
         pkt = ((AVPacket*)(R_BufferStart(packet) + packet->extendDataOffset));
         GInt32 extendDataSize = 0;
@@ -354,9 +335,12 @@ void decodeOutputCallback(
         packetData = pkt->data;
         isKeyPacket = (pkt->flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY;
 
-    }else if (packet->dataSize > 0 ) {
-        packetSize = (int) (packet->dataSize);
-        packetData  = packet->dataOffset + R_BufferStart(&packet->retain);
+    }else if ((packet->flag & GJPacketFlag_P_AVStreamType) == GJPacketFlag_P_AVStreamType) {
+        AVStream* stream = ((AVStream**)(R_BufferStart(packet)+packet->extendDataOffset))[0];
+        AVCodecParameters *codecpar = stream->codecpar;
+        [self findInfoWithAVCC:codecpar->extradata dataSize:codecpar->extradata_size sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
+        GJAssert(sps != GNULL && pps != NULL, "没有sps，pps");
+        [self updateSpsPps:sps spsSize:spsSize pps:pps ppsSize:ppsSize];
     }
     
     
@@ -414,16 +398,10 @@ void decodeOutputCallback(
                     GLong index = 0;
                     oldStatus = kVTVideoDecoderMalfunctionErr;
                     while(queuePeekValue(_gopQueue,index++, (GHandle*)&oldPacket)){
-                        if ((oldPacket->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType){
-                            AVPacket* oldPkt = ((AVPacket*)(R_BufferStart(oldPacket) + oldPacket->extendDataOffset));
-                            oldPacketSize = (int) oldPkt->size;
-                            oldPacketData = oldPkt->data;
-                            
-                        }else if (packet->dataSize > 0 ) {
-                            oldPacketSize = (int) (packet->dataSize);
-                            oldPacketData  = packet->dataOffset + R_BufferStart(&packet->retain);
-                        }
-                        
+                        AVPacket* oldPkt = ((AVPacket*)(R_BufferStart(oldPacket) + oldPacket->extendDataOffset));
+                        oldPacketSize = (int) oldPkt->size;
+                        oldPacketData = oldPkt->data;
+                                                    
                         if (oldPacketSize>0) {
                             CMSampleBufferRef oldSampleBuffer = NULL;
                             oldSampleBuffer = [self createSampleBufferWithData:oldPacketData size:oldPacketSize pts:GTimeMSValue(oldPacket->pts)];
