@@ -110,11 +110,12 @@ static void updateWater(GJSyncControl *syncControl, GLong shake){
         shake = MIN_CACHE_DUR;
     }
     GJAssert(shake < 10000, "异常");
-    
-    syncControl->bufferInfo.lowWaterFlag  = shake;
-    
-    syncControl->bufferInfo.highWaterFlag = syncControl->bufferInfo.lowWaterFlag * MAX_CACHE_RATIO;
-    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "updateWater lowWaterFlag:%ld,highWaterFlag:%ld",syncControl->bufferInfo.lowWaterFlag,syncControl->bufferInfo.highWaterFlag);
+    if(shake != syncControl->bufferInfo.lowWaterFlag){
+        syncControl->bufferInfo.lowWaterFlag  = shake;
+        
+        syncControl->bufferInfo.highWaterFlag = syncControl->bufferInfo.lowWaterFlag * MAX_CACHE_RATIO;
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "updateWater lowWaterFlag:%ld,highWaterFlag:%ld",syncControl->bufferInfo.lowWaterFlag,syncControl->bufferInfo.highWaterFlag);
+    }
 }
 
 #define PLAY_CACHE_LOG(syncControl) \

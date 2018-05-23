@@ -996,22 +996,22 @@
     NSLog(@"pull w:%f,h:%f",info->size.width,info->size.height);
 }
 -(void)livePull:(GJLivePull *)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString *)infoDesc{
-//    switch (type) {
-//        case kLivePullReadPacketError:
-//        case kLivePullConnectError:{
-//            [livePull stopStreamPull];
-//            sleep(1);
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                if(_pullBtn.selected){
-//                    _pullStateLab.text = @"尝试重连中";
-//                    [livePull startStreamPullWithUrl:_pullAddr];
-//                }
-//            });
-//            break;
-//        }
-//        default:
-//            break;
-//    }
+    switch (type) {
+        case kLivePullReadPacketError:
+        case kLivePullConnectError:{
+            [livePull stopStreamPull];
+            sleep(1);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if(_pullBtn.selected){
+                    _pullStateLab.text = @"尝试重连中";
+                    [livePull startStreamPullWithUrl:_pullAddr];
+                }
+            });
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 -(void)livePull:(GJLivePull *)livePull bufferUpdatePercent:(float)percent duration:(long)duration{

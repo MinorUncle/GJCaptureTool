@@ -158,7 +158,7 @@ void decodeOutputCallback(
     dispatch_async(_decodeQueue, ^{
         R_GJPacket* packet;
         while (_isRunning) {
-            if( queuePop(_inputQueue, (GHandle*)&packet, 0)){
+            if( queuePop(_inputQueue, (GHandle*)&packet, GINT32_MAX)){
                 [self _decodePacket:packet];
                 R_BufferUnRetain(packet);
             }

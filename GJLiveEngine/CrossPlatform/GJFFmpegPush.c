@@ -80,7 +80,7 @@ static GHandle sendRunloop(GHandle parm) {
 
     if (push->videoFormat) {
         GLong index = 0;
-        while (queuePeekWaitValue(push->sendBufferQueue,(GHandle) &packet,index++, GINT32_MAX)) { //过滤无效起始数据
+        while (queuePeekWaitValue(push->sendBufferQueue,index++,(GHandle*) &packet, GINT32_MAX)) { //过滤无效起始数据
             if (push->stopRequest) {
                 goto END;
             }
