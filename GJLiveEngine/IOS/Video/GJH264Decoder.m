@@ -11,13 +11,15 @@
 #import "sps_decode.h"
 #import "libavformat/avformat.h"
 #import <UIKit/UIApplication.h>
-
+#define VIDEO_DECODER_CACHE_COUNT 20
 @interface GJH264Decoder () {
     dispatch_queue_t _decodeQueue; //解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
     NSData* _spsData;
     NSData* _ppsData;
     GJQueue* _inputQueue;
+    GJQueue* _gopQueue;
     GBool _isActive;
+    GBool _needFlush;
 }
 @property (nonatomic) VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
@@ -37,7 +39,9 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
         GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVPixelBufferRef), GTrue, R_GJPixelFrameMalloc, cvImagereleaseCallBack, GNULL);
         _isRunning= NO;
         _decodeQueue       = dispatch_queue_create("videoDecodeQueue", DISPATCH_QUEUE_SERIAL);
-        queueCreate(&_inputQueue, 20, YES, GFalse);
+        queueCreate(&_inputQueue, VIDEO_DECODER_CACHE_COUNT, YES, GFalse);
+        queueCreate(&_gopQueue, 100, YES, GTrue);
+
         _isActive = [UIApplication sharedApplication].applicationState == UIApplicationStateActive;
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
@@ -45,11 +49,13 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
     return self;
 }
 -(void)receiveNotification:(NSNotification*)notic{
-    if ([notic.name isEqualToString:UIApplicationWillResignActiveNotification]) {
-        _isActive = NO;
-    }else if([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]){
-        _isActive = YES;
-    }
+//    if ([notic.name isEqualToString:UIApplicationWillResignActiveNotification]) {
+//        queueSetMinCacheSize(_inputQueue, VIDEO_DECODER_CACHE_COUNT+1);
+//        _isActive = NO;
+//    }else if([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]){
+//        queueSetMinCacheSize(_inputQueue, 0);
+//        _isActive = YES;
+//    }
 }
 - (void)dealloc {
     queueFree(&_inputQueue);
@@ -145,13 +151,19 @@ void decodeOutputCallback(
     }
     _isRunning = YES;
     queueEnablePop(_inputQueue, GTrue);
+    queueEnablePop(_gopQueue, GTrue);
+
+    GJLOG(GNULL, GJ_LOGDEBUG, "%p",self);
 
     dispatch_async(_decodeQueue, ^{
         R_GJPacket* packet;
-        while (_isRunning && queuePop(_inputQueue, (GHandle*)&packet, GINT32_MAX)) {
-            [self _decodePacket:packet];
-            R_BufferUnRetain(&packet->retain);
+        while (_isRunning) {
+            if( queuePop(_inputQueue, (GHandle*)&packet, 0)){
+                [self _decodePacket:packet];
+                R_BufferUnRetain(packet);
+            }
         }
+        GJLOG(GNULL, GJ_LOGDEBUG, "video decode runloop end:%p",self);
     });
     return YES;
 }
@@ -160,24 +172,26 @@ void decodeOutputCallback(
         _isRunning = NO;
         queueEnablePop(_inputQueue, GFalse);
         queueBroadcastPop(_inputQueue);
-        GInt32 length = 0;
-        queueClean(_inputQueue, GNULL, &length);
-        if (length > 0) {
-            GHandle* buffer = malloc(sizeof(GHandle)*length);
-            queueClean(_inputQueue, buffer, &length);
-            for (int i = 0; i<length; i++) {
-                R_BufferUnRetain((GJRetainBuffer*)(buffer[i]));
-            }
-            free(buffer);
-        }
+        queueEnablePop(_gopQueue, GFalse);
+        queueBroadcastPop(_gopQueue);
+        
+        queueFuncClean(_inputQueue, R_BufferUnRetainUnTrack);
+        queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
+
+        
+        [self flush];
     }
 }
+
+-(void)flush{
+    VTDecompressionSessionFinishDelayedFrames(_decompressionSession);
+    _needFlush = GTrue;
+}
+
 - (void)decodePacket:(R_GJPacket *)packet {
-    if (_isActive) {
-        R_BufferRetain(&packet->retain);
-        if (!_isRunning || !queuePush(_inputQueue, packet, GINT32_MAX)) {
-            R_BufferUnRetain(&packet->retain);
-        }
+    R_BufferRetain(&packet->retain);
+    if (!_isRunning || !queuePush(_inputQueue, packet, GINT32_MAX)) {
+        R_BufferUnRetain(&packet->retain);
     }
 }
 
@@ -290,39 +304,22 @@ void decodeOutputCallback(
     }
 }
 
-- (void)_decodePacket:(R_GJPacket *)packet {
-    OSStatus          status;
+/**
+ 解码
+
+ @param packet packet description
+ @return 返回yes，表示此包可以释放了，false表示解码还需要在此使用，不能释放
+ */
+- (OSStatus)_decodePacket:(R_GJPacket *)packet {
     long              packetSize  = 0;
     GUInt8*            packetData  = 0;
     AVPacket* pkt = NULL;
-    CMSampleBufferRef sampleBuffer = NULL;
-    CMBlockBufferRef  blockBuffer  = NULL;
 
-//    static GInt32 index = 0;
-//    index++;
-//    GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"receive encode video index:%d size:%lld:",index-2, packet->dataSize-packet->dataOffset);
-//    GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&packet->retain)+packet->dataOffset, (GUInt32) 20);
-    
+
+
     int32_t  spsSize = 0, ppsSize = 0;
     uint8_t *sps = NULL, *pps = NULL, *start;
-//    if(_decompressionSession == nil){
-//        if ((packet->flag & GJPacketFlag_P_AVStreamType) == GJPacketFlag_P_AVStreamType) {
-//            AVStream* stream = ((AVStream**)(R_BufferStart(packet)+packet->extendDataOffset))[0];
-//            AVCodecParameters *codecpar = stream->codecpar;
-//            [self findInfoWithAVCC:codecpar->extradata dataSize:codecpar->extradata_size sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
-//        }else if((packet->flag == GJPacketFlag_KEY && packet->extendDataSize > 0)){
-//            if (packet->extendDataSize > 0) {
-//                start = R_BufferStart(&packet->retain) + packet->extendDataOffset;
-//            }else{
-//                start = R_BufferStart(&packet->retain) + packet->dataOffset;
-//            }
-//            [self findInfoWithData:start dataSize:packet->extendDataSize sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
-//        }else{
-//            GJAssert(0, "格式有问题");
-//        }
-//        GJAssert(sps != GNULL && pps != NULL, "没有sps，pps");
-//        [self updateSpsPps:sps spsSize:spsSize pps:pps ppsSize:ppsSize];
-//    }
+    GBool isKeyPacket = GFalse;
     if ((packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY) {
         if (packet->extendDataSize > 0) {
             start = R_BufferStart(&packet->retain) + packet->extendDataOffset;
@@ -332,6 +329,7 @@ void decodeOutputCallback(
         [self findInfoWithData:start dataSize:packet->extendDataSize sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
         GJAssert(sps != GNULL && pps != NULL, "没有sps，pps");
         [self updateSpsPps:sps spsSize:spsSize pps:pps ppsSize:ppsSize];
+        isKeyPacket = GTrue;
     }else if ((packet->flag & GJPacketFlag_P_AVStreamType) == GJPacketFlag_P_AVStreamType) {
         AVStream* stream = ((AVStream**)(R_BufferStart(packet)+packet->extendDataOffset))[0];
         AVCodecParameters *codecpar = stream->codecpar;
@@ -340,7 +338,7 @@ void decodeOutputCallback(
         [self updateSpsPps:sps spsSize:spsSize pps:pps ppsSize:ppsSize];
     }
     
-    GJAssert(_decompressionSession != nil, "解码器没有初始化，请先传递sps,pps信息");
+
     if ((packet->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType){
         pkt = ((AVPacket*)(R_BufferStart(packet) + packet->extendDataOffset));
         GInt32 extendDataSize = 0;
@@ -351,62 +349,179 @@ void decodeOutputCallback(
         }
         packetSize = (int) pkt->size;
         packetData = pkt->data;
+        isKeyPacket = (pkt->flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY;
 
     }else if (packet->dataSize > 0 ) {
         packetSize = (int) (packet->dataSize);
         packetData  = packet->dataOffset + R_BufferStart(&packet->retain);
     }
     
-    //#if MENORY_CHECK
-    ////<-----conversion
-//    if (((GUInt16*)packetData)[0] == 0 && packetData[2] == 0 && packetData[3] == 1) {
     
-//        GUInt8* preNal = GNULL;
-//        for (int i = 3; i<packetSize-4; i++) {
-//            if (packetData[i] == 0) {
-//                if (packetData[i+1] == 0) {
-//                    if (packetData[i+2] == 0) {
-//                        if (packetData[i+3] == 1) {
-//                            if (preNal != GNULL) {
-//                                GInt32 nalSize = (GInt32)(packetData + i - preNal);
-//                                nalSize = htonl(nalSize);
-//                                memcpy(preNal-4, &nalSize, 4);
-//                            }
-//                            preNal = packetData + i+4;
-//                            i+=3;//跳过4-1个
-//                        }else if(packetData[i+3] != 0){//3-1
-//                            i+=2;
-//                        }//否则//1-1
-//                    }else if(packetData[i+2] == 1){//匹配成功0x000001，3-1,
-//                        AVPacket* pkt = ((AVPacket*)(R_BufferStart(packet) + packet->extendDataOffset));
-//
-//                        av_grow_packet(pkt,1);
-//                        
-//                        memmove(packetData+i+1, packetData+i, packetSize-i);
-//                        if (preNal != GNULL) {
-//                            GInt32 nalSize = (GInt32)(packetData + i - preNal);
-//                            nalSize = htonl(nalSize);
-//                            memcpy(preNal-4, &nalSize, 4);
-//                        }
-//                        preNal = packetData + i +4;
-//                        i+=3;
-//                    }else{
-//                        i+=2;
-//                    }
-//                }else{
-//                    i++;
-//                }
-//            }
-//        }
-//        if (preNal) {
-//            GInt32 nalSize = (GInt32)(packetData + packetSize - preNal);
-//            nalSize = htonl(nalSize);
-//            memcpy(preNal-4, &nalSize, 4);
-//        }
-//    }
+    if (_decompressionSession == nil) {
+        if (!isKeyPacket) {
+            GJLOG(GNULL, GJ_LOGWARNING, "解码器没有初始化，且收到的非i帧，丢帧");
+            return noErr;
+        }else if(_spsData != nil && _ppsData != nil){
+            [self createDecompSession];
+        }else{
+            GJLOG(GNULL, GJ_LOGFORBID, "解码器没有初始化，且收到的i帧，但是没有sps,pps信息，丢帧");
+            return noErr;
+        }
+    }
+    
+    if (_needFlush) {
+        if (!isKeyPacket) {
+            GJLOG(GNULL, GJ_LOGWARNING, "解码器刷新了，收到非i帧，丢帧");
+            return GTrue;
+        }else{
+            _needFlush = GFalse;
+        }
+    }
+    if (packetSize > 0) {
+        CMSampleBufferRef sampleBuffer = NULL;
+        OSStatus status = kVTVideoDecoderMalfunctionErr;
+        sampleBuffer = [self createSampleBufferWithData:packetData size:packetSize pts:GTimeMSValue(packet->pts)];
+        if (sampleBuffer) {
+            status = [self decodeSampleBuffer:sampleBuffer dts:GTimeMSValue(packet->dts) flag:0];
+        }
+        
+        if (status < 0) {
+            if (kVTInvalidSessionErr == status) {
+                VTDecompressionSessionWaitForAsynchronousFrames(_decompressionSession);
+                VTDecompressionSessionInvalidate(_decompressionSession);
+                CFRelease(_decompressionSession);
+                _decompressionSession = nil;
+                GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "无效解码器，重启解码器，恢复数据");
+                [self createDecompSession];
+
+                R_GJPacket* oldPacket = GNULL;
+                GInt32 oldPacketSize = 0;
+                GUInt8* oldPacketData = GNULL;
+                GLong index = 0;
+                OSStatus oldStatus = kVTVideoDecoderMalfunctionErr;
+                while(queuePeekValue(_gopQueue,index++, (GHandle*)&oldPacket)){
+                    if ((oldPacket->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType){
+                        AVPacket* oldPkt = ((AVPacket*)(R_BufferStart(oldPacket) + oldPacket->extendDataOffset));
+                        oldPacketSize = (int) oldPkt->size;
+                        oldPacketData = oldPkt->data;
+                        
+                    }else if (packet->dataSize > 0 ) {
+                        oldPacketSize = (int) (packet->dataSize);
+                        oldPacketData  = packet->dataOffset + R_BufferStart(&packet->retain);
+                    }
+                    
+                    if (oldPacketSize>0) {
+                        CMSampleBufferRef oldSampleBuffer = NULL;
+                        oldSampleBuffer = [self createSampleBufferWithData:oldPacketData size:oldPacketSize pts:GTimeMSValue(oldPacket->pts)];
+                        if (oldSampleBuffer) {
+                            oldStatus = [self decodeSampleBuffer:oldSampleBuffer dts:GTimeMSValue(oldPacket->dts) flag:kVTDecodeFrame_DoNotOutputFrame];
+                            CFRelease(oldSampleBuffer);
+                        }
+                        if (oldStatus != noErr) {
+                            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "恢复gop，gop数据有误， 无法刷新解码器,清除gop,error status：%d", oldStatus);
+                            queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
+                            [self flush];
+                            break;
+                        }
+                    }
+                }
+                
+                if (oldStatus == noErr && sampleBuffer) {
+                    status = [self decodeSampleBuffer:sampleBuffer dts:GTimeMSValue(packet->dts) flag:0];
+                    if (status != noErr) {
+                        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "恢复gop错误,error status：%d", oldStatus);
+                    }else{
+                        if (isKeyPacket) {//刷新gop
+                            queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
+                        }
+                        R_BufferRetain(packet);
+                        if (!queuePush(_gopQueue, packet, 0)) {
+                            R_BufferUnRetain(packet);
+                        }
+                    }
+                }
+   
+            } else  if (status == kVTVideoDecoderMalfunctionErr) {
+                if (isKeyPacket) {
+                    GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "i帧解码错误，数据格式有问题,会造成丢帧至下一个i帧，status:%d:%p", status, _formatDesc);
+
+                }else{
+                    GJLOG(DEFAULT_LOG, GJ_LOGERROR, "非i帧解码错误，需要强制刷新：%d  ,会造成丢帧至下一个i帧，format:%p", status, _formatDesc);
+                }
+                [self flush];
+            }else {
+                GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码错误0：%d  ,format:%p", status, _formatDesc);
+            }
+            if(sampleBuffer){
+                CFRelease(sampleBuffer);
+            }
+        }else{
+            if (isKeyPacket) {//刷新gop
+                queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
+            }
+            R_BufferRetain(packet);
+            if (!queuePush(_gopQueue, packet, 0)) {
+                R_BufferUnRetain(packet);
+            }
+        }
+    }
+    
+    return noErr;
+ERROR:
+    return GFalse;
+}
+-(CMSampleBufferRef)createSampleBufferWithData:(GUInt8*)packetData size:(GLong)packetSize pts:(GInt64)pts{
+    
+    //#if MENORY_CHECK  格式检查，针对不规则流
+    ////<-----conversion
+    //    if (((GUInt16*)packetData)[0] == 0 && packetData[2] == 0 && packetData[3] == 1) {
+    
+    //        GUInt8* preNal = GNULL;
+    //        for (int i = 3; i<packetSize-4; i++) {
+    //            if (packetData[i] == 0) {
+    //                if (packetData[i+1] == 0) {
+    //                    if (packetData[i+2] == 0) {
+    //                        if (packetData[i+3] == 1) {
+    //                            if (preNal != GNULL) {
+    //                                GInt32 nalSize = (GInt32)(packetData + i - preNal);
+    //                                nalSize = htonl(nalSize);
+    //                                memcpy(preNal-4, &nalSize, 4);
+    //                            }
+    //                            preNal = packetData + i+4;
+    //                            i+=3;//跳过4-1个
+    //                        }else if(packetData[i+3] != 0){//3-1
+    //                            i+=2;
+    //                        }//否则//1-1
+    //                    }else if(packetData[i+2] == 1){//匹配成功0x000001，3-1,
+    //                        AVPacket* pkt = ((AVPacket*)(R_BufferStart(packet) + packet->extendDataOffset));
+    //
+    //                        av_grow_packet(pkt,1);
+    //
+    //                        memmove(packetData+i+1, packetData+i, packetSize-i);
+    //                        if (preNal != GNULL) {
+    //                            GInt32 nalSize = (GInt32)(packetData + i - preNal);
+    //                            nalSize = htonl(nalSize);
+    //                            memcpy(preNal-4, &nalSize, 4);
+    //                        }
+    //                        preNal = packetData + i +4;
+    //                        i+=3;
+    //                    }else{
+    //                        i+=2;
+    //                    }
+    //                }else{
+    //                    i++;
+    //                }
+    //            }
+    //        }
+    //        if (preNal) {
+    //            GInt32 nalSize = (GInt32)(packetData + packetSize - preNal);
+    //            nalSize = htonl(nalSize);
+    //            memcpy(preNal-4, &nalSize, 4);
+    //        }
+    //    }
     ///->>>
     
-    //check
+    //格式检查，针对不规则流
 #ifdef DEBUG
     int32_t unitSize = 0;
     uint8_t* current;
@@ -418,83 +533,63 @@ void decodeOutputCallback(
         totalSize += unitSize+4;
         current += unitSize+4;
     }
-    if (totalSize != packetSize) {
-        NSLog(@"size error");
-    }
+    assert(totalSize == packetSize);
+
+//    if (totalSize != packetSize) {
+//        NSLog(@"size error");
+//    }
 #endif
-//    assert(totalSize == packetSize);
     
-    if(packetSize > 0){
-        //        uint32_t dataLength32 = htonl (blockLength - 4);
-        //        memcpy (data, &dataLength32, sizeof (uint32_t));
-        status = CMBlockBufferCreateWithMemoryBlock(NULL, packetData,
-                                                    packetSize,
-                                                    kCFAllocatorNull, NULL,
-                                                    0,
-                                                    packetSize,
-                                                    0, &blockBuffer);
-
-        if (status == noErr) {
-            const size_t       sampleSize = packetSize;
-            CMSampleTimingInfo timingInfo;
-            timingInfo.decodeTimeStamp       = kCMTimeInvalid;
-            timingInfo.duration              = kCMTimeInvalid;
-            timingInfo.presentationTimeStamp = CMTimeMake(packet->pts.value, packet->pts.scale);
-            status                           = CMSampleBufferCreate(kCFAllocatorDefault,
-                                          blockBuffer, true, NULL, NULL,
-                                          _formatDesc, 1, 1, &timingInfo, 1,
-                                          &sampleSize, &sampleBuffer);
-
-            if (status != 0) {
-                GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "CMSampleBufferCreate：%d", status);
-                goto ERROR;
-            }
-        } else {
-            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "CMBlockBufferCreateWithMemoryBlock error:%d", status);
-            goto ERROR;
-        }
-
-RETRY : {
-            CFArrayRef             attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
-            CFMutableDictionaryRef dict        = (CFMutableDictionaryRef) CFArrayGetValueAtIndex(attachments, 0);
-            CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
-
-            //                status = CMSampleBufferSetOutputPresentationTimeStamp(sampleBuffer, pts);
-            //
-            //                assert(status == 0);
-            VTDecodeFrameFlags flags = kVTDecodeFrame_EnableAsynchronousDecompression;
-            VTDecodeInfoFlags  flagOut;
-            GLong              dts    = packet->dts.value*1000/packet->dts.scale;
-            OSStatus           status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags, (GVoid *) dts, &flagOut);
-            if (status < 0) {
-                if (kVTInvalidSessionErr == status) {
-                    VTDecompressionSessionInvalidate(_decompressionSession);
-                    _decompressionSession = nil;
-                    GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "解码错误  kVTInvalidSessionErr");
-                    [self createDecompSession];
-                    goto RETRY;
-                } else {
-                    GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码错误0：%d  ,format:%p", status, _formatDesc);
-                }
-                //                    [self createDecompSession];
-                //                    status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags,&sampleBuffer, &flagOut);
-                //                    if (status < 0) {
-                //                        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "解码错误：%d  丢帧",status);
-                //                        _shouldRestart = YES;
-                //                    }
-            }
-
-            CFRelease(sampleBuffer);
-            CFRelease(blockBuffer);
+    
+    OSStatus status;
+    CMSampleBufferRef sampleBuffer = NULL;
+    CMBlockBufferRef  blockBuffer  = NULL;
+    
+    //        uint32_t dataLength32 = htonl (blockLength - 4);
+    //        memcpy (data, &dataLength32, sizeof (uint32_t));
+    status = CMBlockBufferCreateWithMemoryBlock(NULL, packetData,
+                                                packetSize,
+                                                kCFAllocatorNull, NULL,
+                                                0,
+                                                packetSize,
+                                                0, &blockBuffer);
+    
+    if (status == noErr) {
+        const size_t       sampleSize = packetSize;
+        CMSampleTimingInfo timingInfo;
+        timingInfo.decodeTimeStamp       = kCMTimeInvalid;
+        timingInfo.duration              = kCMTimeInvalid;
+        timingInfo.presentationTimeStamp = CMTimeMake(pts, 1000);
+        status                           = CMSampleBufferCreate(kCFAllocatorDefault,
+                                                                blockBuffer, true, NULL, NULL,
+                                                                _formatDesc, 1, 1, &timingInfo, 1,
+                                                                &sampleSize, &sampleBuffer);
+        
+        if (status != 0) {
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "CMSampleBufferCreate：%d", status);
         }
     } else {
-        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "帧没有pp");
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "CMBlockBufferCreateWithMemoryBlock error:%d", status);
     }
+    CFRelease(blockBuffer);
 
-ERROR:
-    return;
+    return sampleBuffer;
 }
 
+-(OSStatus)decodeSampleBuffer:(CMSampleBufferRef)sampleBuffer dts:(GLong)dts flag:(VTDecodeFrameFlags)flag{
+    
+    CFArrayRef             attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
+    CFMutableDictionaryRef dict        = (CFMutableDictionaryRef) CFArrayGetValueAtIndex(attachments, 0);
+    CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
+    
+    //                status = CMSampleBufferSetOutputPresentationTimeStamp(sampleBuffer, pts);
+    //
+    //                assert(status == 0);
+    VTDecodeFrameFlags flags = 0;
+    VTDecodeInfoFlags  flagOut;
+    OSStatus           status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags, (GVoid *) dts, &flagOut);
+    return status;
+}
 //解码
 //- (void) render:(CMSampleBufferRef)sampleBuffer
 //{

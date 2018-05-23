@@ -22,7 +22,7 @@ static FILE *fmsg;
 static GJ_LogCallback gj_log_default, *cb = gj_log_default;
 
 static const char *levels[] = {"GJ_NONE","GJ_FORBID","GJ_ERROR", "GJ_WARNING", "GJ_DEBUG","GJ_INFO","GJ_ALL"};
-static const GJClass*  debugClass[] = {&Default_NONE,&Default_FORBID,&Default_ERROR,&Default_WARNING,&Default_DEBUG,&Default_INFO,&Default_ALL};
+const GJClass*  debugClass[] = {&Default_NONE,&Default_FORBID,&Default_ERROR,&Default_WARNING,&Default_DEBUG,&Default_INFO,&Default_ALL};
 inline static GVoid gj_log_default(GJClass* dClass,GJ_LogLevel level ,const char *pre, const char *format, va_list vl)
 {
 #ifdef GJ_DEBUG
@@ -48,47 +48,54 @@ inline static GVoid gj_log_default(GJClass* dClass,GJ_LogLevel level ,const char
 #endif
 }
 
-GVoid GJ_LogSetOutput(FILE *file)
+GVoid GJ_LogSetOutput(char *file)
 {
-	fmsg = file;
+    
+    if (fmsg != NULL && fmsg != stderr) {
+        fclose(fmsg);
+        fmsg = NULL;
+    }
+    if (file != NULL) {
+        fmsg = fopen(file, "a+");
+    }
 }
 
 GVoid GJ_LogSetLevel(GJ_LogLevel level)
 {
 #ifdef GJ_DEBUG
 	defaultDebug = (GJClass*)(debugClass[level]);
-    RTMP_LogLevel rtmpLevel = (RTMP_LogLevel)level;
-    GInt avLevel = level;
-    switch (level) {
-        case GJ_LOGNONE:
-            avLevel = AV_LOG_QUIET;
-            break;
-        case GJ_LOGFORBID:
-            avLevel = AV_LOG_PANIC;
-            break;
-        case GJ_LOGERROR:
-            avLevel = AV_LOG_ERROR;
-            break;
-        case GJ_LOGWARNING:
-            avLevel = AV_LOG_WARNING;
-            break;
-        case GJ_LOGDEBUG:
-            rtmpLevel = RTMP_LOGDEBUG;
-            avLevel = AV_LOG_DEBUG;
-            break;
-        case GJ_LOGINFO:
-            rtmpLevel = RTMP_LOGINFO;
-            avLevel = AV_LOG_TRACE;
-            break;
-        case GJ_LOGALL:
-            
-            break;
-        default:
-            break;
-    }
+//    RTMP_LogLevel rtmpLevel = (RTMP_LogLevel)level;
+//    GInt avLevel = level;
+//    switch (level) {
+//        case GJ_LOGNONE:
+//            avLevel = AV_LOG_QUIET;
+//            break;
+//        case GJ_LOGFORBID:
+//            avLevel = AV_LOG_PANIC;
+//            break;
+//        case GJ_LOGERROR:
+//            avLevel = AV_LOG_ERROR;
+//            break;
+//        case GJ_LOGWARNING:
+//            avLevel = AV_LOG_WARNING;
+//            break;
+//        case GJ_LOGDEBUG:
+//            rtmpLevel = RTMP_LOGDEBUG;
+//            avLevel = AV_LOG_DEBUG;
+//            break;
+//        case GJ_LOGINFO:
+//            rtmpLevel = RTMP_LOGINFO;
+//            avLevel = AV_LOG_TRACE;
+//            break;
+//        case GJ_LOGALL:
+//
+//            break;
+//        default:
+//            break;
+//    }
     
-    RTMP_LogSetLevel(rtmpLevel);
-    av_log_set_level(avLevel);
+    RTMP_LogSetLevel(RTMP_LOGWARNING);
+    av_log_set_level(AV_LOG_WARNING);
     
 #else
     if ( !fmsg ) fmsg = stderr;

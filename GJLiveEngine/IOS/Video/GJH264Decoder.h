@@ -31,4 +31,6 @@ typedef void(^H264DecodeComplete)(R_GJPixelFrame* frame);
 -(void)decodePacket:(R_GJPacket *)packet;
 -(void)stopDecode;
 -(BOOL)startDecode;
+-(void)flush;
+
 @end

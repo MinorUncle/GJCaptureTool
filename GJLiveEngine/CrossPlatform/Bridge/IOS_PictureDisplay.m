@@ -34,19 +34,30 @@
 -(void)receiveNotification:(NSNotification* )notic{
     if ([notic.name isEqualToString:UIApplicationDidEnterBackgroundNotification]) {
         _enableRender = NO;
+        runSynchronouslyOnVideoProcessingQueue(^{
+            [_imageInput removeTarget:_displayView];
+        });
     }else if ([notic.name isEqualToString:UIApplicationWillEnterForegroundNotification]) {
+        runSynchronouslyOnVideoProcessingQueue(^{
+            [_imageInput addTarget:_displayView];
+        });
         _enableRender = YES;
     }
 }
 
 - (void)displayImage:(R_GJPixelFrame*)frame {
+    if (!_enableRender) {
+        return;
+    }
     if ((frame->flag & kGJFrameFlag_P_CVPixelBuffer) == kGJFrameFlag_P_CVPixelBuffer) {
         CVImageBufferRef image = ((CVImageBufferRef *) R_BufferStart(frame))[0];
         
         if (![_imageInput isKindOfClass:[GJImagePixelImageInput class]]) {
             OSType format = CVPixelBufferGetPixelFormatType(image);
             _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:(GJYUVPixelImageFormat)format];
-            [_imageInput addTarget:_displayView];
+            if (_enableRender) {
+                [_imageInput addTarget:_displayView];
+            }
         }
         [(GJImagePixelImageInput*)_imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
     }else if ((frame->flag & kGJFrameFlag_P_AVFrame) == kGJFrameFlag_P_AVFrame){
@@ -90,13 +101,19 @@
         if (isRGB) {
             if (![_imageInput isKindOfClass:[GPUImageRawDataInput class]]) {
                 _imageInput = [[GPUImageRawDataInput alloc]initWithBytes:image->data[0] size:CGSizeMake(image->width, image->height) pixelFormat:pixelFormat];
-                [_imageInput addTarget:_displayView];
+                if (_enableRender) {
+                    [_imageInput addTarget:_displayView];
+                }
+                
             }
             [(GPUImageRawDataInput*)_imageInput processData];
         }else{
             if (![_imageInput isKindOfClass:[GJImageYUVDataInput class]]) {
                 _imageInput = [[GJImageYUVDataInput alloc]initWithImageSize:CGSizeMake(image->width, image->height) pixelFormat:yuvFormat];
-                [_imageInput addTarget:_displayView];
+                if (_enableRender) {
+                    [_imageInput addTarget:_displayView];
+                }
+                
             }
             if (yuvFormat == GJPixelFormatI420) {
                 [(GJImageYUVDataInput*)_imageInput updateDataWithY:image->data[0] U:image->data[1] V:image->data[2] type:GJPixelTypeUByte Timestamp:kCMTimeZero];

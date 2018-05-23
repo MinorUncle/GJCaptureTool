@@ -90,6 +90,16 @@ inline static GBool decodePacket(struct _FFVideoDecodeContext *context, R_GJPack
     return GTrue;
 }
 
+inline static GVoid decodeFlush(struct _FFVideoDecodeContext* context){
+    pipleNodeLock(&context->pipleNode);
+    if (context->obaque) {
+        GJH264Decoder *decode = (__bridge GJH264Decoder *) (context->obaque);
+        [decode flush];
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "%p",decode);
+    }
+    pipleNodeUnLock(&context->pipleNode);
+}
+
 inline static GBool decodePacketFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
     GBool result = GFalse;
     if (dataType == GJMediaType_Video) {
@@ -110,6 +120,7 @@ GVoid GJ_H264DecodeContextCreate(FFVideoDecodeContext **decodeContext) {
     context->decodeUnSetup           = decodeUnSetup;
     context->decodeStart             = decodeStart;
     context->decodeStop              = decodeStop;
+    context->decodeFlush             = decodeFlush;
     context->decodePacket            = GNULL;
 }
 GVoid GJ_H264DecodeContextDealloc(FFVideoDecodeContext **context) {

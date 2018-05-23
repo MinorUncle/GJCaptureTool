@@ -45,7 +45,7 @@ static rvop_server_p rvopserver;
 #endif
 
 #ifdef RAOP
-static raop_server_p server;
+static raop_server_p raopServer;
 #endif
 
 static pthread_t serverThread;
@@ -368,21 +368,21 @@ static void *thread_pthread_head(void *ctx) {
     setting.password             = GNULL;
     setting.ignore_source_volume = GFalse;
 
-    if (server == GNULL) {
+    if (raopServer == GNULL) {
 
-        server = raop_server_create(setting, ctx);
+        raopServer = raop_server_create(setting, ctx);
     }
 
-    if (!raop_server_is_running(server)) {
+    if (!raop_server_is_running(raopServer)) {
 
         uint16_t port = 5000;
-        while (port < 5010 && !raop_server_start(server, port++))
+        while (port < 5010 && !raop_server_start(raopServer, port++))
             ;
     }
 
     if (requestStopServer) {
 
-        raop_server_stop(server);
+        raop_server_stop(raopServer);
     }
     serverThread = GNULL;
 
@@ -749,18 +749,22 @@ GVoid GJLivePush_Dealloc(GJLivePushContext **pushContext) {
 
         if (serverThread == GNULL) {
 #ifdef RAOP
-            raop_server_stop(server);
-            raop_server_destroy(server);
-            server = GNULL;
+            if (raopServer) {
+                raop_server_stop(raopServer);
+                raop_server_destroy(raopServer);
+                raopServer = GNULL;
+            }
 #endif
 #ifdef RVOP
-            rvop_server_stop(rvopserver);
-            rvop_server_destroy(rvopserver);
-            rvopserver = NULL;
+            if (rvopserver) {
+                rvop_server_stop(rvopserver);
+                rvop_server_destroy(rvopserver);
+                rvopserver = NULL;
+            }
 #endif
         } else {
-            requestStopServer    = GTrue;
-            requestDestoryServer = GTrue;
+//            requestStopServer    = GTrue;
+//            requestDestoryServer = GTrue;
         }
 
         pthread_mutex_lock(&context->lock);

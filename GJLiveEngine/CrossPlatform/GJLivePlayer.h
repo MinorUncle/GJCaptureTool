@@ -113,7 +113,7 @@ typedef struct _GJLivePlayContext {
     GJPictureDisplayContext *videoPlayer;
     GJAudioPlayContext *     audioPlayer;
     GJAudioFormat            audioFormat;
-    R_GJPixelFrame *         sortQueue[5]; //用于排序,最大5个连续b帧
+    R_GJPixelFrame *         sortQueue[10]; //用于排序,最大5个连续b帧
     GInt32                   sortIndex;
 } GJLivePlayer;
 

@@ -8,6 +8,7 @@
 
 #import "GJAudioSessionCenter.h"
 #import <AVFoundation/AVFoundation.h>
+#import <UIKit/UIApplication.h>
 static  GJAudioSessionCenter* _gjAudioSession;
 @interface GJAudioSessionCenter(){
     NSMutableArray* _playeRequest;
@@ -29,11 +30,15 @@ static  GJAudioSessionCenter* _gjAudioSession;
 +(instancetype)shareSession{
     if (_gjAudioSession == nil) {
         _gjAudioSession = [[GJAudioSessionCenter alloc]init];
-        [[NSNotificationCenter defaultCenter]addObserver:_gjAudioSession selector:@selector(receiveNotification:) name:AVAudioSessionRouteChangeNotification object:nil];
+        [[NSNotificationCenter defaultCenter]addObserver:_gjAudioSession selector:@selector(routeChangeNotification:) name:AVAudioSessionRouteChangeNotification object:nil];
+        [[NSNotificationCenter defaultCenter]addObserver:_gjAudioSession selector:@selector(interruptionNotification:) name:AVAudioSessionInterruptionNotification object:nil];
+        [[NSNotificationCenter defaultCenter]addObserver:_gjAudioSession selector:@selector(appDidBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
+
+
     }
     return _gjAudioSession;
 }
--(void)receiveNotification:(NSNotification*)notic{
+-(void)routeChangeNotification:(NSNotification*)notic{
    AVAudioSessionRouteChangeReason reason = [notic.userInfo[AVAudioSessionRouteChangeReasonKey] longValue];
     NSError* error;
     if (reason == AVAudioSessionRouteChangeReasonNewDeviceAvailable) {
@@ -45,9 +50,34 @@ static  GJAudioSessionCenter* _gjAudioSession;
         [[AVAudioSession sharedInstance]overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&error];
         NSLog(@"override out to speaker result:%@",error);
     }
-
-
 }
+
+-(void)interruptionNotification:(NSNotification*)notic{
+    AVAudioSessionInterruptionType reason = [notic.userInfo[AVAudioSessionInterruptionTypeKey] longValue];
+    NSError* error;
+    if (reason == AVAudioSessionInterruptionTypeBegan) {
+        
+    }else if (reason == AVAudioSessionInterruptionTypeEnded){
+        if (_activeRequest.count > 0 && [UIApplication sharedApplication].applicationState == UIApplicationStateActive ) {
+            NSError* error;
+            [[AVAudioSession sharedInstance] setActive:YES error:&error];
+            if (error) {
+                NSLog(@"AVAudioSession setActive yes error:%@  ,when AVAudioSessionInterruptionTypeEnded",error);
+            }
+        }
+    }
+}
+
+-(void)appDidBecomeActive:(NSNotification*)notic{
+    if (_activeRequest.count > 0) {
+        NSError* error;
+        [[AVAudioSession sharedInstance] setActive:YES error:&error];
+        if (error) {
+            NSLog(@"AVAudioSession setActive yes error:%@  ,when AVAudioSessionInterruptionTypeEnded",error);
+        }
+    }
+}
+
 +(instancetype)allocWithZone:(struct _NSZone *)zone{
     if (_gjAudioSession == nil) {
         static dispatch_once_t onceToken;
@@ -60,7 +90,6 @@ static  GJAudioSessionCenter* _gjAudioSession;
             _gjAudioSession->_mixingRequest = [NSMutableArray arrayWithCapacity:2];
             _gjAudioSession->_bluetoothRequest = [NSMutableArray arrayWithCapacity:2];
             _gjAudioSession->_voiceProcessingRequest = [NSMutableArray arrayWithCapacity:2];
-            
             _gjAudioSession->_activeRequest = [NSMutableArray arrayWithCapacity:2];
         });
     }

@@ -92,6 +92,8 @@ GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
             }
             context->startPullClock = GJ_Gettime();
             context->videoDecoder->decodeStart(context->videoDecoder);
+            context->audioDecoder->decodeStart(context->audioDecoder);
+
             pipleConnectNode((GJPipleNode*)context->streamPull, &context->videoDecoder->pipleNode);
             pipleConnectNode((GJPipleNode*)context->streamPull, &context->audioDecoder->pipleNode);
 
@@ -104,9 +106,11 @@ GVoid GJLivePull_StopPull(GJLivePullContext *context) {
     pthread_mutex_lock(&context->lock);
     GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePull_StartPull:%p",context);
     if (context->streamPull) {
+        context->videoDecoder->decodeStop(context->videoDecoder);
+        context->audioDecoder->decodeStop(context->audioDecoder);
+//先stop，再disconnect防止decoder queue满了，无法，streampull在阻塞状态
         pipleDisConnectNode((GJPipleNode*)context->streamPull, &context->audioDecoder->pipleNode);
         pipleDisConnectNode((GJPipleNode*)context->streamPull, &context->videoDecoder->pipleNode);
-        context->videoDecoder->decodeStop(context->videoDecoder);
         GJStreamPull_CloseAndRelease(context->streamPull);
         context->streamPull = GNULL;
     } else {

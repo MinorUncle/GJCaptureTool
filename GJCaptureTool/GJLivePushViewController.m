@@ -933,6 +933,7 @@
     btn.selected = !btn.selected;
     if (btn.selected) {
         _pullStateLab.text = @"连接中";
+        _dewaterTimes = _bufferTimes = 0;
         if(![_pull startStreamPullWithUrl:_pullAddr]){
             btn.selected = NO;
         };
@@ -1057,7 +1058,10 @@
     self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]initWithTitle:@"返回" style:UIBarButtonItemStylePlain target:self action:@selector(barItemTap:)];
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithBarButtonSystemItem:UIBarButtonSystemItemReply target:self action:@selector(barItemTap:)];
     _pulls = [[NSMutableArray alloc]initWithCapacity:2];
-    GJ_LogSetLevel(GJ_LOGERROR);
+    GJ_LogSetLevel(GJ_LOGDEBUG);
+    NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true)[0];
+    path = [path stringByAppendingPathComponent:@"live.log"];
+//    GJ_LogSetOutput(path.UTF8String);
 
     if(_type == kGJCaptureTypeAR){
         if( [UIDevice currentDevice].systemVersion.doubleValue < 11.0 || !ARConfiguration.isSupported){

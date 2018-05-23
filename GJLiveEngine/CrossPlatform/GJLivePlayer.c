@@ -124,8 +124,9 @@ do{                                                                             
     GLong aCache          = GTimeSubtractMSValue(_syncControl->audioInfo.trafficStatus.enter.ts, _syncControl->audioInfo.trafficStatus.leave.ts);           \
     GLong vCacheCount     = _syncControl->videoInfo.trafficStatus.enter.count - _syncControl->videoInfo.trafficStatus.leave.count;                          \
     GLong aCacheCount = _syncControl->audioInfo.trafficStatus.enter.count - _syncControl->audioInfo.trafficStatus.leave.count;                              \
-    GJLOG(GNULL, GJ_LOGDEBUG, "sync type%s vCache ts:%ld count:%ld aCache ts:%ld count:%ld",\
-    _syncControl->syncType == kTimeSYNCVideo?"video":"audio",vCache,vCacheCount,aCache,aCacheCount);\
+    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "sync type:%s vCache ts:%ld count:%ld aCache ts:%ld count:%ld lowWater:%ld,hightWater:%ld",                   \
+    _syncControl->syncType == kTimeSYNCVideo?"video":"audio",vCache,vCacheCount,aCache,aCacheCount,                                                         \
+    _syncControl->bufferInfo.lowWaterFlag,_syncControl->bufferInfo.highWaterFlag);\
 }while(0)
 
 static GBool GJLivePlay_StartDewatering(GJLivePlayer *player) {
@@ -286,7 +287,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         if (netShake->maxDownShake > netShake->preMaxDownShake) {
             //增加是全额增加
             updateWater(_syncControl, shake);
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "new shake to update waterFlage. max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "new shake to update shake max then preMax. max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
 
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&shake);
 #ifdef NETWORK_DELAY
@@ -298,6 +299,8 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
                 player->callback(player->userDate,GJPlayMessage_TestNetShakeUpdate,&testShake);
             }
 #endif
+        }else{
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "new shake to update shake max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
         }
     }
 //小于0有两种方案，一是按照一定比例下调，二是忽略
@@ -342,8 +345,8 @@ else if ((shake < 0 && dClock >= netShake->collectUpdateDur)||
             //降低时采用滤波器缓冲
             GLong downShake =  netShake->preMaxDownShake*HIGHT_PASS_FILTER + netShake->maxDownShake*(1-HIGHT_PASS_FILTER);
             updateWater(_syncControl,downShake);
+            netShake->maxDownShake = downShake;
             player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&netShake->maxDownShake);
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
 #ifdef NETWORK_DELAY
             if (testShake != shake) {
                 GJLOG(GNULL, GJ_LOGWARNING, "测量值(%ld)与真实值(%ld)不相等",testShake,shake);
@@ -353,10 +356,13 @@ else if ((shake < 0 && dClock >= netShake->collectUpdateDur)||
             }
 #endif
         }//在每次的判断中已经增高了，增高是全额增高
+
         netShake->preMaxDownShake   = netShake->maxDownShake;
         netShake->maxDownShake      = MIN_CACHE_DUR;
         netShake->collectStartClock = clock;
         netShake->collectStartPts   = pts;
+
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update shake max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
 
 #ifdef NETWORK_DELAY
         if (NeedTestNetwork) {
@@ -434,7 +440,6 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer *player) {
         if (cache < _syncControl->bufferInfo.lowWaterFlag) {
             player->callback(player->userDate, GJPlayMessage_BufferUpdate, &bufferInfo);
         } else {
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "缓冲结束");
             bufferInfo.percent = 1.0;
             player->callback(player->userDate, GJPlayMessage_BufferUpdate, &bufferInfo);
             player->playControl.videoQueueWaitTime = 0;
@@ -729,7 +734,7 @@ GBool GJLivePlay_Create(GJLivePlayer **liveplayer, GJLivePlayCallback callback, 
     player->playControl.status = kPlayStatusStop;
 
     pthread_mutex_init(&player->playControl.oLock, GNULL);
-    queueCreate(&player->playControl.imageQueue, VIDEO_MAX_CACHE_COUNT, GTrue, GFalse); //150为暂停时视频最大缓冲
+    queueCreate(&player->playControl.imageQueue, VIDEO_MAX_CACHE_COUNT, GTrue, GTrue); //150为暂停时视频最大缓冲
     queueCreate(&player->playControl.audioQueue, AUDIO_MAX_CACHE_COUNT, GTrue, GFalse);
     signalCreate(&player->playControl.stopSignal);
     return GTrue;
@@ -882,7 +887,6 @@ GBool GJLivePlay_Pause(GJLivePlayer *player){
             
             queueSetMinCacheSize(player->playControl.audioQueue, AUDIO_MAX_CACHE_COUNT+1);
         }
-        player->callback(player->userDate, GJPlayMessage_BufferStart, GNULL);
         queueSetMinCacheSize(player->playControl.imageQueue, VIDEO_MAX_CACHE_COUNT+1);
     }else{
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "重复暂停");
@@ -908,7 +912,7 @@ GVoid GJLivePlay_Resume(GJLivePlayer *player){
             player->syncControl.bufferInfo.bufferTimes++;
             player->syncControl.bufferInfo.lastPauseFlag = 0;
         } else {
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGFORBID, "暂停管理出现问题,重复pause");
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGFORBID, "暂停管理出现问题,重复resume");
         }
         
         if (player->audioPlayer != GNULL) {

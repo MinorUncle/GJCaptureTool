@@ -79,7 +79,8 @@ static GHandle sendRunloop(GHandle parm) {
     R_GJPacket *packet;
 
     if (push->videoFormat) {
-        while (queuePeekWaitValue(push->sendBufferQueue, 0, (GHandle) &packet, GINT32_MAX)) { //过滤无效起始数据
+        GLong index = 0;
+        while (queuePeekWaitValue(push->sendBufferQueue,(GHandle) &packet,index++, GINT32_MAX)) { //过滤无效起始数据
             if (push->stopRequest) {
                 goto END;
             }

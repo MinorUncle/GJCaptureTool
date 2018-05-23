@@ -167,6 +167,8 @@ typedef struct _FFAudioDecodeContext{
 
     GBool   (*decodeSetup)            (struct _FFAudioDecodeContext* context, GJAudioFormat destForamt, AudioFrameOutCallback callback, GHandle userData);
     GVoid   (*decodeUnSetup)          (struct _FFAudioDecodeContext* context);
+    GBool   (*decodeStart)            (struct _FFAudioDecodeContext* context);
+    GVoid   (*decodeStop)             (struct _FFAudioDecodeContext* context);
     GBool   (*decodePacket)           (struct _FFAudioDecodeContext* context, R_GJPacket* packet);
     GJAudioFormat   (*decodeGetDestFormat)(struct _FFAudioDecodeContext* context);
 
@@ -181,6 +183,7 @@ typedef struct _FFVideoDecodeContext{
     GVoid   (*decodeUnSetup)          (struct _FFVideoDecodeContext* context);
     GBool   (*decodeStart)            (struct _FFVideoDecodeContext* context);
     GVoid   (*decodeStop)             (struct _FFVideoDecodeContext* context);
+    GVoid   (*decodeFlush)            (struct _FFVideoDecodeContext* context);
     GBool   (*decodePacket)           (struct _FFVideoDecodeContext* context, R_GJPacket* packet);
 }FFVideoDecodeContext;
 

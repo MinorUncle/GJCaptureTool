@@ -60,7 +60,8 @@ static int stopCount;
 }
 - (void)initQueue {
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_SERIAL);
-    queueCreate(&_resumeQueue, 60, true, false);
+    queueCreate(&_resumeQueue, 60, true, GFalse);
+//    queueSetDebugLeval(_resumeQueue, GJ_LOGALL);
     signalCreate(&_stopFinshSignal);
 }
 + (AudioStreamBasicDescription)defaultSourceFormateDescription {
@@ -86,6 +87,8 @@ static int stopCount;
 - (void)start {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AACDecode Start:%p", self);
     _running = YES;
+    queueEnablePop(_resumeQueue, GTrue);
+    queueEnablePush(_resumeQueue, GTrue);
     startCount++;
 }
 - (void)stop {
@@ -128,7 +131,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         decode->_prePacket = NULL;
     }
     GJQueue *       param = decode->_resumeQueue;
-    R_GJPacket *    packet;
+    R_GJPacket *    packet = GNULL;
     if (decode.running && queuePop(param, (void **) &packet, INT_MAX)) {
         if((packet->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType){
             AVPacket* avpacket = ((AVPacket*)R_BufferStart(packet)+packet->extendDataOffset);

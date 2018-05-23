@@ -205,6 +205,8 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
         memset(&_audioTraffic, 0, sizeof(_audioTraffic));
         memset(&_pullSessionStatus, 0, sizeof(_pullSessionStatus));
         [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotic:) name:AVAudioSessionInterruptionNotification object:nil];
+        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(didBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
+
         return GJLivePull_StartPull(_pullContext, url.UTF8String);
     }
 }
@@ -246,24 +248,31 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
         switch (type) {
             case AVAudioSessionInterruptionTypeBegan:{
                 if (_timer != nil) {
-                    _shouldResume = YES;
                     GJLivePull_Pause(_pullContext);
                 }
-                GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeBegan should resulme:%d",_shouldResume);
+                GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeBegan should resulme:%d",_timer != nil);
                 break;
             }
                 break;
             case AVAudioSessionInterruptionTypeEnded:
-                if (_shouldResume && _timer != nil) {
-                    GJLivePull_Resume(_pullContext);
+                if (_timer != nil) {
+                    if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive) {
+                        GJLivePull_Resume(_pullContext);
+                    }
                 }
-                GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeBegan should resulme:%d",_shouldResume);
+                GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeEnd should resulme:%d",_timer != nil);
                 break;
                 
             default:
                 break;
         }
         
+    }
+}
+
+-(void)didBecomeActive:(NSNotification*)notic{
+    if (_timer != nil) {
+        GJLivePull_Resume(_pullContext);
     }
 }
 

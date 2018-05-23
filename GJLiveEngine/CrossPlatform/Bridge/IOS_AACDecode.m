@@ -25,7 +25,6 @@ inline static GBool decodeSetup(struct _FFAudioDecodeContext *context, GJAudioFo
         callFunc(&context->pipleNode,&frame->retain,GJMediaType_Audio);
     };
     context->obaque = (__bridge_retained GHandle) decode;
-    [decode start];
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "aac decode decodeSetup:%p", decode);
     pipleNodeUnLock(&context->pipleNode);
     return GTrue;
@@ -41,6 +40,29 @@ inline static GVoid decodeUnSetup(struct _FFAudioDecodeContext *context) {
     }
     pipleNodeUnLock(&context->pipleNode);
 }
+
+inline static  GBool  decodeStart(struct _FFAudioDecodeContext* context){
+    pipleNodeLock(&context->pipleNode);
+    if (context->obaque) {
+        GJPCMDecodeFromAAC *decode = (__bridge GJPCMDecodeFromAAC *) (context->obaque);
+        [decode start];
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "%p",decode);
+    }
+    pipleNodeUnLock(&context->pipleNode);
+    return GTrue;
+};
+
+//stop前一定要断开管道的连接。
+inline static  GVoid  decodeStop(struct _FFAudioDecodeContext* context){
+    pipleNodeLock(&context->pipleNode);
+    if (context->obaque) {
+        GJPCMDecodeFromAAC *decode = (__bridge GJPCMDecodeFromAAC *) (context->obaque);
+        [decode stop];
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "%p",decode);
+    }
+    pipleNodeUnLock(&context->pipleNode);
+};
+
 inline static GBool decodePacket(struct _FFAudioDecodeContext *context, R_GJPacket *packet) {
 //    pipleNodeLock(&context->pipleNode);
     GJPCMDecodeFromAAC *decode = (__bridge GJPCMDecodeFromAAC *) (context->obaque);
@@ -78,6 +100,9 @@ GVoid GJ_AACDecodeContextCreate(FFAudioDecodeContext **decodeContext) {
 
     context->decodeSetup             = decodeSetup;
     context->decodeUnSetup           = decodeUnSetup;
+    context->decodeStart             = decodeStart;
+    context->decodeStop              = decodeStop;
+
     context->decodeGetDestFormat    = decodeGetDestFormat;
     context->decodePacket            = GNULL;
 }
