@@ -279,7 +279,6 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         const void* _sps = encoder.sps.bytes;
         const void* _pps = encoder.pps.bytes;
         
-        if (!_sps || !_pps || memcmp(_sps, sps, spsSize) != 0 || memcmp(_pps, pps, ppsSize) != 0){
             size_t spsppsSize = spsSize + ppsSize;
             int    needSize   = (int) (8 + spsppsSize + totalLength + PUSH_H264_PACKET_PRE_SIZE);
             pushPacket        = (R_GJPacket *) GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
@@ -288,11 +287,14 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
                 R_BufferMoveDataToPoint(buffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
             }
             pushPacket->flag       = GJPacketFlag_KEY;
+        if (!_sps || !_pps || memcmp(_sps, sps, spsSize) != 0 || memcmp(_pps, pps, ppsSize) != 0){//增加extenddata
+
             pushPacket->extendDataOffset = 0;
             pushPacket->extendDataSize   = (GInt32)(spsppsSize + 8);
-            
-            pushPacket->dataOffset = pushPacket->extendDataSize;
-            pushPacket->dataSize = (GInt32)totalLength;
+        }//增加sps pps
+
+            pushPacket->dataOffset = 0;
+            pushPacket->dataSize = (GInt32)(totalLength + 8 +spsppsSize);
             uint8_t *data = R_BufferStart(buffer);
             uint32_t sSize = htonl(spsSize);
             //        memcpy(data, "\x00\x00\x00\x01", 4);
@@ -314,9 +316,9 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
             GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
             GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode pps size:%zu:", ppsSize);
             GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
-        }
-    }
-    if(pushPacket == GNULL){
+        
+        
+    }else{
         int needSize = (int) (totalLength + PUSH_H264_PACKET_PRE_SIZE);
         //       R_BufferPack(&buffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, R_BufferRelease, encoder.bufferPool);
         pushPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);

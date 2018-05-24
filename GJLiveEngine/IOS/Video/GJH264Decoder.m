@@ -356,15 +356,15 @@ void decodeOutputCallback(
         }
     }
     
-    if (_needFlush) {
-        if (!isKeyPacket) {
-            GJLOG(GNULL, GJ_LOGWARNING, "解码器刷新了，收到非i帧，丢帧");
-            return GTrue;
-        }else{
-            _needFlush = GFalse;
-        }
-    }
     if (packetSize > 0) {
+        if (_needFlush) {
+            if (!isKeyPacket) {
+                GJLOG(GNULL, GJ_LOGWARNING, "解码器刷新了，收到非i帧，丢帧");
+                return GTrue;
+            }else{
+                _needFlush = GFalse;
+            }
+        }
         
         if (isKeyPacket) {//刷新gop
             queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);

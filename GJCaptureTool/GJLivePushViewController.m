@@ -15,10 +15,84 @@
 #import "GJBufferPool.h"
 #import "GJAudioManager.h"
 #import <ARKit/ARConfiguration.h>
+
+@interface GJSliderView:UISlider{
+    UILabel * _titleLab;
+    UILabel * _valueLab;
+    
+}
+@property(nonatomic,copy)NSString* title;
+@end
+@implementation GJSliderView
+-(instancetype)initWithFrame:(CGRect)frame{
+    self = [super initWithFrame:frame];
+    if (self) {
+        _titleLab = [[UILabel alloc]init];
+        [_titleLab setFont:[UIFont systemFontOfSize:15]];
+        [_titleLab setTextColor:[UIColor whiteColor]];
+        [_titleLab setTextAlignment:NSTextAlignmentCenter];
+        [self addSubview:_titleLab];
+        _valueLab = [[UILabel alloc]init];
+        [_valueLab setFont:[UIFont systemFontOfSize:12]];
+        [_valueLab setTextAlignment:NSTextAlignmentCenter];
+        [_valueLab setTextColor:[UIColor whiteColor]];
+        self.value = 0;
+        [self addSubview:_valueLab];
+        
+    }
+    return self;
+}
+
+-(void)setValue:(float)value{
+    [super setValue:value];
+    _valueLab.text = [NSString stringWithFormat:@"%0.2f",value];
+}
+
+-(void)setValue:(float)value animated:(BOOL)animated{
+    [super setValue:value animated:animated];
+    _valueLab.text = [NSString stringWithFormat:@"%0.2f",value];
+}
+#define xRate 0.3
+#define yRate 0.5
+
+-(void)setFrame:(CGRect)frame{
+    [super setFrame:frame];
+    CGRect rect = frame;
+    rect.origin = CGPointZero;
+    rect.size.width = frame.size.width * xRate;
+    _titleLab.frame = rect;
+    
+    rect.origin.x = CGRectGetMaxX(rect);
+    rect.size.width = frame.size.width*(1-xRate);
+    rect.size.height = frame.size.height * yRate;
+    _valueLab.frame = rect;
+}
+
+-(void)setTitle:(NSString *)title{
+    [_titleLab setText:title];
+}
+
+-(NSString *)title{
+    return _titleLab.text;
+}
+
+-(CGRect)trackRectForBounds:(CGRect)bounds{
+    CGRect rect = bounds;
+    rect.size.height = 3;
+    rect.size.width = bounds.size.width * (1-xRate);
+    rect.origin.x = bounds.size.width - rect.size.width;
+    rect.origin.y = (bounds.size.height - rect.size.height)* yRate;
+    return rect;
+};
+
+@end
+
 @interface PushManager : NSObject <GJLivePushDelegate>
 {
     NSDictionary* _videoSize;
-    
+    NSMutableArray<UIView*>* _tipViewsArry;
+    NSMutableArray<UIView*>* _btnViewsArry;
+
 }
 
 @property (strong, nonatomic) GJLivePush *livePush;
@@ -42,14 +116,11 @@
 
 
 
-@property (strong, nonatomic) UISlider *inputGain;
-@property (strong, nonatomic) UILabel *inputGainLab;
+@property (strong, nonatomic) GJSliderView *inputGain;
 
-@property (strong, nonatomic) UISlider *mixGain;
-@property (strong, nonatomic) UILabel *mixGainLab;
+@property (strong, nonatomic) GJSliderView *mixGain;
 
-@property (strong, nonatomic) UISlider *outputGain;
-@property (strong, nonatomic) UILabel *outputGainLab;
+@property (strong, nonatomic) GJSliderView *outputGain;
 
 @property (strong, nonatomic) UILabel *fpsLab;
 @property (strong, nonatomic) UILabel *sendRateLab;
@@ -69,6 +140,9 @@
 {
     self = [super init];
     if (self) {
+        _tipViewsArry = [NSMutableArray array];
+        _btnViewsArry = [NSMutableArray array];
+
         _pushAddr = url;
         _videoSize = @{@"360*640":[NSValue valueWithCGSize:CGSizeMake(640, 480)],
                        @"480*640":[NSValue valueWithCGSize:CGSizeMake(480, 640)],
@@ -117,43 +191,50 @@
     [_pushStartBtn setTitleColor:[UIColor grayColor] forState:UIControlStateSelected];
     [_pushStartBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_pushStartBtn];
-
+    [_btnViewsArry addObject:_pushStartBtn];
+    
     _pushStateLab = [[UILabel alloc]init];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
     _pushStateLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_pushStateLab];
-    
+    [_tipViewsArry addObject:_pushStateLab];
+
     _fpsLab = [[UILabel alloc]init];
     _fpsLab.textColor = [UIColor redColor];
     _fpsLab.font = [UIFont systemFontOfSize:10];
     _fpsLab.text = @"FPS V:0,A:0";
     [self.view addSubview:_fpsLab];
-    
+    [_tipViewsArry addObject:_fpsLab];
+
     _sendRateLab = [[UILabel alloc]init];
     _sendRateLab.textColor = [UIColor redColor];
     _sendRateLab.text = @"bitrate V:0 KB/s A:0 KB/s";
     _sendRateLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_sendRateLab];
-    
+    [_tipViewsArry addObject:_sendRateLab];
+
     _delayVLab = [[UILabel alloc]init];
     _delayVLab.textColor = [UIColor redColor];
     _delayVLab.font = [UIFont systemFontOfSize:10];
     _delayVLab.text = @"cache V t:0 ms f:0";
     [self.view addSubview:_delayVLab];
-    
+    [_tipViewsArry addObject:_delayVLab];
+
     _delayALab = [[UILabel alloc]init];
     _delayALab.textColor = [UIColor redColor];
     _delayALab.font = [UIFont systemFontOfSize:10];
     _delayALab.text = @"cache A t:0 ms f:0";
     [self.view addSubview:_delayALab];
-    
+    [_tipViewsArry addObject:_delayALab];
+
     _currentV = [[UILabel alloc]init];
     _currentV.textColor = [UIColor redColor];
     _currentV.font = [UIFont systemFontOfSize:10];
     _currentV.text = @"dynamic V rate rate:0 kB/s f:0";
     [self.view addSubview:_currentV];
-    
+    [_tipViewsArry addObject:_currentV];
+
     
     _audioMixBtn = [[UIButton alloc]init];
     _audioMixBtn.backgroundColor = [UIColor clearColor];
@@ -162,7 +243,8 @@
     [_audioMixBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_audioMixBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_audioMixBtn];
-    
+    [_btnViewsArry addObject:_audioMixBtn];
+
     _earPlay = [[UIButton alloc]init];
     _earPlay.backgroundColor = [UIColor clearColor];
     [_earPlay setTitle:@"开始耳返" forState:UIControlStateNormal];
@@ -170,7 +252,8 @@
     [_earPlay setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_earPlay addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_earPlay];
-    
+    [_btnViewsArry addObject:_earPlay];
+
     _mixStream = [[UIButton alloc]init];
     _mixStream.backgroundColor = [UIColor clearColor];
     [_mixStream setTitle:@"禁止混音入流" forState:UIControlStateNormal];
@@ -178,14 +261,16 @@
     [_mixStream setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_mixStream addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_mixStream];
-    
+    [_btnViewsArry addObject:_mixStream];
+
     _changeCamera = [[UIButton alloc]init];
     _changeCamera.backgroundColor = [UIColor clearColor];
     [_changeCamera setTitle:@"切换相机" forState:UIControlStateNormal];
     [_changeCamera setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_changeCamera addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_changeCamera];
-    
+    [_btnViewsArry addObject:_changeCamera];
+
     _videoMute = [[UIButton alloc]init];
     _videoMute.backgroundColor = [UIColor clearColor];
     [_videoMute setTitle:@"暂停视频" forState:UIControlStateNormal];
@@ -193,7 +278,8 @@
     [_videoMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_videoMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_videoMute];
-    
+    [_btnViewsArry addObject:_videoMute];
+
     _audioMute = [[UIButton alloc]init];
     _audioMute.backgroundColor = [UIColor clearColor];
     [_audioMute setTitle:@"暂停音频" forState:UIControlStateNormal];
@@ -201,7 +287,8 @@
     [_audioMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_audioMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_audioMute];
-    
+    [_btnViewsArry addObject:_audioMute];
+
 //    _uiRecode = [[UIButton alloc]init];
 //    _uiRecode.backgroundColor = [UIColor clearColor];
 //    [_uiRecode setTitle:@"开始UI录制" forState:UIControlStateNormal];
@@ -218,7 +305,8 @@
     [_reverb setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_reverb addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_reverb];
-    
+    [_btnViewsArry addObject:_reverb];
+
     _messureModel = [[UIButton alloc]init];
     _messureModel.backgroundColor = [UIColor clearColor];
     [_messureModel setTitle:@"开启messure模式" forState:UIControlStateNormal];
@@ -226,7 +314,8 @@
     [_messureModel setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_messureModel addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_messureModel];
-    
+    [_btnViewsArry addObject:_messureModel];
+
     _sticker = [[UIButton alloc]init];
     _sticker.backgroundColor = [UIColor clearColor];
     [_sticker setTitle:@"开始贴纸" forState:UIControlStateNormal];
@@ -234,7 +323,8 @@
     [_sticker setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_sticker addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_sticker];
-    
+    [_btnViewsArry addObject:_sticker];
+
     _aecBtn = [[UIButton alloc]init];
     _aecBtn.backgroundColor = [UIColor clearColor];
     [_aecBtn setTitle:@"开启回声消除" forState:UIControlStateNormal];
@@ -242,7 +332,8 @@
     [_aecBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_aecBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:_aecBtn];
-    
+    [_btnViewsArry addObject:_aecBtn];
+
     _sizeChangeBtn = [[UIButton alloc]init];
     _sizeChangeBtn.backgroundColor = [UIColor clearColor];
     [_sizeChangeBtn setTitle:_videoSize.allKeys[0] forState:UIControlStateNormal];
@@ -250,49 +341,38 @@
     [_sizeChangeBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     _sizeChangeBtn.backgroundColor = [UIColor clearColor];
     [self.view addSubview:_sizeChangeBtn];
-    
-    _inputGainLab = [[UILabel alloc]init];
-    _inputGainLab.text = @"采集音量";
-    _inputGainLab.textColor = [UIColor whiteColor];
-    _inputGainLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_inputGainLab];
-    
-    _inputGain = [[UISlider alloc]init];
+    [_btnViewsArry addObject:_sizeChangeBtn];
+
+    _inputGain = [[GJSliderView alloc]init];
+    _inputGain.title = @"采集音量:0";
     _inputGain.maximumValue = 1.0;
     _inputGain.minimumValue = 0.0;
 //    _inputGain.continuous = NO;
     _inputGain.value = 1.0;
     [_inputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_inputGain];
+    [_btnViewsArry addObject:_inputGain];
     
-    _mixGainLab = [[UILabel alloc]init];
-    _mixGainLab.text = @"混音音量";
-    _mixGainLab.textColor = [UIColor whiteColor];
-    _mixGainLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_mixGainLab];
-    
-    _mixGain = [[UISlider alloc]init];
+    _mixGain = [[GJSliderView alloc]init];
     _mixGain.maximumValue = 1.0;
     _mixGain.minimumValue = 0.0;
+    _mixGain.title = @"混音音量";
     _mixGain.value = 1.0;
 //    _mixGain.continuous = NO;
     [_mixGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_mixGain];
-    
-    _outputGainLab = [[UILabel alloc]init];
-    _outputGainLab.textColor = [UIColor whiteColor];
-    _outputGainLab.text = @"总音量";
-    _outputGainLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_outputGainLab];
-    
-    _outputGain = [[UISlider alloc]init];
+    [_btnViewsArry addObject:_mixGain];
+
+    _outputGain = [[GJSliderView alloc]init];
     _outputGain.maximumValue = 1.0;
     _outputGain.minimumValue = 0.0;
+    _outputGain.title = @"总音量";
 //    _outputGain.continuous = NO;
     _outputGain.value = 1.0;
     [_outputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:_outputGain];
-    
+    [_btnViewsArry addObject:_outputGain];
+
     if (_livePush.captureType == kGJCaptureTypePaint) {
         _paintBtn = [[UIButton alloc]init];
         [_paintBtn setTitle:@"全屏" forState:UIControlStateNormal];
@@ -342,7 +422,7 @@
     
     
     CGFloat hOffset = CGRectGetMaxY([self findViewController:self.view].navigationController.navigationBar.frame);
-    int leftCount = 6;
+    NSInteger leftCount = _tipViewsArry.count;
     
     if (_livePush.captureType == kGJCaptureTypePaint) {
         rect.size.width = frame.size.width * 0.4;
@@ -356,101 +436,33 @@
     rect.origin = CGPointMake(0, hOffset);
     rect.size = CGSizeMake(frame.size.width*0.5, (frame.size.height-hOffset) / leftCount);
     
-    _pushStateLab.frame = rect;
+    for (UIView* view in _tipViewsArry) {
+        view.frame = rect;
+        rect.origin.y = CGRectGetMaxY(rect);
+    }
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _fpsLab.frame = rect;
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _sendRateLab.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _delayVLab.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _delayALab.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _currentV.frame = rect;
-    
-    int rightCount = 15;
+    NSInteger rightCount = _btnViewsArry.count;
     rect.origin = CGPointMake(frame.size.width - size.width, hOffset);
     rect.size = CGSizeMake(size.width, (self.view.bounds.size.height-hOffset) / rightCount);
-    _pushStartBtn.frame = rect;
     
-    rect.origin.y = CGRectGetMaxY(rect);
-    _audioMixBtn.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _earPlay.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _mixStream.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _changeCamera.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _audioMute.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _videoMute.frame = rect;
-    
-//    rect.origin.y = CGRectGetMaxY(rect);
-//    _uiRecode.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _reverb.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _messureModel.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _sticker.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _aecBtn.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    _sizeChangeBtn.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    rect.size.width *= 0.4;
-    _inputGainLab.frame = rect;
-    
-    rect.origin.x = CGRectGetMaxX(rect);
-    rect.size.width = self.view.bounds.size.width - rect.origin.x;
-    _inputGain.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    rect.size.width = _inputGainLab.bounds.size.width;
-    rect.origin.x = _inputGainLab.frame.origin.x;
-    _mixGainLab.frame = rect;
-    
-    rect.origin.x = CGRectGetMaxX(rect);
-    rect.size.width = self.view.bounds.size.width - rect.origin.x;
-    _mixGain.frame = rect;
-    
-    rect.origin.y = CGRectGetMaxY(rect);
-    rect.size.width = _mixGainLab.bounds.size.width;
-    rect.origin.x = _mixGainLab.frame.origin.x;
-    _outputGainLab.frame = rect;
-    
-    rect.origin.x = CGRectGetMaxX(rect);
-    rect.size.width = self.view.bounds.size.width - rect.origin.x;
-    _outputGain.frame = rect;
+    for (UIView* view in _btnViewsArry) {
+        view.frame = rect;
+        rect.origin.y = CGRectGetMaxY(rect);
+    }
+   
 }
 
 -(void)valueChange:(UISlider*)slider{
     if (slider == _inputGain) {
-        _inputGainLab.text = [NSString stringWithFormat:@"采集音量：%0.2f",slider.value];
+        _inputGain.title = [NSString stringWithFormat:@"采集音量：%0.2f",slider.value];
         [_livePush setInputVolume:slider.value];
     }else if (slider == _mixGain){
-        _mixGainLab.text = [NSString stringWithFormat:@"混音音量：%0.2f",slider.value];
+        _mixGain.title = [NSString stringWithFormat:@"混音音量：%0.2f",slider.value];
         [_livePush setMixVolume:slider.value];
         
     }else if (slider == _outputGain){
-        _outputGainLab.text = [NSString stringWithFormat:@"输出音量：%0.2f",slider.value];
+        _outputGain.title = [NSString stringWithFormat:@"输出音量：%0.2f",slider.value];
         [_livePush setMasterOutVolume:slider.value];
     }
 }

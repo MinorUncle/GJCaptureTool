@@ -272,6 +272,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
 
 -(void)didBecomeActive:(NSNotification*)notic{
     if (_timer != nil) {
+        GJLOG(GNULL, GJ_LOGDEBUG, "UIApplicationDidBecomeActiveNotification");
         GJLivePull_Resume(_pullContext);
     }
 }
