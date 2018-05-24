@@ -291,6 +291,13 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 
             pushPacket->extendDataOffset = 0;
             pushPacket->extendDataSize   = (GInt32)(spsppsSize + 8);
+            encoder.sps = [NSData dataWithBytes:sps length:spsSize];
+            encoder.pps = [NSData dataWithBytes:pps length:ppsSize];
+
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode sps size:%zu:", spsSize);
+            GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode pps size:%zu:", ppsSize);
+            GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
         }//增加sps pps
 
             pushPacket->dataOffset = 0;
@@ -300,24 +307,14 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
             //        memcpy(data, "\x00\x00\x00\x01", 4);
             memcpy(data, &sSize, 4);
             memcpy(data + 4, sps, spsSize);
-            encoder.sps = [NSData dataWithBytes:sps length:spsSize];
-            
+        
             sSize = htonl(ppsSize);
             //        memcpy(data + 4 + sparameterSetSize, "\x00\x00\x00\x01", 4);
             memcpy(data + 4 + spsSize,&sSize, 4);
-            
             memcpy(data + 8 + spsSize, pps, ppsSize);
-            encoder.pps = [NSData dataWithBytes:pps length:ppsSize];
-            
+        
             memcpy(data + spsppsSize + 8, inDataPointer, totalLength);
             inDataPointer = data + spsppsSize + 8;
-            
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode sps size:%zu:", spsSize);
-            GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode pps size:%zu:", ppsSize);
-            GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
-        
-        
     }else{
         int needSize = (int) (totalLength + PUSH_H264_PACKET_PRE_SIZE);
         //       R_BufferPack(&buffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, R_BufferRelease, encoder.bufferPool);

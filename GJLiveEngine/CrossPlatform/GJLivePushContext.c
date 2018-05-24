@@ -591,7 +591,7 @@ GVoid _livePushUpdateCongestion(GJLivePushContext *context,GInt32 netSpeed) {
     if (context->rateCheckStep < NET_MIN_CHECK_STEP) {
         context->rateCheckStep = NET_MIN_CHECK_STEP;
     }
-    GJLOG(GNULL, GJ_LOGINFO, "update sensitivity to sensitivity:%d ms,rateCheckStep:%d,increaseSpeedStep:%0.2f",sensitivity,context->rateCheckStep,context->increaseSpeedRate);
+    GJLOG(GNULL, GJ_LOGDEBUG, "update sensitivity to sensitivity:%d ms,rateCheckStep:%d,increaseSpeedStep:%0.2f",sensitivity,context->rateCheckStep,context->increaseSpeedRate);
 
 }
 GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {

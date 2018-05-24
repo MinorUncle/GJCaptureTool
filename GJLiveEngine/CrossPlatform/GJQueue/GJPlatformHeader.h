@@ -9,11 +9,15 @@
 #ifndef GJPlatformHeader_h
 #define GJPlatformHeader_h
 
-#define MENORY_CHECK 0
+#define MENORY_CHECK 1
 #define CLOSE_WHILE_STREAM_COMPLETE 0
 #define DEFAULT_TRACKER __func__
 
 #include <stdio.h>
+
+#define offsetof(t, d) __builtin_offsetof(t, d)
+
+
 
 
 #define GTrue (GInt8)1

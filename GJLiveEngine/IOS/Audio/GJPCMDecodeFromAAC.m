@@ -237,10 +237,10 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         }
     }
 
-    R_BufferRetain(&packet->retain);
+    R_BufferRetain(packet);
     if (!queuePush(_resumeQueue, packet, GINT32_MAX)) {
         R_BufferUnRetain(&packet->retain);
-        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "aac decode to pcm queuePush faile");
+        GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "aac decode to pcm queuePush faile");
     }
 }
 

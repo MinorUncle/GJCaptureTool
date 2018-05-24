@@ -192,7 +192,7 @@ void decodeOutputCallback(
 }
 
 - (void)decodePacket:(R_GJPacket *)packet {
-    R_BufferRetain(&packet->retain);
+    R_BufferRetain(packet);
     if (!_isRunning || !queuePush(_inputQueue, packet, GINT32_MAX)) {
         R_BufferUnRetain(&packet->retain);
     }

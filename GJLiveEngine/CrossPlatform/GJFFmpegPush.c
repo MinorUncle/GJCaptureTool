@@ -557,7 +557,7 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
         }
 #endif
     }
-    R_BufferRetain(&packet->retain);
+    R_BufferRetain(packet);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
         
         push->videoStatus.enter.ts = packet->dts;
@@ -583,7 +583,7 @@ GBool GJStreamPush_SendAudioData(GJStreamPush *push, R_GJPacket *packet) {
         }
     }
     
-    R_BufferRetain(&packet->retain);
+    R_BufferRetain(packet);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
 
         push->audioStatus.enter.ts = packet->dts;

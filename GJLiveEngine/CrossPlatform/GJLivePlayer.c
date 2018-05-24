@@ -953,7 +953,7 @@ inline static GBool _internal_AddVideoData(GJLivePlayer *player, R_GJPixelFrame 
         pthread_mutex_unlock(&player->playControl.oLock);
     }
 
-    R_BufferRetain(&videoFrame->retain);
+    R_BufferRetain(videoFrame);
     GBool result = GTrue;
     if (player->syncControl.syncType != kTimeSYNCAudio) {
         GJLivePlay_CheckNetShake(player, videoFrame->pts);
@@ -1035,7 +1035,7 @@ GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) 
     //没有数据或者有 比较早的b帧，直接放入排序队列末尾
     if (player->sortIndex <= 0 || player->sortQueue[player->sortIndex - 1]->pts.value > videoFrame->pts.value) {
         player->sortQueue[player->sortIndex++] = videoFrame;
-        R_BufferRetain(&videoFrame->retain);
+        R_BufferRetain(videoFrame);
         return GTrue;
     }
     //比前面最小的要大，说明b帧完成，可以倒序全部放入
@@ -1051,7 +1051,7 @@ GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) 
 //刚接受的一个是最大的，继续放入排序队列，用于判断下一帧释放b帧
     player->sortIndex    = 1;
     player->sortQueue[0] = videoFrame;
-    R_BufferRetain(&videoFrame->retain);
+    R_BufferRetain(videoFrame);
     return GTrue;
 }
 GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
@@ -1128,7 +1128,7 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
 //        _syncControl->audioInfo.trafficStatus.leave.clock = GJ_Gettime();
 //
 //    }
-    R_BufferRetain(&audioFrame->retain);
+    R_BufferRetain(audioFrame);
     
 RETRY:
     if (queuePush(_playControl->audioQueue, audioFrame, GINT32_MAX)) {
