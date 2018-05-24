@@ -287,18 +287,6 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
                 R_BufferMoveDataToPoint(buffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
             }
             pushPacket->flag       = GJPacketFlag_KEY;
-        if (!_sps || !_pps || memcmp(_sps, sps, spsSize) != 0 || memcmp(_pps, pps, ppsSize) != 0){//增加extenddata
-
-            pushPacket->extendDataOffset = 0;
-            pushPacket->extendDataSize   = (GInt32)(spsppsSize + 8);
-            encoder.sps = [NSData dataWithBytes:sps length:spsSize];
-            encoder.pps = [NSData dataWithBytes:pps length:ppsSize];
-
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode sps size:%zu:", spsSize);
-            GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode pps size:%zu:", ppsSize);
-            GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
-        }//增加sps pps
 
             pushPacket->dataOffset = 0;
             pushPacket->dataSize = (GInt32)(totalLength + 8 +spsppsSize);
@@ -315,6 +303,19 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         
             memcpy(data + spsppsSize + 8, inDataPointer, totalLength);
             inDataPointer = data + spsppsSize + 8;
+        
+        if (!_sps || !_pps || memcmp(_sps, sps, spsSize) != 0 || memcmp(_pps, pps, ppsSize) != 0){//增加extenddata
+            
+            pushPacket->extendDataOffset = 0;
+            pushPacket->extendDataSize   = (GInt32)(spsppsSize + 8);
+            encoder.sps = [NSData dataWithBytes:sps length:spsSize];
+            encoder.pps = [NSData dataWithBytes:pps length:ppsSize];
+            
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode sps size:%zu:", spsSize);
+            GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode pps size:%zu:", ppsSize);
+            GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
+        }//增加sps pps
     }else{
         int needSize = (int) (totalLength + PUSH_H264_PACKET_PRE_SIZE);
         //       R_BufferPack(&buffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, R_BufferRelease, encoder.bufferPool);
@@ -409,10 +410,11 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 //        memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
 //        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
 //
-//        uint8_t *data = inDataPointer + bufferOffset;
-//        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
+////        uint8_t *data = inDataPointer + bufferOffset;
+////        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
 //        bufferOffset += AVCCHeaderLength + NALUnitLength;
 //    }
+//    assert(bufferOffset == totalLength);
 
     encoder.completeCallback(pushPacket);
     R_BufferUnRetain(buffer);

@@ -184,15 +184,10 @@ static GHandle sendRunloop(GHandle parm) {
                         start += nalSize + 4;
                     }
                 }
-                
-                
-                sendPacket->data = R_BufferStart(packet) + packet->extendDataOffset;
-                sendPacket->size = packet->dataSize + packet->extendDataSize;
-            }else{
-                
-                sendPacket->data = R_BufferStart(packet) + packet->dataOffset;
-                sendPacket->size = packet->dataSize;
             }
+                
+            sendPacket->data = R_BufferStart(packet) + packet->dataOffset;
+            sendPacket->size = packet->dataSize;
 
             GUInt32 nalSize;
             GUInt8* start = sendPacket->data;
@@ -202,10 +197,14 @@ static GHandle sendRunloop(GHandle parm) {
                 memcpy(start, "\x00\x00\x00\x01", 4);
                 start += nalSize + 4;
             }
+#ifdef DEBUG
+            GJAssert(end == start, "流格式不正确");
+#endif
             if(G_TIME_IS_INVALID(push->videoStatus.leave.firstTs)){
                 push->videoStatus.leave.firstTs = packet->dts;
                 push->videoStatus.leave.firstClock = GJ_Gettime();
             }
+
         } else {
             sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
             sendPacket->size = packet->dataSize;

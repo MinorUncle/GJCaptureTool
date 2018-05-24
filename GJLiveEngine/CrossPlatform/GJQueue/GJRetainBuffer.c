@@ -89,8 +89,8 @@ GVoid R_BufferPack(GJRetainBuffer**pBuffer, GVoid* sourceData, GInt32 size,GBool
 GVoid R_BufferUnRetainUnTrack(GHandle buffer){
     R_BufferUnRetain(buffer);
 }
+
 GVoid _R_BufferUnRetain(GJRetainBuffer* buffer,const GChar* tracker){
-    
 #if MENORY_CHECK
     R_BufferMemCheck(buffer);
     GJAssert(buffer->retainCount > 0, "retain 管理出错");

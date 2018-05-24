@@ -502,10 +502,6 @@ ERROR:
         current += unitSize+4;
     }
     assert(totalSize == packetSize);
-
-//    if (totalSize != packetSize) {
-//        NSLog(@"size error");
-//    }
 #endif
     
     
