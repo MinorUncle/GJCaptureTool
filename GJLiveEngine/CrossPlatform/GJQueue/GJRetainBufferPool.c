@@ -10,6 +10,7 @@
 #include "GJBufferPool.h"
 #include "GJLog.h"
 #include <stdlib.h>
+#include "GJUtil.h"
 /*
 * |
 *
@@ -18,6 +19,7 @@
 
 typedef struct GJRBufferDataHead{
     GJRetainBufferPool* pool;
+    GLong size;
 }GJRBufferDataHead;
 
 typedef struct GJRBufferDataTail{
@@ -28,9 +30,12 @@ typedef struct GJRBufferDataTail{
 static inline GVoid GJRetainbufferPoolCheck(GJRetainBufferPool* pool ,GJRetainBuffer* buffer){
     
     R_BufferMemCheck(buffer);
-
-    GLong* data = (GLong*)R_BufferEnd(buffer);
-    GJAssert(data[-1] == (GLong)R_BufferUserData(buffer) && data[-1] == (GLong)pool, "该 buffer数据有误，不属于该bufferPool");
+    GUInt8* data = (GUInt8*)buffer;
+    GJRBufferDataHead* head = (GJRBufferDataHead*)(data - sizeof(GJRBufferDataHead));
+    GJRBufferDataTail* tail = (GJRBufferDataTail*)(data + head->size);
+    GJAssert(head->pool == (GJRetainBufferPool*)R_BufferUserData(buffer) &&
+             head->pool == pool &&
+             head->pool == tail->pool, "该 buffer数据有误，不属于该bufferPool");
 }
 #endif
 
@@ -69,7 +74,7 @@ static GBool retainFreeCallBack(GJRetainBuffer * buffer){
 //    GJRetainbufferPoolCheck()
 #endif
     free(R_BufferOrigin(buffer));
-    GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer);
+    GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer-sizeof(GJRBufferDataHead));
     return GTrue;
 }
 
@@ -80,6 +85,9 @@ GBool GJRetainBufferPoolClean(GJRetainBufferPool* p,GBool complete){
         if (p->generateSize - queueGetLength(p->queue) > 0){
             GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "retainbuffer:%p,存在%d个buffer没有释放,会产生等待",p,p->generateSize - queueGetLength(p->queue));
         }
+#ifdef DEBUG
+        GLong startMS = GJ_Gettime().value;
+#endif
         while (p->generateSize > 0) {
             if(queuePop(p->queue, (GVoid**)&buffer, GINT32_MAX)){
                 R_BufferSetCallback(buffer, retainFreeCallBack);
@@ -89,6 +97,9 @@ GBool GJRetainBufferPoolClean(GJRetainBufferPool* p,GBool complete){
             }
             p->generateSize --;
         }
+#ifdef DEBUG
+       GJAssert(GJ_Gettime().value - startMS < 1000, "等待时间太久，需要检查")   ;
+#endif
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "GJRetainBufferPoolClean:%p 完成",p);
     }else{
         while (queuePop(p->queue,  (GVoid**)&buffer, 0)) {
@@ -154,34 +165,33 @@ GJRetainBuffer* _GJRetainBufferPoolGetData(GJRetainBufferPool* p,const GChar* fi
     GJRetainBuffer* buffer = NULL;
     if (!queuePop(p->queue, (GVoid**)&buffer, 0)) {
         
-        GInt32 size = R_BufferStructSize();
+        GInt32 structSize = R_BufferStructSize();
         if(p->mallocCallback ){
-            size = p->mallocCallback(p);
+            structSize = p->mallocCallback(p);
         }
         
 #if MENORY_CHECK
         
-        GUInt8* bufferM = _GJBufferPoolGetSizeData(defauleBufferPool(), size+sizeof(GJRBufferDataTail),file,func,line);
-        GJRBufferDataTail* tail = (GJRBufferDataTail*)(bufferM + size);
+        GUInt8* bufferM = _GJBufferPoolGetSizeData(defauleBufferPool(), structSize+sizeof(GJRBufferDataHead)+sizeof(GJRBufferDataTail),file,func,line);
+        GJRBufferDataHead* head = (GJRBufferDataHead*)bufferM;
+        head->pool = p;
+        head->size = structSize;
+
+        GJRBufferDataTail* tail = (GJRBufferDataTail*)(bufferM + sizeof(GJRBufferDataHead) + structSize);
         tail->pool = p;//bufferM结尾添加校验
-        buffer =  (GJRetainBuffer*)bufferM;
+        buffer =  (GJRetainBuffer*)(bufferM + sizeof(GJRBufferDataHead));
+
 #else
         
-        GUInt8* bufferM = GJBufferPoolGetSizeData(defauleBufferPool(), size );
+        GUInt8* bufferM = GJBufferPoolGetSizeData(defauleBufferPool(), structSize );
         buffer =  (GJRetainBuffer*)bufferM;
 #endif
 
-#if MENORY_CHECK
-        
-        R_BufferAlloc(&buffer, p->minSize+sizeof(GJRBufferDataTail), retainReleaseCallBack, p);
-        tail = (GJRBufferDataTail*)R_BufferEnd(buffer) - 1;//data结尾添加校验
-        tail->pool = p;
-#else
-        
         R_BufferAlloc(&buffer, p->minSize, retainReleaseCallBack, p);
-#endif
         
         __sync_fetch_and_add(&p->generateSize,1);
+    }else{
+        _GJBufferPoolUpdateTrackInfo(defauleBufferPool(),(GUInt8*)buffer - sizeof(GJRBufferDataHead),file,func,line);
     }
     R_BufferClearSize(buffer);
 
@@ -203,14 +213,16 @@ GJRetainBuffer* _GJRetainBufferPoolGetSizeData(GJRetainBufferPool* p,GInt32 data
     }
     if (!queuePop(p->queue, (GVoid**)&buffer, 0)) {
 #if MENORY_CHECK
-        GUInt8* bufferM = _GJBufferPoolGetSizeData(defauleBufferPool(), structSize+sizeof(GJRBufferDataTail),file, func, lineTracker);
-        GJRBufferDataTail* tail = (GJRBufferDataTail*)(bufferM + structSize);
-        tail->pool = p;//bufferM结尾添加校验
-        buffer =  (GJRetainBuffer*)bufferM;
+        GUInt8* bufferM = _GJBufferPoolGetSizeData(defauleBufferPool(), structSize+sizeof(GJRBufferDataHead) + sizeof(GJRBufferDataTail),file, func, lineTracker);
+        GJRBufferDataHead* head = (GJRBufferDataHead*)bufferM;
+        head->pool = p;
+        head->size = structSize;
         
-        R_BufferAlloc(&buffer, dataSize+sizeof(GJRBufferDataTail), retainReleaseCallBack, p);
-        tail = (GJRBufferDataTail*)R_BufferEnd(buffer) - 1;//data结尾添加校验//不能加到前面，因为GJRetainBuffer有frontSize固定了前面的位置
-        tail->pool = p;
+        GJRBufferDataTail* tail = (GJRBufferDataTail*)(bufferM + sizeof(GJRBufferDataHead) + structSize);
+        tail->pool = p;//bufferM结尾添加校验
+        buffer =  (GJRetainBuffer*)(bufferM + sizeof(GJRBufferDataHead));
+        
+        R_BufferAlloc(&buffer, dataSize, retainReleaseCallBack, p);//最好此处内存别加检查，会影响capacity，每次unRetain 时，r_buffer会自己检查自己;
 #else
         buffer = (GJRetainBuffer*)GJBufferPoolGetSizeData(defauleBufferPool(), structSize );
         
@@ -219,17 +231,14 @@ GJRetainBuffer* _GJRetainBufferPoolGetSizeData(GJRetainBufferPool* p,GInt32 data
         
         __sync_fetch_and_add(&p->generateSize,1);
     }else{
-        if (R_BufferCapacity(buffer) < dataSize + sizeof(GJRBufferDataTail)) {
+        if (R_BufferCapacity(buffer) < dataSize) {
             
-            R_BufferReCapacity(buffer, dataSize+sizeof(GJRBufferDataTail));
-#if MENORY_CHECK
-            
-            GJRBufferDataTail* tail = (GJRBufferDataTail*)R_BufferEnd(buffer);
-            tail[-1].pool = p;
-#endif
+            R_BufferReCapacity(buffer, dataSize);
         }
+        _GJBufferPoolUpdateTrackInfo(defauleBufferPool(),(GUInt8*)buffer - sizeof(GJRBufferDataHead),file,func,lineTracker);
     }
     memset(buffer+1, 0, structSize - sizeof(GJRetainBuffer));//GJRetainBuffer后面的数据清零
+    
     R_BufferClearSize(buffer);
     GJAssert(R_BufferRetainCount(buffer) == 1, "retain 管理出错");
 #if MENORY_CHECK

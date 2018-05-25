@@ -271,13 +271,14 @@ GBool listPop(GJList* list,GHandle* temBuffer,GUInt32 ms){
     
     if (list->currentLength <= list->minCacheSize) {
 ///<----------1  一定需要，避免收到signal之后被其他lock的线程抢先进入lock，然后list->currentLength > list->minCacheSize还是为false，导致没有超时，但是返回失败
-///<----------1也存在问题，会导致listBroadcast无效
+///<----------1也存在问题，会导致listBroadcast无效,所以如果需要退出，请在broadcast之前将popEnable设置为false，
         GBool didWait = GFalse;
         struct timeval tv0,tv1;
         gettimeofday(&tv0, NULL);
         GInt32 leftMs = ms;
         list->waitCount++;
-        while (listWait(list, leftMs)) {
+        GBool ret = GFalse;
+        while ((ret = listWait(list, leftMs))) {
             if (list->currentLength > list->minCacheSize ) {
                 didWait = GTrue;
                 break;
@@ -290,6 +291,11 @@ GBool listPop(GJList* list,GHandle* temBuffer,GUInt32 ms){
         list->waitCount--;
 //----------->>>>
         if (!didWait) {
+#ifdef DEBUG
+            if (ret && list->popEnable) {
+                GJAssert(0, "这种情况不应该会false");
+            }
+#endif
             listUnLock(list);
             return GFalse;
         }

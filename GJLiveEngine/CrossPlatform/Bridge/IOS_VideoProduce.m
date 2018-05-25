@@ -798,11 +798,11 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (BOOL)startPreview {
-    if (![self.camera isRunning]) {
-        [self.camera startCameraCapture];
-    }
-    runSynchronouslyOnVideoProcessingQueue(^{
 
+    runAsynchronouslyOnVideoProcessingQueue(^{
+        if (![self.camera isRunning]) {
+            [self.camera startCameraCapture];
+        }
         GPUImageOutput *parentFilter = _sticker;
         if (parentFilter == nil) {
             parentFilter = [self getParentFilterWithDeep:kFilterSticker];

@@ -122,10 +122,7 @@ static AEAudioController* shareAudioController;
         }
     }
     _sizePerPacket = PCM_FRAME_COUNT * audioFormat.mBytesPerFrame;
-    if (_alignCacheFrame) {
-        R_BufferUnRetain(&_alignCacheFrame->retain);
-    }
-    _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
+
 }
 
 - (void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time {
@@ -202,7 +199,7 @@ static AEAudioController* shareAudioController;
 
 - (BOOL)startRecode:(NSError **)error {
     AUTO_LOCK(_lock);
-
+    GJLOG(GNULL, GJ_LOGDEBUG, "%p",self);
     _sendFrameCount = 0;
     _startTime = GTimeMSValue( GJ_Gettime());
     NSError *configError;
@@ -242,6 +239,12 @@ static AEAudioController* shareAudioController;
     }else{
         //其他的每次配置参数的时候已经应用了,无需再配置
     }
+    
+    if (_alignCacheFrame) {
+        R_BufferUnRetain(&_alignCacheFrame->retain);
+    }
+    _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
+    
     NSTimeInterval preferredBufferDuration = _sizePerPacket/_audioFormat.mBytesPerFrame/_audioFormat.mSampleRate;
     if (preferredBufferDuration - _audioController.preferredBufferDuration > 0.01 || preferredBufferDuration - _audioController.preferredBufferDuration < -0.01) {
         [_audioController setPreferredBufferDuration:preferredBufferDuration];
@@ -257,7 +260,7 @@ static AEAudioController* shareAudioController;
 - (void)stopRecode {
     AUTO_LOCK(_lock);
 
-    GJLOG(GNULL, GJ_LOGDEBUG, "stopRecode");
+    GJLOG(GNULL, GJ_LOGDEBUG, "%p",self);
     if (_mixfilePlay) {
         [self stopMix];
     }
@@ -273,7 +276,10 @@ static AEAudioController* shareAudioController;
     if (configError) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%s", configError.description.UTF8String);
     }
-
+    if (_alignCacheFrame) {
+        R_BufferUnRetain(&_alignCacheFrame->retain);
+        _alignCacheFrame = GNULL;
+    }
 }
 
 - (AEPlaythroughChannel *)playthrough {

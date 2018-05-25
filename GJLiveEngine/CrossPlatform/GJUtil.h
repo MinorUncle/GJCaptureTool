@@ -72,5 +72,5 @@ GInt32 readADTS(const GUInt8* data,GUInt8 size,ADTS* adts);
 GInt32 readASC(const GUInt8* data,GUInt8 size,ASC* asc);
 GInt32 writeASC(GUInt8* buffer,GUInt8 size,const ASC* asc);
 
-
+GVoid GJ_GetTimeStr(GChar* dest);//最少15字节个空间
 #endif /* GJUtil_h */

@@ -424,7 +424,7 @@ static GVoid livePushCallback(GHandle               userDate,
         case GJLivePush_urlPraseError:
         case GJLivePush_connectError: {
             GJLOG(DEFAULT_LOG, GJ_LOGINFO, "推流连接失败");
-            [livePush stopStreamPush];
+           // [livePush stopStreamPush];//底层已经停止了，这里不需要重复
             dispatch_async(dispatch_get_main_queue(), ^{
                 [livePush.delegate livePush:livePush
                                   errorType:kLivePushConnectError

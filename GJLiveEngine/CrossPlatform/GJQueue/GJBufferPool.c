@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include "GJLog.h"
 #include "GJList.h"
+#include "GJUtil.h"
 
 
 
@@ -33,6 +34,7 @@ typedef struct GJBufferPoolHead{
     const GChar* file;
     const GChar* func;
     GInt32 line;
+//    GChar time[16];
     struct _GJBufferPool* pool;
     GInt32 size;
 }GJBufferDataHead;
@@ -90,19 +92,23 @@ GJBufferPool* defauleBufferPool(){
     }
     return _defaultPool;
 }
-
+struct GJRetainBuffer;
 GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete){
 
     if(complete){
+#ifdef DEBUG
+        GLong startMS = GJ_Gettime().value;
+#endif
         if (p->generateSize > listLength(p->queue)) {
             GJLOG(DEFAULT_LOG, GJ_LOGWARNING, ":%p,还有%d个buffer没有释放,需要等待\n",p,p->generateSize - listLength(p->queue));
         }
         while (p->generateSize > 0) {
             GUInt8* data;
             
-// GJBufferPoolPre = ((GJBufferPoolPre*)((p->leaveList->head->data)-sizeof(GJBufferPoolPre) - 8))[0]
-// 未释放引用列表        ((GJRetainBuffer*)p->leaveList->head->data)->retainList->head->data
-            
+// 离开的内存块申请位置打印命令 p ((GJBufferDataHead*)(p->leaveList->head->data))[-1].file
+// 未回收的所有retain列表       p ((GJRetainBuffer*)(p->leaveList->head->data+16))->retainList->head->data//16为R_RetainBuffer的前缀检查数据GJRBufferDataHead的大小
+// 未回收的所有unretain列表       p ((GJRetainBuffer*)(p->leaveList->head->data+16))->unretainList->head->data//16为R_RetainBuffer的前缀检查数据GJRBufferDataHead的大小
+
             if (listPop(p->queue, (GHandle*)&data, GINT32_MAX)) {
                 
 #if MENORY_CHECK
@@ -118,6 +124,9 @@ GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete){
             }
             p->generateSize --;
         }
+#ifdef DEBUG
+        GJAssert(GJ_Gettime().value - startMS < 1000, "等待时间太久，需要检查")   ;
+#endif
         GJLOG(DEFAULT_LOG, GJ_LOGINFO,"GJBufferPoolClean：%p 完成",p);
     }else{
         GUInt8* data;
@@ -153,6 +162,20 @@ GVoid GJBufferPoolFree(GJBufferPool* pool){
     free(pool);
 };
 
+#if MENORY_CHECK
+GVoid _GJBufferPoolUpdateTrackInfo(GJBufferPool* pool,GUInt8* data,const GChar* file  DEFAULT_PARAM(GNull),const GChar* func  DEFAULT_PARAM(GNull), GInt32 lineTracker DEFAULT_PARAM(0)){
+    GJBufferDataHead* head = GJBufferPoolGetDataHead(data);
+    GJAssert(pool == head->pool, "数据有误，data不属于该pool");
+    GJBufferDataTail* tail = GJBufferPoolGetDataTail(data);
+    GJAssert(head->size == tail->size, "内存溢出");
+    head->file = file;
+    head->func = func;
+    head->line = lineTracker;
+//    GJ_GetTimeStr(head->time);
+
+}
+#endif
+
 GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, const GChar* func, GInt32 lineTracker){
     GUInt8* data;
     
@@ -169,6 +192,7 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
             pre->line = lineTracker;
             pre->pool = p;
             pre->size = size;
+//            GJ_GetTimeStr(pre->time);
             
             GJBufferDataTail* tail = (GJBufferDataTail*)(data + sizeof(GJBufferDataHead) + size);
             tail->size = size;
@@ -191,7 +215,8 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
         pre->line = lineTracker;
         pre->pool = p;
         pre->size = size;
-        
+//        GJ_GetTimeStr(pre->time);
+
         GJBufferDataTail* tail = (GJBufferDataTail*)(data + sizeof(GJBufferDataHead) + size);
         tail->size = size;
         

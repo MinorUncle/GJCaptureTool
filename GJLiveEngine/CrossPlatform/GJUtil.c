@@ -34,6 +34,15 @@ GTime GJ_Gettime(){
 #endif
 }
 
+GVoid GJ_GetTimeStr(GChar* dest){
+    struct tm *local;
+    
+    struct timeval t;
+    gettimeofday(&t,NULL);
+    local=localtime(&t.tv_sec);
+    sprintf(dest, "[%02d:%02d:%02d:%03d]",local->tm_hour,local->tm_min,local->tm_sec,t.tv_usec/1000);
+}
+
 
 GInt32 GJ_GetCPUCount(){
     GInt32 mib[2U] = { CTL_HW, HW_NCPU };

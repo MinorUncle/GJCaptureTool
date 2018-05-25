@@ -30,8 +30,8 @@ inline static GVoid gj_log_default(GJClass* dClass,GJ_LogLevel level ,const char
     char str[MAX_PRINT_LEN]="";
     vsnprintf(str, MAX_PRINT_LEN-1, format, vl);
     if ( !fmsg ) fmsg = stderr;
-    struct tm *local;
     
+    struct tm *local;
     struct timeval t;
     gettimeofday(&t,NULL);
     local=localtime(&t.tv_sec);
