@@ -54,8 +54,21 @@ extern "C" {
      */
 #define GJBufferPoolGetSizeData(x,y) _GJBufferPoolGetSizeData(x,y,__FILE__,__func__, __LINE__)
     GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file  DEFAULT_PARAM(GNull),const GChar* func  DEFAULT_PARAM(GNull), GInt32 lineTrac DEFAULT_PARAM(0));
-    
+#define GATHER_TIME
 #if MENORY_CHECK
+    typedef struct GJBufferPoolHead{
+        
+        const GChar* file;
+        const GChar* func;
+        GInt32 line;
+#ifdef GATHER_TIME
+            GChar time[16];
+#endif
+        GInt32 size;
+        struct _GJBufferPool* pool;
+    }GJBufferDataHead;
+    
+GJBufferDataHead* GJBufferPoolGetDataHead(GUInt8* data);
 
 #define GJBufferPoolUpdateTrackInfo(x,y) _GJBufferPoolUpdateTrackInfo(x,(GUInt8*)y,__FILE__,__func__, __LINE__)
     GVoid _GJBufferPoolUpdateTrackInfo(GJBufferPool* p,GUInt8* data,const GChar* file  DEFAULT_PARAM(GNull),const GChar* func  DEFAULT_PARAM(GNull), GInt32 lineTrac DEFAULT_PARAM(0));

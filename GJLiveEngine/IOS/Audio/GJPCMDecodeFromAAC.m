@@ -12,7 +12,7 @@
 #import "GJUtil.h"
 #import "libavformat/avformat.h"
 #import "GJSignal.h"
-
+#import "GJBufferPool.h"
 
 @interface GJPCMDecodeFromAAC () {
     AudioConverterRef   _decodeConvert;
@@ -106,17 +106,8 @@ static int stopCount;
         GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AudioConverterDispose");
         _decodeConvert = nil;
     }
-    R_GJPacket *packet = NULL;
-    int         length = queueGetLength(_resumeQueue);
-    if (length > 0) {
-        R_GJPacket **packets = (R_GJPacket **) malloc(sizeof(R_GJPacket *) * length);
-        queueClean(_resumeQueue, (GHandle *) packets, &length);
-        for (int i = 0; i < length; i++) {
-            packet = packets[i];
-            R_BufferUnRetain(&packet->retain);
-        }
-        free(packets);
-    }
+    
+    queueFuncClean(_resumeQueue, R_BufferUnRetainUnTrack);
 
     if (_prePacket) {
         R_BufferUnRetain(&_prePacket->retain);
@@ -127,6 +118,8 @@ static int stopCount;
 static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData, AudioStreamPacketDescription **outDataPacketDescription, void *inUserData) {
     GJPCMDecodeFromAAC *decode = (__bridge GJPCMDecodeFromAAC *) inUserData;
     if (decode->_prePacket) {
+        GJBufferDataHead* head = GJBufferPoolGetDataHead((GUInt8*)decode->_prePacket - 16);
+        assert(head->line == 153);
         R_BufferUnRetain(decode->_prePacket);
         decode->_prePacket = NULL;
     }
@@ -163,6 +156,8 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         decode.currentPts = GTimeMSValue(packet->pts);
     }
     decode->_prePacket = packet;
+    GJBufferDataHead* head = GJBufferPoolGetDataHead((GUInt8*)decode->_prePacket - 16);
+    assert(head->line == 153);
     return noErr;
 }
 
@@ -318,7 +313,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         outCacheBufferList.mBuffers[0].mData           = R_BufferStart(&frame->retain);
         outCacheBufferList.mBuffers[0].mDataByteSize   = AAC_FRAME_PER_PACKET * _destFormat.mBytesPerPacket;
         UInt32 numPackets                              = AAC_FRAME_PER_PACKET;
-
+        GJLOG(GNULL, GJ_LOGDEBUG, "audio get frame:%p",frame);
         OSStatus status = AudioConverterFillComplexBuffer(_decodeConvert, decodeInputDataProc, (__bridge void *) self, &numPackets, &outCacheBufferList, &packetDesc);
         if (status != noErr && numPackets == 0) {
             R_BufferUnRetain(&frame->retain);

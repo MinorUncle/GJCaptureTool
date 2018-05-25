@@ -198,16 +198,8 @@ GBool FFDecoder_DecodeStop(FFDecoder* decoder){
     decoder->isRunning = GFalse;
     queueEnablePop(decoder->cacheQueue, GFalse);
     queueBroadcastPop(decoder->cacheQueue);
-    GInt32 length = 0;
-    queueClean(decoder->cacheQueue, GNULL, &length);
-    if (length > 0) {
-        GHandle* buffer = malloc(sizeof(GHandle)*length);
-        queueClean(decoder->cacheQueue, buffer, &length);
-        for (int i = 0; i<length; i++) {
-            R_BufferUnRetain((GJRetainBuffer*)(buffer[i]));
-        }
-        free(buffer);
-    }
+    queueFuncClean(decoder->cacheQueue, R_BufferUnRetainUnTrack);
+   
     return GTrue;
 }
 

@@ -479,17 +479,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
 GVoid GJStreamPush_Delloc(GJStreamPush *push) {
     GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJStreamPush_Delloc:%p", push);
 
-    GInt32 length = queueGetLength(push->sendBufferQueue);
-    if (length > 0) {
-        R_GJPacket **packet = (R_GJPacket **) malloc(sizeof(R_GJPacket *) * length);
-        //queuepop已经关闭
-        if (queueClean(push->sendBufferQueue, (GHandle *) packet, &length)) {
-            for (GInt32 i = 0; i < length; i++) {
-                R_BufferUnRetain(&packet[i]->retain);
-            }
-        }
-        free(packet);
-    }
+    queueFuncClean(push->sendBufferQueue, R_BufferUnRetainUnTrack);
     queueFree(&push->sendBufferQueue);
     _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
         avcodec_close(push->vStream->codec);

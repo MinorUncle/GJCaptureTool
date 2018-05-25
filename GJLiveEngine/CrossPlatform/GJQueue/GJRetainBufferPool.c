@@ -27,10 +27,13 @@ typedef struct GJRBufferDataTail{
 }GJRBufferDataTail;
 
 #if MENORY_CHECK
+GVoid GJBufferPoolCheck(GJBufferPool* pool,GUInt8* data);
+
 static inline GVoid GJRetainbufferPoolCheck(GJRetainBufferPool* pool ,GJRetainBuffer* buffer){
-    
-    R_BufferMemCheck(buffer);
+
     GUInt8* data = (GUInt8*)buffer;
+    GJBufferPoolCheck(defauleBufferPool(), data - sizeof(GJRBufferDataHead));//检查buffer本身结构体内存
+//    R_BufferMemCheck(buffer);//检查buffer所带的data的内存、此处可以不用检查，因为每次unretain的时候都会检查
     GJRBufferDataHead* head = (GJRBufferDataHead*)(data - sizeof(GJRBufferDataHead));
     GJRBufferDataTail* tail = (GJRBufferDataTail*)(data + head->size);
     GJAssert(head->pool == (GJRetainBufferPool*)R_BufferUserData(buffer) &&

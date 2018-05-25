@@ -188,11 +188,11 @@ static GHandle pullRunloop(GHandle parm) {
         R_BufferUnRetain(packet);
         
 #ifdef DEBUG
-        GLong preDTS[2],prePTS[2];
-        GInt32 type = pkt.stream_index == asIndex;
-        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%lld ddts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - prePTS[type],pkt.dts - preDTS[type], pkt.size);
-        preDTS[type] = pkt.dts;
-        prePTS[type] = pkt.pts;
+//        GLong preDTS[2],prePTS[2];
+//        GInt32 type = pkt.stream_index == asIndex;
+//        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%lld ddts:%lld size:%d\n",type, pkt.pts, pkt.dts,pkt.pts - prePTS[type],pkt.dts - preDTS[type], pkt.size);
+//        preDTS[type] = pkt.dts;
+//        prePTS[type] = pkt.pts;
 
 #endif
         av_packet_unref(&pkt);

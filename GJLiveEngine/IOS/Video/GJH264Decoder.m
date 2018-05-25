@@ -59,6 +59,7 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
 }
 - (void)dealloc {
     queueFree(&_inputQueue);
+    queueFree(&_gopQueue);
     GJRetainBufferPool *temPool = _bufferPool;
     dispatch_async(dispatch_get_global_queue(0, 0), ^{
         GJRetainBufferPoolClean(temPool, GTrue);

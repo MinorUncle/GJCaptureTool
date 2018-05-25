@@ -219,8 +219,10 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     if (_trackImage) {
         [_trackImage stop];
     }
-    if (_camera && _camera.isRunning) {
-        [_camera stopCameraCapture];
+    if (_camera) {
+        if ( _camera.isRunning) {
+            [_camera stopCameraCapture];
+        }
         [self deleteCamera];
     }
     GJRetainBufferPool *temPool = _bufferPool;
