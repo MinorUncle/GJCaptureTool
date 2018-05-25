@@ -31,7 +31,7 @@ inline GVoid R_BufferMemCheck(GJRetainBuffer* buffer){
         GLong* tailData = (GLong*)(buffer->data+buffer->capacity);
         GLong size = buffer->capacity + buffer->frontSize;
         GJAssert(data[-1] == size &&
-                 tailData[0] == data[-1] &&
+                 tailData[0] == data[-1] &&//此处的size检查实际上是malloc中的size数据
                  buffer->capacity < 60000 &&
                  buffer->size <= buffer->capacity, "数据存在错误");
     }
@@ -46,19 +46,12 @@ GVoid R_BufferAlloc(GJRetainBuffer**pBuffer, GInt32 size,GBool (*releaseCallBack
     GJRetainBuffer* buffer = *pBuffer;
     buffer->capacity = size;
     buffer->size = 0;
+    buffer->data = malloc(size);
+
+    //malloc已经有了检查，所以不需要重复添加检查数据。
 #if MENORY_CHECK
-    GLong* data = malloc(size + 2*sizeof(GLong));
-    data[0] = size;
-    data++;
-    buffer->data = (GUInt8*)(data);
-    data = (GLong*)(((GUInt8*)data)+size);
-    data[0] = size;
     buffer->needCheck = GTrue;
     buffer->retainList = buffer->unretainList = GNULL;
-
-
-#else
-    buffer->data = malloc(size);
 #endif
     buffer->frontSize = 0;
     buffer->retainReleaseCallBack = releaseCallBack;
@@ -113,9 +106,6 @@ GVoid _R_BufferUnRetain(GJRetainBuffer* buffer,const GChar* tracker){
             }
         }else{
             GLong* data = (GLong*)(buffer->data - buffer->frontSize);
-#if MENORY_CHECK
-            data = data-1;
-#endif
             free(data);
             free(buffer);
         }
@@ -126,7 +116,6 @@ GVoid R_BufferFreeData(GJRetainBuffer* buffer){
     GLong* data = (GLong*)(buffer->data - buffer->frontSize);
 #if MENORY_CHECK
     R_BufferMemCheck(buffer);
-    data = data-1;
 #endif
     free(data);
 }
@@ -142,25 +131,12 @@ GBool R_BufferMoveDataPoint(GJRetainBuffer* buffer,GInt32 offset,GBool keepMem){
 
 GVoid R_BufferReCapacity(GJRetainBuffer* buffer,GInt32 size){
     if (buffer->capacity < size) {//保持frontSize大小，但是不保证内存不变
+        
 #if MENORY_CHECK
-        if (buffer->needCheck) {
-            GInt32 needSize = size + buffer->frontSize;
-            buffer->data = (GUInt8*)realloc(R_BufferOrigin(buffer), needSize+ 2*sizeof(GLong));
-            buffer->capacity = size;
-            ((GLong*)buffer->data)[0] = needSize;
-            ((GLong*)(buffer->data + sizeof(GLong) + needSize))[0] = needSize;
-            buffer->data = buffer->data + sizeof(GLong) + buffer->frontSize;
-            
-            R_BufferMemCheck(buffer);
-        }else{
-            buffer->data = (GUInt8*)realloc(R_BufferOrigin(buffer), size + buffer->frontSize) + buffer->frontSize;
-            buffer->capacity = size;
-        }
-
-#else
+        R_BufferMemCheck(buffer);
+#endif
         buffer->data = (GUInt8*)realloc(R_BufferOrigin(buffer), size + buffer->frontSize) + buffer->frontSize;
         buffer->capacity = size;
-#endif
     }
 }
 

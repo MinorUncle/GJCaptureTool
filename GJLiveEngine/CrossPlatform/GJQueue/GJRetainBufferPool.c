@@ -16,6 +16,10 @@
 
 */
 
+typedef struct GJRBufferDataHead{
+    GJRetainBufferPool* pool;
+}GJRBufferDataHead;
+
 typedef struct GJRBufferDataTail{
     GJRetainBufferPool* pool;
 }GJRBufferDataTail;

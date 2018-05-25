@@ -49,7 +49,7 @@ typedef GBool (*RetainReleaseCallBack)(struct _GJRetainBuffer* data);
 #if 1
     static inline GUInt8* R_BufferOrigin(GJRetainBuffer* buffer){
 #if MENORY_CHECK
-        return buffer->data-buffer->frontSize-sizeof(GLong);
+        return buffer->data-buffer->frontSize;
 #else
         return buffer->data-buffer->frontSize;
 #endif
