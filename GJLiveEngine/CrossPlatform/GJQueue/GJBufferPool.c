@@ -135,7 +135,7 @@ GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete){
         }
 #ifdef DEBUG
         GLong dl = GJ_Gettime().value - startMS;
-        if(dl < 1000){
+        if(dl > 1000){
             GJLOG(GNULL, GJ_LOGWARNING, "等待时间太久:%ld ms，需要检查",dl);
         }
 #endif
@@ -200,14 +200,14 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
         if ( head->size < size) {
             
 #if MENORY_CHECK
-            data = (GUInt8*)realloc(data-sizeof(GJBufferDataHead), size + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
+            data = (GUInt8*)realloc(head, size + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
             head = (GJBufferDataHead*)data;
             head->size = size;
 
             GJBufferDataTail* tail = (GJBufferDataTail*)(data + sizeof(GJBufferDataHead) + size);
             tail->size = size;
 #else
-            data = (GUInt8*)realloc(data-sizeof(GJBufferDataHead), size + sizeof(GJBufferDataHead));
+            data = (GUInt8*)realloc(head, size + sizeof(GJBufferDataHead));
             head = (GJBufferDataHead*)data;
             head->size = size;
 #endif

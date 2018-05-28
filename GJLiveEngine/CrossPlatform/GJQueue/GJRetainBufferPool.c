@@ -17,6 +17,9 @@
 
 */
 
+
+
+#if MENORY_CHECK
 typedef struct GJRBufferDataHead{
     GJRetainBufferPool* pool;
     GLong size;
@@ -26,7 +29,6 @@ typedef struct GJRBufferDataTail{
     GJRetainBufferPool* pool;
 }GJRBufferDataTail;
 
-#if MENORY_CHECK
 GVoid GJBufferPoolCheck(GJBufferPool* pool,GUInt8* data);
 
 static inline GVoid GJRetainbufferPoolCheck(GJRetainBufferPool* pool ,GJRetainBuffer* buffer){
@@ -72,12 +74,12 @@ GBool GJRetainBufferPoolCreate(GJRetainBufferPool** pool,GUInt32 minSize,GBool a
 };
 
 static GBool retainFreeCallBack(GJRetainBuffer * buffer){
-
+    R_BufferFreeData(buffer);
 #if MENORY_CHECK
-//    GJRetainbufferPoolCheck()
-#endif
-    free(R_BufferOrigin(buffer));
     GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer-sizeof(GJRBufferDataHead));
+#else
+    GJBufferPoolSetData(defauleBufferPool(), (GUInt8*)buffer);
+#endif
     return GTrue;
 }
 
@@ -102,7 +104,7 @@ GBool GJRetainBufferPoolClean(GJRetainBufferPool* p,GBool complete){
         }
 #ifdef DEBUG
         GLong dl = GJ_Gettime().value - startMS;
-        if(dl < 1000){
+        if(dl > 1000){
             GJLOG(GNULL, GJ_LOGWARNING, "等待时间太久:%ld ms，需要检查",dl);
         }
 #endif
@@ -231,13 +233,11 @@ GJRetainBuffer* _GJRetainBufferPoolGetSizeData(GJRetainBufferPool* p,GInt32 data
         tail->pool = p;//bufferM结尾添加校验
         buffer =  (GJRetainBuffer*)(bufferM + sizeof(GJRBufferDataHead));
         
-        R_BufferAlloc(&buffer, dataSize, retainReleaseCallBack, p);//最好此处内存别加检查，会影响capacity，每次unRetain 时，r_buffer会自己检查自己;
 #else
         buffer = (GJRetainBuffer*)GJBufferPoolGetSizeData(defauleBufferPool(), structSize );
-        
-        R_BufferAlloc(&buffer, dataSize, retainReleaseCallBack, p);
 #endif
-        
+        R_BufferAlloc(&buffer, dataSize, retainReleaseCallBack, p);//最好此处内存别加检查，会影响capacity，每次unRetain 时，r_buffer会自己检查自己;
+
         __sync_fetch_and_add(&p->generateSize,1);
     }else{
         if (R_BufferCapacity(buffer) < dataSize) {

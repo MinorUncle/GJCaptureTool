@@ -10,7 +10,7 @@
 #define GJPlatformHeader_h
 
 #ifdef DEBUG
-#define MENORY_CHECK 1
+#define MENORY_CHECK 0
 #else
 #define MENORY_CHECK 0
 #endif
