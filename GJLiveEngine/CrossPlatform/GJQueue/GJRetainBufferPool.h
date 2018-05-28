@@ -92,6 +92,7 @@ GJRetainBuffer* _GJRetainBufferPoolGetData(GJRetainBufferPool* p,const GChar* fi
 #define GJRetainBufferPoolGetSizeData(x,y) _GJRetainBufferPoolGetSizeData(x,y,__FILE__,__func__,__LINE__)
 GJRetainBuffer* _GJRetainBufferPoolGetSizeData(GJRetainBufferPool* p,GInt32 size,const GChar* file,const GChar* func DEFAULT_PARAM(GNull),GInt32 line);
 
+    
 #ifdef __cplusplus
 }
 #endif

@@ -118,8 +118,6 @@ static int stopCount;
 static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData, AudioStreamPacketDescription **outDataPacketDescription, void *inUserData) {
     GJPCMDecodeFromAAC *decode = (__bridge GJPCMDecodeFromAAC *) inUserData;
     if (decode->_prePacket) {
-        GJBufferDataHead* head = GJBufferPoolGetDataHead((GUInt8*)decode->_prePacket - 16);
-        assert(head->line == 153);
         R_BufferUnRetain(decode->_prePacket);
         decode->_prePacket = NULL;
     }
@@ -156,8 +154,6 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         decode.currentPts = GTimeMSValue(packet->pts);
     }
     decode->_prePacket = packet;
-    GJBufferDataHead* head = GJBufferPoolGetDataHead((GUInt8*)decode->_prePacket - 16);
-    assert(head->line == 153);
     return noErr;
 }
 

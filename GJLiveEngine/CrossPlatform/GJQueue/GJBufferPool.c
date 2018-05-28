@@ -28,7 +28,23 @@ struct _GJBufferPool{
     GJList*     leaveList;
 #endif
 };
+#define GATHER_TIME
 
+typedef struct GJBufferPoolHead{
+    GInt32 size;
+    
+#if MENORY_CHECK
+    const GChar* file;
+    const GChar* func;
+    GInt32 line;
+#ifdef GATHER_TIME
+    GChar time[16];
+#endif
+    struct _GJBufferPool* pool;
+#endif
+}GJBufferDataHead;
+
+GJBufferDataHead* GJBufferPoolGetDataHead(GUInt8* data);
 
 typedef struct GJBufferDataTail{
     GInt32 size;
@@ -158,9 +174,9 @@ GVoid GJBufferPoolFree(GJBufferPool* pool){
 
 GVoid _GJBufferPoolUpdateTrackInfo(GJBufferPool* pool,GUInt8* data,const GChar* file  DEFAULT_PARAM(GNull),const GChar* func  DEFAULT_PARAM(GNull), GInt32 lineTracker DEFAULT_PARAM(0)){
     GJBufferDataHead* head = GJBufferPoolGetDataHead(data);
-    GJAssert(pool == head->pool, "数据有误，data不属于该pool");
     GJBufferDataTail* tail = GJBufferPoolGetDataTail(data);
     GJAssert(head->size == tail->size, "内存溢出");
+    head->pool = pool;
     head->file = file;
     head->func = func;
     head->line = lineTracker;
@@ -175,20 +191,15 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
     
     GJAssert(size >= p->minSize, "GJBufferPoolGetSizeData size less then minsize");
     if (listPop(p->queue, (GVoid**)&data, 0)) {
-        GJBufferDataHead* head = (GJBufferDataHead*)data;
+        GJBufferDataHead* head = (GJBufferDataHead*)(data - sizeof(GJBufferDataHead));
+
         if ( head->size < size) {
             
 #if MENORY_CHECK
             data = (GUInt8*)realloc(data-sizeof(GJBufferDataHead), size + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
             head = (GJBufferDataHead*)data;
-            head->file = file;
-            head->func = func;
-            head->line = lineTracker;
-            head->pool = p;
             head->size = size;
-#ifdef GATHER_TIME
-            GJ_GetTimeStr(head->time);
-#endif
+
             GJBufferDataTail* tail = (GJBufferDataTail*)(data + sizeof(GJBufferDataHead) + size);
             tail->size = size;
 
@@ -198,34 +209,16 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
             *(GLong*)data = (GLong)size;
             data += sizeof(GLong);
 #endif
-            GJBufferPoolCheck(p, data);
 
         }
-#if MENORY_CHECK
-
-        else{
-            head->file = file;
-            head->func = func;
-            head->line = lineTracker;
-            GJBufferPoolCheck(p, data);
-
-        }
-
-#endif
     }else{
         
 #if MENORY_CHECK
         
         data = (GUInt8*)malloc(size + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
         GJBufferDataHead* head = (GJBufferDataHead*)data;
-        head->file = file;
-        head->func = func;
-        head->line = lineTracker;
-        head->pool = p;
         head->size = size;
-#ifdef GATHER_TIME
-        GJ_GetTimeStr(head->time);
-#endif
+
         GJBufferDataTail* tail = (GJBufferDataTail*)(data + sizeof(GJBufferDataHead) + size);
         tail->size = size;
         
@@ -237,31 +230,24 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
         data += sizeof(GLong);
 #endif
         __sync_fetch_and_add(&p->generateSize,1);
-        GJBufferPoolCheck(p, data);
 
     }
 
 #if MENORY_CHECK
+    _GJBufferPoolUpdateTrackInfo(p, data, file, func, lineTracker);
     GJAssert(listPush(p->leaveList, data), "跟踪器失败") ;
-    
 #endif
     return (GUInt8*)data;
 }
 
-GUInt8* GJBufferPoolGetData(GJBufferPool* p,const GChar* func, GInt32 lineTracker){
+GUInt8* GJBufferPoolGetData(GJBufferPool* p,const GChar* file  DEFAULT_PARAM(GNull),const GChar* func, GInt32 lineTracker){
     GUInt8* data;
     
     if (!listPop(p->queue, (GVoid**)&data, 0)) {
 #if MENORY_CHECK
         data = (GUInt8*)malloc(p->minSize + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
         GJBufferDataHead* pre = (GJBufferDataHead*)data;
-        pre->func = func;
-        pre->line = lineTracker;
-        pre->pool = p;
         pre->size = p->minSize;
-#ifdef GATHER_TIME
-        GJ_GetTimeStr(pre->time);
-#endif
         GJBufferDataTail* tail = (GJBufferDataTail*)(data + sizeof(GJBufferDataHead) + p->minSize);
         tail->size = p->minSize;
         
@@ -275,6 +261,8 @@ GUInt8* GJBufferPoolGetData(GJBufferPool* p,const GChar* func, GInt32 lineTracke
     }
 
 #if MENORY_CHECK
+    _GJBufferPoolUpdateTrackInfo(p, data, GNULL, func, lineTracker);
+
     GJAssert(listPush(p->leaveList, data), "跟踪器失败") ;
 #endif
     return (GUInt8*)data;

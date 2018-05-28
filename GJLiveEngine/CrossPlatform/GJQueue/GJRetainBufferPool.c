@@ -168,12 +168,12 @@ static GBool retainReleaseCallBack(GJRetainBuffer * buffer){
 GJRetainBuffer* _GJRetainBufferPoolGetData(GJRetainBufferPool* p,const GChar* file,const GChar* func,GInt32 line){
     
     GJRetainBuffer* buffer = NULL;
+    GInt32 structSize = R_BufferStructSize();
+    if(p->mallocCallback ){
+        structSize = p->mallocCallback(p);
+    }
+    
     if (!queuePop(p->queue, (GVoid**)&buffer, 0)) {
-        
-        GInt32 structSize = R_BufferStructSize();
-        if(p->mallocCallback ){
-            structSize = p->mallocCallback(p);
-        }
         
 #if MENORY_CHECK
         
