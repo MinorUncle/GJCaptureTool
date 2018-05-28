@@ -92,7 +92,7 @@
     NSDictionary* _videoSize;
     NSMutableArray<UIView*>* _tipViewsArry;
     NSMutableArray<UIView*>* _btnViewsArry;
-
+    UITapGestureRecognizer* _tapGesture;
 }
 
 @property (strong, nonatomic) GJLivePush *livePush;
@@ -133,6 +133,7 @@
 @property (strong, nonatomic) UILabel *timeLab;
 @property (assign, nonatomic) CGRect frame;
 @property (assign, nonatomic) CGRect beforeFullframe;
+@property (assign, nonatomic) BOOL enableFull;
 
 @end
 @implementation PushManager
@@ -173,6 +174,9 @@
         
     }
     return self;
+}
+-(void)setEnableFull:(BOOL)enableFull{
+    _tapGesture.enabled = enableFull;
 }
 -(void)buildUI{
     self.view = [[UIView alloc]init];
@@ -382,19 +386,18 @@
         [_paintBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
         [self.view addSubview:_paintBtn];
     }else{
-        UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
-        [_view addGestureRecognizer:tap];
-        
+        _tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+        [_view addGestureRecognizer:_tapGesture];
         for (UIGestureRecognizer* g in _outputGain.gestureRecognizers) {
-            [tap requireGestureRecognizerToFail:g];
+            [_tapGesture requireGestureRecognizerToFail:g];
         }
         
         for (UIGestureRecognizer* g in _inputGain.gestureRecognizers) {
-            [tap requireGestureRecognizerToFail:g];
+            [_tapGesture requireGestureRecognizerToFail:g];
         }
         
         for (UIGestureRecognizer* g in _mixGain.gestureRecognizers) {
-            [tap requireGestureRecognizerToFail:g];
+            [_tapGesture requireGestureRecognizerToFail:g];
         }
     }
     
@@ -770,12 +773,13 @@
 
 @end
 
-#define PULL_COUNT 2
+#define PULL_COUNT 1
 @interface PullManager : NSObject<GJLivePullDelegate>
 {
     NSMutableArray<UIView*>* _viewArr;
     NSInteger _bufferTimes;
     NSInteger _dewaterTimes;
+    UITapGestureRecognizer* _tapGesture;
 }
 @property (copy, nonatomic) NSString    *pullAddr;
 @property (strong, nonatomic) UILabel    *pullRateLab;
@@ -793,6 +797,7 @@
 @property (strong, nonatomic  ) UIButton   * pullBtn;;
 @property (assign, nonatomic) CGRect     frame;
 @property (assign, nonatomic) CGRect     beforeFullFrame;
+@property (assign, nonatomic) BOOL       fullEnable;
 
 @end
 
@@ -817,16 +822,19 @@
         _pull.delegate = self;
         _viewArr = [NSMutableArray array];
         [self buildUI];
+        self.fullEnable = YES;
     }
     return self;
 }
+-(void)setFullEnable:(BOOL)fullEnable{
+    _tapGesture.enabled = fullEnable;
+}
+
 -(void)buildUI{
     _view = [[UIView alloc]init];
     [_view addSubview:[_pull getPreviewView]];
-    
-    UITapGestureRecognizer* tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
-    [_view addGestureRecognizer:tap];
-    
+    _tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+    [_view addGestureRecognizer:_tapGesture];
     _pullBtn = [UIButton buttonWithType:UIButtonTypeSystem];
     _pullBtn.layer.borderWidth = 1;
     _pullBtn.layer.borderColor = [UIColor blackColor].CGColor;
@@ -1081,7 +1089,7 @@
             _type = kGJCaptureTypeCamera;
         }
     }
-    _pushManager = [[PushManager alloc]initWithPushUrl:_pushAddr type:_type];
+    if(_pushAddr.length > 3)_pushManager = [[PushManager alloc]initWithPushUrl:_pushAddr type:_type];
     //ui放在后面，因为ar一定要先设置ARScene
     [self buildUI];
     [self updateFrame];
@@ -1119,15 +1127,17 @@
     [_pushManager.livePush stopPreview];
 }
 -(void)buildUI{
+    if (_pushAddr.length > 3)[self.view addSubview:_pushManager.view];
     
-    [self.view addSubview:_pushManager.view];
-    
-    for (int i = 0; i<PULL_COUNT; i++) {
-        PullManager* pullManager = [[PullManager alloc]initWithPullUrl:_pullAddr];
-        pullManager.view.backgroundColor = [UIColor colorWithRed:(arc4random()%200 + 50)/255.0 green:(arc4random()%200 + 50)/255.0 blue:(arc4random()%200 + 50)/255.0 alpha:1.0];
-        pullManager.pullBtn.backgroundColor = pullManager.view.backgroundColor;
-        [_pulls addObject:pullManager];
-        [self.view addSubview:pullManager.view];
+    if (_pullAddr.length > 3) {
+        for (int i = 0; i<PULL_COUNT; i++) {
+            PullManager* pullManager = [[PullManager alloc]initWithPullUrl:_pullAddr];
+            pullManager.fullEnable = _pushAddr.length > 3;
+            pullManager.view.backgroundColor = [UIColor colorWithRed:(arc4random()%200 + 50)/255.0 green:(arc4random()%200 + 50)/255.0 blue:(arc4random()%200 + 50)/255.0 alpha:1.0];
+            pullManager.pullBtn.backgroundColor = pullManager.view.backgroundColor;
+            [_pulls addObject:pullManager];
+            [self.view addSubview:pullManager.view];
+        }
     }
 }
 //-(UIImage*)backImageWithSize:(CGSize)size color:(UIColor*)color{
@@ -1155,22 +1165,29 @@
 
 -(void)updateFrame{
     CGRect rect = self.view.bounds;
-    rect.size.height *= 0.5;
-    _pushManager.frame = rect;
-    
-    int count = PULL_COUNT + 2;
-    
-    CGRect sRect;
-    sRect.origin.x = 0;
-    sRect.origin.y = CGRectGetMaxY(rect);
-    sRect.size.height = self.view.bounds.size.height - sRect.origin.y;
-    sRect.size.width = self.view.bounds.size.width/(count-2);
-    for (int i = 0; i<PULL_COUNT; i++) {
-        rect.origin.x = CGRectGetMaxX(rect);
-        PullManager* show = _pulls[i];
-        show.frame = sRect;
-        sRect.origin.x = CGRectGetMaxX(sRect);
+    if (_pushAddr.length > 3) {
+        if (_pullAddr.length > 3) {
+            rect.size.height *= 0.5;
+        }
+        _pushManager.frame = rect;
+    }else{
+        rect.size.height = 0;
     }
+
+    if (_pullAddr.length > 3) {
+        CGRect sRect;
+        sRect.origin.x = 0;
+        sRect.origin.y = CGRectGetMaxY(rect);
+        sRect.size.height = self.view.bounds.size.height - sRect.origin.y;
+        sRect.size.width = self.view.bounds.size.width/PULL_COUNT;
+        for (int i = 0; i<PULL_COUNT; i++) {
+            rect.origin.x = CGRectGetMaxX(rect);
+            PullManager* show = _pulls[i];
+            show.frame = sRect;
+            sRect.origin.x = CGRectGetMaxX(sRect);
+        }
+    }
+
 }
 
 -(void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation{
