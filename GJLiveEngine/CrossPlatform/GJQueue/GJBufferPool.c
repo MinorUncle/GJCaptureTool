@@ -32,7 +32,6 @@ struct _GJBufferPool{
 
 typedef struct GJBufferPoolHead{
     GInt32 size;
-    
 #if MENORY_CHECK
     const GChar* file;
     const GChar* func;
@@ -46,11 +45,13 @@ typedef struct GJBufferPoolHead{
 
 GJBufferDataHead* GJBufferPoolGetDataHead(GUInt8* data);
 
+
+
+#if MENORY_CHECK
 typedef struct GJBufferDataTail{
     GInt32 size;
 }GJBufferDataTail;
 
-#if MENORY_CHECK
 GJBufferDataHead* GJBufferPoolGetDataHead(GUInt8* data){
     return (GJBufferDataHead*)(data - sizeof(GJBufferDataHead));
 }
@@ -202,33 +203,29 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
 
             GJBufferDataTail* tail = (GJBufferDataTail*)(data + sizeof(GJBufferDataHead) + size);
             tail->size = size;
-
-            data += sizeof(GJBufferDataHead);
 #else
-            data = (GUInt8*)realloc(data-sizeof(GLong), size + sizeof(GLong));
-            *(GLong*)data = (GLong)size;
-            data += sizeof(GLong);
+            data = (GUInt8*)realloc(data-sizeof(GJBufferDataHead), size + sizeof(GJBufferDataHead));
+            head = (GJBufferDataHead*)data;
+            head->size = size;
 #endif
-
+            data += sizeof(GJBufferDataHead);
         }
     }else{
         
 #if MENORY_CHECK
-        
         data = (GUInt8*)malloc(size + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
         GJBufferDataHead* head = (GJBufferDataHead*)data;
         head->size = size;
 
         GJBufferDataTail* tail = (GJBufferDataTail*)(data + sizeof(GJBufferDataHead) + size);
         tail->size = size;
-        
-        data += sizeof(GJBufferDataHead);
 #else
         
-        data = (GUInt8*)malloc(size + sizeof(GLong));
-        *(GLong*)data = (GLong)size;
-        data += sizeof(GLong);
+        data = (GUInt8*)malloc(size + sizeof(GJBufferDataHead));
+        GJBufferDataHead* head = (GJBufferDataHead*)data;
+        head->size = size;
 #endif
+        data += sizeof(GJBufferDataHead);
         __sync_fetch_and_add(&p->generateSize,1);
 
     }
@@ -250,13 +247,12 @@ GUInt8* GJBufferPoolGetData(GJBufferPool* p,const GChar* file  DEFAULT_PARAM(GNu
         pre->size = p->minSize;
         GJBufferDataTail* tail = (GJBufferDataTail*)(data + sizeof(GJBufferDataHead) + p->minSize);
         tail->size = p->minSize;
-        
-        data += sizeof(GJBufferDataHead);
 #else
-        data = (GUInt8*)malloc(p->minSize + sizeof(GLong));
-        *(GLong*)data = (GLong)p->minSize;
-        data += sizeof(GLong);
+        data = (GUInt8*)malloc(p->minSize + sizeof(GJBufferDataHead));
+        GJBufferDataHead* pre = (GJBufferDataHead*)data;
+        pre->size = p->minSize;
 #endif
+        data += sizeof(GJBufferDataHead);
         __sync_fetch_and_add(&p->generateSize,1);
     }
 

@@ -195,9 +195,12 @@ GJRetainBuffer* _GJRetainBufferPoolGetData(GJRetainBufferPool* p,const GChar* fi
         R_BufferAlloc(&buffer, p->minSize, retainReleaseCallBack, p);
         
         __sync_fetch_and_add(&p->generateSize,1);
-    }else{
+    }
+#if MENORY_CHECK
+    else{
         _GJBufferPoolUpdateTrackInfo(defauleBufferPool(),(GUInt8*)buffer - sizeof(GJRBufferDataHead),file,func,line);
     }
+#endif
     R_BufferClearSize(buffer);
 
     GJAssert(R_BufferRetainCount(buffer) == 1, "retain 管理出错");
@@ -240,7 +243,9 @@ GJRetainBuffer* _GJRetainBufferPoolGetSizeData(GJRetainBufferPool* p,GInt32 data
             
             R_BufferReCapacity(buffer, dataSize);
         }
+#if MENORY_CHECK
         _GJBufferPoolUpdateTrackInfo(defauleBufferPool(),(GUInt8*)buffer - sizeof(GJRBufferDataHead),file,func,lineTracker);
+#endif
     }
     memset(buffer+1, 0, structSize - sizeof(GJRetainBuffer));//GJRetainBuffer后面的数据清零
     
