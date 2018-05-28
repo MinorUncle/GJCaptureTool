@@ -54,7 +54,7 @@ GJMessageDispatcher* defaultDispatcher(){
             staticDispatcher = (GJMessageDispatcher*)calloc(sizeof(GJMessageDispatcher),1);
             queueCreate(&staticDispatcher->messageQueue, 10, GTrue, GTrue);
             staticDispatcher->running = GTrue;
-            staticDispatcher->threadName = "messageRunLoop";
+            staticDispatcher->threadName = "Loop.GJMessageDispatcher";
             GResult result = pthread_create(&staticDispatcher->thread , GNULL, messageRunLoop, staticDispatcher);
             if (result) {
                 free(staticDispatcher);

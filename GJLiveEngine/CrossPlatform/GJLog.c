@@ -11,14 +11,15 @@
 #include <sys/time.h>
 #include <libavutil/log.h>
 #include "log.h"
-
+#include <pthread.h>
+#include "GJList.h"
+#include "GJBufferPool.h"
 
 #define MAX_PRINT_LEN	2048
 
 GJClass* defaultDebug = (GJClass*)&Default_WARNING;
 
 static FILE *fmsg;
-
 static GJ_LogCallback gj_log_default, *cb = gj_log_default;
 
 static const char *levels[] = {"GJ_NONE","GJ_FORBID","GJ_ERROR", "GJ_WARNING", "GJ_DEBUG","GJ_INFO","GJ_ALL"};
@@ -48,15 +49,86 @@ inline static GVoid gj_log_default(GJClass* dClass,GJ_LogLevel level ,const char
 #endif
 }
 
+
+
+#ifdef DEBUG
+static pthread_t _logRunloop;
+static GJList* _messageList;
+static GJBufferPool* _logBufferPool;
+typedef struct _LogMessage{
+    
+}GJ_LogMessage;
+
+static GVoid gj_log_runloop(GJClass* dClass,GJ_LogLevel level ,const char *pre, const char *format, va_list vl){
+#ifdef GJ_DEBUG
+    GJAssert(dClass != GNULL, "dClass不能为null,在本文件转换");
+    //    GJBufferPoolGetSizeData(x, <#y#>)
+    char str[MAX_PRINT_LEN]="";
+    vsnprintf(str, MAX_PRINT_LEN-1, format, vl);
+    if ( !fmsg ) fmsg = stderr;
+    
+    struct tm *local;
+    struct timeval t;
+    gettimeofday(&t,NULL);
+    local=localtime(&t.tv_sec);
+    
+    GChar* strData = GNULL;
+    if (dClass->className != GNULL) {
+        GLong strLen = strlen(pre) + strlen(str) + strlen(levels[level]) + strlen(dClass->className) + 23;
+        strData = (GChar*)GJBufferPoolGetSizeData(_logBufferPool, (GInt32)strLen);
+        sprintf(strData, "[%02d:%02d:%02d:%03d][%s][%s][%s]:%s\n",local->tm_hour,local->tm_min,local->tm_sec,t.tv_usec/1000,levels[level],dClass->className,pre, str);
+    }else{
+        GLong strLen = strlen(pre) + strlen(str) + strlen(levels[level]) + 23;
+        strData = (GChar*)GJBufferPoolGetSizeData(_logBufferPool, (GInt32)strLen);
+        sprintf(strData, "[%02d:%02d:%02d:%03d][%s][%s]:%s\n",local->tm_hour,local->tm_min,local->tm_sec,t.tv_usec/1000,levels[level],pre, str);
+    }
+    listPush(_messageList, strData);
+    if (level == GJ_LOGFORBID && dClass->dLevel >= GJ_LOGDEBUG) {
+        assert(0);
+    }
+#endif
+    
+}
+static void * logRunloop(void * userData){
+    pthread_setname_np("Loop.GJLog");
+    while (fmsg) {
+        GChar* message = GNULL;
+        if (listPop(_messageList, (GHandle*)(&message), GINT32_MAX)) {
+            fprintf(fmsg, "%s", message);
+#ifdef DEBUG
+            fprintf(stdout, "%s", message);
+#endif
+            GJBufferPoolSetData(_logBufferPool, (GUInt8*)message);
+        }
+    }
+    return GNULL;
+}
+#endif
+
 GVoid GJ_LogSetOutput(char *file)
 {
     
     if (fmsg != NULL && fmsg != stderr) {
         fclose(fmsg);
         fmsg = NULL;
+        listEnablePop(_messageList, GFalse);
+        pthread_join(_logRunloop, GNULL);
+        _logRunloop = GNULL;
+        cb = gj_log_default;
+        if (_messageList) {
+            listFree(&_messageList);
+        }
+        if (_logBufferPool) {
+            GJBufferPoolClean(_logBufferPool, GFalse);
+        }
+        
     }
     if (file != NULL) {
+        listCreate(&_messageList, GTrue);
+        GJBufferPoolCreate(&_logBufferPool, 0, GTrue);
+        cb = gj_log_runloop;
         fmsg = fopen(file, "a+");
+        pthread_create(&_logRunloop, GNULL, logRunloop, GNULL);
     }
 }
 

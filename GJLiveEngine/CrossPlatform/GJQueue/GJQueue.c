@@ -136,7 +136,7 @@ inline GBool queueUnLockPush(GJQueue* q){
 #pragma mark DELEGATE
 
 GVoid queueEnablePop(GJQueue* q,GBool enable){
-    GJLOG(GNULL, GJ_LOGDEBUG, "queue:%p EnablePop:%d",q,enable);
+    GJLOG(GNULL, GJ_LOGINFO, "queue:%p EnablePop:%d",q,enable);
     if(!enable){
         q->popEnable = enable;//之前也要enable一次，防止pop中assent击中
         queueBroadcastPop(q);//要broadcast，防止其他线程在waitpop，产生等待
@@ -150,7 +150,7 @@ GVoid queueEnablePop(GJQueue* q,GBool enable){
 }
 
 GVoid queueEnablePush(GJQueue* q,GBool enable){
-    GJLOG(GNULL, GJ_LOGDEBUG, "queue:%p EnablePush:%d",q,enable);
+    GJLOG(GNULL, GJ_LOGINFO, "queue:%p EnablePush:%d",q,enable);
     if(!enable){
         queueLockPush(q);
         q->pushEnable = enable;

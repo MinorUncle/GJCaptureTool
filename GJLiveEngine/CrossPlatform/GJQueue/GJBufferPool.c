@@ -106,7 +106,7 @@ GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete){
 
     if(complete){
 #ifdef DEBUG
-//        GLong startMS = GJ_Gettime().value;
+        GLong startMS = GJ_Gettime().value;
 #endif
         if (p->generateSize > listLength(p->queue)) {
             GJLOG(DEFAULT_LOG, GJ_LOGWARNING, ":%p,还有%d个buffer没有释放,需要等待\n",p,p->generateSize - listLength(p->queue));
@@ -134,7 +134,10 @@ GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete){
             p->generateSize --;
         }
 #ifdef DEBUG
-//        GJAssert(GJ_Gettime().value - startMS < 1000, "等待时间太久，需要检查")   ;
+        GLong dl = GJ_Gettime().value - startMS;
+        if(dl < 1000){
+            GJLOG(GNULL, GJ_LOGWARNING, "等待时间太久:%ld ms，需要检查",dl);
+        }
 #endif
         GJLOG(DEFAULT_LOG, GJ_LOGINFO,"GJBufferPoolClean：%p 完成",p);
     }else{

@@ -48,7 +48,6 @@ GBool queueFree(GJQueue** inQ);
 /**
  用于释放数据内存的回调，data表示入队列的数据
 
- @param QueueCleanFunc QueueCleanFunc description
  */
 typedef void (*QueueCleanFunc)(GHandle data);
     
@@ -57,7 +56,6 @@ typedef void (*QueueCleanFunc)(GHandle data);
 
  @param q q description
  @param func func description
- @return return value description
  */
 GVoid queueFuncClean(GJQueue* q,QueueCleanFunc func);
 /**
