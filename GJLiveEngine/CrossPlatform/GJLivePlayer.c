@@ -493,7 +493,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
         preTime = currentTime;
 #endif
         if(_playControl->freshAudioFrame != GNULL){
-            R_BufferUnRetain(&_playControl->freshAudioFrame->retain);
+            R_BufferUnRetain(_playControl->freshAudioFrame);
         }
         _playControl->freshAudioFrame = audioBuffer;
         return GTrue;

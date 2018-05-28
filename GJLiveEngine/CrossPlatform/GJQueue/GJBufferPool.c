@@ -175,12 +175,12 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
     
     GJAssert(size >= p->minSize, "GJBufferPoolGetSizeData size less then minsize");
     if (listPop(p->queue, (GVoid**)&data, 0)) {
-        
-        if ( *data < size) {
+        GJBufferDataHead* head = (GJBufferDataHead*)data;
+        if ( head->size < size) {
             
 #if MENORY_CHECK
             data = (GUInt8*)realloc(data-sizeof(GJBufferDataHead), size + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
-            GJBufferDataHead* head = (GJBufferDataHead*)data;
+            head = (GJBufferDataHead*)data;
             head->file = file;
             head->func = func;
             head->line = lineTracker;
@@ -198,17 +198,19 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
             *(GLong*)data = (GLong)size;
             data += sizeof(GLong);
 #endif
+            GJBufferPoolCheck(p, data);
+
         }
 #if MENORY_CHECK
 
         else{
-            GJBufferDataHead* head = (GJBufferDataHead*)(data - sizeof(GJBufferDataHead));
             head->file = file;
             head->func = func;
             head->line = lineTracker;
-            head->pool = p;
-            head->size = size;
+            GJBufferPoolCheck(p, data);
+
         }
+
 #endif
     }else{
         
@@ -235,10 +237,13 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
         data += sizeof(GLong);
 #endif
         __sync_fetch_and_add(&p->generateSize,1);
+        GJBufferPoolCheck(p, data);
+
     }
 
 #if MENORY_CHECK
     GJAssert(listPush(p->leaveList, data), "跟踪器失败") ;
+    
 #endif
     return (GUInt8*)data;
 }

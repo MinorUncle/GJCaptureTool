@@ -302,14 +302,14 @@ static GVoid aacDecodeCompleteCallback(GHandle userData, R_GJPCMFrame *frame) {
     if (G_TIME_IS_INVALID(livePull->fristAudioDecodeClock)) {
         GJAudioFormat destformat   = livePull->audioDecoder->decodeGetDestFormat(livePull->audioDecoder);
         if (destformat.mSampleRate > 0) {
-            pthread_mutex_lock(&livePull->lock);
+//            pthread_mutex_lock(&livePull->lock);//调用stopAudio时，使用了信号机制，会等到此回调结束，所以不用锁
             if (livePull->streamPull) {//没有停止
                 GJLivePlay_AddAudioSourceFormat(livePull->player, destformat);
                 livePull->fristAudioDecodeClock = GJ_Gettime();
                 
                 pipleConnectNode(&livePull->audioDecoder->pipleNode, &livePull->player->pipleNode);
             }
-            pthread_mutex_unlock(&livePull->lock);
+//            pthread_mutex_unlock(&livePull->lock);
         }
     }
 }

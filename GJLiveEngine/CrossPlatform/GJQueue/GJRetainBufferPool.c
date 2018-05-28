@@ -101,7 +101,9 @@ GBool GJRetainBufferPoolClean(GJRetainBufferPool* p,GBool complete){
             p->generateSize --;
         }
 #ifdef DEBUG
-       GJAssert(GJ_Gettime().value - startMS < 1000, "等待时间太久，需要检查")   ;
+        if(GJ_Gettime().value - startMS < 1000){
+            GJLOG(GNULL, GJ_LOGWARNING, "等待时间太久，需要检查");
+        }
 #endif
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "GJRetainBufferPoolClean:%p 完成",p);
     }else{
