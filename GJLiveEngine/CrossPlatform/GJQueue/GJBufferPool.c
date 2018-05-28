@@ -123,10 +123,8 @@ GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete){
 #if MEMORY_CHECK
 
                 GJBufferPoolCheck(p,(GUInt8*)data);
-                data -= sizeof(GJBufferDataHead);
-#else
-                data -= sizeof(GLong);
 #endif
+                data -= sizeof(GJBufferDataHead);
                 free(data);
             }else{
                 GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "GJBufferPoolClean error:%p",p);
@@ -143,12 +141,11 @@ GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete){
     }else{
         GUInt8* data;
         while (listPop(p->queue, (GHandle*)&data, 0)) {
-            
 #if MEMORY_CHECK
 
             GJBufferPoolCheck(p,(GUInt8*)data);
-            data -= sizeof(GJBufferDataHead);
 #endif
+            data -= sizeof(GJBufferDataHead);
             free(data);
             p->generateSize --;
         }
