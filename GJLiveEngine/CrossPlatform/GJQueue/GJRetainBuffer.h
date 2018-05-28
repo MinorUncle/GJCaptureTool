@@ -15,7 +15,7 @@
 
 
 #include "GJPlatformHeader.h"
-#if MENORY_CHECK
+#if MEMORY_CHECK
 #include "GJList.h"
 #endif
 
@@ -33,7 +33,7 @@ typedef GBool (*RetainReleaseCallBack)(struct _GJRetainBuffer* data);
         GInt32 frontSize; //data之前的内存,所以外部释放时一定要注意free((char*)data-frontSize);
         GInt32 retainCount;
         GUInt8* data;
-#if MENORY_CHECK
+#if MEMORY_CHECK
         GBool needCheck;
         GJList* retainList;//retain调用的函数名
         GJList* unretainList;//unretain调用的函数名
@@ -42,13 +42,13 @@ typedef GBool (*RetainReleaseCallBack)(struct _GJRetainBuffer* data);
         GVoid *parm;
     };
     
-#if MENORY_CHECK
+#if MEMORY_CHECK
     GVoid R_BufferMemCheck(GJRetainBuffer* buffer);
 #endif
     
 #if 1
     static inline GUInt8* R_BufferOrigin(GJRetainBuffer* buffer){
-#if MENORY_CHECK
+#if MEMORY_CHECK
         return buffer->data-buffer->frontSize;
 #else
         return buffer->data-buffer->frontSize;
@@ -137,7 +137,7 @@ typedef GBool (*RetainReleaseCallBack)(struct _GJRetainBuffer* data);
 #define R_BufferRelive(x) _R_BufferRelive(x,__func__)
     static inline GVoid _R_BufferRelive(GJRetainBuffer* buffer, const GChar* tracker DEFAULT_PARAM(GNull)){
         __sync_fetch_and_add(&buffer->retainCount,1);
-#if MENORY_CHECK
+#if MEMORY_CHECK
         GJAssert(buffer->retainCount == 1, "");
 
         if(buffer->retainList == GNULL){
@@ -158,7 +158,7 @@ typedef GBool (*RetainReleaseCallBack)(struct _GJRetainBuffer* data);
     static inline GVoid _R_BufferRetain(GJRetainBuffer* buffer, const GChar* tracker DEFAULT_PARAM(GNull)){
         
          __sync_fetch_and_add(&buffer->retainCount,1);
-#if MENORY_CHECK
+#if MEMORY_CHECK
         GJAssert(buffer->retainCount > 1, "0及以下的retaincount不能retain");
         if(buffer->retainList == GNULL){
             listCreate(&buffer->retainList, GTrue);
@@ -204,7 +204,7 @@ typedef GBool (*RetainReleaseCallBack)(struct _GJRetainBuffer* data);
 
 /**
  为GJRetainBuffer申请data内存，需要时也创建一个GJRetainBuffer；
- MENORY_CHECK打开时负责内存校验
+ MEMORY_CHECK打开时负责内存校验
  data不能直接free，需要请用retainBufferFreeData；，包括releaseCallBack中
 
  @param R_Buffer 指针地址，当* R_Buffer为空时自动创建，

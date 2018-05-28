@@ -10,9 +10,9 @@
 #define GJPlatformHeader_h
 
 #ifdef DEBUG
-#define MENORY_CHECK 0
+#define MEMORY_CHECK 0
 #else
-#define MENORY_CHECK 0
+#define MEMORY_CHECK 0
 #endif
 #define CLOSE_WHILE_STREAM_COMPLETE 0
 #define DEFAULT_TRACKER __func__

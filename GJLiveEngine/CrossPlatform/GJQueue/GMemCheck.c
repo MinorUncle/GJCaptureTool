@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 
-#if MENORY_CHECK
+#if MEMORY_CHECK
 #include <assert.h>
 
 typedef struct _GMemCheckInfoHead{

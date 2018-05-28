@@ -18,7 +18,7 @@ GVoid GFree(GVoid *__ptr);
 GVoid *GRealloc(GVoid *__ptr, GSize_t __size);
 GVoid* GCalloc(GSize_t __count, GSize_t __size);
 
-#if MENORY_CHECK
+#if MEMORY_CHECK
 #define GMemCheck(_x)                                                                    \
 do{     GUInt8* data = (GUInt8*)(_x);                                                      \
         GMemCheckInfo* head = (GMemCheckInfo*)(data - sizeof(GMemCheckInfo));               \

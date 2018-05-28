@@ -84,13 +84,13 @@ static inline GJListNode* listGetEmptyNode(GJList* list){
         list->recycleHead = node->next;
         if(list->recycleHead == GNULL){
             
-#if MENORY_CHECK
+#if MEMORY_CHECK
             GJAssert(node == list->recycleTail, "管理有误");
 #endif
             list->recycleTail = GNULL;
         }
     }else{
-#if MENORY_CHECK
+#if MEMORY_CHECK
         GJAssert(list->recycleTail == GNULL, "管理有误");
 #endif
         node = (GJListNode*)malloc(sizeof(GJListNode));
@@ -102,13 +102,13 @@ static inline GJListNode* listGetEmptyNode(GJList* list){
 static inline GVoid listRecycleNode(GJList* list,GJListNode* node){
     if (list->recycleTail == GNULL) {
         
-#if MENORY_CHECK
+#if MEMORY_CHECK
         GJAssert(list->recycleHead == GNULL, "管理有误");
 #endif
         list->recycleTail = list->recycleHead = node;
     }else{
         
-#if MENORY_CHECK
+#if MEMORY_CHECK
         GJAssert(list->recycleHead != GNULL, "管理有误");
 #endif
         list->recycleTail->next = node;
@@ -145,7 +145,7 @@ GBool listFree(GJList** inQ){
     pthread_cond_destroy(&list->cond);
     pthread_mutex_destroy(&list->lock);
     
-#if MENORY_CHECK
+#if MEMORY_CHECK
     GJListNode* node = list->recycleHead;
     while (node) {
         GJListNode* next = node->next;
@@ -210,7 +210,7 @@ GBool listClean(GJList*list, GHandle* outBuffer,GInt32* outCount){
         }
 
         list->tail = GNULL;
-#if MENORY_CHECK
+#if MEMORY_CHECK
         GJAssert(list->currentLength == 0,"管理有误");
 #endif
     }
@@ -229,7 +229,7 @@ GBool listDelete(GJList* list,GHandle temBuffer){
     if (node->data == temBuffer) {
         list->head = node->next;
         if (list->head == GNULL) {
-#if MENORY_CHECK
+#if MEMORY_CHECK
             GJAssert(node == list->tail, "管理有误");
 #endif
             list->tail = GNULL;
@@ -254,7 +254,7 @@ GBool listDelete(GJList* list,GHandle temBuffer){
         }
     }
     
-#if MENORY_CHECK
+#if MEMORY_CHECK
     GJAssert(node != GNULL, "追踪器有误， node 不存在");
 #endif
 
@@ -304,7 +304,7 @@ GBool listPop(GJList* list,GHandle* temBuffer,GUInt32 ms){
     GJListNode* node = list->head;
     list->head = node->next;
     if (list->head == GNULL) {
-#if MENORY_CHECK
+#if MEMORY_CHECK
         GJAssert(node == list->tail, "管理有误");
 #endif
         list->tail = GNULL;
@@ -401,7 +401,7 @@ GInt32 listLength(GJList* list){
     return list->currentLength;
 }
 
-#if MENORY_CHECK
+#if MEMORY_CHECK
 GInt32 listGenerateSize(GJList* list){
     return list->generateSize;
 }

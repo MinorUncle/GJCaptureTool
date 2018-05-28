@@ -24,7 +24,7 @@ struct _GJStreamPull {
     GJPipleNode pipleNode;
     RTMP *rtmp;
     char  pullUrl[MAX_URL_LENGTH];
-#if MENORY_CHECK
+#if MEMORY_CHECK
     GJRetainBufferPool *memoryCachePool;
 #endif
     pthread_t       pullThread;
@@ -325,7 +325,7 @@ GBool GJStreamPull_Create(GJStreamPull **pullP, MessageHandle callback, GHandle 
     pull->messageCallbackParm = rtmpPullParm;
     pull->stopRequest         = GFalse;
 
-#if MENORY_CHECK
+#if MEMORY_CHECK
     GJRetainBufferPoolCreate(&pull->memoryCachePool, 1, GTrue, R_GJPacketMalloc, GNULL, GNULL);
 #endif
     pthread_mutex_init(&pull->mutex, NULL);
@@ -335,7 +335,7 @@ GBool GJStreamPull_Create(GJStreamPull **pullP, MessageHandle callback, GHandle 
 
 GVoid GJStreamPull_Delloc(GJStreamPull *pull) {
     if (pull) {
-#if MENORY_CHECK
+#if MEMORY_CHECK
         GJRetainBufferPoolClean(pull->memoryCachePool, GTrue);
         GJRetainBufferPoolFree(pull->memoryCachePool);
 #endif

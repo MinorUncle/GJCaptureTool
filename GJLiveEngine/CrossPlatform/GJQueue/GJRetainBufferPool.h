@@ -37,7 +37,7 @@ typedef struct GJRetainBufferPool{
     //    每次回收内存时的通知，用于处理伪释放内存前的处理
     P_RecycleNoticeCallback* noticeCallback;
     GHandle noticeUserData;
-#if MENORY_CHECK
+#if MEMORY_CHECK
     
     //跟踪离开bufferpool的数据
     GJList*     leaveList;

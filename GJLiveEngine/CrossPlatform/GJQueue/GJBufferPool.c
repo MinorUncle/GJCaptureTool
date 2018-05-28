@@ -22,7 +22,7 @@ struct _GJBufferPool{
     GInt32      generateSize;
     GUInt32     minSize;
     
-#if MENORY_CHECK
+#if MEMORY_CHECK
     
     //跟踪离开bufferpool的数据
     GJList*     leaveList;
@@ -32,7 +32,7 @@ struct _GJBufferPool{
 
 typedef struct GJBufferPoolHead{
     GInt32 size;
-#if MENORY_CHECK
+#if MEMORY_CHECK
     const GChar* file;
     const GChar* func;
     GInt32 line;
@@ -47,7 +47,7 @@ GJBufferDataHead* GJBufferPoolGetDataHead(GUInt8* data);
 
 
 
-#if MENORY_CHECK
+#if MEMORY_CHECK
 typedef struct GJBufferDataTail{
     GInt32 size;
 }GJBufferDataTail;
@@ -81,7 +81,7 @@ GBool GJBufferPoolCreate(GJBufferPool** pool,GUInt32 minSize,GBool atomic){
         return GFalse;
     }
     
-#if MENORY_CHECK
+#if MEMORY_CHECK
     if (!listCreate(&p->leaveList, 5)){
         free(p);
         GJAssert(0, "跟踪器启动失败");
@@ -120,7 +120,7 @@ GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete){
 
             if (listPop(p->queue, (GHandle*)&data, GINT32_MAX)) {
                 
-#if MENORY_CHECK
+#if MEMORY_CHECK
 
                 GJBufferPoolCheck(p,(GUInt8*)data);
                 data -= sizeof(GJBufferDataHead);
@@ -144,7 +144,7 @@ GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete){
         GUInt8* data;
         while (listPop(p->queue, (GHandle*)&data, 0)) {
             
-#if MENORY_CHECK
+#if MEMORY_CHECK
 
             GJBufferPoolCheck(p,(GUInt8*)data);
             data -= sizeof(GJBufferDataHead);
@@ -154,7 +154,7 @@ GVoid GJBufferPoolClean(GJBufferPool* p,GBool complete){
         }
     }
     
-#if MENORY_CHECK
+#if MEMORY_CHECK
     if (complete) {
         GJAssert(listLength(p->leaveList)==0, "跟踪器有误,还存在数据");
     }
@@ -167,14 +167,14 @@ GVoid GJBufferPoolFree(GJBufferPool* pool){
         return ;
     }
     listFree(&pool->queue);
-#if MENORY_CHECK
+#if MEMORY_CHECK
     listFree(&pool->leaveList);
 #endif
     
     free(pool);
 };
 
-#if MENORY_CHECK
+#if MEMORY_CHECK
 
 GVoid _GJBufferPoolUpdateTrackInfo(GJBufferPool* pool,GUInt8* data,const GChar* file  DEFAULT_PARAM(GNull),const GChar* func  DEFAULT_PARAM(GNull), GInt32 lineTracker DEFAULT_PARAM(0)){
     GJBufferDataHead* head = GJBufferPoolGetDataHead(data);
@@ -199,7 +199,7 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
 
         if ( head->size < size) {
             
-#if MENORY_CHECK
+#if MEMORY_CHECK
             data = (GUInt8*)realloc(head, size + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
             head = (GJBufferDataHead*)data;
             head->size = size;
@@ -215,7 +215,7 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
         }
     }else{
         
-#if MENORY_CHECK
+#if MEMORY_CHECK
         data = (GUInt8*)malloc(size + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
         GJBufferDataHead* head = (GJBufferDataHead*)data;
         head->size = size;
@@ -233,7 +233,7 @@ GUInt8* _GJBufferPoolGetSizeData(GJBufferPool* p,GInt32 size,const GChar* file, 
 
     }
 
-#if MENORY_CHECK
+#if MEMORY_CHECK
     _GJBufferPoolUpdateTrackInfo(p, data, file, func, lineTracker);
     GJAssert(listPush(p->leaveList, data), "跟踪器失败") ;
 #endif
@@ -244,7 +244,7 @@ GUInt8* GJBufferPoolGetData(GJBufferPool* p,const GChar* file  DEFAULT_PARAM(GNu
     GUInt8* data;
     
     if (!listPop(p->queue, (GVoid**)&data, 0)) {
-#if MENORY_CHECK
+#if MEMORY_CHECK
         data = (GUInt8*)malloc(p->minSize + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
         GJBufferDataHead* pre = (GJBufferDataHead*)data;
         pre->size = p->minSize;
@@ -259,7 +259,7 @@ GUInt8* GJBufferPoolGetData(GJBufferPool* p,const GChar* file  DEFAULT_PARAM(GNu
         __sync_fetch_and_add(&p->generateSize,1);
     }
 
-#if MENORY_CHECK
+#if MEMORY_CHECK
     _GJBufferPoolUpdateTrackInfo(p, data, GNULL, func, lineTracker);
 
     GJAssert(listPush(p->leaveList, data), "跟踪器失败") ;
@@ -273,7 +273,7 @@ GUInt8* GJBufferPoolGetData(GJBufferPool* p,const GChar* file  DEFAULT_PARAM(GNu
 //}
 GBool GJBufferPoolSetData(GJBufferPool* p,GUInt8* data){
     
-#if MENORY_CHECK
+#if MEMORY_CHECK
     GJBufferPoolCheck(p,data);
     listDelete(p->leaveList, data);
 #endif

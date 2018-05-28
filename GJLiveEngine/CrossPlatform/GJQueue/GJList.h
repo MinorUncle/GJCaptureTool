@@ -62,7 +62,7 @@ GBool listSwop(GJList* list, GBool order, ListSwopFunc func);
 
 GInt32  listLength(GJList* list);
 
-#if MENORY_CHECK
+#if MEMORY_CHECK
 GInt32 listGenerateSize(GJList* list);
 #endif
 

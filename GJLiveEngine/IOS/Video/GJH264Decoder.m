@@ -441,7 +441,7 @@ ERROR:
 }
 -(CMSampleBufferRef)createSampleBufferWithData:(GUInt8*)packetData size:(GLong)packetSize pts:(GInt64)pts{
     
-    //#if MENORY_CHECK  格式检查，针对不规则流
+    //#if MEMORY_CHECK  格式检查，针对不规则流
     ////<-----conversion
     //    if (((GUInt16*)packetData)[0] == 0 && packetData[2] == 0 && packetData[3] == 1) {
     

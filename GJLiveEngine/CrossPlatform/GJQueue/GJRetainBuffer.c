@@ -16,7 +16,7 @@
 //    GInt32 frontSize; //data之前的内存,所以外部释放时一定要注意free((char*)data-frontSize);
 //    GInt32 retainCount;
 //    GUInt8* data;
-//#if MENORY_CHECK
+//#if MEMORY_CHECK
 //    GBool needCheck;
 //#endif
 //    RetainReleaseCallBack retainReleaseCallBack;
@@ -24,7 +24,7 @@
 //};
 
 
-#if MENORY_CHECK
+#if MEMORY_CHECK
 inline GVoid R_BufferMemCheck(GJRetainBuffer* buffer){
     if (buffer->needCheck) {
         GLong* data = (GLong*)(buffer->data-buffer->frontSize);
@@ -49,7 +49,7 @@ GVoid R_BufferAlloc(GJRetainBuffer**pBuffer, GInt32 size,GBool (*releaseCallBack
     buffer->data = malloc(size);
 
     //malloc已经有了检查，所以不需要重复添加检查数据。
-#if MENORY_CHECK
+#if MEMORY_CHECK
     buffer->needCheck = GTrue;
     buffer->retainList = buffer->unretainList = GNULL;
 #endif
@@ -67,8 +67,8 @@ GVoid R_BufferPack(GJRetainBuffer**pBuffer, GVoid* sourceData, GInt32 size,GBool
     GJRetainBuffer* buffer = *pBuffer;
     buffer->capacity = size;
     buffer->size = 0;
-#if MENORY_CHECK
-    GJAssert(0, "MENORY_CHECK状态，请尽量避免该方法");
+#if MEMORY_CHECK
+    GJAssert(0, "MEMORY_CHECK状态，请尽量避免该方法");
     buffer->needCheck = GFalse;
     buffer->retainList = buffer->unretainList = GNULL;
 #endif
@@ -84,7 +84,7 @@ GVoid R_BufferUnRetainUnTrack(GHandle buffer){
 }
 
 GVoid _R_BufferUnRetain(GJRetainBuffer* buffer,const GChar* tracker){
-#if MENORY_CHECK
+#if MEMORY_CHECK
     R_BufferMemCheck(buffer);
     GJAssert(buffer->retainCount > 0, "retain 管理出错");
     
@@ -92,7 +92,7 @@ GVoid _R_BufferUnRetain(GJRetainBuffer* buffer,const GChar* tracker){
 #endif
     
     if (__sync_fetch_and_add(&buffer->retainCount,-1) <= 1) {//count是减一之前的值，，当连续unretain的时候，第一个unretain到达此的时候，第二个刚走完__sync_fetch_and_add，容易引起第一个先进入count的情况。所以修改为返回结果直接判断
-#if MENORY_CHECK
+#if MEMORY_CHECK
         GJAssert(listLength(buffer->unretainList) == listLength(buffer->retainList), "释放的个数与引用的个数不相等");
         listClean(buffer->retainList, GNULL, GNULL);
         listClean(buffer->unretainList, GNULL, GNULL);
@@ -114,7 +114,7 @@ GVoid _R_BufferUnRetain(GJRetainBuffer* buffer,const GChar* tracker){
 
 GVoid R_BufferFreeData(GJRetainBuffer* buffer){
     GLong* data = (GLong*)(buffer->data - buffer->frontSize);
-#if MENORY_CHECK
+#if MEMORY_CHECK
     R_BufferMemCheck(buffer);
 #endif
     free(data);
@@ -132,7 +132,7 @@ GBool R_BufferMoveDataPoint(GJRetainBuffer* buffer,GInt32 offset,GBool keepMem){
 GVoid R_BufferReCapacity(GJRetainBuffer* buffer,GInt32 size){
     if (buffer->capacity < size) {//保持frontSize大小，但是不保证内存不变
         
-#if MENORY_CHECK
+#if MEMORY_CHECK
         R_BufferMemCheck(buffer);
 #endif
         buffer->data = (GUInt8*)realloc(R_BufferOrigin(buffer), size + buffer->frontSize) + buffer->frontSize;
@@ -154,13 +154,13 @@ GBool R_BufferMoveDataToPoint(GJRetainBuffer* buffer,GUInt32 frontSize,GBool kee
         buffer->data = buffer->data-buffer->frontSize+frontSize;
         buffer->capacity = buffer->capacity + buffer->frontSize - frontSize;
         buffer->frontSize = frontSize;
-#if MENORY_CHECK
+#if MEMORY_CHECK
         R_BufferMemCheck(buffer);
 #endif
         return GTrue;
     }else{
-#if MENORY_CHECK
-        GJAssert(0, "MENORY_CHECK 状态下不能尝试内存重新申请，");
+#if MEMORY_CHECK
+        GJAssert(0, "MEMORY_CHECK 状态下不能尝试内存重新申请，");
 #endif
         GInt32 canOffset = buffer->capacity - buffer->size +buffer->frontSize;
         if (canOffset >= frontSize) {//可以移动则直接移动
@@ -191,7 +191,7 @@ GInt32  R_BufferStructSize(){
 #if 0
 
 GUInt8* R_BufferOrigin(GJRetainBuffer* buffer){
-#if MENORY_CHECK
+#if MEMORY_CHECK
     return buffer->data-buffer->frontSize-sizeof(GLong);
 #else
     return buffer->data-buffer->frontSize;
