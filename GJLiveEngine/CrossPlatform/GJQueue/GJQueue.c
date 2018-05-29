@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/time.h>
+#import <libkern/OSAtomic.h>
 
 
 #define DEFAULT_MAX_COUNT 10
@@ -270,8 +271,10 @@ RETRY:
         GJLOG(q->debugClass, GJ_LOGALL, "queue:%p after pop wait with incount:%d  outcount:%d  minCacheSize:%d",q,q->inPointer,q->outPointer,q->minCacheSize);
     }
     GInt32 index = q->outPointer%q->capacity;
-    q->outPointer++;
+    //改为先读取，再自增，否则会出现自增后还没有读，写操作就已经覆盖了。
     *temBuffer = q->queue[index];
+    OSMemoryBarrier();//使用内存栅栏，防止cpu乱序
+    q->outPointer++;
 
     queueSignalPush(q);
     GJLOG(q->debugClass, GJ_LOGALL, "queue:%p signal pop with incount:%d  outcount:%d  minCacheSize:%d",q,q->inPointer,q->outPointer,q->minCacheSize);
@@ -324,10 +327,10 @@ GBool queuePush(GJQueue* q,GHandle temBuffer,GUInt32 ms){
     q->queue[q->inPointer%q->capacity] = temBuffer;
 //    __atomic_add_fetch();
 //    __sync_add_and_fetch();
-    GJAssert(q->inPointer>=q->outPointer, "error");
+    OSMemoryBarrier();//使用内存栅栏，防止cpu乱序
+    q->inPointer++;
     GJLOG(q->debugClass, GJ_LOGALL, "queue:%p after push wait with incount:%d  outcount:%d  minCacheSize:%d",q,q->inPointer,q->outPointer,q->minCacheSize);
 
-    q->inPointer++;
 
     
 //    if (q->inPointer - q->outPointer > q->minCacheSize) {//每次都发出信号，防止pop进入等待前一刻的临界条件此处发出了signal信号。
