@@ -51,7 +51,6 @@ inline static GVoid gj_log_default(GJClass* dClass,GJ_LogLevel level ,const char
 
 
 
-#ifdef DEBUG
 static pthread_t _logRunloop;
 static GJList* _messageList;
 static GJBufferPool* _logBufferPool;
@@ -103,7 +102,6 @@ static void * logRunloop(void * userData){
     }
     return GNULL;
 }
-#endif
 
 GVoid GJ_LogSetOutput(char *file)
 {
