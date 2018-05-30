@@ -144,7 +144,6 @@ GVoid queueEnablePop(GJQueue* q,GBool enable){
         queueLockPop(q);//要lock，防止其他线程刚好读取上次的结果，然后又在之后的Broadcast后wait了。
         q->popEnable = enable;
         queueUnLockPop(q);
-        queueBroadcastPop(q);
     }else{
         q->popEnable = enable;
     }
@@ -153,10 +152,10 @@ GVoid queueEnablePop(GJQueue* q,GBool enable){
 GVoid queueEnablePush(GJQueue* q,GBool enable){
     GJLOG(GNULL, GJ_LOGINFO, "queue:%p EnablePush:%d",q,enable);
     if(!enable){
+        queueBroadcastPush(q);
         queueLockPush(q);
         q->pushEnable = enable;
         queueUnLockPush(q);
-        queueBroadcastPush(q);
     }else{
         q->pushEnable = enable;
     }
