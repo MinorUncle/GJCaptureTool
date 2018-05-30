@@ -36,7 +36,9 @@ GJMessage* createMessage(MessageHandle handle,GHandle sender,GHandle receive,GIn
     message->arg = arg;
     return message;
 }
-
+static inline GVoid freeMessage(MessageHandle handle){
+    free(handle);
+}
 static GHandle messageRunLoop(GHandle parm) {
     GJMessageDispatcher* dispatcher = parm;
     GJMessage* message;
@@ -72,7 +74,7 @@ void destroyDispatcher(GJMessageDispatcher* dispatcher){
         GHandle message;
         while (queuePop(dispatcher->messageQueue, &message, 0)) {
             GJLOG(GNULL, GJ_LOGFORBID, "还有没有分发的消息");
-            free(message);
+            freeMessage(message);
         }
         queueFree(&dispatcher->messageQueue);
         free(dispatcher);
