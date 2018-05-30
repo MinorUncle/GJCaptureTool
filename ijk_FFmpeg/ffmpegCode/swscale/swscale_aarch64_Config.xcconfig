@@ -1,0 +1,8 @@
+PROJECT_DIR=/Users/weichengniandashu/develop/ffmpegCode
+TARGETNAME=swscale
+PROJECT_FILE_PATH=/Users/weichengniandashu/develop/ffmpegCode/ffmpegCode.xcodeproj
+GROUP=swscale/libswscale/aarch64
+arch=arm64
+configFile=/Users/weichengniandashu/develop/ffmpegCode/ffmpegCode/config_arm64.h
+makeFile=/Users/weichengniandashu/develop/ffmpegCode/ffmpegCode/ffmpeg/libswscale/aarch64/Makefile
+DidBuild=yes

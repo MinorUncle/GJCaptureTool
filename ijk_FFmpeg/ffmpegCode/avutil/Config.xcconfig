@@ -1,0 +1,8 @@
+PROJECT_DIR=/Users/zhouguangjin/Desktop/ijkplayer-master/ios/ffmpegCode
+TARGETNAME=avutil
+PROJECT_FILE_PATH=/Users/zhouguangjin/Desktop/ijkplayer-master/ios/ffmpegCode/ffmpegCode.xcodeproj
+GROUP=avutil/libavutil
+arch=arm64
+StaticFile=/Users/zhouguangjin/Desktop/ijkplayer-master/ios/ffmpegCode/staticFile.txt
+rubyFile=/Users/zhouguangjin/Desktop/ijkplayer-master/ios/ffmpegCode/PraseProduct.rb
+DidBuild=yes

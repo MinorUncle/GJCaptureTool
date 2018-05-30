@@ -1,0 +1,6 @@
+PROJECT_DIR=/Users/tongguan/Develop/ffmpegCode
+TARGETNAME=avfilter
+PROJECT_FILE_PATH=/Users/tongguan/Develop/ffmpegCode/ffmpegCode.xcodeproj
+GROUP=avfilter/libavfilter
+arch=arm64
+DidBuild=yes

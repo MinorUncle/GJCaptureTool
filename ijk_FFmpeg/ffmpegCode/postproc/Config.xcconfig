@@ -1,0 +1,6 @@
+PROJECT_DIR=/Users/tongguan/Develop/ffmpegCode
+TARGETNAME=postproc
+PROJECT_FILE_PATH=/Users/tongguan/Develop/ffmpegCode/ffmpegCode.xcodeproj
+GROUP=postproc/libpostproc
+arch=arm64
+DidBuild=yes

@@ -1,0 +1,6 @@
+PROJECT_DIR=/Users/tongguan/Develop/ffmpegCode
+TARGETNAME=swresample
+PROJECT_FILE_PATH=/Users/tongguan/Develop/ffmpegCode/ffmpegCode.xcodeproj
+GROUP=swresample/libswresample
+arch=arm64
+DidBuild=yes

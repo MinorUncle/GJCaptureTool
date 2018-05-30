@@ -1,0 +1,16 @@
+//
+//  FFmpegHeader.pch
+//  ffmpegCode
+//
+//  Created by tongguan on 16/9/26.
+//  Copyright © 2016年 MinorUncle. All rights reserved.
+//
+
+#ifndef FFmpegHeader_pch
+#define FFmpegHeader_pch
+
+// Include any system framework and library headers here that should be included in all compilation units.
+// You will also need to set the Prefix Header build setting of one or more of your targets to reference this file.
+#include "libavutil/internal.h"
+
+#endif /* FFmpegHeader_pch */

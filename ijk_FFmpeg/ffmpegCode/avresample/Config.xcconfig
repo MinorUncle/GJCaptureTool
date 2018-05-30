@@ -1,0 +1,8 @@
+PROJECT_DIR=/Users/tongguan/Develop/ffmpegCode
+TARGETNAME=avresample
+PROJECT_FILE_PATH=/Users/tongguan/Develop/ffmpegCode/ffmpegCode.xcodeproj
+GROUP=avresample/libavresample
+arch=arm64
+configFile=/Users/tongguan/Develop/ffmpegCode/ffmpegCode/config_arm64.h
+makeFile=/Users/tongguan/Develop/ffmpegCode/ffmpegCode/ffmpeg/libavresample/Makefile
+DidBuild=yes

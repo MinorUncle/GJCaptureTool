@@ -1,0 +1,7 @@
+PROJECT_DIR=/Users/zhouguangjin/Desktop/ijkplayer-master/ios/ffmpegCode
+TARGETNAME=avformat
+PROJECT_FILE_PATH=/Users/zhouguangjin/Desktop/ijkplayer-master/ios/ffmpegCode/ffmpegCode.xcodeproj
+GROUP=avformat/libavformat
+arch=arm64
+StaticFile=/Users/zhouguangjin/Desktop/ijkplayer-master/ios/ffmpegCode/staticFile.txt
+rubyFile=/Users/zhouguangjin/Desktop/ijkplayer-master/ios/ffmpegCode/PraseProduct.rb

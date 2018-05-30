@@ -1,0 +1,17 @@
+allfilters.o
+audio.o
+avfilter.o
+avfiltergraph.o
+buffersink.o
+buffersrc.o
+drawutils.o
+fifo.o
+formats.o
+framepool.o
+framequeue.o
+graphdump.o
+graphparser.o
+opencl_allkernels.o
+pthread.o
+transform.o
+video.o

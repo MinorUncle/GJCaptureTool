@@ -1,0 +1,8 @@
+PROJECT_DIR=/Users/weichengniandashu/Downloads/ffmpegCode
+TARGETNAME=avcodec
+PROJECT_FILE_PATH=/Users/weichengniandashu/Downloads/ffmpegCode/ffmpegCode.xcodeproj
+GROUP=avcodec/libavcodec/aarch64
+arch=arm64
+configFile=/Users/weichengniandashu/Downloads/ffmpegCode/ffmpegCode/config_arm64.h
+makeFile=/Users/weichengniandashu/Downloads/ffmpegCode/ffmpegCode/ffmpeg/libavcodec/aarch64/Makefile
+DidBuild=yes
