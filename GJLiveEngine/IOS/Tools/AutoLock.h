@@ -8,11 +8,12 @@
 
 #import <Foundation/Foundation.h>
 
-@interface AutoLock:NSObject
-{
-    NSObject<NSLocking>* _lock;
+@interface AutoLock : NSObject {
+    NSObject<NSLocking> *_lock;
 }
-+(instancetype) local:(NSObject<NSLocking>*)lock;
++ (instancetype)local:(NSObject<NSLocking> *)lock;
 @end
 
-#define AUTO_LOCK(lock) AutoLock* a=[AutoLock local:lock];a=a;
+#define AUTO_LOCK(lock)                  \
+    AutoLock *a = [AutoLock local:lock]; \
+    a           = a;

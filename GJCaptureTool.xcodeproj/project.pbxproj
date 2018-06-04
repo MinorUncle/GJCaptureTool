@@ -46,7 +46,6 @@
 		6A435CCD1F2883D30046CEA3 /* IOS_Recoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A435CCB1F2883D30046CEA3 /* IOS_Recoder.h */; };
 		6A53950D20A9A81700E9E3C9 /* GJDNSCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A53950B20A9A81700E9E3C9 /* GJDNSCache.h */; };
 		6A53951120A9AA0E00E9E3C9 /* GJDNSCacheTool.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A53950F20A9AA0E00E9E3C9 /* GJDNSCacheTool.h */; };
-		6A53951220A9AA0E00E9E3C9 /* GJDNSCacheTool.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A53951020A9AA0E00E9E3C9 /* GJDNSCacheTool.m */; };
 		6A53951A20AA7BF900E9E3C9 /* AutoLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A53951820AA7BF900E9E3C9 /* AutoLock.h */; };
 		6A53951B20AA7BF900E9E3C9 /* AutoLock.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A53951920AA7BF900E9E3C9 /* AutoLock.m */; };
 		6A559C311F3D3A3500698C19 /* GJStreamPull.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453841F14C16C0009FB64 /* GJStreamPull.h */; };
@@ -574,8 +573,6 @@
 		AE3A2C321F07FDD900C24BAA /* audiooutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = audiooutput.h; path = libairfloat/libairfloat/audiooutput.h; sourceTree = SOURCE_ROOT; };
 		AE3A2C341F07FE0400C24BAA /* decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = decoder.h; path = libairfloat/libairfloat/decoder.h; sourceTree = SOURCE_ROOT; };
 		AE70A4B81ECB4D930009E49A /* GJLiveEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GJLiveEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		AE70A4C71ECB4DFE0009E49A /* FFWriter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FFWriter.c; sourceTree = "<group>"; };
-		AE70A4C81ECB4DFE0009E49A /* FFWriter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFWriter.h; sourceTree = "<group>"; };
 		AE70A4C91ECB4DFE0009E49A /* GJFormats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJFormats.h; sourceTree = "<group>"; };
 		AE70A4CA1ECB4DFE0009E49A /* GJLive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLive.h; sourceTree = "<group>"; };
 		AE70A4CB1ECB4DFE0009E49A /* GJLiveDefine+internal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "GJLiveDefine+internal.c"; sourceTree = "<group>"; };
@@ -994,8 +991,6 @@
 				6AB4F4301EF0082200FD4172 /* GJFLVPack.h */,
 				AE70A4D41ECB4DFE0009E49A /* sps_decode.c */,
 				AE70A4D51ECB4DFE0009E49A /* sps_decode.h */,
-				AE70A4C71ECB4DFE0009E49A /* FFWriter.c */,
-				AE70A4C81ECB4DFE0009E49A /* FFWriter.h */,
 				AE70A4C91ECB4DFE0009E49A /* GJFormats.h */,
 				6A53950A20A9A81700E9E3C9 /* GJDNSCache.c */,
 				6A53950B20A9A81700E9E3C9 /* GJDNSCache.h */,
@@ -1916,7 +1911,6 @@
 				6ABF2B231F0B413600721DB3 /* IOS_H264Decode.m in Sources */,
 				6AA649011FC2C99F00AA3CAC /* LIveStartViewController.m in Sources */,
 				AE70A5281ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m in Sources */,
-				6A53951220A9AA0E00E9E3C9 /* GJDNSCacheTool.m in Sources */,
 				6AD06E8620B53B86004DF75B /* GJQueue.c in Sources */,
 				6ABF2B271F0B413600721DB3 /* IOS_PictureDisplay.m in Sources */,
 				6AE37BD61ED5956800B049EB /* GJLivePullContext.c in Sources */,

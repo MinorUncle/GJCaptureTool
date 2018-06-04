@@ -9,8 +9,7 @@
 #import "AutoLock.h"
 
 @implementation AutoLock
-- (instancetype)initWithLock:(NSObject<NSLocking>*)lock
-{
+- (instancetype)initWithLock:(NSObject<NSLocking> *)lock {
     self = [super init];
     if (self && lock) {
         _lock = lock;
@@ -18,10 +17,12 @@
     }
     return self;
 }
--(void)dealloc{
+
+- (void)dealloc {
     [_lock unlock];
 }
-+(instancetype) local:(NSObject<NSLocking>*)lock{
-    return [[AutoLock alloc]initWithLock:lock];
+
++ (instancetype)local:(NSObject<NSLocking> *)lock {
+    return [[AutoLock alloc] initWithLock:lock];
 }
 @end
