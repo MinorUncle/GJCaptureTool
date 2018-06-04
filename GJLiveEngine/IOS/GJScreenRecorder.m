@@ -248,7 +248,7 @@ NSData *createData;
                     _audioFrameCount += sizeFrame;
                     [self writeAudioWithSampleBuffer:sample pts:pts];
                     [self freeSampleBuffer:sample];
-                    GJLOG(GNULL, GJ_LOGINFO, "appendSampleBuffer empty data，currentTimeFrames:%ld audioframe:%d", (long) currentTimeFrames, _audioFrameCount);
+                    GJLOG(GNULL, GJ_LOGINFO, "appendSampleBuffer empty data，currentTimeFrames:%ld audioframe:%ld", (long) currentTimeFrames, (long)_audioFrameCount);
                 } else {
                     NSAssert(0, @"createBlackSampleBufferWithSample ERROR");
                     return;

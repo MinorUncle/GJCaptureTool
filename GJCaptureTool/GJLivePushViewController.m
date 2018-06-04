@@ -13,7 +13,6 @@
 #import "GJSunSystemARScene.h"
 #import "GJLog.h"
 #import "GJBufferPool.h"
-#import "GJAudioManager.h"
 #import <ARKit/ARConfiguration.h>
 
 @interface GJSliderView:UISlider{

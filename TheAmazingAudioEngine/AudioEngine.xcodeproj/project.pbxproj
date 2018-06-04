@@ -160,10 +160,10 @@
 		6A40E1A21EEAA2BB0047E0F0 /* AEPlaythroughChannel.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CA689C01542DC8C00AF8DDD /* AEPlaythroughChannel.m */; };
 		6A40E1A31EEAA2BF0047E0F0 /* AEPlaythroughChannel.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CA689BF1542DC8C00AF8DDD /* AEPlaythroughChannel.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		6A85F9E01F0139770037A64F /* AEMixerBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C8A0F3E1540BBD300307CB6 /* AEMixerBuffer.m */; };
-		6A85F9E71F013E200037A64F /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85F9E51F013E200037A64F /* AEAudioSender.h */; };
-		6A85F9E81F013E200037A64F /* AEAudioSender.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A85F9E61F013E200037A64F /* AEAudioSender.m */; };
-		6A85FA251F0239550037A64F /* GJAudioMixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA231F0239550037A64F /* GJAudioMixer.h */; };
-		6A85FA261F0239550037A64F /* GJAudioMixer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A85FA241F0239550037A64F /* GJAudioMixer.m */; };
+		6A8E27C920C4E08F00777B38 /* GJAudioMixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A8E27C720C4E08E00777B38 /* GJAudioMixer.h */; };
+		6A8E27CA20C4E08F00777B38 /* GJAudioMixer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A8E27C820C4E08E00777B38 /* GJAudioMixer.m */; };
+		6A8E27CD20C4E0C300777B38 /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A8E27CB20C4E0C300777B38 /* AEAudioSender.h */; };
+		6A8E27CE20C4E0C300777B38 /* AEAudioSender.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A8E27CC20C4E0C300777B38 /* AEAudioSender.m */; };
 		6AB4F4491EF0D8C000FD4172 /* GJAudioSessionCenter.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AB4F4471EF0D8C000FD4172 /* GJAudioSessionCenter.h */; };
 		6AB4F44A1EF0D8C000FD4172 /* GJAudioSessionCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB4F4481EF0D8C000FD4172 /* GJAudioSessionCenter.m */; };
 		7A5687151B54617200243427 /* AEAudioController+Audiobus.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C2886511557DB800074175A /* AEAudioController+Audiobus.m */; };
@@ -302,10 +302,10 @@
 		4CE501971493F82600F23607 /* AudioEngine-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AudioEngine-Prefix.pch"; sourceTree = "<group>"; };
 		4CEC0EB716B5294200D11ED9 /* AEBlockFilter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEBlockFilter.h; sourceTree = "<group>"; };
 		4CEC0EB816B5294300D11ED9 /* AEBlockFilter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEBlockFilter.m; sourceTree = "<group>"; };
-		6A85F9E51F013E200037A64F /* AEAudioSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioSender.h; sourceTree = "<group>"; };
-		6A85F9E61F013E200037A64F /* AEAudioSender.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAudioSender.m; sourceTree = "<group>"; };
-		6A85FA231F0239550037A64F /* GJAudioMixer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioMixer.h; sourceTree = "<group>"; };
-		6A85FA241F0239550037A64F /* GJAudioMixer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioMixer.m; sourceTree = "<group>"; };
+		6A8E27C720C4E08E00777B38 /* GJAudioMixer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJAudioMixer.h; path = TheAmazingAudioEngine/GJAudioMixer.h; sourceTree = "<group>"; };
+		6A8E27C820C4E08E00777B38 /* GJAudioMixer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GJAudioMixer.m; path = TheAmazingAudioEngine/GJAudioMixer.m; sourceTree = "<group>"; };
+		6A8E27CB20C4E0C300777B38 /* AEAudioSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEAudioSender.h; path = TheAmazingAudioEngine/AEAudioSender.h; sourceTree = "<group>"; };
+		6A8E27CC20C4E0C300777B38 /* AEAudioSender.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AEAudioSender.m; path = TheAmazingAudioEngine/AEAudioSender.m; sourceTree = "<group>"; };
 		6AB4F4471EF0D8C000FD4172 /* GJAudioSessionCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioSessionCenter.h; sourceTree = "<group>"; };
 		6AB4F4481EF0D8C000FD4172 /* GJAudioSessionCenter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioSessionCenter.m; sourceTree = "<group>"; };
 		7A5687101B54610900243427 /* libAudioEngine OS X.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libAudioEngine OS X.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -413,12 +413,12 @@
 				4C70F9781BB0D0900064CF73 /* Filters */,
 				4C8A0F3D1540BBD300307CB6 /* AEMixerBuffer.h */,
 				4C8A0F3E1540BBD300307CB6 /* AEMixerBuffer.m */,
-				6A85FA231F0239550037A64F /* GJAudioMixer.h */,
-				6A85FA241F0239550037A64F /* GJAudioMixer.m */,
-				6A85F9E51F013E200037A64F /* AEAudioSender.h */,
-				6A85F9E61F013E200037A64F /* AEAudioSender.m */,
+				6A8E27CB20C4E0C300777B38 /* AEAudioSender.h */,
+				6A8E27CC20C4E0C300777B38 /* AEAudioSender.m */,
 				4CA689B11541EF4A00AF8DDD /* AELimiter.h */,
 				4CA689B21541EF4A00AF8DDD /* AELimiter.m */,
+				6A8E27C720C4E08E00777B38 /* GJAudioMixer.h */,
+				6A8E27C820C4E08E00777B38 /* GJAudioMixer.m */,
 				4CA689BC1542D4FE00AF8DDD /* AELimiterFilter.h */,
 				4CA689BD1542D4FE00AF8DDD /* AELimiterFilter.m */,
 				4CA689C315447E3100AF8DDD /* AEExpanderFilter.h */,
@@ -547,17 +547,17 @@
 			files = (
 				4CB2273C1D0E5FD100B1135F /* AERealtimeWatchdog.h in Headers */,
 				4C215D121523A94200D36CAD /* TheAmazingAudioEngine.h in Headers */,
-				6A85FA251F0239550037A64F /* GJAudioMixer.h in Headers */,
+				6A8E27C920C4E08F00777B38 /* GJAudioMixer.h in Headers */,
 				F9C23C1E1BA979050060718F /* AEMessageQueue.h in Headers */,
 				4C13AA9B1BB0FC9900DE05E0 /* AEMemoryBufferPlayer.h in Headers */,
 				6AB4F4491EF0D8C000FD4172 /* GJAudioSessionCenter.h in Headers */,
 				4C2886381556FC620074175A /* AEAudioController+Audiobus.h in Headers */,
 				4C215D131523A94200D36CAD /* AEAudioController.h in Headers */,
 				4C49FE32153DC21A008725E0 /* AEAudioFileLoaderOperation.h in Headers */,
-				6A85F9E71F013E200037A64F /* AEAudioSender.h in Headers */,
 				4C215D141523A94200D36CAD /* AEAudioFilePlayer.h in Headers */,
 				4C38DC5515458AB1009F4454 /* AEAudioFileWriter.h in Headers */,
 				4C215D151523A94200D36CAD /* AEUtilities.h in Headers */,
+				6A8E27CD20C4E0C300777B38 /* AEAudioSender.h in Headers */,
 				4C8AED0416B3644500958034 /* AEFloatConverter.h in Headers */,
 				6A40E1A31EEAA2BF0047E0F0 /* AEPlaythroughChannel.h in Headers */,
 				4CEC0EB916B5294300D11ED9 /* AEBlockFilter.h in Headers */,
@@ -776,9 +776,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C215D081523A8E500D36CAD /* AEAudioController.m in Sources */,
+				6A8E27CA20C4E08F00777B38 /* GJAudioMixer.m in Sources */,
 				4C70F9A51BB0D2FE0064CF73 /* AEHighPassFilter.m in Sources */,
 				4C215D091523A8E500D36CAD /* AEAudioFilePlayer.m in Sources */,
-				6A85FA261F0239550037A64F /* GJAudioMixer.m in Sources */,
 				4C215D0A1523A8E500D36CAD /* AEUtilities.m in Sources */,
 				4C70F9AD1BB0D2FE0064CF73 /* AENewTimePitchFilter.m in Sources */,
 				4CCAFEFF1C0BCFF100B87416 /* AEAudioBufferManager.m in Sources */,
@@ -795,7 +795,6 @@
 				4C70F99D1BB0D2FE0064CF73 /* AEBandpassFilter.m in Sources */,
 				4C2886521557DB800074175A /* AEAudioController+Audiobus.m in Sources */,
 				4CB2273D1D0E5FD100B1135F /* AERealtimeWatchdog.m in Sources */,
-				6A85F9E81F013E200037A64F /* AEAudioSender.m in Sources */,
 				4C25747415F0D8E100D232E8 /* TPCircularBuffer.c in Sources */,
 				4C70F9A31BB0D2FE0064CF73 /* AEDynamicsProcessorFilter.m in Sources */,
 				4C70F9AB1BB0D2FE0064CF73 /* AELowShelfFilter.m in Sources */,
@@ -814,6 +813,7 @@
 				F9C23C201BA979050060718F /* AEMessageQueue.m in Sources */,
 				4C09450216FBD7460054608E /* AEBlockScheduler.m in Sources */,
 				4C70F9AF1BB0D2FE0064CF73 /* AEParametricEqFilter.m in Sources */,
+				6A8E27CE20C4E0C300777B38 /* AEAudioSender.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -113,7 +113,7 @@ GVoid GJ_LogHex(GJ_LogLevel level, const GUInt8 *data, GUInt32 len);
 GVoid GJ_LogHexString(GJ_LogLevel level, const GUInt8 *data, GUInt32 len);
 
 //所有等级都会打印，但是大于GJ_LOGDEBUG模式会产生中断
-GVoid GJ_LogAssert(GInt32 isTrue, const char *pre, const char *format, ...);
+GVoid GJ_LogAssert(GInt32 isTrue,const char *pre,const char *format, ...) __attribute__((format(printf, 3, 4)));
 GBool GJ_LogCheckResult(GResult result, const char *pre, const char *format, ...);
 GBool GJ_LogCheckBool(GBool result, const char *pre, const char *format, ...);
 

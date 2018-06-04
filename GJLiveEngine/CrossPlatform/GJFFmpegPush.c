@@ -365,10 +365,10 @@ static int app_func_event(AVApplicationContext *h, int message, void *data, size
     GJStreamPush *push = (GJStreamPush *) h->opaque;
 
     if (message == AVAPP_EVENT_IO_TRAFFIC && sizeof(AVAppIOTraffic) == size) {
-        AVAppIOTraffic *event = (AVAppIOTraffic *) (intptr_t) data;
+//        AVAppIOTraffic *event = (AVAppIOTraffic *) (intptr_t) data;
 
     } else if (message == AVAPP_EVENT_ASYNC_STATISTIC && sizeof(AVAppAsyncStatistic) == size) {
-        AVAppAsyncStatistic *statistic = (AVAppAsyncStatistic *) (intptr_t) data;
+//        AVAppAsyncStatistic *statistic = (AVAppAsyncStatistic *) (intptr_t) data;
 
     } else if (message == AVAPP_CTRL_DID_TCP_OPEN) {
         AVAppTcpIOControl *realData = data;
