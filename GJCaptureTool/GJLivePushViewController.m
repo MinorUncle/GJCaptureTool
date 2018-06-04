@@ -723,12 +723,13 @@
                 _pushStateLab.text =@"尝试重连中";
             });
             [_livePush stopStreamPush];
-            sleep(1);
-            if (_pushStartBtn.selected) {
-                if(![_livePush startStreamPushWithUrl:_pushAddr]){
-                    NSLog(@"startStreamPushWithUrl error");
-                };
-            }
+            dispatch_async(dispatch_get_global_queue(0, 0), ^{
+                if (_pushStartBtn.selected) {
+                    if(![_livePush startStreamPushWithUrl:_pushAddr]){
+                        NSLog(@"startStreamPushWithUrl error");
+                    };
+                }
+            });
 
             break;
         }
