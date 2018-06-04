@@ -29,9 +29,7 @@ typedef enum ScreenRecorderStatus {
 - (instancetype)initWithDestUrl:(NSURL *)url;
 - (BOOL)addAudioSourceWithFormat:(AudioStreamBasicDescription)format;
 - (BOOL)addVideoSourceWithView:(UIView *)view fps:(NSInteger)fps;
-
 - (BOOL)startRecode;
-
 - (void)stopRecord;
 - (void)pause;
 - (void)resume;

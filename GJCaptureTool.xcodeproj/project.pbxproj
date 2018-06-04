@@ -485,8 +485,8 @@
 		6A53951920AA7BF900E9E3C9 /* AutoLock.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AutoLock.m; sourceTree = "<group>"; };
 		6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = kcpTunDemo.xcodeproj; path = ../kcptunCode/kcpTunDemo/kcpTunDemo.xcodeproj; sourceTree = "<group>"; };
 		6A582238202AF473002AFF76 /* client.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = client.json; sourceTree = "<group>"; };
-		6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FFAudioDecoder.h; path = GJLiveEngine/IOS/Audio/FFAudioDecoder.h; sourceTree = SOURCE_ROOT; };
-		6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FFAudioDecoder.m; path = GJLiveEngine/IOS/Audio/FFAudioDecoder.m; sourceTree = SOURCE_ROOT; };
+		6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FFAudioDecoder.h; path = GJLiveEngine/CrossPlatform/Bridge/FFAudioDecoder.h; sourceTree = SOURCE_ROOT; };
+		6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FFAudioDecoder.m; path = GJLiveEngine/CrossPlatform/Bridge/FFAudioDecoder.m; sourceTree = SOURCE_ROOT; };
 		6A63463A20414074000F14E2 /* GJMessageDispatcher.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GJMessageDispatcher.c; sourceTree = "<group>"; };
 		6A63463B20414074000F14E2 /* GJMessageDispatcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJMessageDispatcher.h; sourceTree = "<group>"; };
 		6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrganRun.m4a; sourceTree = "<group>"; };
@@ -1003,9 +1003,9 @@
 			isa = PBXGroup;
 			children = (
 				6A53950F20A9AA0E00E9E3C9 /* GJDNSCacheTool.h */,
+				6A53951020A9AA0E00E9E3C9 /* GJDNSCacheTool.m */,
 				6A53951820AA7BF900E9E3C9 /* AutoLock.h */,
 				6A53951920AA7BF900E9E3C9 /* AutoLock.m */,
-				6A53951020A9AA0E00E9E3C9 /* GJDNSCacheTool.m */,
 			);
 			path = Tools;
 			sourceTree = "<group>";
@@ -1038,10 +1038,14 @@
 				6ABF2B171F0B413600721DB3 /* IOS_PictureDisplay.m */,
 				6ABF2B181F0B413600721DB3 /* IOS_VideoProduce.h */,
 				6ABF2B191F0B413600721DB3 /* IOS_VideoProduce.m */,
+				AE70A4FD1ECB4DFE0009E49A /* FFVideoDecoder.h */,
+				AE70A4FE1ECB4DFE0009E49A /* FFVideoDecoder.m */,
 				6A435CCB1F2883D30046CEA3 /* IOS_Recoder.h */,
 				6A435CCC1F2883D30046CEA3 /* IOS_Recoder.m */,
 				6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */,
 				6A9856C41F2B3D2500128480 /* IOS_RAOPPlay.m */,
+				6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */,
+				6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */,
 			);
 			name = Bridge;
 			path = ../CrossPlatform/Bridge;
@@ -1154,8 +1158,6 @@
 		AE70A4D91ECB4DFE0009E49A /* Audio */ = {
 			isa = PBXGroup;
 			children = (
-				6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */,
-				6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */,
 				AE70A4DA1ECB4DFE0009E49A /* AACEncoderFromPCM.h */,
 				AE70A4DB1ECB4DFE0009E49A /* AACEncoderFromPCM.m */,
 				6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */,
@@ -1194,8 +1196,6 @@
 				AE70A4FA1ECB4DFE0009E49A /* GJH264Decoder.m */,
 				AE70A4FB1ECB4DFE0009E49A /* GJH264Encoder.h */,
 				AE70A4FC1ECB4DFE0009E49A /* GJH264Encoder.m */,
-				AE70A4FD1ECB4DFE0009E49A /* FFVideoDecoder.h */,
-				AE70A4FE1ECB4DFE0009E49A /* FFVideoDecoder.m */,
 				AE70A4FF1ECB4DFE0009E49A /* H264Encoder.h */,
 				AE70A5001ECB4DFE0009E49A /* H264Encoder.m */,
 				AE70A5011ECB4DFE0009E49A /* H264StreamToTS.h */,
