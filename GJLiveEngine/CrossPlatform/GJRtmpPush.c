@@ -115,10 +115,10 @@ static GHandle sendRunloop(GHandle parm) {
                 GUInt8 *sps = GNULL, *pps = GNULL;
 
                 if ((start[4] & 0x1f) == 7) {
-                    GInt32     spsSize = ntohl(*(GInt32*)start), ppsSize = ntohl(*(GInt32*)(start+4+spsSize));
+                    GInt32 spsSize = ntohl(*(GInt32 *) start), ppsSize = ntohl(*(GInt32 *) (start + 4 + spsSize));
                     sps = start + 4;
                     pps = sps + spsSize + 4;
-                    
+
                     RTMPPacket avcPacket;
                     if (RTMP_AllocAndPakcetAVCSequenceHeader(push, sps, spsSize, pps, ppsSize, packet->dts, &avcPacket)) {
 
@@ -131,7 +131,6 @@ static GHandle sendRunloop(GHandle parm) {
                             errType = kStreamPushMessageType_sendPacketError;
                             goto ERROR;
                         }
-
 
                         if (packet->dataSize <= 0) { //没有数据
                             push->videoStatus.leave.byte  = packet->dataSize;
@@ -155,7 +154,7 @@ static GHandle sendRunloop(GHandle parm) {
                     R_BufferUnRetain(&packet->retain);
                     continue;
                 }
-            }else{
+            } else {
                 if (push->videoStatus.enter.count == 0) {
                     GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "第一帧必须是关键帧");
                 }
@@ -168,7 +167,6 @@ static GHandle sendRunloop(GHandle parm) {
                 fristByte = 0x17;
             }
 
-            
             GInt32 preSize = ppPreSize + RTMP_MAX_HEADER_SIZE;
             if (nal_start - R_BufferStart(&packet->retain) + R_BufferFrontSize(&packet->retain) < preSize) {
 //申请内存控制得当的话不会进入此条件、  先扩大，在查找。
@@ -219,8 +217,8 @@ static GHandle sendRunloop(GHandle parm) {
                 GJLOG(DEFAULT_LOG, GJ_LOGERROR, "error send video FRAME");
                 errType = kStreamPushMessageType_sendPacketError;
                 goto ERROR;
-            }else{
-                GJLOG(DEFAULT_LOG, GJ_LOGALL, "send video pts:%lld dts:%lld size:%d",packet->pts,packet->dts,packet->dataSize);
+            } else {
+                GJLOG(DEFAULT_LOG, GJ_LOGALL, "send video pts:%lld dts:%lld size:%d", packet->pts, packet->dts, packet->dataSize);
             }
         } else {
             //            printf("send packet pts:%lld size:%d  last data:%d\n",packet->pts,packet->dataSize,(packet->retain.data + packet->dataOffset + packet->dataSize -1)[0]);
@@ -290,8 +288,8 @@ static GHandle sendRunloop(GHandle parm) {
                 GJLOG(DEFAULT_LOG, GJ_LOGERROR, "error send packet FRAME");
                 errType = kStreamPushMessageType_sendPacketError;
                 goto ERROR;
-            }else{
-                GJLOG(DEFAULT_LOG, GJ_LOGALL, "send audio pts:%lld dts:%lld size:%d",packet->pts,packet->dts,packet->dataSize);
+            } else {
+                GJLOG(DEFAULT_LOG, GJ_LOGALL, "send audio pts:%lld dts:%lld size:%d", packet->pts, packet->dts, packet->dataSize);
             }
         }
     }
@@ -566,7 +564,7 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
 
     R_BufferRetain(&packet->retain);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-        
+
         push->videoStatus.enter.ts = (GLong) packet->dts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
@@ -616,7 +614,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush *sender, const GChar *sendUrl) {
     queueEnablePop(sender->sendBufferQueue, GTrue);
     GInt32 ret = pthread_create(&sender->sendThread, GNULL, sendRunloop, sender);
     if (ret != 0) {
-        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "pthread_create error:%d",ret);
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "pthread_create error:%d", ret);
     }
     return ret == 0;
 }

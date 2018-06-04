@@ -8,6 +8,5 @@
 
 #import "GJBridegContext.h"
 
-GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext** context);
-GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext** context);
-
+GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **context);
+GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context);

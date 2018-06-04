@@ -23,7 +23,7 @@
     BOOL   requestFlush;
     GInt64 _preDTS;
     GInt64 _dtsDelta;
-    GBool _isActive;
+    GBool  _isActive;
 }
 @property (nonatomic, assign) VTCompressionSessionRef enCodeSession;
 @property (nonatomic, assign) GJRetainBufferPool *    bufferPool;
@@ -45,19 +45,19 @@
         _profileLevel = profileLevelHigh;
         _entropyMode  = kEntropyMode_CABAC;
         _dtsDelta     = 0;
-        _preDTS     = -1;
-        _isActive = [UIApplication sharedApplication].applicationState == UIApplicationStateActive;
-        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
-        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
+        _preDTS       = -1;
+        _isActive     = [UIApplication sharedApplication].applicationState == UIApplicationStateActive;
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
         [self creatEnCodeSession];
     }
     return self;
 }
 
--(void)receiveNotification:(NSNotification*)notic{
+- (void)receiveNotification:(NSNotification *)notic {
     if ([notic.name isEqualToString:UIApplicationWillResignActiveNotification]) {
         _isActive = YES;
-    }else if([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]){
+    } else if ([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]) {
         _isActive = NO;
     }
 }
@@ -83,7 +83,7 @@
             _enCodeSession,
             imageBuffer,
             CMTimeMake(pts.value, pts.scale), //pts能得到dts和pts
-            kCMTimeInvalid,        // may be kCMTimeInvalid ,dts只能得到dts
+            kCMTimeInvalid,                   // may be kCMTimeInvalid ,dts只能得到dts
             (__bridge CFDictionaryRef) properties,
             NULL,
             NULL);
@@ -144,7 +144,7 @@
 - (void)setGop:(int)gop {
     _gop                         = gop;
     CFNumberRef frameIntervalRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberIntType, &(_gop));
-    OSStatus    result           = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_MaxKeyFrameInterval, frameIntervalRef);
+    OSStatus result = VTSessionSetProperty(_enCodeSession, kVTCompressionPropertyKey_MaxKeyFrameInterval, frameIntervalRef);
     CFRelease(frameIntervalRef);
     if (result == kVTInvalidSessionErr) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "编码器失效，setGop 失败，重启");
@@ -165,7 +165,7 @@
         _enCodeSession = nil;
         [self creatEnCodeSession];
         [self setAllParm];
-    } else if(result != 0) {
+    } else if (result != 0) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_ProfileLevel set error");
     }
 }
@@ -178,7 +178,7 @@
         _enCodeSession = nil;
         [self creatEnCodeSession];
         [self setAllParm];
-    } else if(result != 0){
+    } else if (result != 0) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_H264EntropyMode set error");
     }
 }
@@ -191,7 +191,7 @@
         _enCodeSession = nil;
         [self creatEnCodeSession];
         [self setAllParm];
-    } else if(result != 0){
+    } else if (result != 0) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_AllowFrameReordering set error");
     }
 }
@@ -219,9 +219,9 @@
             _enCodeSession = nil;
             [self creatEnCodeSession];
             [self setAllParm];
-        } else if(result != noErr) {
+        } else if (result != noErr) {
             GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "kVTCompressionPropertyKey_AverageBitRate set error:%d", result);
-        } else if(result != 0){
+        } else if (result != 0) {
             GJLOG(DEFAULT_LOG, GJ_LOGINFO, "set video bitrate:%0.2f kB/s", bitrate / 1024.0 / 8.0);
         }
     }
@@ -256,7 +256,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     bool keyframe = !CFDictionaryContainsKey((CFArrayGetValueAtIndex(CMSampleBufferGetSampleAttachmentsArray(sample, true), 0)), kCMSampleAttachmentKey_NotSync);
 
     if (keyframe) {
- 
+
         CMFormatDescriptionRef format = CMSampleBufferGetFormatDescription(sample);
         size_t                 spsSize, sparameterSetCount;
         int                    spHeadSize;
@@ -276,47 +276,47 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
             return;
         }
 
-        const void* _sps = encoder.sps.bytes;
-        const void* _pps = encoder.pps.bytes;
-        
-            size_t spsppsSize = spsSize + ppsSize;
-            int    needSize   = (int) (8 + spsppsSize + totalLength + PUSH_H264_PACKET_PRE_SIZE);
-            pushPacket        = (R_GJPacket *) GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
-            buffer            = &pushPacket->retain;
-            if (R_BufferFrontSize(buffer) < PUSH_H264_PACKET_PRE_SIZE) {
-                R_BufferMoveDataToPoint(buffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
-            }
-            pushPacket->flag       = GJPacketFlag_KEY;
+        const void *_sps = encoder.sps.bytes;
+        const void *_pps = encoder.pps.bytes;
 
-            pushPacket->dataOffset = 0;
-            pushPacket->dataSize = (GInt32)(totalLength + 8 +spsppsSize);
-            uint8_t *data = R_BufferStart(buffer);
-            uint32_t sSize = htonl(spsSize);
-            //        memcpy(data, "\x00\x00\x00\x01", 4);
-            memcpy(data, &sSize, 4);
-            memcpy(data + 4, sps, spsSize);
-        
-            sSize = htonl(ppsSize);
-            //        memcpy(data + 4 + sparameterSetSize, "\x00\x00\x00\x01", 4);
-            memcpy(data + 4 + spsSize,&sSize, 4);
-            memcpy(data + 8 + spsSize, pps, ppsSize);
-        
-            memcpy(data + spsppsSize + 8, inDataPointer, totalLength);
-            inDataPointer = data + spsppsSize + 8;
-        
-        if (!_sps || !_pps || memcmp(_sps, sps, spsSize) != 0 || memcmp(_pps, pps, ppsSize) != 0){//增加extenddata
-            
+        size_t spsppsSize = spsSize + ppsSize;
+        int    needSize   = (int) (8 + spsppsSize + totalLength + PUSH_H264_PACKET_PRE_SIZE);
+        pushPacket        = (R_GJPacket *) GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
+        buffer            = &pushPacket->retain;
+        if (R_BufferFrontSize(buffer) < PUSH_H264_PACKET_PRE_SIZE) {
+            R_BufferMoveDataToPoint(buffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
+        }
+        pushPacket->flag = GJPacketFlag_KEY;
+
+        pushPacket->dataOffset = 0;
+        pushPacket->dataSize   = (GInt32)(totalLength + 8 + spsppsSize);
+        uint8_t *data          = R_BufferStart(buffer);
+        uint32_t sSize         = htonl(spsSize);
+        //        memcpy(data, "\x00\x00\x00\x01", 4);
+        memcpy(data, &sSize, 4);
+        memcpy(data + 4, sps, spsSize);
+
+        sSize = htonl(ppsSize);
+        //        memcpy(data + 4 + sparameterSetSize, "\x00\x00\x00\x01", 4);
+        memcpy(data + 4 + spsSize, &sSize, 4);
+        memcpy(data + 8 + spsSize, pps, ppsSize);
+
+        memcpy(data + spsppsSize + 8, inDataPointer, totalLength);
+        inDataPointer = data + spsppsSize + 8;
+
+        if (!_sps || !_pps || memcmp(_sps, sps, spsSize) != 0 || memcmp(_pps, pps, ppsSize) != 0) { //增加extenddata
+
             pushPacket->extendDataOffset = 0;
             pushPacket->extendDataSize   = (GInt32)(spsppsSize + 8);
-            encoder.sps = [NSData dataWithBytes:sps length:spsSize];
-            encoder.pps = [NSData dataWithBytes:pps length:ppsSize];
-            
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode sps size:%zu:", spsSize);
+            encoder.sps                  = [NSData dataWithBytes:sps length:spsSize];
+            encoder.pps                  = [NSData dataWithBytes:pps length:ppsSize];
+
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "encode sps size:%zu:", spsSize);
             GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG,"encode pps size:%zu:", ppsSize);
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "encode pps size:%zu:", ppsSize);
             GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
-        }//增加sps pps
-    }else{
+        } //增加sps pps
+    } else {
         int needSize = (int) (totalLength + PUSH_H264_PACKET_PRE_SIZE);
         //       R_BufferPack(&buffer, GJBufferPoolGetSizeData(encoder.bufferPool,needSize), needSize, R_BufferRelease, encoder.bufferPool);
         pushPacket = (R_GJPacket *) GJRetainBufferPoolGetSizeData(encoder->_bufferPool, needSize);
@@ -324,9 +324,9 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
         if (R_BufferFrontSize(buffer) < PUSH_H264_PACKET_PRE_SIZE) {
             R_BufferMoveDataToPoint(buffer, PUSH_H264_PACKET_PRE_SIZE, GFalse);
         }
-        pushPacket->flag       = 0;
-        pushPacket->dataOffset = 0;
-        pushPacket->dataSize   = (GInt32)(totalLength);
+        pushPacket->flag           = 0;
+        pushPacket->dataOffset     = 0;
+        pushPacket->dataSize       = (GInt32)(totalLength);
         pushPacket->extendDataSize = pushPacket->extendDataOffset = 0;
 
         //拷贝
@@ -336,17 +336,17 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     }
 
     pushPacket->type = GJMediaType_Video;
-    CMTime ptsTime       = CMSampleBufferGetPresentationTimeStamp(sample);
-    GInt64 pts = ptsTime.value*1000/ptsTime.timescale;
+    CMTime ptsTime   = CMSampleBufferGetPresentationTimeStamp(sample);
+    GInt64 pts       = ptsTime.value * 1000 / ptsTime.timescale;
     GInt64 dts;
 
     dts = GJ_Gettime().value;
     if (encoder->_dtsDelta <= 0) {
-        encoder->_dtsDelta = (int)GMAX(1000,(dts - pts)*8);
+        encoder->_dtsDelta = (int) GMAX(1000, (dts - pts) * 8);
     }
     dts -= encoder->_dtsDelta;
 
-//    assert(pushPacket->dts != encoder->_preDTS);
+    //    assert(pushPacket->dts != encoder->_preDTS);
 
     if (dts <= encoder->_preDTS) {
         dts = encoder->_preDTS + 1;
@@ -354,18 +354,18 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     if (dts > pts) {
         if (encoder->_preDTS + 1 > pts) {
             //如果比上一次解dts还要早，则直接推迟pts到dts,并扩大差距
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pts:%lld小于preDts:%lld，修改pts为：%lld",pts,encoder->_preDTS,encoder->_preDTS + 2);
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "pts:%lld小于preDts:%lld，修改pts为：%lld", pts, encoder->_preDTS, encoder->_preDTS + 2);
             encoder->_dtsDelta *= 1.2;
-            pts = encoder->_preDTS+2;
-
+            pts = encoder->_preDTS + 2;
         }
         //dt则直接采用上次dts
-        dts = encoder->_preDTS+1;
+        dts = encoder->_preDTS + 1;
     }
-    
+
     pushPacket->pts = GTimeMake(pts, 1000);
-    pushPacket->dts = GTimeMake(dts, 1000);;
-    encoder->_preDTS =  dts;
+    pushPacket->dts = GTimeMake(dts, 1000);
+    ;
+    encoder->_preDTS = dts;
 
 #ifdef DEBUG
 //    static GTimeValue preDTS;
@@ -378,13 +378,12 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
 //        printf("pts:%lld\n",prePTS);
 //    }
 //    prePTS = pts;
-    
+
 //    static GInt32 index = 0;
 //    GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"encode video index:%d size:%d:",index++, pushPacket->dataSize);
 //    GJ_LogHexString(GJ_LOGDEBUG, R_BufferStart(&pushPacket->retain)+pushPacket->dataOffset+pushPacket->dataSize-20, (GUInt32) 20);
 #endif
 
-    
 //    printf("encode over pts:%lld dts:%lld data size:%zu\n",pts.value,pushPacket->dts,totalLength);
 
 //    NSData* seid = [NSData dataWithBytes:pushPacket->ppOffset+pushPacket->retain.data length:30];
@@ -402,19 +401,19 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     GJLOG(DEFAULT_LOG, GJ_LOGINFO,"encode dts:%f pts:%f\n",dts.value*1.0 / dts.timescale,pts.value*1.0/pts.timescale);
 #endif
 
-//    int bufferOffset = 0;
-//    static const uint32_t AVCCHeaderLength = 4;
-//    while (bufferOffset < totalLength) {
-//        // Read the NAL unit length
-//        uint32_t NALUnitLength = 0;
-//        memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
-//        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
-//
-////        uint8_t *data = inDataPointer + bufferOffset;
-////        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
-//        bufferOffset += AVCCHeaderLength + NALUnitLength;
-//    }
-//    assert(bufferOffset == totalLength);
+    //    int bufferOffset = 0;
+    //    static const uint32_t AVCCHeaderLength = 4;
+    //    while (bufferOffset < totalLength) {
+    //        // Read the NAL unit length
+    //        uint32_t NALUnitLength = 0;
+    //        memcpy(&NALUnitLength, inDataPointer + bufferOffset, AVCCHeaderLength);
+    //        NALUnitLength = CFSwapInt32BigToHost(NALUnitLength);
+    //
+    ////        uint8_t *data = inDataPointer + bufferOffset;
+    ////        memcpy(&data[0], "\x00\x00\x00\x01", AVCCHeaderLength);
+    //        bufferOffset += AVCCHeaderLength + NALUnitLength;
+    //    }
+    //    assert(bufferOffset == totalLength);
 
     encoder.completeCallback(pushPacket);
     R_BufferUnRetain(buffer);
@@ -424,7 +423,7 @@ void encodeOutputCallback(void *outputCallbackRefCon, void *sourceFrameRefCon, O
     requestFlush = YES;
     _sps         = nil;
     _pps         = nil;
-    _preDTS    = -1;
+    _preDTS      = -1;
 }
 
 - (void)dealloc {

@@ -24,7 +24,7 @@
 
 inline static GBool audioProduceSetup(struct _GJAudioProduceContext *context, AudioFrameOutCallback callback, GHandle userData) {
     GJAssert(context->obaque == GNULL, "上一个音频生产器没有释放");
-  
+
 #ifdef AUDIO_QUEUE_RECODE
     GJAudioQueueRecoder *recoder = [[GJAudioQueueRecoder alloc] initWithStreamWithSampleRate:format.mSampleRate channel:format.mChannelsPerFrame formatID:formatid];
     recoder.callback             = ^(R_GJPCMFrame *frame) {
@@ -35,13 +35,13 @@ inline static GBool audioProduceSetup(struct _GJAudioProduceContext *context, Au
 
 #ifdef AMAZING_AUDIO_ENGINE
 
-    GJAudioManager *manager = [[GJAudioManager alloc] init];
+    GJAudioManager *manager   = [[GJAudioManager alloc] init];
     NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
-    manager.audioCallback   = ^(R_GJPCMFrame *frame) {
+    manager.audioCallback     = ^(R_GJPCMFrame *frame) {
         if (callback) {
             callback(userData, frame);
         }
-        callFunc(&context->pipleNode,&frame->retain,GJMediaType_Audio);
+        callFunc(&context->pipleNode, &frame->retain, GJMediaType_Audio);
     };
     if (!manager) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "GJAudioManager setup ERROR");
@@ -70,7 +70,7 @@ inline static GVoid audioProduceUnSetup(struct _GJAudioProduceContext *context) 
 }
 
 inline static GBool setAudioFormat(struct _GJAudioProduceContext *context, GJAudioFormat format) {
-    if(context->obaque == GNULL){
+    if (context->obaque == GNULL) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "GJAudioManager not setup");
         return GFalse;
     }
@@ -101,8 +101,8 @@ inline static GBool setAudioFormat(struct _GJAudioProduceContext *context, GJAud
     audioFormat.mBytesPerPacket             = audioFormat.mBytesPerFrame * audioFormat.mFramesPerPacket;
     audioFormat.mFormatFlags                = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
     audioFormat.mFormatID                   = kAudioFormatLinearPCM;
-    manager.audioFormat = audioFormat;
-    
+    manager.audioFormat                     = audioFormat;
+
 #endif
     return GTrue;
 }
@@ -155,7 +155,7 @@ inline static GVoid audioProduceStop(struct _GJAudioProduceContext *context) {
 GBool enableReverb(struct _GJAudioProduceContext *context, GBool enable) {
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
-    manager.enableReverb = enable;
+    manager.enableReverb    = enable;
     return manager.enableReverb == enable;
 #endif
     return GFalse;
@@ -181,21 +181,22 @@ GBool enableMeasurementMode(struct _GJAudioProduceContext *context, GBool enable
 
 GBool enableAudioInEarMonitoring(struct _GJAudioProduceContext *context, GBool enable) {
 #ifdef AMAZING_AUDIO_ENGINE
-    GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
+    GJAudioManager *manager      = (__bridge GJAudioManager *) (context->obaque);
     manager.audioInEarMonitoring = enable;
     return manager.audioInEarMonitoring == enable;
 #endif
     return GFalse;
 }
-GBool setupMixAudioFile(struct _GJAudioProduceContext *context, const GChar *file, GBool loop,AudioMixFinishCallback callback, GHandle userData) {
+GBool setupMixAudioFile(struct _GJAudioProduceContext *context, const GChar *file, GBool loop, AudioMixFinishCallback callback, GHandle userData) {
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
     NSURL *         url     = [NSURL fileURLWithPath:[NSString stringWithUTF8String:file]];
-    GBool result = [manager setMixFile:url finish:^(GBool finish) {
-        if (callback) {
-            callback(userData,url.path.UTF8String,GNULL);
-        }
-    }];
+    GBool           result  = [manager setMixFile:url
+                                finish:^(GBool finish) {
+                                    if (callback) {
+                                        callback(userData, url.path.UTF8String, GNULL);
+                                    }
+                                }];
     return result;
 #endif
     return GFalse;
@@ -247,14 +248,13 @@ GBool setMixToStream(struct _GJAudioProduceContext *context, GBool should) {
     return GTrue;
 }
 
-GBool   setMute(struct _GJAudioProduceContext* context, GBool mute){
+GBool setMute(struct _GJAudioProduceContext *context, GBool mute) {
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
-    manager.mute      = mute;
+    manager.mute            = mute;
 #endif
     return GTrue;
 }
-
 
 GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext **recodeContext) {
     if (*recodeContext == NULL) {
@@ -263,25 +263,25 @@ GVoid GJ_AudioProduceContextCreate(GJAudioProduceContext **recodeContext) {
     GJAudioProduceContext *context = *recodeContext;
     memset(context, 0, sizeof(GJAudioProduceContext));
     pipleNodeInit(&context->pipleNode, GNULL);
-    context->audioProduceSetup     = audioProduceSetup;
-    context->audioProduceUnSetup   = audioProduceUnSetup;
-    context->setAudioFormat        = setAudioFormat;
-    context->audioProduceStart     = audioProduceStart;
-    context->audioProduceStop      = audioProduceStop;
+    context->audioProduceSetup   = audioProduceSetup;
+    context->audioProduceUnSetup = audioProduceUnSetup;
+    context->setAudioFormat      = setAudioFormat;
+    context->audioProduceStart   = audioProduceStart;
+    context->audioProduceStop    = audioProduceStop;
 
     context->enableAudioInEarMonitoring = enableAudioInEarMonitoring;
     context->setupMixAudioFile          = setupMixAudioFile;
     context->startMixAudioFileAtTime    = startMixAudioFileAtTime;
     context->stopMixAudioFile           = stopMixAudioFile;
 
-    context->setInputGain          = setInputGain;
-    context->setMixVolume          = setMixVolume;
-    context->setOutVolume          = setOutVolume;
-    context->setMixToStream        = setMixToStream;
-    context->enableReverb          = enableReverb;
-    context->enableMeasurementMode = enableMeasurementMode;
+    context->setInputGain                = setInputGain;
+    context->setMixVolume                = setMixVolume;
+    context->setOutVolume                = setOutVolume;
+    context->setMixToStream              = setMixToStream;
+    context->enableReverb                = enableReverb;
+    context->enableMeasurementMode       = enableMeasurementMode;
     context->enableAudioEchoCancellation = enableAudioEchoCancellation;
-    context->setMute = setMute;
+    context->setMute                     = setMute;
 }
 GVoid GJ_AudioProduceContextDealloc(GJAudioProduceContext **context) {
     if ((*context)->obaque) {

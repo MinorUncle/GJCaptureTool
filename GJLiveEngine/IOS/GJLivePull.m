@@ -50,27 +50,26 @@ static GVoid livePullCallback(GHandle userDate, GJLivePullMessageType message, G
         _enablePreview  = YES;
         _gaterFrequency = 2.0;
         _lock           = [[NSRecursiveLock alloc] init];
-        
+
 #ifdef USE_KCP
         dispatch_once(&kcpOnceToken, ^{
             static dispatch_queue_t kcpQueue;
             kcpQueue = dispatch_queue_create("KCP_LOOP", DISPATCH_QUEUE_SERIAL);
             dispatch_async(kcpQueue, ^{
                 struct xkcp_config *config = xkcp_get_config();
-                config->main_loop = client_main_loop;
-                NSString* path = [[NSBundle mainBundle]pathForResource:@"client" ofType:@"json"];
-                if(![[NSFileManager defaultManager]fileExistsAtPath:path] || ![[NSFileManager defaultManager]isReadableFileAtPath:path]){
+                config->main_loop          = client_main_loop;
+                NSString *path             = [[NSBundle mainBundle] pathForResource:@"client" ofType:@"json"];
+                if (![[NSFileManager defaultManager] fileExistsAtPath:path] || ![[NSFileManager defaultManager] isReadableFileAtPath:path]) {
                     assert(0);
                 }
-                path = [NSString stringWithFormat:@"-c%@",path];
-                char* arg[2];
+                path = [NSString stringWithFormat:@"-c%@", path];
+                char *arg[2];
                 arg[0] = "kcpTun";
-                arg[1] = (char*)path.UTF8String;
+                arg[1] = (char *) path.UTF8String;
                 xkcp_main(2, arg);
             });
         });
 #endif
-        
     }
     return self;
 }
@@ -110,48 +109,48 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
             }
         } break;
         case GJLivePull_bufferEnd: {
-//            GJCacheInfo info;
+            //            GJCacheInfo info;
         } break;
         case GJLivePull_decodeFristVideoFrame: {
             //                GJPullFristFrameInfo info = {0};
             //                info.size = *(GSize*)parm;
             [livePull.delegate livePull:livePull fristFrameDecode:parm];
         } break;
-        case GJLivePull_dewateringUpdate:{
+        case GJLivePull_dewateringUpdate: {
             if ([livePull.delegate respondsToSelector:@selector(livePull:dewaterUpdate:)]) {
-                GBool dewatering = *(GBool*)parm;
+                GBool dewatering = *(GBool *) parm;
                 [livePull.delegate livePull:livePull dewaterUpdate:dewatering];
             }
-        }break;
-        case GJLivePull_netShakeUpdate:{
+        } break;
+        case GJLivePull_netShakeUpdate: {
             if ([livePull.delegate respondsToSelector:@selector(livePull:netShakeUpdate:)]) {
-                GLong time = *(GLong*)parm;
-                [livePull.delegate livePull:livePull netShakeUpdate:(GLong)time];
+                GLong time = *(GLong *) parm;
+                [livePull.delegate livePull:livePull netShakeUpdate:(GLong) time];
             }
-        }break;
-        case GJLivePull_netShakeRangeUpdate:{
+        } break;
+        case GJLivePull_netShakeRangeUpdate: {
             if ([livePull.delegate respondsToSelector:@selector(livePull:netShakeRangeUpdate:)]) {
-                GLong time = *(GLong*)parm;
-                [livePull.delegate livePull:livePull netShakeRangeUpdate:(GLong)time];
+                GLong time = *(GLong *) parm;
+                [livePull.delegate livePull:livePull netShakeRangeUpdate:(GLong) time];
             }
-        }break;
+        } break;
 #ifdef NETWORK_DELAY
         case GJLivePull_testNetShakeUpdate:
             if ([livePull.delegate respondsToSelector:@selector(livePull:testNetShake:)]) {
-                GLong time = *(GLong*)parm;
-                [livePull.delegate livePull:livePull testNetShake:(GLong)time];
+                GLong time = *(GLong *) parm;
+                [livePull.delegate livePull:livePull testNetShake:(GLong) time];
             }
             break;
         case GJLivePull_testKeyDelayUpdate:
             if ([livePull.delegate respondsToSelector:@selector(livePull:testKeyDelay:)]) {
-                GLong time = *(GLong*)parm;
-                [livePull.delegate livePull:livePull testKeyDelay:(long)time];
+                GLong time = *(GLong *) parm;
+                [livePull.delegate livePull:livePull testKeyDelay:(long) time];
             }
             break;
 #endif
-        case GJLivePull_decodeFristAudioFrame:{
-            
-        }break;
+        case GJLivePull_decodeFristAudioFrame: {
+
+        } break;
         default:
             GJLOG(DEFAULT_LOG, GJ_LOGERROR, "not catch info：%d", messageType);
             break;
@@ -159,25 +158,25 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
 }
 
 - (void)updateStatusCallback {
-    GJTrafficStatus vCache                    = GJLivePull_GetVideoTrafficStatus(_pullContext);
-    GJTrafficStatus aCache                    = GJLivePull_GetAudioTrafficStatus(_pullContext);
-    _pullSessionStatus.videoStatus.cacheCount = vCache.enter.count - vCache.leave.count;
-    _pullSessionStatus.videoStatus.cacheTime  = GTimeSubtractMSValue(vCache.enter.ts, vCache.leave.ts);
-    _pullSessionStatus.videoStatus.bitrate    = (vCache.enter.byte - _videoTraffic.enter.byte) * 1.0 / _gaterFrequency;
-    _pullSessionStatus.videoStatus.frameRate  = (vCache.leave.count - _videoTraffic.leave.count) * 1.0 / _gaterFrequency;
+    GJTrafficStatus vCache                        = GJLivePull_GetVideoTrafficStatus(_pullContext);
+    GJTrafficStatus aCache                        = GJLivePull_GetAudioTrafficStatus(_pullContext);
+    _pullSessionStatus.videoStatus.cacheCount     = vCache.enter.count - vCache.leave.count;
+    _pullSessionStatus.videoStatus.cacheTime      = GTimeSubtractMSValue(vCache.enter.ts, vCache.leave.ts);
+    _pullSessionStatus.videoStatus.bitrate        = (vCache.enter.byte - _videoTraffic.enter.byte) * 1.0 / _gaterFrequency;
+    _pullSessionStatus.videoStatus.frameRate      = (vCache.leave.count - _videoTraffic.leave.count) * 1.0 / _gaterFrequency;
     _pullSessionStatus.videoStatus.lastReceivePts = vCache.enter.ts;
-    
-    _pullSessionStatus.audioStatus.cacheCount = aCache.enter.count - aCache.leave.count;
-    _pullSessionStatus.audioStatus.cacheTime  = GTimeSubtractMSValue(aCache.enter.ts, aCache.leave.ts);
-    _pullSessionStatus.audioStatus.bitrate    = (aCache.enter.byte - _audioTraffic.enter.byte) * 1.0 / _gaterFrequency;
-    _pullSessionStatus.audioStatus.frameRate  = (aCache.leave.count - _audioTraffic.leave.count) * 1.0 / _gaterFrequency;
+
+    _pullSessionStatus.audioStatus.cacheCount     = aCache.enter.count - aCache.leave.count;
+    _pullSessionStatus.audioStatus.cacheTime      = GTimeSubtractMSValue(aCache.enter.ts, aCache.leave.ts);
+    _pullSessionStatus.audioStatus.bitrate        = (aCache.enter.byte - _audioTraffic.enter.byte) * 1.0 / _gaterFrequency;
+    _pullSessionStatus.audioStatus.frameRate      = (aCache.leave.count - _audioTraffic.leave.count) * 1.0 / _gaterFrequency;
     _pullSessionStatus.audioStatus.lastReceivePts = aCache.enter.ts;
-    
-    _videoTraffic                             = vCache;
-    _audioTraffic                             = aCache;
+
+    _videoTraffic = vCache;
+    _audioTraffic = aCache;
     [self.delegate livePull:self updatePullStatus:&_pullSessionStatus];
 #ifdef NETWORK_DELAY
-    if(NeedTestNetwork){
+    if (NeedTestNetwork) {
         if ([self.delegate respondsToSelector:@selector(livePull:networkDelay:)]) {
             [self.delegate livePull:self networkDelay:GJLivePull_GetNetWorkDelay(_pullContext)];
         }
@@ -193,19 +192,19 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
         if ([NSThread isMainThread]) {
             _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
             GJLOG(DEFAULT_LOG, GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
-        }else{
+        } else {
             dispatch_async(dispatch_get_main_queue(), ^{
                 _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
                 GJLOG(DEFAULT_LOG, GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
             });
         }
-   
+
         _pullUrl = url;
         memset(&_videoTraffic, 0, sizeof(_videoTraffic));
         memset(&_audioTraffic, 0, sizeof(_audioTraffic));
         memset(&_pullSessionStatus, 0, sizeof(_pullSessionStatus));
-        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(receiveNotic:) name:AVAudioSessionInterruptionNotification object:nil];
-        [[NSNotificationCenter defaultCenter]addObserver:self selector:@selector(didBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotic:) name:AVAudioSessionInterruptionNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
 
         return GJLivePull_StartPull(_pullContext, url.UTF8String);
     }
@@ -215,7 +214,7 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
     if ([NSThread isMainThread]) {
         [_timer invalidate];
         _timer = nil;
-    }else{
+    } else {
         dispatch_async(dispatch_get_main_queue(), ^{
             [_timer invalidate];
             _timer = nil;
@@ -241,36 +240,34 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
--(void)receiveNotic:(NSNotification*)notic{
+- (void)receiveNotic:(NSNotification *)notic {
     if ([notic.name isEqualToString:AVAudioSessionInterruptionNotification]) {
         AVAudioSessionInterruptionType type = [notic.userInfo[AVAudioSessionInterruptionTypeKey] integerValue];
-//        AVAudioSessionInterruptionOptions option = [notic.userInfo[AVAudioSessionInterruptionOptionKey] integerValue];
+        //        AVAudioSessionInterruptionOptions option = [notic.userInfo[AVAudioSessionInterruptionOptionKey] integerValue];
         switch (type) {
-            case AVAudioSessionInterruptionTypeBegan:{
+            case AVAudioSessionInterruptionTypeBegan: {
                 if (_timer != nil) {
                     GJLivePull_Pause(_pullContext);
                 }
-                GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeBegan should resulme:%d",_timer != nil);
+                GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeBegan should resulme:%d", _timer != nil);
                 break;
-            }
-                break;
+            } break;
             case AVAudioSessionInterruptionTypeEnded:
                 if (_timer != nil) {
                     if ([UIApplication sharedApplication].applicationState == UIApplicationStateActive) {
                         GJLivePull_Resume(_pullContext);
                     }
                 }
-                GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeEnd should resulme:%d",_timer != nil);
+                GJLOG(GNULL, GJ_LOGDEBUG, "AVAudioSessionInterruptionTypeEnd should resulme:%d", _timer != nil);
                 break;
-                
+
             default:
                 break;
         }
-        
     }
 }
 
--(void)didBecomeActive:(NSNotification*)notic{
+- (void)didBecomeActive:(NSNotification *)notic {
     if (_timer != nil) {
         GJLOG(GNULL, GJ_LOGDEBUG, "UIApplicationDidBecomeActiveNotification");
         GJLivePull_Resume(_pullContext);

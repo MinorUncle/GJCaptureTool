@@ -39,11 +39,11 @@ GBool encodeSetup(struct _GJEncodeToAACContext *context, GJAudioFormat sourceFor
     AACEncoderFromPCM *encoder                     = [[AACEncoderFromPCM alloc] initWithSourceForamt:&source DestDescription:&dest bitrate:destForamt.bitrate];
     [encoder start];
     NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
-    encoder.completeCallback = ^(R_GJPacket *packet) {
+    encoder.completeCallback  = ^(R_GJPacket *packet) {
         if (callback) {
             callback(userData, packet);
         }
-        callFunc(&context->pipleNode,&packet->retain,GJMediaType_Audio);
+        callFunc(&context->pipleNode, &packet->retain, GJMediaType_Audio);
     };
     context->obaque = (__bridge_retained GHandle)(encoder);
     pipleNodeUnLock(&context->pipleNode);
@@ -73,17 +73,16 @@ GVoid encodeFlush(struct _GJEncodeToAACContext *context) {
     //    AACEncoderFromPCM* encode = (__bridge AACEncoderFromPCM *)(context->obaque);
 }
 
-inline static GBool encodeFrameFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
-    encodeFrame((GJEncodeToAACContext*)context,(R_GJPCMFrame*)data);
-    return  GTrue;
+inline static GBool encodeFrameFunc(GJPipleNode *context, GJRetainBuffer *data, GJMediaType dataType) {
+    encodeFrame((GJEncodeToAACContext *) context, (R_GJPCMFrame *) data);
+    return GTrue;
 }
-
 
 GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext **encodeContext) {
     if (*encodeContext == NULL) {
         *encodeContext = (GJEncodeToAACContext *) malloc(sizeof(GJEncodeToAACContext));
     }
-    GJEncodeToAACContext *context   = *encodeContext;
+    GJEncodeToAACContext *context = *encodeContext;
     memset(context, 0, sizeof(GJEncodeToAACContext));
     pipleNodeInit(&context->pipleNode, encodeFrameFunc);
     context->encodeSetup            = encodeSetup;
@@ -99,7 +98,7 @@ GVoid GJ_AACEncodeContextDealloc(GJEncodeToAACContext **context) {
         (*context)->encodeUnSetup(*context);
     }
     pipleNodeUnInit(&(*context)->pipleNode);
-    
+
     free(*context);
     *context = GNULL;
 }

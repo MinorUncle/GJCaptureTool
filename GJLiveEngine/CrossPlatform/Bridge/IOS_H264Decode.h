@@ -6,7 +6,6 @@
 //  Copyright © 2017年 MinorUncle. All rights reserved.
 //
 
-
 #import "GJBridegContext.h"
-GVoid GJ_H264DecodeContextCreate(FFVideoDecodeContext** context);
-GVoid GJ_H264DecodeContextDealloc(FFVideoDecodeContext** context);
+GVoid GJ_H264DecodeContextCreate(FFVideoDecodeContext **context);
+GVoid GJ_H264DecodeContextDealloc(FFVideoDecodeContext **context);

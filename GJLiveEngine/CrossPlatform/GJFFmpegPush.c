@@ -19,7 +19,7 @@
 
 #define STREAM_PUSH_LOG GNULL
 struct _GJStreamPush {
-    GJPipleNode pipleNode;
+    GJPipleNode          pipleNode;
     AVFormatContext *    formatContext;
     AVStream *           vStream;
     AVStream *           aStream;
@@ -27,42 +27,42 @@ struct _GJStreamPush {
     GJVideoStreamFormat *videoFormat;
 
     GJQueue *sendBufferQueue;
-    char*     pushUrl;
+    char *   pushUrl;
 
     pthread_t       sendThread;
     pthread_mutex_t mutex;
 
     MessageHandle messageCallback;
-    void *                    streamPushParm;
-    int                       stopRequest;
-    int                       releaseRequest;
+    void *        streamPushParm;
+    int           stopRequest;
+    int           releaseRequest;
 
-    GJTrafficStatus audioStatus;
-    GJTrafficStatus videoStatus;
-    GTimeValue     startMS;
-    GInt  fd;
-    AVApplicationContext* app_ctx;
+    GJTrafficStatus       audioStatus;
+    GJTrafficStatus       videoStatus;
+    GTimeValue            startMS;
+    GInt                  fd;
+    AVApplicationContext *app_ctx;
 };
 
 static GJTrafficStatus error_Status;
 
 GVoid GJStreamPush_Delloc(GJStreamPush *push);
 GVoid GJStreamPush_Close(GJStreamPush *sender);
-static int app_func_event(AVApplicationContext *h, int message ,void *data, size_t size);
+static int app_func_event(AVApplicationContext *h, int message, void *data, size_t size);
 static GHandle sendRunloop(GHandle parm) {
     pthread_setname_np("Loop.GJStreamPush");
     GJStreamPush *         push    = (GJStreamPush *) parm;
     kStreamPushMessageType errType = kStreamPushMessageType_connectError;
     AVDictionary *         option  = GNULL;
-    
+
     av_application_open(&push->app_ctx, push);
     push->app_ctx->func_on_app_event = app_func_event;
     av_dict_set_int(&option, "send_buffer_size", 30000, 0);
-    av_dict_set_int(&option, "ijkapplication", (GInt64)push->app_ctx, 0);
+    av_dict_set_int(&option, "ijkapplication", (GInt64) push->app_ctx, 0);
     av_dict_set_int(&option, "dns_cache", 0, 0);
 
     GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl, AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, &option);
-    
+
     av_dict_free(&option);
     if (ret < 0) {
         GJLOG(STREAM_PUSH_LOG, GJ_LOGERROR, "avio_open2 error:%d", ret);
@@ -71,7 +71,7 @@ static GHandle sendRunloop(GHandle parm) {
     }
     pthread_mutex_lock(&push->mutex);
     if (push->messageCallback) {
-//        push->messageCallback(push, push->streamPushParm, kStreamPushMessageType_connectSuccess, GNULL);
+        //        push->messageCallback(push, push->streamPushParm, kStreamPushMessageType_connectSuccess, GNULL);
         defauleDeliveryMessage0(push->messageCallback, push, push->streamPushParm, kStreamPushMessageType_connectSuccess);
     }
     pthread_mutex_unlock(&push->mutex);
@@ -80,7 +80,7 @@ static GHandle sendRunloop(GHandle parm) {
 
     if (push->videoFormat) {
         GLong index = 0;
-        while (queuePeekWaitValue(push->sendBufferQueue,index++,(GHandle*) &packet, GINT32_MAX)) { //过滤无效起始数据
+        while (queuePeekWaitValue(push->sendBufferQueue, index++, (GHandle *) &packet, GINT32_MAX)) { //过滤无效起始数据
             if (push->stopRequest) {
                 goto END;
             }
@@ -97,14 +97,14 @@ static GHandle sendRunloop(GHandle parm) {
                     continue;
                 }
 
-                GUInt8 *sps = start + 4, *pps;
-                GUInt32 spsSize = ntohl(*(GUInt32*)start), ppsSize;
-                
-                if ((sps[spsSize+4] & 0x1f) == 8 ) {
-                    pps = sps + spsSize + 4;
-                    ppsSize = ntohl(*(GUInt32*)(pps - 4));
-                }else{
-                    
+                GUInt8 *sps     = start + 4, *pps;
+                GUInt32 spsSize = ntohl(*(GUInt32 *) start), ppsSize;
+
+                if ((sps[spsSize + 4] & 0x1f) == 8) {
+                    pps     = sps + spsSize + 4;
+                    ppsSize = ntohl(*(GUInt32 *) (pps - 4));
+                } else {
+
                     GJLOG(STREAM_PUSH_LOG, GJ_LOGFORBID, "没有sps，pps，丢弃该帧");
                     queuePop(push->sendBufferQueue, (GHandle) packet, 0);
                     push->videoStatus.leave.byte += packet->dataSize;
@@ -121,7 +121,7 @@ static GHandle sendRunloop(GHandle parm) {
                 memcpy(push->vStream->codecpar->extradata + spsSize + 4, "\x00\x00\x00\x01", 4);
                 break;
             } else {
-                
+
                 GJLOG(STREAM_PUSH_LOG, GJ_LOGWARNING, "非视频帧，丢弃该帧");
                 queuePop(push->sendBufferQueue, (GHandle) &packet, 0);
                 push->audioStatus.leave.byte += packet->dataSize;
@@ -137,10 +137,10 @@ static GHandle sendRunloop(GHandle parm) {
 
         push->aStream->codecpar->extradata_size = 2;
         push->aStream->codecpar->extradata      = av_malloc(2);
-        ASC asc = {0};
-        asc.channelConfig = push->audioFormat->format.mChannelsPerFrame;
-        asc.audioType = aactype;
-        asc.sampleRate = push->audioFormat->format.mSampleRate;
+        ASC asc                                 = {0};
+        asc.channelConfig                       = push->audioFormat->format.mChannelsPerFrame;
+        asc.audioType                           = aactype;
+        asc.sampleRate                          = push->audioFormat->format.mSampleRate;
         writeASC(push->aStream->codecpar->extradata, 2, &asc);
     }
 
@@ -161,64 +161,64 @@ static GHandle sendRunloop(GHandle parm) {
             R_BufferUnRetain(&packet->retain);
             break;
         }
-        GTimeValue pts = GTimeMSValue(packet->pts)-push->startMS;
-        GTimeValue dts = GTimeMSValue(packet->dts)-push->startMS;
+        GTimeValue pts = GTimeMSValue(packet->pts) - push->startMS;
+        GTimeValue dts = GTimeMSValue(packet->dts) - push->startMS;
         av_init_packet(sendPacket);
-        sendPacket->pts = (GInt64)(pts) & 0x7fffffff;
-        sendPacket->dts = (GInt64)(dts) & 0x7fffffff;
+        sendPacket->pts = (GInt64)(pts) &0x7fffffff;
+        sendPacket->dts = (GInt64)(dts) &0x7fffffff;
 
         if (packet->type == GJMediaType_Video) {
             sendPacket->stream_index = push->vStream->index;
             if (packet->extendDataSize > 0 && (packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY) {
-                
+
                 uint8_t *side = av_packet_new_side_data(sendPacket, AV_PKT_DATA_NEW_EXTRADATA,
                                                         packet->extendDataSize);
                 if (side) {
-                    memcpy(side, R_BufferStart(&packet->retain) + packet->extendDataOffset,packet->extendDataSize);
+                    memcpy(side, R_BufferStart(&packet->retain) + packet->extendDataOffset, packet->extendDataSize);
                     GUInt32 nalSize;
-                    GUInt8* start = side;
-                    GUInt8* end = side + packet->extendDataSize;
-                    while (end - start >= 4 ) {
-                        nalSize = ntohl(*(GUInt32*)(start));
+                    GUInt8 *start = side;
+                    GUInt8 *end   = side + packet->extendDataSize;
+                    while (end - start >= 4) {
+                        nalSize = ntohl(*(GUInt32 *) (start));
                         memcpy(start, "\x00\x00\x00\x01", 4);
                         start += nalSize + 4;
                     }
                 }
             }
-                
+
             sendPacket->data = R_BufferStart(packet) + packet->dataOffset;
             sendPacket->size = packet->dataSize;
 
             GUInt32 nalSize;
-            GUInt8* start = sendPacket->data;
-            GUInt8* end = sendPacket->data + sendPacket->size;
-            while (end - start >= 4 ) {
-                nalSize = ntohl(*(GUInt32*)(start));
+            GUInt8 *start = sendPacket->data;
+            GUInt8 *end   = sendPacket->data + sendPacket->size;
+            while (end - start >= 4) {
+                nalSize = ntohl(*(GUInt32 *) (start));
                 memcpy(start, "\x00\x00\x00\x01", 4);
                 start += nalSize + 4;
             }
 #ifdef DEBUG
             GJAssert(end == start, "流格式不正确");
 #endif
-            if(G_TIME_IS_INVALID(push->videoStatus.leave.firstTs)){
-                push->videoStatus.leave.firstTs = packet->dts;
+            if (G_TIME_IS_INVALID(push->videoStatus.leave.firstTs)) {
+                push->videoStatus.leave.firstTs    = packet->dts;
                 push->videoStatus.leave.firstClock = GJ_Gettime();
             }
 
         } else {
-            sendPacket->data = R_BufferStart(&packet->retain) + packet->dataOffset;
-            sendPacket->size = packet->dataSize;
+            sendPacket->data         = R_BufferStart(&packet->retain) + packet->dataOffset;
+            sendPacket->size         = packet->dataSize;
             sendPacket->stream_index = push->aStream->index;
-            
-            if(G_TIME_IS_INVALID(push->audioStatus.leave.firstTs)){
-                push->audioStatus.leave.firstTs = packet->dts;
+
+            if (G_TIME_IS_INVALID(push->audioStatus.leave.firstTs)) {
+                push->audioStatus.leave.firstTs    = packet->dts;
                 push->audioStatus.leave.firstClock = GJ_Gettime();
             }
         }
         if (packet->flag == GJPacketFlag_KEY) {
             sendPacket->flags = AV_PKT_FLAG_KEY;
         }
-        
+
 #ifdef DEBUG
 //        static GLong preDTS[2];
 //        GInt32 type = sendPacket->stream_index == push->aStream->index;
@@ -227,41 +227,38 @@ static GHandle sendRunloop(GHandle parm) {
 //        preDTS[type] = sendPacket->pts;
 #endif
 
-
-//        if (sendPacket->stream_index == 0) {
-//            static GInt32 index = 0;
-//            GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"send video index:%d size:%d:",index++, sendPacket->size);
-//            GJ_LogHexString(GJ_LOGDEBUG, sendPacket->data+sendPacket->size-20, (GUInt32) 20);
-//
-//        }
-        GInt32 iRet      = av_write_frame(push->formatContext, sendPacket);
+        //        if (sendPacket->stream_index == 0) {
+        //            static GInt32 index = 0;
+        //            GJLOG(DEFAULT_LOG,GJ_LOGDEBUG,"send video index:%d size:%d:",index++, sendPacket->size);
+        //            GJ_LogHexString(GJ_LOGDEBUG, sendPacket->data+sendPacket->size-20, (GUInt32) 20);
+        //
+        //        }
+        GInt32 iRet = av_write_frame(push->formatContext, sendPacket);
         av_packet_free_side_data(sendPacket);
         if (iRet >= 0) {
             if (packet->type == GJMediaType_Video) {
 
-                GJLOG(GNULL,GJ_LOGALL,"send video pts:%lld dts:%lld size:%d\n", packet->pts.value, packet->dts.value, packet->dataSize);
+                GJLOG(GNULL, GJ_LOGALL, "send video pts:%lld dts:%lld size:%d\n", packet->pts.value, packet->dts.value, packet->dataSize);
                 push->videoStatus.leave.byte += packet->dataSize;
                 push->videoStatus.leave.count++;
-                push->videoStatus.leave.ts =  packet->dts;
+                push->videoStatus.leave.ts    = packet->dts;
                 push->videoStatus.leave.clock = GJ_Gettime();
-                
+
                 pthread_mutex_lock(&push->mutex);
                 if (push->messageCallback) {
                     //                push->messageCallback(push, push->streamPushParm,kStreamPushMessageType_packetSendSignal,&(packet->type));
-                    defauleDeliveryMessage1(push->messageCallback, push, push->streamPushParm, kStreamPushMessageType_packetSendSignal,packet->type);
+                    defauleDeliveryMessage1(push->messageCallback, push, push->streamPushParm, kStreamPushMessageType_packetSendSignal, packet->type);
                 }
                 pthread_mutex_unlock(&push->mutex);
-                
+
             } else {
 
-                GJLOG(GNULL,GJ_LOGALL,"send audio pts:%lld dts:%lld size:%d\n", packet->pts.value, packet->dts.value, packet->dataSize);
+                GJLOG(GNULL, GJ_LOGALL, "send audio pts:%lld dts:%lld size:%d\n", packet->pts.value, packet->dts.value, packet->dataSize);
                 push->audioStatus.leave.byte += packet->dataSize;
                 push->audioStatus.leave.count++;
-                push->audioStatus.leave.ts = packet->dts;
+                push->audioStatus.leave.ts    = packet->dts;
                 push->audioStatus.leave.clock = GJ_Gettime();
             }
-
-
 
             R_BufferUnRetain(&packet->retain);
         } else {
@@ -298,12 +295,11 @@ END:
         GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "avio_close success");
     }
 
-
     GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&push->mutex);
     if (push->messageCallback) {
         defauleDeliveryMessage0(push->messageCallback, push, push->streamPushParm, errType);
-//        push->messageCallback(push, push->streamPushParm, errType, errParm);
+        //        push->messageCallback(push, push->streamPushParm, errType, errParm);
     }
     push->sendThread = GNULL;
     if (push->releaseRequest == GTrue) {
@@ -311,7 +307,7 @@ END:
     }
     pthread_mutex_unlock(&push->mutex);
     av_application_closep(&push->app_ctx);
-    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "sendRunloop end:%p",push);
+    GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "sendRunloop end:%p", push);
     if (shouldDelloc) {
         GJStreamPush_Delloc(push);
     }
@@ -328,7 +324,7 @@ GBool GJStreamPush_Create(GJStreamPush **sender, MessageHandle callback, void *s
     GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJStreamPush_Create:%p", push);
 
     memset(push, 0, sizeof(GJStreamPush));
-    pipleNodeInit(&push->pipleNode, (NodeFlowDataFunc)GJStreamPush_NodeReceiveData);
+    pipleNodeInit(&push->pipleNode, (NodeFlowDataFunc) GJStreamPush_NodeReceiveData);
     GInt32 ret = avformat_network_init();
     if (ret < 0) {
         return GFalse;
@@ -362,22 +358,22 @@ static int interrupt_callback(void *parm) {
     return push->stopRequest;
 }
 
-static int app_func_event(AVApplicationContext *h, int message ,void *data, size_t size){
+static int app_func_event(AVApplicationContext *h, int message, void *data, size_t size) {
     if (!h || !h->opaque || !data)
         return 0;
-    
-    GJStreamPush *push = (GJStreamPush *)h->opaque;
+
+    GJStreamPush *push = (GJStreamPush *) h->opaque;
 
     if (message == AVAPP_EVENT_IO_TRAFFIC && sizeof(AVAppIOTraffic) == size) {
-        AVAppIOTraffic *event = (AVAppIOTraffic *)(intptr_t)data;
+        AVAppIOTraffic *event = (AVAppIOTraffic *) (intptr_t) data;
 
     } else if (message == AVAPP_EVENT_ASYNC_STATISTIC && sizeof(AVAppAsyncStatistic) == size) {
-        AVAppAsyncStatistic *statistic =  (AVAppAsyncStatistic *) (intptr_t)data;
+        AVAppAsyncStatistic *statistic = (AVAppAsyncStatistic *) (intptr_t) data;
 
-    }else if (message == AVAPP_CTRL_DID_TCP_OPEN) {
+    } else if (message == AVAPP_CTRL_DID_TCP_OPEN) {
         AVAppTcpIOControl *realData = data;
-        push->fd = realData->fd;
-        printf("fd:%d\n",push->fd);
+        push->fd                    = realData->fd;
+        printf("fd:%d\n", push->fd);
     }
     return 0;
 }
@@ -389,7 +385,7 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
     size_t length = strlen(sendUrl);
     memset(&push->videoStatus, 0, sizeof(GJTrafficStatus));
     memset(&push->audioStatus, 0, sizeof(GJTrafficStatus));
-    push->pushUrl = realloc(push->pushUrl,length + 1);
+    push->pushUrl = realloc(push->pushUrl, length + 1);
     memcpy(push->pushUrl, sendUrl, length + 1);
     if (push->sendThread) {
         GJLOG(STREAM_PUSH_LOG, GJ_LOGWARNING, "上一个push没有释放，开始释放并等待");
@@ -398,11 +394,11 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
         GJLOG(STREAM_PUSH_LOG, GJ_LOGWARNING, "等待push释放结束");
     }
     push->stopRequest = GFalse;
-    push->startMS = 0;
+    push->startMS     = 0;
     queueEnablePush(push->sendBufferQueue, GTrue);
     queueEnablePop(push->sendBufferQueue, GTrue);
     char *format = GNULL;
-    char preUrl[5];
+    char  preUrl[5];
     memcpy(preUrl, sendUrl, 4);
     preUrl[4] = 0;
     if (strcasecmp(preUrl, "rtmp") == 0) {
@@ -415,13 +411,13 @@ GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl) {
     }
     AVIOInterruptCB cb = {.callback = interrupt_callback, .opaque = push};
     push->formatContext->interrupt_callback = cb;
-    AVDictionary* metadata = push->formatContext->metadata;
+    AVDictionary *metadata                  = push->formatContext->metadata;
     av_dict_set_int(&metadata, "fps", 15, 0);
     av_dict_set(&metadata, "author", "GuangJin.Zhou", AV_DICT_MATCH_CASE);
 
     push->formatContext->metadata = metadata;
-    AVCodec *audioCode = GNULL;
-    AVCodec *videoCode = GNULL;
+    AVCodec *audioCode            = GNULL;
+    AVCodec *videoCode            = GNULL;
 
     if (push->videoFormat) {
         switch (push->videoFormat->format.mType) {
@@ -484,8 +480,7 @@ GVoid GJStreamPush_Delloc(GJStreamPush *push) {
     _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
         avcodec_close(push->vStream->codec);
     avcodec_close(push->aStream->codec);
-    _Pragma("GCC diagnostic warning \"-Wdeprecated-declarations\"")
-    if (push->formatContext) {
+    _Pragma("GCC diagnostic warning \"-Wdeprecated-declarations\"") if (push->formatContext) {
         avformat_free_context(push->formatContext);
     }
     if (push->videoFormat) free(push->videoFormat);
@@ -500,10 +495,10 @@ GVoid GJStreamPush_Delloc(GJStreamPush *push) {
 GVoid GJStreamPush_Release(GJStreamPush *push) {
     GJLOG(STREAM_PUSH_LOG, GJ_LOGDEBUG, "GJStreamPush_Delloc::%p", push);
 
-    GBool shouldDelloc    = GFalse;
+    GBool shouldDelloc = GFalse;
     pthread_mutex_lock(&push->mutex);
     push->messageCallback = GNULL;
-    push->releaseRequest = GTrue;
+    push->releaseRequest  = GTrue;
     if (push->sendThread == GNULL) {
         shouldDelloc = GTrue;
     }
@@ -531,13 +526,13 @@ GVoid GJStreamPush_CloseAndDealloc(GJStreamPush **push) {
 GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
 
     if (push == GNULL) return GFalse;
-    
+
     if (G_TIME_IS_INVALID(push->videoStatus.enter.firstTs)) {
         if (packet->extendDataSize <= 0 || (packet->flag & GJPacketFlag_KEY) != GJPacketFlag_KEY) {
             GJLOG(GNULL, GJ_LOGWARNING, "第一帧非关键帧 丢帧");
             return GTrue;
-        }else{
-            push->videoStatus.enter.firstTs = packet->dts;
+        } else {
+            push->videoStatus.enter.firstTs    = packet->dts;
             push->videoStatus.enter.firstClock = GJ_Gettime();
         }
 #ifndef NETWORK_DELAY
@@ -548,7 +543,7 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
     }
     R_BufferRetain(packet);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
-        
+
         push->videoStatus.enter.ts = packet->dts;
         push->videoStatus.enter.count++;
         push->videoStatus.enter.byte += packet->dataSize;
@@ -561,17 +556,17 @@ GBool GJStreamPush_SendVideoData(GJStreamPush *push, R_GJPacket *packet) {
     return GTrue;
 }
 GBool GJStreamPush_SendAudioData(GJStreamPush *push, R_GJPacket *packet) {
-    if (push == GNULL || G_TIME_IS_INVALID(push->videoStatus.enter.firstTs))return GFalse;
+    if (push == GNULL || G_TIME_IS_INVALID(push->videoStatus.enter.firstTs)) return GFalse;
 
     if (G_TIME_IS_INVALID(push->audioStatus.enter.firstTs)) {
         if (GTimeMSValue(packet->dts) < GTimeMSValue(push->videoStatus.enter.firstTs)) {
             return GFalse;
-        }else{
-            push->audioStatus.enter.firstTs = packet->dts;
+        } else {
+            push->audioStatus.enter.firstTs    = packet->dts;
             push->audioStatus.enter.firstClock = GJ_Gettime();
         }
     }
-    
+
     R_BufferRetain(packet);
     if (queuePush(push->sendBufferQueue, packet, 0)) {
 
@@ -596,7 +591,7 @@ GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush *push) {
     if (!push) return error_Status;
 
     GJTrafficStatus status = push->videoStatus;
-    if(G_TIME_IS_INVALID(status.leave.ts)){
+    if (G_TIME_IS_INVALID(status.leave.ts)) {
         status.leave = status.enter;
     }
     return status;

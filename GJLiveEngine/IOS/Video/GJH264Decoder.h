@@ -13,24 +13,23 @@
 #import "GJRetainBufferPool.h"
 #import "GJLiveDefine+internal.h"
 
-typedef void(^H264DecodeComplete)(R_GJPixelFrame* frame);
+typedef void (^H264DecodeComplete)(R_GJPixelFrame *frame);
 
 //@protocol GJH264DecoderDelegate <NSObject>
 //-(void)GJH264Decoder:(GJH264Decoder*)devocer decodeCompleteImageData:(CVImageBufferRef)imageBuffer pts:(int64_t)pts;
 //@end
 
-@interface GJH264Decoder : NSObject
-{
+@interface GJH264Decoder : NSObject {
 }
 //default kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
-@property(nonatomic,assign)OSType outPutImageFormat;
-@property(nonatomic,copy)H264DecodeComplete completeCallback;
-@property(nonatomic,assign)GJRetainBufferPool* bufferPool;
-@property(nonatomic,assign,readonly)BOOL isRunning;
+@property (nonatomic, assign) OSType              outPutImageFormat;
+@property (nonatomic, copy) H264DecodeComplete    completeCallback;
+@property (nonatomic, assign) GJRetainBufferPool *bufferPool;
+@property (nonatomic, assign, readonly) BOOL isRunning;
 
--(void)decodePacket:(R_GJPacket *)packet;
--(void)stopDecode;
--(BOOL)startDecode;
+- (void)decodePacket:(R_GJPacket *)packet;
+- (void)stopDecode;
+- (BOOL)startDecode;
 -(void)flush;
 
 @end

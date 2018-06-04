@@ -8,5 +8,5 @@
 
 #import "GJBridegContext.h"
 
-GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext** context);
-GVoid GJ_AACEncodeContextDealloc(GJEncodeToAACContext** context);
+GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext **context);
+GVoid GJ_AACEncodeContextDealloc(GJEncodeToAACContext **context);

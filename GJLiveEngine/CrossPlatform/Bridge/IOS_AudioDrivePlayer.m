@@ -84,7 +84,7 @@ inline static GJPlayStatus audioGetStatus(struct _GJAudioPlayContext *context) {
 }
 GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext **audioPlayContext) {
     if (*audioPlayContext == NULL) {
-        *audioPlayContext = (GJAudioPlayContext *) calloc(1,sizeof(GJAudioPlayContext));
+        *audioPlayContext = (GJAudioPlayContext *) calloc(1, sizeof(GJAudioPlayContext));
     }
     GJAudioPlayContext *context = *audioPlayContext;
     context->audioPlaySetup     = audioPlaySetup;

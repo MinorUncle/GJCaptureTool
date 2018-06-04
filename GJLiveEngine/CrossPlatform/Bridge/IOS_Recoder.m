@@ -36,9 +36,9 @@ static GVoid unSetup(struct _GJRecodeContext *context) {
     }
 }
 static GBool addVideoSource(struct _GJRecodeContext *context, GJVideoFormat format, GView targetView) {
-    GJScreenRecorder *          recoder     = (__bridge GJScreenRecorder *) (context->obaque);
+    GJScreenRecorder *recoder = (__bridge GJScreenRecorder *) (context->obaque);
 
-    return [recoder addVideoSourceWithView:(__bridge UIView *)(targetView) fps:format.mFps];
+    return [recoder addVideoSourceWithView:(__bridge UIView *) (targetView) fps:format.mFps];
 }
 static GBool addAudioSource(struct _GJRecodeContext *context, GJAudioFormat format) {
 

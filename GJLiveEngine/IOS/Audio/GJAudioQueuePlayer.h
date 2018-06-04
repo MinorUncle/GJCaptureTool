@@ -12,18 +12,16 @@
 #import "GJLiveDefine+internal.h"
 @interface GJAudioQueuePlayer : NSObject
 
-@property (nonatomic,assign,readonly) BOOL available;
-@property (nonatomic,assign,readonly) AudioStreamBasicDescription format;
-@property (nonatomic,assign) float volume;
-@property (nonatomic,assign) UInt32 maxBufferSize;
-@property (nonatomic,assign,readonly) GJPlayStatus status;
+@property (nonatomic, assign, readonly) BOOL                        available;
+@property (nonatomic, assign, readonly) AudioStreamBasicDescription format;
+@property (nonatomic, assign) float  volume;
+@property (nonatomic, assign) UInt32 maxBufferSize;
+@property (nonatomic, assign, readonly) GJPlayStatus status;
 
 /**
  *  return playedTime of audioqueue, return invalidPlayedTime when error occurs.
  */
-@property (nonatomic,readonly) NSTimeInterval playedTime;
-
-
+@property (nonatomic, readonly) NSTimeInterval playedTime;
 
 /**
  must on main thread
@@ -46,7 +44,7 @@
  *  @return whether successfully played
  */
 
-- (BOOL)playData:(GJRetainBuffer*)bufferData packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions;
+- (BOOL)playData:(GJRetainBuffer *)bufferData packetDescriptions:(const AudioStreamPacketDescription *)packetDescriptions;
 
 /**
  *  pause & resume
@@ -83,7 +81,7 @@
  */
 - (BOOL)flush;
 
--(BOOL)start;
+- (BOOL)start;
 
 - (BOOL)setProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32)dataSize data:(const void *)data error:(NSError **)outError;
 - (BOOL)getProperty:(AudioQueuePropertyID)propertyID dataSize:(UInt32 *)dataSize data:(void *)data error:(NSError **)outError;

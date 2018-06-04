@@ -11,19 +11,18 @@
 @interface H264StreamToTS : NSObject
 
 //完整的存储路径文件名
-@property(copy,nonatomic)NSString* destFilePath;
-@property(copy,nonatomic)NSString* preFileName;
+@property (copy, nonatomic) NSString *destFilePath;
+@property (copy, nonatomic) NSString *preFileName;
 
 //最大分片数，超过则删除前面的。<=0不设置
-@property(assign,nonatomic)int numberOfMaxCountFiles;
+@property (assign, nonatomic) int numberOfMaxCountFiles;
 
+@property (assign, nonatomic) int durationPerTs;
 
-@property(assign,nonatomic)int durationPerTs;
+- (instancetype)initWithDestFilePath:(NSString *)filePath;
 
-- (instancetype)initWithDestFilePath:(NSString*)filePath;
-
--(void)sendH264Stream:(uint8_t*)buffer lenth:(int)lengh pts:(int)pts dts:(int)dts;
--(void)sendAACStream:(uint8_t*)buffer lenth:(int)lengh pts:(int)pts dts:(int)dts;
+- (void)sendH264Stream:(uint8_t *)buffer lenth:(int)lengh pts:(int)pts dts:(int)dts;
+- (void)sendAACStream:(uint8_t *)buffer lenth:(int)lengh pts:(int)pts dts:(int)dts;
 
 -(void)start;
 -(void)stop;

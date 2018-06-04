@@ -7,5 +7,5 @@
 //
 
 #import "GJBridegContext.h"
-GVoid GJ_AACDecodeContextCreate(FFAudioDecodeContext** context);
-GVoid GJ_AACDecodeContextDealloc(FFAudioDecodeContext** context);
+GVoid GJ_AACDecodeContextCreate(FFAudioDecodeContext **context);
+GVoid GJ_AACDecodeContextDealloc(FFAudioDecodeContext **context);

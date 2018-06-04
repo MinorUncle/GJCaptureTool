@@ -24,20 +24,18 @@ long kcpOnceToken;
 //GJRetainBuffer* R_GJH264PacketMalloc(GJRetainBufferPool* pool,GHandle userdata){
 //    return (GJRetainBuffer*)calloc(1,sizeof(R_GJH264Packet));
 //}
-GInt32 R_GJPacketMalloc(GJRetainBufferPool* pool){
-    
+GInt32 R_GJPacketMalloc(GJRetainBufferPool *pool) {
+
     return sizeof(R_GJPacket);
 }
 
-GInt32 R_GJPCMFrameMalloc(GJRetainBufferPool* pool){
-    
+GInt32 R_GJPCMFrameMalloc(GJRetainBufferPool *pool) {
+
     return sizeof(R_GJPCMFrame);
-    
 }
-GInt32 R_GJPixelFrameMalloc(GJRetainBufferPool* pool){
-    
+GInt32 R_GJPixelFrameMalloc(GJRetainBufferPool *pool) {
+
     return sizeof(R_GJPixelFrame);
-    
 }
 
 //GJRetainBuffer* R_GJStreamPacketMalloc(GJRetainBufferPool* pool,GHandle userdata){

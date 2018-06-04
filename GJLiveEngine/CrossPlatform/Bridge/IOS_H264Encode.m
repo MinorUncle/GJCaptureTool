@@ -15,13 +15,13 @@ inline static GBool encodeSetup(struct _GJEncodeToH264eContext *context, GJPixel
     GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
     GJH264Encoder *encoder = [[GJH264Encoder alloc] initWithSourceSize:CGSizeMake((CGFloat) format.mWidth, (CGFloat) format.mHeight)];
     GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Encoder setup:%p", encoder);
-    
+
     NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
-    encoder.completeCallback = ^(R_GJPacket *packet) {
+    encoder.completeCallback  = ^(R_GJPacket *packet) {
         if (callback) {
             callback(userData, packet);
         }
-        callFunc(&context->pipleNode,&packet->retain,GJMediaType_Video);
+        callFunc(&context->pipleNode, &packet->retain, GJMediaType_Video);
     };
     context->obaque = (__bridge_retained GHandle) encoder;
     return GTrue;
@@ -37,9 +37,9 @@ inline static GVoid encodeUnSetup(GJEncodeToH264eContext *context) {
 }
 
 inline static GBool encodeFrame(GJEncodeToH264eContext *context, R_GJPixelFrame *frame) {
-    GJH264Encoder *  encode = (__bridge GJH264Encoder *) (context->obaque);
+    GJH264Encoder *encode = (__bridge GJH264Encoder *) (context->obaque);
     GJAssert((frame->flag & kGJFrameFlag_P_CVPixelBuffer) == kGJFrameFlag_P_CVPixelBuffer, "格式暂时不支持");
-    CVPixelBufferRef image  = ((CVPixelBufferRef *) R_BufferStart(&frame->retain))[0];
+    CVPixelBufferRef image = ((CVPixelBufferRef *) R_BufferStart(&frame->retain))[0];
     return [encode encodeImageBuffer:image pts:frame->pts];
 }
 
@@ -105,9 +105,9 @@ inline static GBool encodeGetSPS_PPS(struct _GJEncodeToH264eContext *context, GU
     return result;
 }
 
-inline static GBool encodeFrameFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
-    encodeFrame((GJEncodeToH264eContext*)context,(R_GJPixelFrame*)data);
-    return  GTrue;
+inline static GBool encodeFrameFunc(GJPipleNode *context, GJRetainBuffer *data, GJMediaType dataType) {
+    encodeFrame((GJEncodeToH264eContext *) context, (R_GJPixelFrame *) data);
+    return GTrue;
 }
 
 GVoid GJ_H264EncodeContextCreate(GJEncodeToH264eContext **encodeContext) {

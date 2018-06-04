@@ -249,13 +249,13 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     //    audioBuffer->size = outCacheBufferList.mBuffers[0].mDataByteSize+7;
     adtsDataForPacketLength(outCacheBufferList.mBuffers[0].mDataByteSize, R_BufferStart(&packet->retain), _destFormat.mSampleRate, _destFormat.mChannelsPerFrame);
 
-    packet->type       = GJMediaType_Audio;
-    packet->extendDataSize = 7;
+    packet->type             = GJMediaType_Audio;
+    packet->extendDataSize   = 7;
     packet->extendDataOffset = 0;
-    packet->dataOffset = packet->extendDataSize;
-    packet->dataSize   = outCacheBufferList.mBuffers[0].mDataByteSize;
-    packet->pts        = frame->pts;
-    packet->dts        = frame->pts;
+    packet->dataOffset       = packet->extendDataSize;
+    packet->dataSize         = outCacheBufferList.mBuffers[0].mDataByteSize;
+    packet->pts              = frame->pts;
+    packet->dts              = frame->pts;
 
     self.completeCallback(packet);
     R_BufferUnRetain(audioBuffer);
@@ -304,7 +304,7 @@ static void adtsDataForPacketLength(int packetLength, uint8_t *packet, int sampl
      */
     int        chanCfg    = channel;
     NSUInteger fullLength = adtsLength + packetLength;
-    packet[0]             = (char) 0xFF; // 11111111  	= syncword
+    packet[0]             = (char) 0xFF; // 11111111      = syncword
     packet[1]             = (char) 0xF1; // 1111 0 00 1 = syncword+id(MPEG-4) + Layer + absent
 
     packet[2] = (char) (((profile) << 6) + (freqIdx << 2) + (chanCfg >> 2)); // profile(2)+sampling(4)+privatebit(1)+channel_config(1)

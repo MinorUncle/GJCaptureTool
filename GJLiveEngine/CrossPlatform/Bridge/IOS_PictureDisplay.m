@@ -16,28 +16,27 @@
 
 @interface IOS_PictureDisplay : NSObject
 @property (strong, nonatomic) GPUImageOutput *imageInput;
-@property (strong, nonatomic) GJImageView *           displayView;
-@property (assign, nonatomic) BOOL enableRender;
+@property (strong, nonatomic) GJImageView *   displayView;
+@property (assign, nonatomic) BOOL            enableRender;
 @end
 @implementation IOS_PictureDisplay
 - (instancetype)init {
     self = [super init];
     if (self) {
-        _displayView = [[GJImageView alloc] init];
+        _displayView  = [[GJImageView alloc] init];
         _enableRender = YES;
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidEnterBackgroundNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillEnterForegroundNotification object:nil];
-
     }
     return self;
 }
--(void)receiveNotification:(NSNotification* )notic{
+- (void)receiveNotification:(NSNotification *)notic {
     if ([notic.name isEqualToString:UIApplicationDidEnterBackgroundNotification]) {
         _enableRender = NO;
         runSynchronouslyOnVideoProcessingQueue(^{
             [_imageInput removeTarget:_displayView];
         });
-    }else if ([notic.name isEqualToString:UIApplicationWillEnterForegroundNotification]) {
+    } else if ([notic.name isEqualToString:UIApplicationWillEnterForegroundNotification]) {
         runSynchronouslyOnVideoProcessingQueue(^{
             [_imageInput addTarget:_displayView];
         });
@@ -45,54 +44,54 @@
     }
 }
 
-- (void)displayImage:(R_GJPixelFrame*)frame {
+- (void)displayImage:(R_GJPixelFrame *)frame {
     if (!_enableRender) {
         return;
     }
     if ((frame->flag & kGJFrameFlag_P_CVPixelBuffer) == kGJFrameFlag_P_CVPixelBuffer) {
         CVImageBufferRef image = ((CVImageBufferRef *) R_BufferStart(frame))[0];
-        
+
         if (![_imageInput isKindOfClass:[GJImagePixelImageInput class]]) {
             OSType format = CVPixelBufferGetPixelFormatType(image);
-            _imageInput = [[GJImagePixelImageInput alloc]initWithFormat:(GJYUVPixelImageFormat)format];
+            _imageInput   = [[GJImagePixelImageInput alloc] initWithFormat:(GJYUVPixelImageFormat) format];
             if (_enableRender) {
                 [_imageInput addTarget:_displayView];
             }
         }
-        [(GJImagePixelImageInput*)_imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
-    }else if ((frame->flag & kGJFrameFlag_P_AVFrame) == kGJFrameFlag_P_AVFrame){
-        AVFrame* image =   ((AVFrame* *) R_BufferStart(frame))[0];
+        [(GJImagePixelImageInput *) _imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
+    } else if ((frame->flag & kGJFrameFlag_P_AVFrame) == kGJFrameFlag_P_AVFrame) {
+        AVFrame *          image  = ((AVFrame **) R_BufferStart(frame))[0];
         enum AVPixelFormat format = image->format;
-    
-        GPUPixelFormat pixelFormat = GPUPixelFormatBGRA;
-        GJYUVPixelFormat yuvFormat = GJPixelFormatI420;
+
+        GPUPixelFormat   pixelFormat = GPUPixelFormatBGRA;
+        GJYUVPixelFormat yuvFormat   = GJPixelFormatI420;
 
         BOOL isRGB = GFalse;
         BOOL isYUV = GFalse;
         switch (format) {
             case AV_PIX_FMT_RGBA:
                 pixelFormat = GPUPixelFormatRGBA;
-                isRGB = GTrue;
+                isRGB       = GTrue;
                 break;
             case AV_PIX_FMT_BGRA:
                 pixelFormat = GPUPixelFormatBGRA;
-                isRGB = GTrue;
+                isRGB       = GTrue;
                 break;
             case AV_PIX_FMT_RGB24:
                 pixelFormat = GPUPixelFormatRGB;
-                isRGB = GTrue;
+                isRGB       = GTrue;
                 break;
             case AV_PIX_FMT_YUV420P:
                 yuvFormat = GJPixelFormatI420;
-                isYUV = GTrue;
+                isYUV     = GTrue;
                 break;
             case AV_PIX_FMT_NV12:
                 yuvFormat = GJPixelFormatNV12;
-                isYUV = GTrue;
+                isYUV     = GTrue;
                 break;
             case AV_PIX_FMT_NV21:
                 yuvFormat = GJPixelFormatNV21;
-                isYUV = GTrue;
+                isYUV     = GTrue;
                 break;
             default:
                 GJAssert(0, "不支持");
@@ -100,33 +99,29 @@
         }
         if (isRGB) {
             if (![_imageInput isKindOfClass:[GPUImageRawDataInput class]]) {
-                _imageInput = [[GPUImageRawDataInput alloc]initWithBytes:image->data[0] size:CGSizeMake(image->width, image->height) pixelFormat:pixelFormat];
+                _imageInput = [[GPUImageRawDataInput alloc] initWithBytes:image->data[0] size:CGSizeMake(image->width, image->height) pixelFormat:pixelFormat];
                 if (_enableRender) {
                     [_imageInput addTarget:_displayView];
                 }
-                
             }
-            [(GPUImageRawDataInput*)_imageInput processData];
-        }else{
+            [(GPUImageRawDataInput *) _imageInput processData];
+        } else {
             if (![_imageInput isKindOfClass:[GJImageYUVDataInput class]]) {
-                _imageInput = [[GJImageYUVDataInput alloc]initWithImageSize:CGSizeMake(image->width, image->height) pixelFormat:yuvFormat];
+                _imageInput = [[GJImageYUVDataInput alloc] initWithImageSize:CGSizeMake(image->width, image->height) pixelFormat:yuvFormat];
                 if (_enableRender) {
                     [_imageInput addTarget:_displayView];
                 }
-                
             }
             if (yuvFormat == GJPixelFormatI420) {
-                [(GJImageYUVDataInput*)_imageInput updateDataWithY:image->data[0] U:image->data[1] V:image->data[2] type:GJPixelTypeUByte Timestamp:kCMTimeZero];
-            }else{
-                [(GJImageYUVDataInput*)_imageInput updateDataWithY:image->data[0] CrBr:image->data[1] type:GJPixelTypeUByte Timestamp:kCMTimeZero];
-
+                [(GJImageYUVDataInput *) _imageInput updateDataWithY:image->data[0] U:image->data[1] V:image->data[2] type:GJPixelTypeUByte Timestamp:kCMTimeZero];
+            } else {
+                [(GJImageYUVDataInput *) _imageInput updateDataWithY:image->data[0] CrBr:image->data[1] type:GJPixelTypeUByte Timestamp:kCMTimeZero];
             }
-
         }
     }
 }
 
--(void)dealloc{
+- (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 @end
@@ -156,7 +151,7 @@ static GHandle IOS_PictureDisplayGetView(GJPictureDisplayContext *context) {
 }
 GVoid GJ_PictureDisplayContextCreate(GJPictureDisplayContext **disPlayContext) {
     if (*disPlayContext == NULL) {
-        *disPlayContext = (GJPictureDisplayContext *) calloc(1,sizeof(GJPictureDisplayContext));
+        *disPlayContext = (GJPictureDisplayContext *) calloc(1, sizeof(GJPictureDisplayContext));
     }
     GJPictureDisplayContext *context = *disPlayContext;
     context->displaySetup            = IOS_PictureDisplaySetup;

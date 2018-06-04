@@ -12,14 +12,14 @@
 #import "GJRetainBuffer.h"
 #import "GJLiveDefine+internal.h"
 @class GJAudioQueueRecoder;
-typedef void(^AudioRecodeCallBack)(R_GJPCMFrame* frame);
+typedef void (^AudioRecodeCallBack)(R_GJPCMFrame *frame);
 
-typedef enum _RecoderStatus{
+typedef enum _RecoderStatus {
     kRecoderInvalidStatus = 0,
     kRecoderStopStatus,
     kRecoderRunningStatus,
     kRecoderPauseStatus,
-}RecoderStatus;
+} RecoderStatus;
 
 //@protocol GJAudioQueueRecoderDelegate <NSObject>
 //@optional
@@ -29,19 +29,18 @@ typedef enum _RecoderStatus{
 //@end
 
 @interface GJAudioQueueRecoder : NSObject
-@property(nonatomic,assign)int maxOutSize;
-@property(nonatomic,assign,readonly)AudioStreamBasicDescription format;
-@property(nonatomic,assign,readonly)RecoderStatus status;
-@property(nonatomic,copy)AudioRecodeCallBack callback;
+@property (nonatomic, assign) int maxOutSize;
+@property (nonatomic, assign, readonly) AudioStreamBasicDescription format;
+@property (nonatomic, assign, readonly) RecoderStatus               status;
+@property (nonatomic, copy) AudioRecodeCallBack callback;
 
 /**
  回调延迟，越小消耗越大，默认0.2,单位s
  */
-@property(nonatomic,assign)float callbackDelay;
-
+@property (nonatomic, assign) float callbackDelay;
 
 - (instancetype)initWithStreamWithSampleRate:(Float64)sampleRate channel:(UInt32)channel formatID:(UInt32)formatID;
 
--(BOOL)startRecodeAudio;
+- (BOOL)startRecodeAudio;
 -(void)stop;
 @end

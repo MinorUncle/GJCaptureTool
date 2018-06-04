@@ -233,9 +233,9 @@ static const int MCAudioQueueBufferCount = 3;
 }
 
 - (BOOL)stop:(BOOL)immediately {
-    GJPlayStatus pre  = _status; //防止监听部分重启
-    _status         = kPlayStatusStop;
-    OSStatus status = AudioQueueStop(_audioQueue, immediately);
+    GJPlayStatus pre = _status; //防止监听部分重启
+    _status          = kPlayStatusStop;
+    OSStatus status  = AudioQueueStop(_audioQueue, immediately);
     if (status != noErr) {
         NSLog(@"AudioQueueStop error:%d", (int) status);
         _status = pre;

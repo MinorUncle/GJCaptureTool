@@ -17,7 +17,7 @@ inline static GBool decodeSetup(struct _FFVideoDecodeContext *context, GJPixelTy
     GJAssert(context->obaque == GNULL, "上一个视频解码器没有释放");
     GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder setup");
 
-    GJH264Decoder *decode   = [[GJH264Decoder alloc] init];
+    GJH264Decoder *decode = [[GJH264Decoder alloc] init];
     switch (format) {
         case GJPixelType_32BGRA:
             decode.outPutImageFormat = kCVPixelFormatType_32BGRA;
@@ -33,11 +33,11 @@ inline static GBool decodeSetup(struct _FFVideoDecodeContext *context, GJPixelTy
             break;
     }
     NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
-    decode.completeCallback = ^(R_GJPixelFrame *frame) {
+    decode.completeCallback   = ^(R_GJPixelFrame *frame) {
         if (callback) {
             callback(userData, frame);
         }
-        callFunc(&context->pipleNode,&frame->retain,GJMediaType_Video);
+        callFunc(&context->pipleNode, &frame->retain, GJMediaType_Video);
     };
     context->obaque = (__bridge_retained GHandle) decode;
     pipleNodeUnLock(&context->pipleNode);
@@ -51,14 +51,14 @@ inline static GVoid decodeUnSetup(struct _FFVideoDecodeContext *context) {
         if (decode.isRunning) {
             [decode stopDecode];
         }
-        context->obaque       = GNULL;
-        decode                = nil;
+        context->obaque = GNULL;
+        decode          = nil;
         GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder unsetup");
     }
     pipleNodeUnLock(&context->pipleNode);
 }
 
-inline static  GBool  decodeStart(struct _FFVideoDecodeContext* context){
+inline static GBool decodeStart(struct _FFVideoDecodeContext *context) {
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
         GJH264Decoder *decode = (__bridge GJH264Decoder *) (context->obaque);
@@ -70,7 +70,7 @@ inline static  GBool  decodeStart(struct _FFVideoDecodeContext* context){
 };
 
 //stop前一定要断开管道的连接。
-inline static  GVoid  decodeStop(struct _FFVideoDecodeContext* context){
+inline static GVoid decodeStop(struct _FFVideoDecodeContext *context) {
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
         GJH264Decoder *decode = (__bridge GJH264Decoder *) (context->obaque);
@@ -83,45 +83,44 @@ inline static  GVoid  decodeStop(struct _FFVideoDecodeContext* context){
 };
 
 inline static GBool decodePacket(struct _FFVideoDecodeContext *context, R_GJPacket *packet) {
-//    pipleNodeLock(&context->pipleNode);
+    //    pipleNodeLock(&context->pipleNode);
     GJH264Decoder *decode = (__bridge GJH264Decoder *) (context->obaque);
     [decode decodePacket:packet];
-//    pipleNodeUnLock(&context->pipleNode);
+    //    pipleNodeUnLock(&context->pipleNode);
     return GTrue;
 }
 
-inline static GVoid decodeFlush(struct _FFVideoDecodeContext* context){
+inline static GVoid decodeFlush(struct _FFVideoDecodeContext *context) {
     pipleNodeLock(&context->pipleNode);
     if (context->obaque) {
         GJH264Decoder *decode = (__bridge GJH264Decoder *) (context->obaque);
         [decode flush];
-        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "%p",decode);
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "%p", decode);
     }
     pipleNodeUnLock(&context->pipleNode);
 }
 
-inline static GBool decodePacketFunc(GJPipleNode* context, GJRetainBuffer* data,GJMediaType dataType){
+inline static GBool decodePacketFunc(GJPipleNode *context, GJRetainBuffer *data, GJMediaType dataType) {
     GBool result = GFalse;
     if (dataType == GJMediaType_Video) {
-        result = decodePacket((FFVideoDecodeContext*)context,(R_GJPacket*)data);
+        result = decodePacket((FFVideoDecodeContext *) context, (R_GJPacket *) data);
     }
-    return  result;
-    
+    return result;
 }
 
 GVoid GJ_H264DecodeContextCreate(FFVideoDecodeContext **decodeContext) {
     if (*decodeContext == NULL) {
         *decodeContext = (FFVideoDecodeContext *) malloc(sizeof(FFVideoDecodeContext));
     }
-    FFVideoDecodeContext *context     = *decodeContext;
+    FFVideoDecodeContext *context = *decodeContext;
     memset(context, 0, sizeof(FFVideoDecodeContext));
     pipleNodeInit(&context->pipleNode, decodePacketFunc);
-    context->decodeSetup             = decodeSetup;
-    context->decodeUnSetup           = decodeUnSetup;
-    context->decodeStart             = decodeStart;
-    context->decodeStop              = decodeStop;
-    context->decodeFlush             = decodeFlush;
-    context->decodePacket            = GNULL;
+    context->decodeSetup   = decodeSetup;
+    context->decodeUnSetup = decodeUnSetup;
+    context->decodeStart   = decodeStart;
+    context->decodeStop    = decodeStop;
+    context->decodeFlush   = decodeFlush;
+    context->decodePacket  = GNULL;
 }
 GVoid GJ_H264DecodeContextDealloc(FFVideoDecodeContext **context) {
     if ((*context)->obaque) {

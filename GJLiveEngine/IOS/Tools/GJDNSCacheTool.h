@@ -7,5 +7,4 @@
 //
 #include "GJPlatformHeader.h"
 
-GBool getIPWithAddr(const char* addr,char* outIpAddr,int index);
-
+GBool getIPWithAddr(const char *addr, char *outIpAddr, int index);

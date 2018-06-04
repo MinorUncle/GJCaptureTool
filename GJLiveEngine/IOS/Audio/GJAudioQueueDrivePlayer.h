@@ -19,27 +19,25 @@
 //-(BOOL)GJAudioQueueDrivePlayer:(GJAudioQueueDrivePlayer*)player outAudioData:(void*)data outSize:(int*)size;
 //
 //@end
-typedef BOOL(^FillDataCallBack)(void* data,int* size);
+typedef BOOL (^FillDataCallBack)(void *data, int *size);
 @interface GJAudioQueueDrivePlayer : NSObject
-@property (nonatomic,assign,readonly) BOOL available;
-@property (nonatomic,assign,readonly) AudioStreamBasicDescription format;
-@property (nonatomic,assign) float volume;
-@property (nonatomic,assign) float speed;
+@property (nonatomic, assign, readonly) BOOL                        available;
+@property (nonatomic, assign, readonly) AudioStreamBasicDescription format;
+@property (nonatomic, assign) float volume;
+@property (nonatomic, assign) float speed;
 
-@property (nonatomic,assign) UInt32 maxBufferSize;
-@property (nonatomic,assign,readonly) GJPlayStatus status;
+@property (nonatomic, assign) UInt32 maxBufferSize;
+@property (nonatomic, assign, readonly) GJPlayStatus status;
 //@property (nonatomic,weak) id<GJAudioQueueDrivePlayerDelegate> delegate;
 //default 5
-@property (nonatomic,assign) int cacheBufferCount;
+@property (nonatomic, assign) int cacheBufferCount;
 
-@property (nonatomic,copy) FillDataCallBack fillDataCallback;
+@property (nonatomic, copy) FillDataCallBack fillDataCallback;
 
 /**
  *  return playedTime of audioqueue, return invalidPlayedTime when error occurs.
  */
-@property (nonatomic,readonly) NSTimeInterval playedTime;
-
-
+@property (nonatomic, readonly) NSTimeInterval playedTime;
 
 /**
  must on main thread
@@ -51,9 +49,7 @@ typedef BOOL(^FillDataCallBack)(void* data,int* size);
  */
 - (instancetype)initWithFormat:(AudioStreamBasicDescription)format maxBufferSize:(UInt32)maxBufferSize macgicCookie:(NSData *)macgicCookie;
 
-
 - (instancetype)initWithSampleRate:(Float64)sampleRate channel:(UInt32)channel formatID:(UInt32)formatID;
-
 
 /**
  *  pause & resume

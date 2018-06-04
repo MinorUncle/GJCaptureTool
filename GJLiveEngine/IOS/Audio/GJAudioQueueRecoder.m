@@ -141,7 +141,7 @@ static void pcmHandleInputBuffer(void *aqData, AudioQueueRef inAQ, AudioQueueBuf
         R_BufferWrite(&buffer->retain, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
         //        memcpy(buffer->retain.data, inBuffer->mAudioData, inBuffer->mAudioDataByteSize);
         //        buffer->retain.size = inBuffer->mAudioDataByteSize;
-        buffer->pts = GTimeMake(CACurrentMediaTime()*1000, 1000);
+        buffer->pts = GTimeMake(CACurrentMediaTime() * 1000, 1000);
         tempSelf.callback(buffer);
 
         R_BufferUnRetain(&buffer->retain);
@@ -252,7 +252,7 @@ static void aacHandleInputBuffer(void *aqData, AudioQueueRef inAQ, AudioQueueBuf
     status          = AudioQueueNewInput(&format, callback, (__bridge void *_Nullable)(self), NULL, 0, 0, &_mAudioQueue);
     if (status != 0) {
         char *formatName = (char *) &(status);
-        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioQueueNewInput error:%d: %c%c%c%c---------",status, formatName[3], formatName[2], formatName[1], formatName[0]);
+        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioQueueNewInput error:%d: %c%c%c%c---------", status, formatName[3], formatName[2], formatName[1], formatName[0]);
         _mAudioQueue = NULL;
 
         return NO;
@@ -283,7 +283,7 @@ static void aacHandleInputBuffer(void *aqData, AudioQueueRef inAQ, AudioQueueBuf
 - (void)receiveNotification:(NSNotification *)notifica {
 
     if ([notifica.name isEqualToString:AVAudioSessionInterruptionNotification]) {
-        AVAudioSessionInterruptionType    type    = [notifica.userInfo[AVAudioSessionInterruptionTypeKey] longValue];
+        AVAudioSessionInterruptionType type = [notifica.userInfo[AVAudioSessionInterruptionTypeKey] longValue];
         AVAudioSessionInterruptionOptions options = [notifica.userInfo[AVAudioSessionInterruptionOptionKey] longValue];
 
         if (type == AVAudioSessionInterruptionTypeEnded && options == AVAudioSessionInterruptionOptionShouldResume && self.status == kRecoderRunningStatus) {

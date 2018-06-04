@@ -106,14 +106,13 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return position;
 }
 
-@interface IOS_VideoProduce : NSObject{
+@interface IOS_VideoProduce : NSObject {
 }
-@property (nonatomic, strong) GPUImageOutput<GJCameraProtocal>*    camera;
-@property (nonatomic, strong) GJImageView *           imageView;
-@property (nonatomic, strong) GPUImageCropFilter *    cropFilter;
-@property (nonatomic, strong) ARCSoftFaceHandle *     faceHandle;
-@property (nonatomic, strong) ARCSoftFaceSticker *    faceSticker;
-
+@property (nonatomic, strong) GPUImageOutput<GJCameraProtocal> *camera;
+@property (nonatomic, strong) GJImageView *                     imageView;
+@property (nonatomic, strong) GPUImageCropFilter *              cropFilter;
+@property (nonatomic, strong) ARCSoftFaceHandle *               faceHandle;
+@property (nonatomic, strong) ARCSoftFaceSticker *              faceSticker;
 
 @property (nonatomic, strong) GPUImageBeautifyFilter *beautifyFilter;
 @property (nonatomic, strong) GPUImageFilter *        videoSender;
@@ -130,44 +129,43 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 @property (nonatomic, strong) GJImageTrackImage *     trackImage;
 @property (nonatomic, assign) GJCaptureType           captureType;
 @property (nonatomic, strong) id<GJImageARScene>      scene;
-@property (nonatomic, strong) UIView*                 captureView;
+@property (nonatomic, strong) UIView *                captureView;
 @property (nonatomic, assign) GRational               dropStep;
-@property (nonatomic, assign) long                  captureCount;
-@property (nonatomic, assign) long                  dropCount;
+@property (nonatomic, assign) long                    captureCount;
+@property (nonatomic, assign) long                    dropCount;
 
 #pragma mark 美颜参数设置，请先开启任意一种美颜
 /**
  美白：0-100
  */
-@property(assign,nonatomic)NSInteger brightness;
+@property (assign, nonatomic) NSInteger brightness;
 
 /**
  磨皮：0-100
  */
-@property(assign,nonatomic)NSInteger skinSoften;
+@property (assign, nonatomic) NSInteger skinSoften;
 
 /**
  皮肤红润：0--100
  */
-@property(nonatomic,assign)NSInteger skinRuddy;
+@property (nonatomic, assign) NSInteger skinRuddy;
 
 /**
  瘦脸：0--100
  */
-@property(nonatomic,assign)NSInteger faceSlender;     //
+@property (nonatomic, assign) NSInteger faceSlender; //
 
 /**
  大眼：0--100
  */
-@property(nonatomic,assign)NSInteger eyeEnlargement;  //
-
+@property (nonatomic, assign) NSInteger eyeEnlargement; //
 
 @property (nonatomic, copy) VideoRecodeCallback callback;
 
 @end
 @implementation IOS_VideoProduce
 
-- (instancetype)init{
+- (instancetype)init {
     self = [super init];
     if (self) {
 
@@ -177,36 +175,35 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         GJRetainBufferPoolCreate(&_bufferPool, sizeof(CVImageBufferRef), GTrue, R_GJPixelFrameMalloc, pixelReleaseCallBack, GNULL);
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidEnterBackgroundNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillEnterForegroundNotification object:nil];
-        
     }
     return self;
 }
 
--(void)receiveNotification:(NSNotification* )notic{
+- (void)receiveNotification:(NSNotification *)notic {
     if ([notic.name isEqualToString:UIApplicationDidEnterBackgroundNotification]) {
         self.imageView.disable = YES;
-    }else if ([notic.name isEqualToString:UIApplicationWillEnterForegroundNotification]) {
+    } else if ([notic.name isEqualToString:UIApplicationWillEnterForegroundNotification]) {
         self.imageView.disable = NO;
     }
 }
 
--(void)setPixelFormat:(GJPixelFormat)pixelFormat{
-    _pixelFormat = pixelFormat;
+- (void)setPixelFormat:(GJPixelFormat)pixelFormat {
+    _pixelFormat  = pixelFormat;
     self.destSize = CGSizeMake((CGFloat) pixelFormat.mWidth, (CGFloat) pixelFormat.mHeight);
 }
 
--(void)setScene:(id<GJImageARScene>)scene{
+- (void)setScene:(id<GJImageARScene>)scene {
     _captureView = nil;
-    _scene = scene;
+    _scene       = scene;
 }
 
--(void)setCaptureView:(UIView *)captureView{
-    _scene = nil;
+- (void)setCaptureView:(UIView *)captureView {
+    _scene       = nil;
     _captureView = captureView;
 }
 
--(void)setCaptureType:(GJCaptureType)captureType{
-    if(_camera != nil){
+- (void)setCaptureType:(GJCaptureType)captureType {
+    if (_camera != nil) {
         GJLOG(GNULL, GJ_LOGWARNING, "setCaptureType 无效，请先停止预览和推流");
     }
     _captureType = captureType;
@@ -220,7 +217,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         [_trackImage stop];
     }
     if (_camera) {
-        if ( _camera.isRunning) {
+        if (_camera.isRunning) {
             [_camera stopCameraCapture];
         }
         [self deleteCamera];
@@ -233,43 +230,41 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     });
 }
 
--(void)deleteCamera{
+- (void)deleteCamera {
     if ([_camera isKindOfClass:[GJPaintingCamera class]]) {
         [_camera removeObserver:self forKeyPath:@"captureSize"];
     }
     _camera = nil;
 }
-- (GPUImageOutput<GJCameraProtocal>*)camera {
+- (GPUImageOutput<GJCameraProtocal> *)camera {
     if (_camera == nil) {
 
         CGSize size = _destSize;
 
         switch (_captureType) {
-            case kGJCaptureTypeCamera:
-            {
+            case kGJCaptureTypeCamera: {
                 if (_outputOrientation == UIInterfaceOrientationPortrait ||
                     _outputOrientation == UIInterfaceOrientationPortraitUpsideDown) {
                     size.height += size.width;
                     size.width  = size.height - size.width;
                     size.height = size.height - size.width;
                 }
-                NSString *preset               = getCapturePresetWithSize(size);
-                _camera                        = [[GPUImageVideoCamera alloc] initWithSessionPreset:preset cameraPosition:_cameraPosition];
-            }
-                break;
-            case kGJCaptureTypeView:{
+                NSString *preset = getCapturePresetWithSize(size);
+                _camera          = [[GPUImageVideoCamera alloc] initWithSessionPreset:preset cameraPosition:_cameraPosition];
+            } break;
+            case kGJCaptureTypeView: {
                 GJAssert(_captureView != nil, "请先设置直播的视图");
-                _camera = [[GJImageUICapture alloc]initWithView:_captureView];
+                _camera = [[GJImageUICapture alloc] initWithView:_captureView];
                 break;
             }
-            case kGJCaptureTypePaint:{
-                _camera = [[GJPaintingCamera alloc]init];
+            case kGJCaptureTypePaint: {
+                _camera = [[GJPaintingCamera alloc] init];
                 [_camera addObserver:self forKeyPath:@"captureSize" options:NSKeyValueObservingOptionNew context:nil];
                 break;
             }
-            case kGJCaptureTypeAR:{
+            case kGJCaptureTypeAR: {
                 GJAssert(_scene != nil, "请先设置ARScene");
-                _camera = [[GJImageARCapture alloc]initWithScene:_scene captureSize:size];
+                _camera = [[GJImageARCapture alloc] initWithScene:_scene captureSize:size];
                 break;
             }
             default:
@@ -277,54 +272,54 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         }
         if (_scene != nil) {
             //            [self.imageView addSubview:_scene.scene];
-        }else if(_captureView != nil){
-        }else{
-           
+        } else if (_captureView != nil) {
+        } else {
+
             //        [self.beautifyFilter addTarget:self.cropFilter];
         }
 
-        self.frameRate          = _frameRate;
-        self.outputOrientation  = _outputOrientation;
-        self.horizontallyMirror = _horizontallyMirror;
-        self.cameraPosition     = _cameraPosition;
+        self.frameRate            = _frameRate;
+        self.outputOrientation    = _outputOrientation;
+        self.horizontallyMirror   = _horizontallyMirror;
+        self.cameraPosition       = _cameraPosition;
         GPUImageOutput *sonFilter = [self getSonFilterWithDeep:kFilterCamera];
         if (sonFilter) {
-            [_camera addTarget:(id<GPUImageInput>)sonFilter];
+            [_camera addTarget:(id<GPUImageInput>) sonFilter];
         }
         [self updateCropSize];
     }
     return _camera;
 }
 
--(void)setSkinRuddy:(NSInteger)skinRuddy{
+- (void)setSkinRuddy:(NSInteger)skinRuddy {
     _faceHandle.skinRuddy = skinRuddy;
 }
--(NSInteger)skinRuddy{
+- (NSInteger)skinRuddy {
     return _faceHandle.skinRuddy;
 }
 
--(void)setSkinSoften:(NSInteger)skinSoften{
+- (void)setSkinSoften:(NSInteger)skinSoften {
     _faceHandle.skinSoftn = skinSoften;
 }
--(NSInteger)skinSoften{
+- (NSInteger)skinSoften {
     return _faceHandle.skinSoftn;
 }
 
--(void)setBrightness:(NSInteger)brightness{
+- (void)setBrightness:(NSInteger)brightness {
     _faceHandle.skinBright = brightness;
 }
--(NSInteger)brightness{
+- (NSInteger)brightness {
     return _faceHandle.skinBright;
 }
 
--(void)setEyeEnlargement:(NSInteger)eyeEnlargement{
+- (void)setEyeEnlargement:(NSInteger)eyeEnlargement {
     _faceHandle.eyesEnlargement = eyeEnlargement;
 }
--(NSInteger)eyeEnlargement{
+- (NSInteger)eyeEnlargement {
     return _faceHandle.eyesEnlargement;
 }
 
--(void)deleteShowImage{
+- (void)deleteShowImage {
     [_imageView removeObserver:self forKeyPath:@"frame"];
     _imageView = nil;
 }
@@ -334,8 +329,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             if (_imageView == nil) {
                 if (_captureType != kGJCaptureTypePaint) {
                     _imageView = [[GJImageView alloc] init];
-                }else{
-                    _imageView = ((GJPaintingCamera*)self.camera).paintingView;
+                } else {
+                    _imageView = ((GJPaintingCamera *) self.camera).paintingView;
                 }
                 [_imageView addObserver:self forKeyPath:@"frame" options:NSKeyValueObservingOptionNew context:nil];
                 if (_previewMirror) {
@@ -346,7 +341,6 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     }
     return _imageView;
 }
-
 
 - (GPUImageBeautifyFilter *)beautifyFilter {
     if (_beautifyFilter == nil) {
@@ -365,7 +359,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     GPUImageOutput *outFiter = nil;
     switch (deep) {
         case kFilterSticker:
-            if(_trackImage){
+            if (_trackImage) {
                 outFiter = _trackImage;
                 break;
             }
@@ -431,15 +425,15 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             }
         case kFilterBeauty:
             if (_trackImage) {
-                outFiter    = _trackImage;
+                outFiter = _trackImage;
                 break;
             }
         case kFilterTrack:
             if (_sticker) {
-                outFiter    = _sticker;
+                outFiter = _sticker;
                 break;
             }
-            break;//可能为空
+            break; //可能为空
         default:
             GJAssert(0, "错误");
             break;
@@ -449,7 +443,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 //必须videoprocess
 - (void)removeFilterWithdeep:(GJFilterDeep)deep {
-    
+
     GPUImageOutput *deleteFilter = [self getFilterWithDeep:deep];
     if (deleteFilter) {
         if (deep > 0) {
@@ -461,10 +455,9 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
                 [parentFilter removeTarget:(id<GPUImageInput>) deleteFilter];
                 [deleteFilter removeAllTargets];
             }
-        }else{
+        } else {
             [_camera removeAllTargets];
         }
-        
     }
 }
 
@@ -477,34 +470,34 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         }
         [parentFilter removeAllTargets];
         [parentFilter addTarget:filter];
-    }else{
+    } else {
         assert(0);
         [[self getSonFilterWithDeep:deep] addTarget:filter];
     }
 }
 
-
 - (BOOL)startStickerWithImages:(NSArray<GJOverlayAttribute *> *)images fps:(NSInteger)fps updateBlock:(OverlaysUpdate)updateBlock {
-    
+
     if (_camera != nil) {
         runAsynchronouslyOnVideoProcessingQueue(^{
             GJImagePictureOverlay *newSticker = [[GJImagePictureOverlay alloc] init];
             [self addFilter:newSticker deep:kFilterSticker];
             self.sticker = newSticker;
             if (updateBlock) {
-                [newSticker startOverlaysWithImages:images fps:fps updateBlock:^(NSInteger index, GJOverlayAttribute * _Nonnull ioAttr, BOOL * _Nonnull ioFinish) {
-                    updateBlock(index,ioAttr, ioFinish);
-                }];
-      
+                [newSticker startOverlaysWithImages:images
+                                                fps:fps
+                                        updateBlock:^(NSInteger index, GJOverlayAttribute *_Nonnull ioAttr, BOOL *_Nonnull ioFinish) {
+                                            updateBlock(index, ioAttr, ioFinish);
+                                        }];
+
             } else {
                 [newSticker startOverlaysWithImages:images fps:fps updateBlock:nil];
             }
         });
         return YES;
-    }else{
+    } else {
         return NO;
     }
-
 }
 - (void)chanceSticker {
     //使用同步线程，防止chance后还会有回调
@@ -516,11 +509,11 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     });
 }
 
--(BOOL)prepareVideoEffectWithBaseData:(NSString *)baseDataPath{
+- (BOOL)prepareVideoEffectWithBaseData:(NSString *)baseDataPath {
     runAsynchronouslyOnVideoProcessingQueue(^{
-        _faceHandle = [[ARCSoftFaceHandle alloc]initWithDataPath:baseDataPath];
+        _faceHandle          = [[ARCSoftFaceHandle alloc] initWithDataPath:baseDataPath];
         self.camera.delegate = _faceHandle;
-        _faceSticker = [[ARCSoftFaceSticker alloc]init];
+        _faceSticker         = [[ARCSoftFaceSticker alloc] init];
         [self addFilter:_faceSticker deep:kFilterFaceSticker];
     });
     return YES;
@@ -528,23 +521,23 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 /**
  取消视频处理
  */
--(void)chanceVideoEffect{
+- (void)chanceVideoEffect {
     self.camera.delegate = nil;
-    _faceHandle = nil;
+    _faceHandle          = nil;
     runSynchronouslyOnVideoProcessingQueue(^{
         [self removeFilterWithdeep:kFilterFaceSticker];
     });
 }
 
--(BOOL)updateFaceStickerWithTemplatePath:(NSString*)path{
+- (BOOL)updateFaceStickerWithTemplatePath:(NSString *)path {
     return [_faceSticker updateTemplatePath:path];
 }
 
-- (BOOL)startTrackingImageWithImages:(NSArray<GJOverlayAttribute*>*)images{
+- (BOOL)startTrackingImageWithImages:(NSArray<GJOverlayAttribute *> *)images {
     if (_camera == nil) {
         return NO;
     }
-    
+
     runAsynchronouslyOnVideoProcessingQueue(^{
         GJImageTrackImage *newTrack = [[GJImageTrackImage alloc] init];
         [self addFilter:newTrack deep:kFilterTrack];
@@ -555,7 +548,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return YES;
 }
 
-- (void)stopTracking{
+- (void)stopTracking {
     [self.trackImage stop];
     runSynchronouslyOnVideoProcessingQueue(^{
         if (self.trackImage == nil) { return; }
@@ -581,49 +574,47 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
  @param targetSize 目标图片大小
  @return 裁剪的比例
  */
--(CGRect) getCropRectWithSourceSize:(CGSize) originSize target:(CGSize)targetSize {
-    CGSize sourceSize = originSize;
+- (CGRect)getCropRectWithSourceSize:(CGSize)originSize target:(CGSize)targetSize {
+    CGSize sourceSize  = originSize;
     CGSize previewSize = _imageView.bounds.size;
-    CGRect region =CGRectZero;
-    
+    CGRect region      = CGRectZero;
+
     if (_imageView && _imageView.superview != nil) {
         switch (_imageView.contentMode) {
-            case UIViewContentModeScaleAspectFill://显示在显示视图内
+            case UIViewContentModeScaleAspectFill: //显示在显示视图内
             {
-                float scaleX =  sourceSize.width / previewSize.width;
-                float scaleY =  sourceSize.height / previewSize.height;
+                float scaleX = sourceSize.width / previewSize.width;
+                float scaleY = sourceSize.height / previewSize.height;
                 if (scaleX <= scaleY) {
-                    float scale = scaleX;
+                    float  scale     = scaleX;
                     CGSize scaleSize = CGSizeMake(previewSize.width * scale, previewSize.height * scale);
-                    region.origin.x = 0;
-                    region.origin.y = (sourceSize.height - scaleSize.height)/2;
-                    sourceSize.height -= region.origin.y*2;
-                }else{
-                    float scale = scaleY;
+                    region.origin.x  = 0;
+                    region.origin.y  = (sourceSize.height - scaleSize.height) / 2;
+                    sourceSize.height -= region.origin.y * 2;
+                } else {
+                    float  scale     = scaleY;
                     CGSize scaleSize = CGSizeMake(previewSize.width * scale, previewSize.height * scale);
-                    region.origin.x = (sourceSize.width - scaleSize.width)/2;
-                    region.origin.y = 0;
-                    sourceSize.width -= region.origin.x*2;
+                    region.origin.x  = (sourceSize.width - scaleSize.width) / 2;
+                    region.origin.y  = 0;
+                    sourceSize.width -= region.origin.x * 2;
                 }
-            }
-                break;
-                
+            } break;
+
             default:
                 break;
         }
     }
 
-    
-    float scaleX =  sourceSize.width / targetSize.width;
-    float scaleY =  sourceSize.height / targetSize.height;
+    float scaleX = sourceSize.width / targetSize.width;
+    float scaleY = sourceSize.height / targetSize.height;
     if (scaleX <= scaleY) {
-        float scale = scaleX;
+        float  scale     = scaleX;
         CGSize scaleSize = CGSizeMake(targetSize.width * scale, targetSize.height * scale);
-        region.origin.y += (sourceSize.height - scaleSize.height)/2;
-    }else{
-        float scale = scaleY;
+        region.origin.y += (sourceSize.height - scaleSize.height) / 2;
+    } else {
+        float  scale     = scaleY;
         CGSize scaleSize = CGSizeMake(targetSize.width * scale, targetSize.height * scale);
-        region.origin.x += (sourceSize.width - scaleSize.width)/2;
+        region.origin.x += (sourceSize.width - scaleSize.width) / 2;
     }
     if (region.origin.y < 0) {
         if (region.origin.y > -0.0001) {
@@ -637,37 +628,37 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     }
     region.origin.x /= originSize.width;
     region.origin.y /= originSize.height;
-    region.size.width = 1-2*region.origin.x;
-    region.size.height = 1-2*region.origin.y;
-    
-//    //裁剪，
-//    CGSize targetSize = sourceSize;
-//    float  scaleX     = targetSize.width / destSize.width;
-//    float  scaleY     = targetSize.height / destSize.height;
-//    CGRect region     = CGRectZero;
-//    if (scaleX <= scaleY) {
-//        float  scale       = scaleX;
-//        CGSize scaleSize   = CGSizeMake(destSize.width * scale, destSize.height * scale);
-//        region.origin.x    = 0;
-//        region.size.width  = 1.0;
-//        region.origin.y    = (targetSize.height - scaleSize.height) * 0.5 / targetSize.height;
-//        region.size.height = 1 - 2 * region.origin.y;
-//    } else {
-//        float  scale       = scaleY;
-//        CGSize scaleSize   = CGSizeMake(destSize.width * scale, destSize.height * scale);
-//        region.origin.y    = 0;
-//        region.size.height = 1.0;
-//        region.origin.x    = (targetSize.width - scaleSize.width) * 0.5 / targetSize.width;
-//        region.size.width  = 1 - 2 * region.origin.x;
-//    }
+    region.size.width  = 1 - 2 * region.origin.x;
+    region.size.height = 1 - 2 * region.origin.y;
+
+    //    //裁剪，
+    //    CGSize targetSize = sourceSize;
+    //    float  scaleX     = targetSize.width / destSize.width;
+    //    float  scaleY     = targetSize.height / destSize.height;
+    //    CGRect region     = CGRectZero;
+    //    if (scaleX <= scaleY) {
+    //        float  scale       = scaleX;
+    //        CGSize scaleSize   = CGSizeMake(destSize.width * scale, destSize.height * scale);
+    //        region.origin.x    = 0;
+    //        region.size.width  = 1.0;
+    //        region.origin.y    = (targetSize.height - scaleSize.height) * 0.5 / targetSize.height;
+    //        region.size.height = 1 - 2 * region.origin.y;
+    //    } else {
+    //        float  scale       = scaleY;
+    //        CGSize scaleSize   = CGSizeMake(destSize.width * scale, destSize.height * scale);
+    //        region.origin.y    = 0;
+    //        region.size.height = 1.0;
+    //        region.origin.x    = (targetSize.width - scaleSize.width) * 0.5 / targetSize.width;
+    //        region.size.width  = 1 - 2 * region.origin.x;
+    //    }
 
     return region;
 }
 
 - (BOOL)startProduce {
     __weak IOS_VideoProduce *wkSelf = self;
-    _dropCount = 0;
-    _captureCount = 0;
+    _dropCount                      = 0;
+    _captureCount                   = 0;
     runSynchronouslyOnVideoProcessingQueue(^{
         GPUImageOutput *parentFilter = _sticker;
         if (parentFilter == nil) {
@@ -676,18 +667,18 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         [parentFilter addTarget:self.cropFilter];
         self.cropFilter.frameProcessingCompletionBlock = ^(GPUImageOutput *imageOutput, CMTime time) {
             CVPixelBufferRef pixel_buffer = [imageOutput framebufferForOutput].newPixelBufferFromFramebufferContents;
-//            CVPixelBufferRetain(pixel_buffer);
+            //            CVPixelBufferRetain(pixel_buffer);
 
-            R_GJPixelFrame *frame                                   = (R_GJPixelFrame *) GJRetainBufferPoolGetData(wkSelf.bufferPool);
-            R_BufferWrite(&frame->retain, (GUInt8*)&pixel_buffer, sizeof(CVPixelBufferRef));
-            frame->height                                           = (GInt32) wkSelf.destSize.height;
-            frame->width                                            = (GInt32) wkSelf.destSize.width;
-            frame->flag                                             = kGJFrameFlag_P_CVPixelBuffer;
-            frame->pts = GTimeMake(time.value, time.timescale);
+            R_GJPixelFrame *frame = (R_GJPixelFrame *) GJRetainBufferPoolGetData(wkSelf.bufferPool);
+            R_BufferWrite(&frame->retain, (GUInt8 *) &pixel_buffer, sizeof(CVPixelBufferRef));
+            frame->height = (GInt32) wkSelf.destSize.height;
+            frame->width  = (GInt32) wkSelf.destSize.width;
+            frame->flag   = kGJFrameFlag_P_CVPixelBuffer;
+            frame->pts    = GTimeMake(time.value, time.timescale);
             if (wkSelf.captureCount++ % wkSelf.dropStep.den >= wkSelf.dropStep.num) {
                 wkSelf.callback(frame);
-            }else{
-                wkSelf.dropCount ++;
+            } else {
+                wkSelf.dropCount++;
             }
             R_BufferUnRetain((GJRetainBuffer *) frame);
         };
@@ -704,10 +695,10 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     if (_cropFilter.frameProcessingCompletionBlock == nil) {
         return;
     }
-   
+
     runAsynchronouslyOnVideoProcessingQueue(^{
         GJAssert(_camera != nil, "camera管理待优化");
-        
+
         GPUImageOutput *parentFilter = _sticker;
         if (parentFilter == nil) {
             parentFilter = [self getParentFilterWithDeep:kFilterSticker];
@@ -719,7 +710,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
                 [self stopTracking];
             }
         }
-        
+
         [parentFilter removeTarget:_cropFilter];
         _cropFilter.frameProcessingCompletionBlock = nil;
     });
@@ -734,8 +725,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 - (void)updateCropSize {
     runSynchronouslyOnVideoProcessingQueue(^{
-        if(_camera == nil)return ;
-        CGSize size = _destSize;
+        if (_camera == nil) return;
+        CGSize size    = _destSize;
         CGSize capture = self.camera.captureSize;
         if (capture.height < 2 || capture.width < 2) {
             return;
@@ -749,7 +740,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
             }
             capture = self.camera.captureSize;
         }
-        
+
         CGRect region              = [self getCropRectWithSourceSize:capture target:_destSize];
         self.cropFilter.cropRegion = region;
         [_cropFilter forceProcessingAtSize:_destSize];
@@ -757,7 +748,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (void)setOutputOrientation:(UIInterfaceOrientation)outputOrientation {
-    _outputOrientation             = outputOrientation;
+    _outputOrientation = outputOrientation;
     if (_camera) {
         self.camera.outputImageOrientation = outputOrientation;
         [self updateCropSize];
@@ -765,20 +756,20 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (void)setHorizontallyMirror:(BOOL)horizontallyMirror {
-    _horizontallyMirror                            = horizontallyMirror;
+    _horizontallyMirror = horizontallyMirror;
     if (_camera) {
         self.camera.horizontallyMirrorRearFacingCamera = self.camera.horizontallyMirrorFrontFacingCamera = _horizontallyMirror;
     }
 }
 
-- (void)setPreviewMirror:(BOOL)previewMirror{
-    _previewMirror                            = previewMirror;
+- (void)setPreviewMirror:(BOOL)previewMirror {
+    _previewMirror = previewMirror;
     if (_imageView) {
         [_imageView setInputRotation:kGPUImageFlipHorizonal atIndex:0];
     }
 }
 
--(void)setStreamMirror:(BOOL)streamMirror{
+- (void)setStreamMirror:(BOOL)streamMirror {
     _streamMirror = streamMirror;
     if (_cropFilter) {
         [_cropFilter setInputRotation:kGPUImageFlipHorizonal atIndex:0];
@@ -786,7 +777,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (void)setFrameRate:(int)frameRate {
-    _frameRate        = frameRate;
+    _frameRate = frameRate;
     if (_camera) {
         self.camera.frameRate = frameRate;
     }
@@ -819,10 +810,10 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
         return;
     }
     GJAssert(_camera != nil, "camera管理待优化");
-    
+
     if (_cropFilter.frameProcessingCompletionBlock == nil && [_camera isRunning]) {
         [_camera stopCameraCapture];
-//        [self deleteCamera];
+        //        [self deleteCamera];
         if (_trackImage) {
             [self stopTracking];
         }
@@ -838,38 +829,36 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     });
 }
 
-
 - (UIView *)getPreviewView {
     return self.imageView;
 }
 
--(UIImage*)getFreshDisplayImage{
-    return [((GJImageView*)self.imageView) captureFreshImage];
+- (UIImage *)getFreshDisplayImage {
+    return [((GJImageView *) self.imageView) captureFreshImage];
 }
 
--(void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey,id> *)change context:(void *)context{
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSKeyValueChangeKey, id> *)change context:(void *)context {
     if (object == _imageView) {
         if ([keyPath isEqualToString:@"frame"]) {
             [self updateCropSize];
         }
-    }else if (object == _camera){
+    } else if (object == _camera) {
         if ([keyPath isEqualToString:@"captureSize"]) {
             [self updateCropSize];
         }
     }
 }
 
-
 @end
 inline static GBool videoProduceSetup(struct _GJVideoProduceContext *context, VideoFrameOutCallback callback, GHandle userData) {
     GJAssert(context->obaque == GNULL, "上一个视频生产器没有释放");
-    IOS_VideoProduce *recode = [[IOS_VideoProduce alloc] init];
+    IOS_VideoProduce *recode  = [[IOS_VideoProduce alloc] init];
     NodeFlowDataFunc callFunc = pipleNodeFlowFunc(&context->pipleNode);
-    recode.callback          = ^(R_GJPixelFrame *frame) {
+    recode.callback           = ^(R_GJPixelFrame *frame) {
         if (callback) {
             callback(userData, frame);
         }
-        callFunc(&context->pipleNode,&frame->retain,GJMediaType_Video);
+        callFunc(&context->pipleNode, &frame->retain, GJMediaType_Video);
     };
 
     context->obaque = (__bridge_retained GHandle) recode;
@@ -886,7 +875,7 @@ inline static GVoid videoProduceUnSetup(struct _GJVideoProduceContext *context) 
 
 inline static GBool videoProduceSetVideoFormat(struct _GJVideoProduceContext *context, GJPixelFormat format) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    
+
     [recode setPixelFormat:format];
     return GTrue;
 }
@@ -954,19 +943,19 @@ inline static GBool videoProduceSetOutputOrientation(struct _GJVideoProduceConte
 
 inline static GBool videoProduceSetARScene(struct _GJVideoProduceContext *context, GHandle scene) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    recode.scene = (__bridge id<GJImageARScene>)(scene);
+    recode.scene             = (__bridge id<GJImageARScene>) (scene);
     return GTrue;
 }
 
 inline static GBool videoProduceSetCaptureView(struct _GJVideoProduceContext *context, GView view) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    recode.captureView = (__bridge UIView*)(view);
+    recode.captureView       = (__bridge UIView *) (view);
     return GTrue;
 }
 
 inline static GBool videoProduceSetCaptureType(struct _GJVideoProduceContext *context, GJCaptureType type) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    recode.captureType = type;
+    recode.captureType       = type;
     return GTrue;
 }
 
@@ -976,20 +965,20 @@ inline static GBool videoProduceSetHorizontallyMirror(struct _GJVideoProduceCont
     return GTrue;
 }
 
-inline static GBool setPreviewMirror (struct _GJVideoProduceContext* context, GBool mirror){
+inline static GBool setPreviewMirror(struct _GJVideoProduceContext *context, GBool mirror) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    recode.previewMirror = mirror;
+    recode.previewMirror     = mirror;
     return recode.previewMirror == mirror;
 }
-inline static GBool setStreamMirror (struct _GJVideoProduceContext* context, GBool mirror){
+inline static GBool setStreamMirror(struct _GJVideoProduceContext *context, GBool mirror) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    recode.streamMirror = mirror;
+    recode.streamMirror      = mirror;
     return recode.streamMirror == mirror;
 }
 
-inline static GVoid setDropStep (struct _GJVideoProduceContext* context, GRational step){
+inline static GVoid setDropStep(struct _GJVideoProduceContext *context, GRational step) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    recode.dropStep = step;
+    recode.dropStep          = step;
 }
 
 inline static GBool videoProduceSetFrameRate(struct _GJVideoProduceContext *context, GInt32 fps) {
@@ -1010,18 +999,20 @@ inline static GVoid videoProduceStopPreview(struct _GJVideoProduceContext *conte
 
 inline static GHandle getFreshDisplayImage(struct _GJVideoProduceContext *context) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    return (GHandle)CFBridgingRetain([recode getFreshDisplayImage]);
+    return (GHandle) CFBridgingRetain([recode getFreshDisplayImage]);
 }
 
-inline static GBool addSticker(struct _GJVideoProduceContext *context, const GVoid *overlays,  GInt32 fps, GJStickerUpdateCallback callback, const GVoid *userData) {
+inline static GBool addSticker(struct _GJVideoProduceContext *context, const GVoid *overlays, GInt32 fps, GJStickerUpdateCallback callback, const GVoid *userData) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    
+
     if (callback == GNULL) {
-        [recode startStickerWithImages:(__bridge_transfer NSArray<GJOverlayAttribute *> *)(overlays) fps:fps updateBlock:nil];
+        [recode startStickerWithImages:(__bridge_transfer NSArray<GJOverlayAttribute *> *) (overlays) fps:fps updateBlock:nil];
     } else {
-        [recode startStickerWithImages:(__bridge_transfer NSArray<GJOverlayAttribute *> *)(overlays) fps:fps updateBlock:^(NSInteger index, GJOverlayAttribute * _Nonnull ioAttr, BOOL * _Nonnull ioFinish) {
-            callback((GHandle) userData, index,(__bridge GHandle)(ioAttr), (GBool *) ioFinish);
-        }];
+        [recode startStickerWithImages:(__bridge_transfer NSArray<GJOverlayAttribute *> *) (overlays)
+                                   fps:fps
+                           updateBlock:^(NSInteger index, GJOverlayAttribute *_Nonnull ioAttr, BOOL *_Nonnull ioFinish) {
+                               callback((GHandle) userData, index, (__bridge GHandle)(ioAttr), (GBool *) ioFinish);
+                           }];
     }
     return GTrue;
 }
@@ -1032,13 +1023,13 @@ inline static GVoid chanceSticker(struct _GJVideoProduceContext *context) {
 }
 
 inline static GBool startTrackImage(struct _GJVideoProduceContext *context, const GVoid *images, GCRect frame) {
-    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    NSArray<UIImage *> * imageArry = (__bridge_transfer NSArray<UIImage *> *)(images);
-    NSMutableArray* overlays = [NSMutableArray arrayWithCapacity:imageArry.count];
-    for (UIImage* image in imageArry) {
+    IOS_VideoProduce *  recode    = (__bridge IOS_VideoProduce *) (context->obaque);
+    NSArray<UIImage *> *imageArry = (__bridge_transfer NSArray<UIImage *> *) (images);
+    NSMutableArray *    overlays  = [NSMutableArray arrayWithCapacity:imageArry.count];
+    for (UIImage *image in imageArry) {
         [overlays addObject:[GJOverlayAttribute overlayAttributeWithImage:image frame:makeGCRectToCGRect(frame) rotate:0]];
     }
-    BOOL result =  [recode startTrackingImageWithImages:overlays];
+    BOOL result = [recode startTrackingImageWithImages:overlays];
     return result;
 }
 
@@ -1050,13 +1041,13 @@ inline static GVoid stopTrackImage(struct _GJVideoProduceContext *context) {
 inline static GSize getCaptureSize(struct _GJVideoProduceContext *context) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
     GSize             size;
-    CGSize capture = recode.camera.captureSize;
-    size.width = capture.width;
-    size.height = capture.height;
+    CGSize            capture = recode.camera.captureSize;
+    size.width                = capture.width;
+    size.height               = capture.height;
     return size;
 }
 
-GBool   setMute(struct _GJVideoProduceContext* context, GBool enable){
+GBool setMute(struct _GJVideoProduceContext *context, GBool enable) {
     setDropStep(context, GRationalMake(enable == GTrue, 1));
     return GTrue;
 }
@@ -1068,13 +1059,13 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     GJVideoProduceContext *context = *produceContext;
     memset(context, 0, sizeof(GJVideoProduceContext));
     pipleNodeInit(&context->pipleNode, GNULL);
-    context->videoProduceSetup     = videoProduceSetup;
-    context->videoProduceUnSetup   = videoProduceUnSetup;
-    context->startProduce          = videoProduceStart;
-    context->stopProduce           = videoProduceStop;
-    context->startPreview          = videoProduceStartPreview;
-    context->stopPreview           = videoProduceStopPreview;
-//    context->setProduceSize        = videoProduceSetProduceSize;
+    context->videoProduceSetup   = videoProduceSetup;
+    context->videoProduceUnSetup = videoProduceUnSetup;
+    context->startProduce        = videoProduceStart;
+    context->stopProduce         = videoProduceStop;
+    context->startPreview        = videoProduceStartPreview;
+    context->stopPreview         = videoProduceStopPreview;
+    //    context->setProduceSize        = videoProduceSetProduceSize;
     context->setCameraPosition     = videoProduceSetCameraPosition;
     context->setOrientation        = videoProduceSetOutputOrientation;
     context->setHorizontallyMirror = videoProduceSetHorizontallyMirror;

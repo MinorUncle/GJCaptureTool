@@ -32,13 +32,13 @@
         [self _init];
         [self _createAudioOutputQueue:macgicCookie];
 
-//        if (![[NSThread currentThread] isMainThread]) {
-//            dispatch_sync(dispatch_get_main_queue(), ^{
-//                [self _createAudioOutputQueue:macgicCookie];
-//            });
-//        } else {
-//            [self _createAudioOutputQueue:macgicCookie];
-//        }
+        //        if (![[NSThread currentThread] isMainThread]) {
+        //            dispatch_sync(dispatch_get_main_queue(), ^{
+        //                [self _createAudioOutputQueue:macgicCookie];
+        //            });
+        //        } else {
+        //            [self _createAudioOutputQueue:macgicCookie];
+        //        }
     }
     return self;
 }
@@ -54,7 +54,7 @@
             format.mFramesPerPacket  = 1;          // 7
             format.mBitsPerChannel   = 16;         // 5
             format.mBytesPerFrame    = format.mChannelsPerFrame * format.mBitsPerChannel / 8;
-            format.mBytesPerPacket  = format.mBytesPerFrame * format.mFramesPerPacket;
+            format.mBytesPerPacket   = format.mBytesPerFrame * format.mFramesPerPacket;
             format.mFormatFlags      = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
             maxBufferSize            = format.mBytesPerFrame * 1024;
             break;
@@ -157,12 +157,12 @@
 }
 
 - (BOOL)start {
-//    if (![NSThread isMainThread]) {
-//        dispatch_async(dispatch_get_main_queue(), ^{
-//            [self start];
-//        });
-//        return YES;
-//    }
+    //    if (![NSThread isMainThread]) {
+    //        dispatch_async(dispatch_get_main_queue(), ^{
+    //            [self start];
+    //        });
+    //        return YES;
+    //    }
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AudioQueueStart");
     if (_status != kPlayStatusRunning) {
         _status = kPlayStatusRunning;
@@ -275,23 +275,23 @@
 }
 
 - (BOOL)stop:(BOOL)immediately {
-//    if (![NSThread isMainThread]) {
-//        if (immediately) {
-//            dispatch_sync(dispatch_get_main_queue(), ^{
-//                [self stop:immediately];
-//            });
-//        }else{
-//            dispatch_async(dispatch_get_main_queue(), ^{
-//                [self stop:immediately];
-//            });
-//        }
-//        return YES;
-//    }
+    //    if (![NSThread isMainThread]) {
+    //        if (immediately) {
+    //            dispatch_sync(dispatch_get_main_queue(), ^{
+    //                [self stop:immediately];
+    //            });
+    //        }else{
+    //            dispatch_async(dispatch_get_main_queue(), ^{
+    //                [self stop:immediately];
+    //            });
+    //        }
+    //        return YES;
+    //    }
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AudioQueuestop");
 
-    GJPlayStatus pre  = _status; //防止监听部分重启
-    _status         = kPlayStatusStop;
-    OSStatus status = AudioQueueStop(_audioQueue, immediately);
+    GJPlayStatus pre = _status; //防止监听部分重启
+    _status          = kPlayStatusStop;
+    OSStatus status  = AudioQueueStop(_audioQueue, immediately);
     if (status != noErr) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "AudioQueueStop error:%d", status);
         _status = pre;
@@ -363,7 +363,7 @@
 #pragma mark - call back
 static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer) {
 
-    GJAudioQueueDrivePlayer *player = (__bridge GJAudioQueueDrivePlayer *) inClientData;
+    GJAudioQueueDrivePlayer *player   = (__bridge GJAudioQueueDrivePlayer *) inClientData;
     int                      dataSize = inBuffer->mAudioDataByteSize;
 
     if (player.fillDataCallback(inBuffer->mAudioData, &dataSize)) {
@@ -429,3 +429,4 @@ static void MCAudioQueuePropertyCallback(void *inUserData, AudioQueueRef inAQ, A
     [self _disposeAudioOutputQueue];
 }
 @end
+

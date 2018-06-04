@@ -9,5 +9,5 @@
 #include "GJLiveDefine+internal.h"
 #include "GJBridegContext.h"
 
-GVoid FFAudioDecodeContextCreate(FFAudioDecodeContext** context);
-GVoid FFAudioDecodeContextDealloc(FFAudioDecodeContext** context);
+GVoid FFAudioDecodeContextCreate(FFAudioDecodeContext **context);
+GVoid FFAudioDecodeContextDealloc(FFAudioDecodeContext **context);

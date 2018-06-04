@@ -46,12 +46,12 @@ typedef struct _GJLivePushContext {
 
     pthread_mutex_t lock;
 
-    GTime  startPushClock;
-    GTime  stopPushClock;
-    GTime  firstVideoEncodeClock;
-    GTime  firstAudioEncodeClock;
-    GTime  connentClock;
-    GTime  disConnentClock;
+    GTime startPushClock;
+    GTime stopPushClock;
+    GTime firstVideoEncodeClock;
+    GTime firstAudioEncodeClock;
+    GTime connentClock;
+    GTime disConnentClock;
 
     GJLivePushCallback callback;
     GHandle            userData;
@@ -61,27 +61,26 @@ typedef struct _GJLivePushContext {
     GJTrafficStatus  preCheckVideoTraffic;
     // 网速检查速率单元，默认等于fps，表示1s检查一次。（越大越准确，但是越迟钝，越小越敏感）
     GInt32 rateCheckStep;
-//    敏感参数，
+    //    敏感参数，
     GInt32 sensitivity;
-    
 
     GRational videoDropStep; //每den帧丢num帧
     //     表示允许的最大丢帧频率，每den帧丢num帧。 allowDropStep 一定小于1.0/DEFAULT_MAX_DROP_STEP,当num大于1时，den只能是num+1，
-    GRational videoMaxDropRate; //默认fps-1/fps.表示1s至少有1帧数据
+    GRational videoMaxDropRate;  //默认fps-1/fps.表示1s至少有1帧数据
     GRational videoDropStepBack; //保存丢帧率，用于连续丢帧时保存，恢复时候恢复到此丢帧率
-    GInt32    videoBitrate;     //当前编码码率
+    GInt32    videoBitrate;      //当前编码码率
     GInt32    maxVideoDelay;     //默认最大的延时，超过此延时，则启动连续丢帧，直到延迟恢复到3/4,默认500ms；
     //不丢帧情况下允许的最小码率,主要用来控制质量，实际码率可能低于此。用于动态码率
-    GInt32  videoMinBitrate;
-    GInt32  videoNetSpeed;         //最近netSpeedCheckInterval次rateCheck网速为平均网速
-    GFloat32  increaseSpeedRate; //连续检查网络空闲次数大于rateCheckStep的increaseSpeedRate倍，则增加码率
+    GInt32   videoMinBitrate;
+    GInt32   videoNetSpeed;     //最近netSpeedCheckInterval次rateCheck网速为平均网速
+    GFloat32 increaseSpeedRate; //连续检查网络空闲次数大于rateCheckStep的increaseSpeedRate倍，则增加码率
 
-    GInt32 *netSpeedUnit;//表示当前发送码率bps，（负数表示受码率限制的发送速率，正数表示不受码率限制的满速速率）
+    GInt32 *netSpeedUnit;          //表示当前发送码率bps，（负数表示受码率限制的发送速率，正数表示不受码率限制的满速速率）
     GInt32  netSpeedCheckInterval; //netSpeedUnit数组长度
-    GInt32  collectCount; //已经收集的个数
-    GInt32  favorableCount;//连续良好网速的帧数
-    GInt32  increaseCount;//连续增加网速的个数
-    GInt32  checkCount;//用于控制检查间隔
+    GInt32  collectCount;          //已经收集的个数
+    GInt32  favorableCount;        //连续良好网速的帧数
+    GInt32  increaseCount;         //连续增加网速的个数
+    GInt32  checkCount;            //用于控制检查间隔
     GInt32  captureVideoCount;
     GInt32  dropVideoCount;
 
@@ -93,9 +92,6 @@ GBool GJLivePush_Create(GJLivePushContext **context, GJLivePushCallback callback
 GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url);
 GVoid GJLivePush_StopPush(GJLivePushContext *context);
 GVoid GJLivePush_SetConfig(GJLivePushContext *context, const GJPushConfig *config);
-
-
-
 
 /**
  是否禁止编码器,与GJLivePush_SetVideoMute类似，但是GJLivePush_SetVideoMute更轻量级，不会销毁编码器，此函数会，iOS进入后台时会使用。
@@ -112,10 +108,9 @@ GJTrafficStatus GJLivePush_GetAudioTrafficStatus(GJLivePushContext *context);
 GBool GJLivePush_StartRecode(GJLivePushContext *context, GView view, GInt32 fps, const GChar *fileUrl);
 GVoid GJLivePush_StopRecode(GJLivePushContext *context);
 
-
 #pragma mark 音频
-GVoid GJLivePush_AttachAudioProducer(GJLivePushContext* context,GJAudioProduceContext* audioProducer);
-GVoid GJLivePush_DetachAudioProducer(GJLivePushContext* context);
+GVoid GJLivePush_AttachAudioProducer(GJLivePushContext *context, GJAudioProduceContext *audioProducer);
+GVoid GJLivePush_DetachAudioProducer(GJLivePushContext *context);
 //GBool GJLivePush_SetAudioMute(GJLivePushContext *context, GBool mute);
 //GBool GJLivePush_EnableAudioEchoCancellation(GJLivePushContext *context, GBool enable);
 //GBool GJLivePush_EnableAudioInEarMonitoring(GJLivePushContext *context, GBool enable);
@@ -130,8 +125,8 @@ GVoid GJLivePush_DetachAudioProducer(GJLivePushContext* context);
 
 #pragma mark 视频
 
-GVoid GJLivePush_AttachVideoProducer(GJLivePushContext* context,GJVideoProduceContext* videoProducer);
-GVoid GJLivePush_DetachVideoProducer(GJLivePushContext* context);
+GVoid GJLivePush_AttachVideoProducer(GJLivePushContext *context, GJVideoProduceContext *videoProducer);
+GVoid GJLivePush_DetachVideoProducer(GJLivePushContext *context);
 //GBool GJLivePush_SetARScene(GJLivePushContext *context,GHandle scene);
 //GBool GJLivePush_SetCaptureView(GJLivePushContext *context,GView view);
 //GBool GJLivePush_SetCaptureType(GJLivePushContext *context, GJCaptureType type);
@@ -151,6 +146,5 @@ GVoid GJLivePush_DetachVideoProducer(GJLivePushContext* context);
 //GBool GJLivePush_StartTrackImage(GJLivePushContext *context, const GVoid *images, GCRect initFrame);
 //GVoid GJLivePush_StopTrack(GJLivePushContext *context);
 //GSize GJLivePush_GetCaptureSize(GJLivePushContext *context);
-
 
 #endif /* GJLivePushContext_h */

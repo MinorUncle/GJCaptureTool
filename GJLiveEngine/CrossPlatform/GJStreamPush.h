@@ -20,14 +20,13 @@ typedef struct _GJStreamPush GJStreamPush;
 typedef enum _kStreamPushMessageType {
     kStreamPushMessageType_connectSuccess,
     kStreamPushMessageType_closeComplete,
-    kStreamPushMessageType_packetSendSignal,  // GJMediaType
+    kStreamPushMessageType_packetSendSignal, // GJMediaType
     kStreamPushMessageType_connectError,
     kStreamPushMessageType_urlPraseError,
     kStreamPushMessageType_sendPacketError, //网络错误，发送失败
-    
+
 } kStreamPushMessageType;
 //typedef GVoid (*StreamPushMessageCallback)(GJStreamPush* push, GHandle receive, kStreamPushMessageType messageType, GLong messageParm);
-
 
 GBool GJStreamPush_Create(GJStreamPush **push, MessageHandle callback, GHandle streamPushParm, const GJAudioStreamFormat *audioFormat, const GJVideoStreamFormat *videoFormat);
 GVoid GJStreamPush_CloseAndDealloc(GJStreamPush **push);
@@ -43,10 +42,10 @@ GFloat32 GJStreamPush_GetBufferRate(GJStreamPush *push);
 GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush *push);
 GJTrafficStatus GJStreamPush_GetAudioBufferCacheInfo(GJStreamPush *push);
 
-static inline GBool GJStreamPush_NodeReceiveData(GJStreamPush *push, R_GJPacket *data,GJMediaType type){
+static inline GBool GJStreamPush_NodeReceiveData(GJStreamPush *push, R_GJPacket *data, GJMediaType type) {
     if (type == GJMediaType_Audio) {
         return GJStreamPush_SendAudioData(push, data);
-    }else{
+    } else {
         return GJStreamPush_SendVideoData(push, data);
     }
 }

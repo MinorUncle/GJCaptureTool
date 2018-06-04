@@ -12,6 +12,5 @@
 
 typedef struct _FFDecoder FFDecoder;
 
-GVoid GJ_FFDecodeContextCreate(FFVideoDecodeContext** context);
-GVoid GJ_FFDecodeContextDealloc(FFVideoDecodeContext** context);
-
+GVoid GJ_FFDecodeContextCreate(FFVideoDecodeContext **context);
+GVoid GJ_FFDecodeContextDealloc(FFVideoDecodeContext **context);
