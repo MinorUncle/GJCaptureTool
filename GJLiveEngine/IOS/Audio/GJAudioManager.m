@@ -38,6 +38,7 @@ static AEAudioController *shareAudioController;
         _mixPlayers = [NSMutableDictionary dictionaryWithCapacity:2];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotific:) name:AVAudioSessionRouteChangeNotification object:nil];
         GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc, GNULL, GNULL);
+        _alignWithBlack = YES;
     }
     return self;
 }
@@ -127,6 +128,7 @@ static AEAudioController *shareAudioController;
         return;
     }
     if (_mute) {
+        return;
         memset(frame->mBuffers[0].mData, 0, frame->mBuffers[0].mDataByteSize);
     }
     if (_alignWithBlack) {
@@ -138,7 +140,7 @@ static AEAudioController *shareAudioController;
             R_BufferUnRetain(&_alignCacheFrame->retain);
             _sendFrameCount += PCM_FRAME_COUNT;
             _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
-            GJLOG(GNULL, GJ_LOGINFO, "采集延迟，填充空白帧");
+            GJLOG(GNULL, GJ_LOGDEBUG, "采集延迟，填充空白帧");
         }
     }
 

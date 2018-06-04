@@ -13,6 +13,8 @@
 #import "libavformat/avformat.h"
 #import "GJSignal.h"
 #import "GJBufferPool.h"
+#import "GJAudioAlignment.h"
+#define AAC_FRAME_PER_PACKET 1024
 
 @interface GJPCMDecodeFromAAC () {
     AudioConverterRef   _decodeConvert;
@@ -25,6 +27,8 @@
     AudioStreamPacketDescription tPacketDesc;
     ASC                          _asc;
     GJSignal *                   _stopFinshSignal;
+
+    GJAudioAlignmentContext*     _alignmentContext;
 }
 
 @property (nonatomic, assign) int64_t currentPts;
@@ -38,6 +42,18 @@ static int stopCount;
 - (BOOL)createCorverWithDescription:(AudioStreamBasicDescription)destDescription SourceDescription:(AudioStreamBasicDescription)sourceDescription {
     _sourceFormat       = sourceDescription;
     _destFormat         = destDescription;
+    
+    if (_alignmentContext) {
+        audioAlignmentDelloc(&_alignmentContext);
+    }
+    GJAudioFormat format = {0};
+    format.mBitsPerChannel = _destFormat.mBitsPerChannel;
+    format.mChannelsPerFrame = _destFormat.mChannelsPerFrame;
+    format.mSampleRate = _destFormat.mSampleRate;
+    format.mFramePerPacket = _destFormat.mFramesPerPacket;
+    format.mType = GJAudioType_PCM;
+    audioAlignmentAlloc(&_alignmentContext, &format);
+    
     __block BOOL result = NO;
     if ([NSThread isMainThread]) {
         result = [self _createEncodeConverter];
@@ -185,7 +201,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
             d.mBitsPerChannel             = 16;
             d.mFormatID                   = kAudioFormatLinearPCM; //PCM
             d.mBytesPerPacket = d.mBytesPerFrame = d.mChannelsPerFrame * d.mBitsPerChannel / 8;
-            d.mFramesPerPacket                   = 1;
+            d.mFramesPerPacket                   = AAC_FRAME_PER_PACKET;
             d.mFormatFlags                       = kLinearPCMFormatFlagIsPacked | kLinearPCMFormatFlagIsSignedInteger; // little-endian
             [self createCorverWithDescription:d SourceDescription:s];
         }
@@ -231,7 +247,6 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
 }
 
-#define AAC_FRAME_PER_PACKET 1024
 
 - (BOOL)_createEncodeConverter {
     if (_decodeConvert) {
@@ -319,8 +334,19 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         }
 
         R_BufferUseSize(&frame->retain, outCacheBufferList.mBuffers[0].mDataByteSize);
-        frame->pts = GTimeMake(_currentPts, 1000);
-        frame->dts = frame->pts;
+        frame->dts = frame->pts = GTimeMake(_currentPts, 1000);
+        
+        GTime pts = frame->dts;
+        while (audioAlignmentUpdate(_alignmentContext, R_BufferStart(frame), R_BufferSize(frame), &pts) >= _destMaxOutSize) {
+            //有校正后的填充数据
+            frame->dts = frame->pts = pts;
+            self.decodeCallback(frame);
+            R_BufferUnRetain(&frame->retain);
+
+            frame = (R_GJPCMFrame *) GJRetainBufferPoolGetData(_bufferPool);
+            pts = GInvalidTime;
+            R_BufferUseSize(&frame->retain, _destMaxOutSize);
+        }
         self.decodeCallback(frame);
         _currentPts = -1;
         R_BufferUnRetain(&frame->retain);
@@ -343,6 +369,9 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     }
     if (_resumeQueue) {
         queueFree(&(_resumeQueue));
+    }
+    if (_alignmentContext) {
+        audioAlignmentDelloc(&_alignmentContext);
     }
     signalDestory(&_stopFinshSignal);
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "gjpcmdecodeformaac delloc:%p", self);

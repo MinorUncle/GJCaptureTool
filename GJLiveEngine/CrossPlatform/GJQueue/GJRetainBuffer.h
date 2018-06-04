@@ -73,10 +73,11 @@ typedef GBool (*RetainReleaseCallBack)(struct _GJRetainBuffer* data);
         GJAssert((buffer->size <= buffer->capacity),"MEM ERROR");
     }
 #define R_BufferUseSize(buffer,size) _R_BufferUseSize((GJRetainBuffer*)(buffer),size)
-    static inline GInt32 R_BufferSize(GJRetainBuffer* buffer){
+    static inline GInt32 _R_BufferSize(GJRetainBuffer* buffer){
         return buffer->size;
     }
-    
+#define R_BufferSize(buffer) _R_BufferSize((GJRetainBuffer*)(buffer))
+
     static inline GInt32 R_BufferFrontSize(GJRetainBuffer* buffer){
         return buffer->frontSize;
     }

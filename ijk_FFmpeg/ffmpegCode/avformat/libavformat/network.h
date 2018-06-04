@@ -236,7 +236,7 @@ const char *ff_gai_strerror(int ecode);
 
 int ff_is_multicast_address(struct sockaddr *addr);
 
-#define POLLING_TIME 100 /// Time in milliseconds between interrupt check
+#define POLLING_TIME 400 /// Time in milliseconds between interrupt check
 
 /**
  * Bind to a file descriptor and poll for a connection.

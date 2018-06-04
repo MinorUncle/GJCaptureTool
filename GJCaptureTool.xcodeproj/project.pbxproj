@@ -49,6 +49,10 @@
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
 		6A8E277020C4D9FA00777B38 /* libAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A8E277120C4D9FA00777B38 /* libAudioEngine.a */; };
 		6A8E27C520C4DAEF00777B38 /* libAirReceive.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A8E27C620C4DAEF00777B38 /* libAirReceive.a */; };
+		6A8E27D520C4EE3F00777B38 /* GJAudioAlignment.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A8E27D320C4EE3F00777B38 /* GJAudioAlignment.c */; };
+		6A8E27D620C4EE3F00777B38 /* GJAudioAlignment.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A8E27D420C4EE3F00777B38 /* GJAudioAlignment.h */; };
+		6A8E27D920C52FFC00777B38 /* GTime.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A8E27D720C52FFC00777B38 /* GTime.c */; };
+		6A8E27DA20C52FFC00777B38 /* GTime.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A8E27D820C52FFC00777B38 /* GTime.h */; };
 		6A8F5E351F340E3C00FA57A4 /* GJAudioQueuePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4E51ECB4DFE0009E49A /* GJAudioQueuePlayer.m */; };
 		6A8F5E361F341FFC00FA57A4 /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6A96CCA41F2195C5000DC4FE /* GJScreenRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */; };
@@ -327,6 +331,20 @@
 			remoteGlobalIDString = 17BB5B401BECD101007A2892;
 			remoteInfo = "AudioEngine tvOS";
 		};
+		6A8E27D120C4EAF300777B38 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4C215CEB1523A7D500D36CAD;
+			remoteInfo = AudioEngine;
+		};
+		6ABDA0E320C5400800BD8070 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A8E27BF20C4DAB900777B38 /* AirReceive.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = A1D0DC501950378A004717F5;
+			remoteInfo = AirReceive;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -417,6 +435,10 @@
 		6A8E277120C4D9FA00777B38 /* libAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6A8E27BF20C4DAB900777B38 /* AirReceive.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = AirReceive.xcodeproj; path = libairfloat/AirReceive.xcodeproj; sourceTree = "<group>"; };
 		6A8E27C620C4DAEF00777B38 /* libAirReceive.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libAirReceive.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A8E27D320C4EE3F00777B38 /* GJAudioAlignment.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GJAudioAlignment.c; sourceTree = "<group>"; };
+		6A8E27D420C4EE3F00777B38 /* GJAudioAlignment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJAudioAlignment.h; sourceTree = "<group>"; };
+		6A8E27D720C52FFC00777B38 /* GTime.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GTime.c; sourceTree = "<group>"; };
+		6A8E27D820C52FFC00777B38 /* GTime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GTime.h; sourceTree = "<group>"; };
 		6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJScreenRecorder.h; path = ../GJScreenRecorder.h; sourceTree = "<group>"; };
 		6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GJScreenRecorder.m; path = ../GJScreenRecorder.m; sourceTree = "<group>"; };
 		6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_RAOPPlay.h; sourceTree = "<group>"; };
@@ -796,6 +818,8 @@
 				6A42F16320AED90C00083B01 /* GJLog.h */,
 				AE70A4D21ECB4DFE0009E49A /* GJUtil.c */,
 				AE70A4D31ECB4DFE0009E49A /* GJUtil.h */,
+				6A8E27D320C4EE3F00777B38 /* GJAudioAlignment.c */,
+				6A8E27D420C4EE3F00777B38 /* GJAudioAlignment.h */,
 				6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */,
 				6AB4F4301EF0082200FD4172 /* GJFLVPack.h */,
 				AE70A4D41ECB4DFE0009E49A /* sps_decode.c */,
@@ -842,6 +866,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		6ABDA0E020C5400800BD8070 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6ABDA0E420C5400800BD8070 /* libAirReceive.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		6ABF2B091F0B413600721DB3 /* Bridge */ = {
 			isa = PBXGroup;
 			children = (
@@ -882,6 +914,8 @@
 				6AD06E5520B53B86004DF75B /* GJDebug.h */,
 				6AD06E5620B53B86004DF75B /* GJList.c */,
 				6AD06E5720B53B86004DF75B /* GJList.h */,
+				6A8E27D720C52FFC00777B38 /* GTime.c */,
+				6A8E27D820C52FFC00777B38 /* GTime.h */,
 				6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */,
 				6AD06E5A20B53B86004DF75B /* GJQueue+cplus.h */,
 				6AD06E5B20B53B86004DF75B /* GJQueue.c */,
@@ -1241,6 +1275,7 @@
 			files = (
 				AE70A5501ECB4DFE0009E49A /* GJBridegContext.h in Headers */,
 				AE70A53B1ECB4DFE0009E49A /* GJLivePush.h in Headers */,
+				6A8E27D620C4EE3F00777B38 /* GJAudioAlignment.h in Headers */,
 				6ABF2B201F0B413600721DB3 /* IOS_AudioProduce.h in Headers */,
 				6A53950D20A9A81700E9E3C9 /* GJDNSCache.h in Headers */,
 				6AD06E8720B53B86004DF75B /* GJQueue.h in Headers */,
@@ -1274,6 +1309,7 @@
 				AE70A53D1ECB4DFE0009E49A /* GJH264Decoder.h in Headers */,
 				6ABF2B1A1F0B413600721DB3 /* IOS_AACDecode.h in Headers */,
 				AE3A2C2C1F07F74500C24BAA /* GJAudioManager.h in Headers */,
+				6A8E27DA20C52FFC00777B38 /* GTime.h in Headers */,
 				6A5E04C520A44AE20030A0B8 /* FFAudioDecoder.h in Headers */,
 				AE70A5141ECB4DFE0009E49A /* GJLiveDefine.h in Headers */,
 				AE70A51A1ECB4DFE0009E49A /* GJUtil.h in Headers */,
@@ -1309,6 +1345,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				6A8E27D220C4EAF300777B38 /* PBXTargetDependency */,
 				6A6B1A3B207C474E00BFC8FA /* PBXTargetDependency */,
 			);
 			name = GJLiveEngine;
@@ -1378,6 +1415,10 @@
 			productRefGroup = C54FA8A91D21006000A0D3C3 /* Products */;
 			projectDirPath = "";
 			projectReferences = (
+				{
+					ProductGroup = 6ABDA0E020C5400800BD8070 /* Products */;
+					ProjectRef = 6A8E27BF20C4DAB900777B38 /* AirReceive.xcodeproj */;
+				},
 				{
 					ProductGroup = 6A8E277A20C4DA5400777B38 /* Products */;
 					ProjectRef = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
@@ -1580,6 +1621,13 @@
 			remoteRef = 6A8E278320C4DA5400777B38 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		6ABDA0E420C5400800BD8070 /* libAirReceive.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libAirReceive.a;
+			remoteRef = 6ABDA0E320C5400800BD8070 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -1652,6 +1700,7 @@
 				6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */,
 				6ABF2B1D1F0B413600721DB3 /* IOS_AACEncode.m in Sources */,
 				AE3A2C2D1F07F74500C24BAA /* GJAudioManager.m in Sources */,
+				6A8E27D520C4EE3F00777B38 /* GJAudioAlignment.c in Sources */,
 				6AD06E8A20B53B86004DF75B /* GJRetainBufferPool.c in Sources */,
 				6A8F5E351F340E3C00FA57A4 /* GJAudioQueuePlayer.m in Sources */,
 				AE70A5121ECB4DFE0009E49A /* GJLiveDefine+internal.c in Sources */,
@@ -1677,6 +1726,7 @@
 				6A5E04C620A44AE20030A0B8 /* FFAudioDecoder.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
 				6ABF2B251F0B413600721DB3 /* IOS_H264Encode.m in Sources */,
+				6A8E27D920C52FFC00777B38 /* GTime.c in Sources */,
 				6A53951B20AA7BF900E9E3C9 /* AutoLock.m in Sources */,
 				6A96CCA51F2195C5000DC4FE /* GJScreenRecorder.m in Sources */,
 				AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */,
@@ -1706,6 +1756,11 @@
 			isa = PBXTargetDependency;
 			name = GJImageFilters;
 			targetProxy = 6A6B1A3A207C474E00BFC8FA /* PBXContainerItemProxy */;
+		};
+		6A8E27D220C4EAF300777B38 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = AudioEngine;
+			targetProxy = 6A8E27D120C4EAF300777B38 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

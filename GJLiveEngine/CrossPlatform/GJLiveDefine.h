@@ -11,7 +11,7 @@
 #import <CoreGraphics/CGGeometry.h>
 #import <CoreVideo/CVPixelBuffer.h>
 #import "GJRetainBuffer.h"
-
+#import "GTime.h"
 //延迟收集，只有在同一收集同时推拉流才准确，
 
 //#define NETWORK_DELAY

@@ -11,6 +11,7 @@
 #include "GJRetainBuffer.h"
 #include "GJRetainBufferPool.h"
 #include "GJLiveDefine.h"
+#include "GTime.h"
 #define DEFAULT_MAX_DROP_STEP 30
 #define MAX_SEND_DELAY 60000 //in ms,重启
 #define SEND_DELAY_TIME 1500 //宏观检测的延迟时间限额
