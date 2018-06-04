@@ -145,7 +145,6 @@ GBool listFree(GJList** inQ){
     pthread_cond_destroy(&list->cond);
     pthread_mutex_destroy(&list->lock);
     
-#if MEMORY_CHECK
     GJListNode* node = list->recycleHead;
     while (node) {
         GJListNode* next = node->next;
@@ -154,7 +153,6 @@ GBool listFree(GJList** inQ){
         list->generateSize--;
     }
     GJAssert(list->generateSize == 0, "管理有误");
-#endif
     free(list);
     *inQ = NULL;
     return GTrue;

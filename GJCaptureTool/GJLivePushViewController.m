@@ -954,6 +954,9 @@
     if (btn.selected) {
         _pullStateLab.text = @"连接中";
         _dewaterTimes = _bufferTimes = 0;
+        _dewaterStatus.text = [NSString stringWithFormat:@"dewaterStatus:false times:0"];
+        _playerBufferLab.text = [NSString stringWithFormat:@"buffer：0 times:0"];
+
         if(![_pull startStreamPullWithUrl:_pullAddr]){
             btn.selected = NO;
         };
@@ -1125,6 +1128,7 @@
 -(void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
     [_pushManager.livePush stopPreview];
+    [_pushManager.livePush stopStreamPush];
 }
 -(void)buildUI{
     if (_pushAddr.length > 3)[self.view addSubview:_pushManager.view];

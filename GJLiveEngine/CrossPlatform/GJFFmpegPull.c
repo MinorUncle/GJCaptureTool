@@ -53,6 +53,7 @@ static GHandle pullRunloop(GHandle parm) {
     av_dict_set_int(&options, "fpsprobesize", 0, 0);
     av_dict_set(&options, "fflags", "keepside", 0);
     av_dict_set_int(&options, "fflags", pull->formatContext->flags|AVFMT_FLAG_KEEP_SIDE_DATA, 0);
+    av_dict_set_int(&options, "dns_cache", 0, 0);
 
     GInt32 result = avformat_open_input(&pull->formatContext, (const GChar*)pull->pullUrl, GNULL, &options);
     av_dict_free(&options);

@@ -31,7 +31,7 @@
 //因为期望为0，所以极差约等于2*最大抖动值，所以最大抖动值可以控制抖动更新区间。
 
 #define VIDEO_PTS_PRECISION 140  //视频最多延迟两帧精度播放
-#define AUDIO_PTS_PRECISION 60  //改为100，2帧
+#define AUDIO_PTS_PRECISION 100  //改为100，2帧
 
 #define MAX_CACHE_DUR 4000 //抖动最大缓存控制
 #define MIN_CACHE_DUR 200  //抖动最小缓存控制
@@ -260,7 +260,8 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     GLong dClock = (GTimeSencondValue(clock) - GTimeSencondValue(netShake->collectStartClock))*1000;
     GLong dPTS = (GTimeSencondValue(pts) - GTimeSencondValue(netShake->collectStartPts)) *1000;
     GLong shake = dClock - dPTS; //统计少发的抖动
-    if (shake <0) {shake = -shake;}
+    GLong dShake = shake;
+    if (shake <0) {shake = -shake*0.5;}//不能直接变为负数，因为后面会使用到符号
 #ifdef NETWORK_DELAY
     GLong delay = 0;
     GLong testShake = 0;
@@ -305,7 +306,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     }
 //小于0有两种方案，一是按照一定比例下调，二是忽略
 #if 0
-    if(shake < 0){
+    if(dShake < 0){
 //如果是按照比例下调，则一定重新超时计时器，
         if(netShake->maxDownShake > netShake->preMaxDownShake){
 //            如果有必要，更新preMaxDownShake
@@ -336,7 +337,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 #endif
     }
 #endif
-else if ((shake < 0 && dClock >= netShake->collectUpdateDur)||
+else if ((dShake < 0 && dClock >= netShake->collectUpdateDur)||
          dClock >= 2 * netShake->collectUpdateDur) {
     //要shake小于0才开始更新抖动计时器，否则表示该包已经有延时了，后面的抖动计算就会偏小。
     //或者shake一直大于0，表示网络实在太差，也不需要高精度的抖动，则到达翻倍的超时时间也开始更新。
@@ -503,6 +504,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
             GLong currentTime = GTimeMSValue(GJ_Gettime());
             GLong lastClock = GTimeMSValue(_syncControl->audioInfo.trafficStatus.leave.clock);
             if(shake-(currentTime - lastClock)< AUDIO_PTS_PRECISION){//去除抖动限制，因为可能抖动大于AUDIO_PTS_PRECISION，但是播放缓存也会消耗时间，
+                GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "音频为空，但是估计缓冲时间不长，直接补充假数据，省去缓冲");
                 *outSize = R_BufferSize(&_playControl->freshAudioFrame->retain);
                 memcpy(data, R_BufferStart(_playControl->freshAudioFrame), *outSize);
                 return GTrue;
@@ -766,7 +768,7 @@ GBool GJLivePlay_Start(GJLivePlayer *player) {
 
         player->syncControl.netShake.preMaxDownShake = MIN_CACHE_DUR;
         player->syncControl.netShake.maxDownShake    = MIN_CACHE_DUR;
-        player->syncControl.netShake.collectUpdateDur = UPDATE_SHAKE_TIME_MIN;
+        player->syncControl.netShake.collectUpdateDur = UPDATE_SHAKE_TIME_MIN*2;
         player->callback(player->userDate, GJPlayMessage_NetShakeRangeUpdate, &player->syncControl.netShake.collectUpdateDur);
         player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&player->syncControl.netShake.maxDownShake);
         
