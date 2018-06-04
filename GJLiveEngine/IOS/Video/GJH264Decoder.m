@@ -49,13 +49,11 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
     return self;
 }
 - (void)receiveNotification:(NSNotification *)notic {
-    //    if ([notic.name isEqualToString:UIApplicationWillResignActiveNotification]) {
-    //        queueSetMinCacheSize(_inputQueue, VIDEO_DECODER_CACHE_COUNT+1);
-    //        _isActive = NO;
-    //    }else if([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]){
-    //        queueSetMinCacheSize(_inputQueue, 0);
-    //        _isActive = YES;
-    //    }
+        if ([notic.name isEqualToString:UIApplicationWillResignActiveNotification]) {
+            _isActive = NO;
+        }else if([notic.name isEqualToString:UIApplicationDidBecomeActiveNotification]){
+            _isActive = YES;
+        }
 }
 - (void)dealloc {
     queueFree(&_inputQueue);
@@ -369,6 +367,14 @@ void decodeOutputCallback(
             R_BufferUnRetain(packet);
         }
 
+        if(!_isActive){
+//            if (!_needFlush) {
+//                [self flush];
+//            }
+            return noErr;
+        }
+        
+        
         CMSampleBufferRef sampleBuffer = NULL;
         OSStatus          status       = kVTVideoDecoderMalfunctionErr;
         sampleBuffer                   = [self createSampleBufferWithData:packetData size:packetSize pts:GTimeMSValue(packet->pts)];
