@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
-		6A0200F31F0621EF00F4255B /* liblibairfloat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0200E81F0621E000F4255B /* liblibairfloat.a */; };
 		6A0201001F06227800F4255B /* raopsession.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FA1F06227800F4255B /* raopsession.h */; };
 		6A0201011F06227800F4255B /* rtprecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FB1F06227800F4255B /* rtprecorder.h */; };
 		6A0201021F06227800F4255B /* rtpsocket.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0200FC1F06227800F4255B /* rtpsocket.h */; };
@@ -32,7 +31,6 @@
 		6A34884D1F453803008223AA /* index3.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A3488351F453803008223AA /* index3.png */; };
 		6A34884E1F453803008223AA /* index4.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A3488361F453803008223AA /* index4.png */; };
 		6A34884F1F453803008223AA /* index5.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A3488371F453803008223AA /* index5.png */; };
-		6A40DFB91EE8DAE80047E0F0 /* libTheAmazingAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFB41EE8DA4D0047E0F0 /* libTheAmazingAudioEngine.a */; };
 		6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
 		6A40E1A51EEAA2D70047E0F0 /* AEPlaythroughChannel.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A40E1A41EEAA2D70047E0F0 /* AEPlaythroughChannel.h */; };
 		6A42F16020AED6A300083B01 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A42F15320AED68D00083B01 /* libavcodec.a */; };
@@ -59,6 +57,8 @@
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
 		6A85F9EA1F0140AF0037A64F /* AEAudioSender.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85F9E91F0140AF0037A64F /* AEAudioSender.h */; };
 		6A85FA281F02397F0037A64F /* GJAudioMixer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A85FA271F02397F0037A64F /* GJAudioMixer.h */; };
+		6A8E277020C4D9FA00777B38 /* libAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A8E277120C4D9FA00777B38 /* libAudioEngine.a */; };
+		6A8E27C520C4DAEF00777B38 /* libAirReceive.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A8E27C620C4DAEF00777B38 /* libAirReceive.a */; };
 		6A8F5E351F340E3C00FA57A4 /* GJAudioQueuePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4E51ECB4DFE0009E49A /* GJAudioQueuePlayer.m */; };
 		6A8F5E361F341FFC00FA57A4 /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6A96CCA41F2195C5000DC4FE /* GJScreenRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */; };
@@ -201,13 +201,6 @@
 			remoteGlobalIDString = C5E7F6A51D8E2EB60018CBC6;
 			remoteInfo = Mp4V2_Demo;
 		};
-		6A0200E71F0621E000F4255B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = A1D0DC501950378A004717F5;
-			remoteInfo = libairfloat;
-		};
 		6A0E86DF1E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
@@ -242,27 +235,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = C591E8AE1DC6FF6600BCC938;
 			remoteInfo = RtmpServer;
-		};
-		6A40DFB31EE8DA4D0047E0F0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4C215CEC1523A7D500D36CAD;
-			remoteInfo = TheAmazingAudioEngine;
-		};
-		6A40DFB51EE8DA4D0047E0F0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 7A5687101B54610900243427;
-			remoteInfo = "TheAmazingAudioEngine OS X";
-		};
-		6A40DFB71EE8DA4D0047E0F0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 17BB5B401BECD101007A2892;
-			remoteInfo = "TheAmazingAudioEngine tvOS";
 		};
 		6A42F14C20AED68D00083B01 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -348,26 +320,33 @@
 			remoteGlobalIDString = 6A58217C202AAD2B002AFF76;
 			remoteInfo = kcptun;
 		};
-		6A6B1A36207C474E00BFC8FA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = A1D0DC4F1950378A004717F5;
-			remoteInfo = libairfloat;
-		};
-		6A6B1A38207C474E00BFC8FA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 4C215CEB1523A7D500D36CAD;
-			remoteInfo = TheAmazingAudioEngine;
-		};
 		6A6B1A3A207C474E00BFC8FA /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 0417FCBC1E5EC74E00D5B5D9;
 			remoteInfo = GJImageFilters;
+		};
+		6A8E277F20C4DA5400777B38 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4C215CEC1523A7D500D36CAD;
+			remoteInfo = AudioEngine;
+		};
+		6A8E278120C4DA5400777B38 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 7A5687101B54610900243427;
+			remoteInfo = "AudioEngine OS X";
+		};
+		6A8E278320C4DA5400777B38 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 17BB5B401BECD101007A2892;
+			remoteInfo = "AudioEngine tvOS";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -417,7 +396,6 @@
 		046F5B321E305714007901EB /* x264_config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264_config.h; path = ../../../../x264Code/x264/include/x264_config.h; sourceTree = "<group>"; };
 		046F5B331E305714007901EB /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264.h; path = ../../../../x264Code/x264/include/x264.h; sourceTree = "<group>"; };
 		046F7E411E306C8E00712A2B /* libx264_back.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264_back.a; sourceTree = "<group>"; };
-		6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libairfloat.xcodeproj; path = libairfloat/libairfloat.xcodeproj; sourceTree = "<group>"; };
 		6A0200FA1F06227800F4255B /* raopsession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = raopsession.h; path = libairfloat/libairfloat/raopsession.h; sourceTree = SOURCE_ROOT; };
 		6A0200FB1F06227800F4255B /* rtprecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rtprecorder.h; path = libairfloat/libairfloat/rtprecorder.h; sourceTree = SOURCE_ROOT; };
 		6A0200FC1F06227800F4255B /* rtpsocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rtpsocket.h; path = libairfloat/libairfloat/rtpsocket.h; sourceTree = SOURCE_ROOT; };
@@ -451,7 +429,7 @@
 		6A3488361F453803008223AA /* index4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = index4.png; sourceTree = "<group>"; };
 		6A3488371F453803008223AA /* index5.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = index5.png; sourceTree = "<group>"; };
 		6A3955401FA33DE4002931D9 /* GJLiveEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJLiveEngine.h; sourceTree = "<group>"; };
-		6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = TheAmazingAudioEngine.xcodeproj; path = TheAmazingAudioEngine/TheAmazingAudioEngine.xcodeproj; sourceTree = "<group>"; };
+		6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = AudioEngine.xcodeproj; path = TheAmazingAudioEngine/AudioEngine.xcodeproj; sourceTree = "<group>"; };
 		6A40DFBB1EE8DB630047E0F0 /* AEAudioBufferManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioBufferManager.h; sourceTree = "<group>"; };
 		6A40DFBC1EE8DB630047E0F0 /* AEAudioController+Audiobus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "AEAudioController+Audiobus.h"; sourceTree = "<group>"; };
 		6A40DFBD1EE8DB630047E0F0 /* AEAudioController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioController.h; sourceTree = "<group>"; };
@@ -493,6 +471,9 @@
 		6A85F9941F00F0B00037A64F /* MixTest.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MixTest.mp3; sourceTree = "<group>"; };
 		6A85F9E91F0140AF0037A64F /* AEAudioSender.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AEAudioSender.h; path = TheAmazingAudioEngine/AEAudioSender.h; sourceTree = SOURCE_ROOT; };
 		6A85FA271F02397F0037A64F /* GJAudioMixer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJAudioMixer.h; path = TheAmazingAudioEngine/GJAudioMixer.h; sourceTree = SOURCE_ROOT; };
+		6A8E277120C4D9FA00777B38 /* libAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6A8E27BF20C4DAB900777B38 /* AirReceive.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = AirReceive.xcodeproj; path = libairfloat/AirReceive.xcodeproj; sourceTree = "<group>"; };
+		6A8E27C620C4DAEF00777B38 /* libAirReceive.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libAirReceive.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJScreenRecorder.h; path = ../GJScreenRecorder.h; sourceTree = "<group>"; };
 		6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GJScreenRecorder.m; path = ../GJScreenRecorder.m; sourceTree = "<group>"; };
 		6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_RAOPPlay.h; sourceTree = "<group>"; };
@@ -720,6 +701,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6A8E27C520C4DAEF00777B38 /* libAirReceive.a in Frameworks */,
+				6A8E277020C4D9FA00777B38 /* libAudioEngine.a in Frameworks */,
 				6A42F16020AED6A300083B01 /* libavcodec.a in Frameworks */,
 				6A42F16120AED6A300083B01 /* libavformat.a in Frameworks */,
 				6A42F16220AED6A300083B01 /* libavutil.a in Frameworks */,
@@ -735,9 +718,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				6AF7ECFD1FE7ABE800605E6E /* IOSurface.framework in Frameworks */,
-				6A0200F31F0621EF00F4255B /* liblibairfloat.a in Frameworks */,
 				6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */,
-				6A40DFB91EE8DAE80047E0F0 /* libTheAmazingAudioEngine.a in Frameworks */,
 				AE70A5571ECB50FA0009E49A /* GJLiveEngine.framework in Frameworks */,
 				6ABD5B661E88B73B00404A6B /* libcrypto.a in Frameworks */,
 				6ABD5B671E88B73B00404A6B /* libopenssl.a in Frameworks */,
@@ -818,14 +799,6 @@
 			path = GJImageFilters;
 			sourceTree = "<group>";
 		};
-		6A0200DE1F0621E000F4255B /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				6A0200E81F0621E000F4255B /* liblibairfloat.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		6A0200F91F06225700F4255B /* airfloat */ = {
 			isa = PBXGroup;
 			children = (
@@ -890,16 +863,6 @@
 				6A3488371F453803008223AA /* index5.png */,
 			);
 			path = Image;
-			sourceTree = "<group>";
-		};
-		6A40DFAE1EE8DA4D0047E0F0 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				6A40DFB41EE8DA4D0047E0F0 /* libTheAmazingAudioEngine.a */,
-				6A40DFB61EE8DA4D0047E0F0 /* libTheAmazingAudioEngine OS X.a */,
-				6A40DFB81EE8DA4D0047E0F0 /* libTheAmazingAudioEngine tvOS.a */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		6A40DFBA1EE8DB630047E0F0 /* TheAmazingAudioEngine */ = {
@@ -1015,6 +978,16 @@
 			children = (
 				6A582204202AF29D002AFF76 /* kcpTunDemo.app */,
 				6A582206202AF29D002AFF76 /* libkcptun.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		6A8E277A20C4DA5400777B38 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6A8E278020C4DA5400777B38 /* libAudioEngine.a */,
+				6A8E278220C4DA5400777B38 /* libAudioEngine OS X.a */,
+				6A8E278420C4DA5400777B38 /* libAudioEngine tvOS.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1326,6 +1299,8 @@
 		AEFEF2291DB3B9A80004CF39 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6A8E27C620C4DAEF00777B38 /* libAirReceive.a */,
+				6A8E277120C4D9FA00777B38 /* libAudioEngine.a */,
 				6AF7ECE31FE7ABE300605E6E /* IOSurface.framework */,
 				6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */,
 				C573F1751D4B417B002607B6 /* VideoToolbox.framework */,
@@ -1351,13 +1326,13 @@
 		C54FA89F1D21006000A0D3C3 = {
 			isa = PBXGroup;
 			children = (
-				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
-				6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */,
 				6A34882A1F453803008223AA /* Image */,
+				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
+				6A8E27BF20C4DAB900777B38 /* AirReceive.xcodeproj */,
 				6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */,
-				6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */,
-				6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */,
+				6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */,
 				6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */,
+				6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */,
 				0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */,
 				045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */,
 				C561ABE91D51D3DC00113453 /* GJCaptureTool */,
@@ -1535,8 +1510,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				6A6B1A37207C474E00BFC8FA /* PBXTargetDependency */,
-				6A6B1A39207C474E00BFC8FA /* PBXTargetDependency */,
 				6A6B1A3B207C474E00BFC8FA /* PBXTargetDependency */,
 			);
 			name = GJLiveEngine;
@@ -1607,6 +1580,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = 6A8E277A20C4DA5400777B38 /* Products */;
+					ProjectRef = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
+				},
+				{
 					ProductGroup = 6A42F14020AED68C00083B01 /* Products */;
 					ProjectRef = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
 				},
@@ -1619,20 +1596,12 @@
 					ProjectRef = 6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */;
 				},
 				{
-					ProductGroup = 6A0200DE1F0621E000F4255B /* Products */;
-					ProjectRef = 6A0200DD1F0621E000F4255B /* libairfloat.xcodeproj */;
-				},
-				{
 					ProductGroup = 045C61A01E1CE4380047E673 /* Products */;
 					ProjectRef = 045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */;
 				},
 				{
 					ProductGroup = 6A0E86D01E84BE3E002A2A2D /* Products */;
 					ProjectRef = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
-				},
-				{
-					ProductGroup = 6A40DFAE1EE8DA4D0047E0F0 /* Products */;
-					ProjectRef = 6A40DFAD1EE8DA4D0047E0F0 /* TheAmazingAudioEngine.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -1672,13 +1641,6 @@
 			remoteRef = 045C61B11E1CE4390047E673 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		6A0200E81F0621E000F4255B /* liblibairfloat.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = liblibairfloat.a;
-			remoteRef = 6A0200E71F0621E000F4255B /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		6A0E86E01E84BE3F002A2A2D /* RtmpCode.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
@@ -1712,27 +1674,6 @@
 			fileType = "compiled.mach-o.executable";
 			path = RtmpServer;
 			remoteRef = 6A0E86E71E84BE3F002A2A2D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A40DFB41EE8DA4D0047E0F0 /* libTheAmazingAudioEngine.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libTheAmazingAudioEngine.a;
-			remoteRef = 6A40DFB31EE8DA4D0047E0F0 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A40DFB61EE8DA4D0047E0F0 /* libTheAmazingAudioEngine OS X.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libTheAmazingAudioEngine OS X.a";
-			remoteRef = 6A40DFB51EE8DA4D0047E0F0 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A40DFB81EE8DA4D0047E0F0 /* libTheAmazingAudioEngine tvOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libTheAmazingAudioEngine tvOS.a";
-			remoteRef = 6A40DFB71EE8DA4D0047E0F0 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		6A42F14D20AED68D00083B01 /* ffmpegCode.app */ = {
@@ -1817,6 +1758,27 @@
 			fileType = archive.ar;
 			path = libkcptun.a;
 			remoteRef = 6A582205202AF29D002AFF76 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A8E278020C4DA5400777B38 /* libAudioEngine.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libAudioEngine.a;
+			remoteRef = 6A8E277F20C4DA5400777B38 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A8E278220C4DA5400777B38 /* libAudioEngine OS X.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libAudioEngine OS X.a";
+			remoteRef = 6A8E278120C4DA5400777B38 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		6A8E278420C4DA5400777B38 /* libAudioEngine tvOS.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libAudioEngine tvOS.a";
+			remoteRef = 6A8E278320C4DA5400777B38 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -1942,16 +1904,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		6A6B1A37207C474E00BFC8FA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = libairfloat;
-			targetProxy = 6A6B1A36207C474E00BFC8FA /* PBXContainerItemProxy */;
-		};
-		6A6B1A39207C474E00BFC8FA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = TheAmazingAudioEngine;
-			targetProxy = 6A6B1A38207C474E00BFC8FA /* PBXContainerItemProxy */;
-		};
 		6A6B1A3B207C474E00BFC8FA /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = GJImageFilters;
