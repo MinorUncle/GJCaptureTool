@@ -1003,7 +1003,7 @@ GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) 
 }
 GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
 
-    GJLOG(GNULL, GJ_LOGALL, "收到音频 PTS:%lld DTS:%lld\n", audioFrame->pts.value, audioFrame->dts.value);
+    GJLOG(GNULL, GJ_LOGALL, "收到音频 PTS:%lld DTS:%lld size:%d", audioFrame->pts.value, audioFrame->dts.value,R_BufferSize(audioFrame));
     GJPlayControl *_playControl = &(player->playControl);
     GJSyncControl *_syncControl = &(player->syncControl);
     GBool          result       = GTrue;

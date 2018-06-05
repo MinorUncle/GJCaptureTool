@@ -337,7 +337,10 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         frame->dts = frame->pts = GTimeMake(_currentPts, 1000);
         
         GTime pts = frame->dts;
-        while (audioAlignmentUpdate(_alignmentContext, R_BufferStart(frame), R_BufferSize(frame), &pts) >= _destMaxOutSize) {
+        GUInt8* data = R_BufferStart(frame);
+        GInt32 dataSize = R_BufferSize(frame);
+        GInt32 ret = 0;
+        while ((ret = audioAlignmentUpdate(_alignmentContext, data, dataSize, &pts, R_BufferStart(frame))) > 0) {
             //有校正后的填充数据
             frame->dts = frame->pts = pts;
             self.decodeCallback(frame);
@@ -346,6 +349,8 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
             frame = (R_GJPCMFrame *) GJRetainBufferPoolGetData(_bufferPool);
             pts = GInvalidTime;
             R_BufferUseSize(&frame->retain, _destMaxOutSize);
+            data = GNULL;
+            dataSize = 0;
         }
         self.decodeCallback(frame);
         _currentPts = -1;

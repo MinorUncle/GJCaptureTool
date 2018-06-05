@@ -88,4 +88,6 @@ typedef int32_t             GResult;
 #   define DEFAULT_PARAM(x)
 #endif
 
+#define  GALIGN(A,B) ((A) & ~(B-1))
+
 #endif /* GJPlatformHeader_h */

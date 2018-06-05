@@ -11,17 +11,19 @@
 #import "GJLog.h"
 #import "GJUtil.h"
 #import "AutoLock.h"
+#import "GJAudioAlignment.h"
 
 #define PCM_FRAME_COUNT 1024
 
 //static GJAudioManager* _staticManager;
 @interface GJAudioManager () {
-    R_GJPCMFrame *_alignCacheFrame;
     GInt32        _sizePerPacket;
     GLong         _sendFrameCount;
     GLong         _startTime; //ms
     NSMutableDictionary<id, id<AEAudioPlayable>> *_mixPlayers;
     BOOL _needResumeEarMonitoring;
+    GJAudioAlignmentContext* _alignmentContext;
+    R_GJPCMFrame *_alignCacheFrame;
 }
 @property (nonatomic, retain) NSRecursiveLock *lock;
 @end
@@ -107,6 +109,7 @@ static AEAudioController *shareAudioController;
         return;
     }
     _audioFormat = audioFormat;
+
     NSError *error;
     if (_audioController) {
         [_audioController setAudioDescription:_audioFormat error:&error];
@@ -122,48 +125,48 @@ static AEAudioController *shareAudioController;
 - (void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time {
     //time 为一帧结束时间，pts为一帧开始时间
 
-    int64_t timeCount = (time - _startTime) * _audioFormat.mSampleRate / 1000;
-    if (timeCount < _sendFrameCount - PCM_FRAME_COUNT) {
-        GJLOG(GNULL, GJ_LOGWARNING, "采集数据过多，丢帧");
-        return;
-    }
+
     if (_mute) {
-        return;
         memset(frame->mBuffers[0].mData, 0, frame->mBuffers[0].mDataByteSize);
     }
+    GInt dataSize = frame->mBuffers[0].mDataByteSize;
     if (_alignWithBlack) {
-        while (timeCount > _sendFrameCount + 2 * PCM_FRAME_COUNT) {
-            R_BufferWriteConst(&_alignCacheFrame->retain, 0, PCM_FRAME_COUNT * _audioFormat.mBytesPerFrame - R_BufferSize(&_alignCacheFrame->retain));
+        GVoid* data = frame->mBuffers[0].mData;
+        
+        GTime pts = GTimeMake(time, 1000);
+        GInt32 ret = audioAlignmentUpdate(_alignmentContext, data, dataSize, &pts,GNULL);
+        while (ret > 0) {
+            R_GJPCMFrame* rFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool,GMAX(dataSize, _sizePerPacket));
+            ret = audioAlignmentUpdate(_alignmentContext, GNULL, 0, &pts,R_BufferStart(rFrame));
+            R_BufferUseSize(rFrame, _sizePerPacket);
+            GJAssert(ret>=0, "逻辑错误");
+            rFrame->pts = pts;
+            rFrame->channel = frame->mBuffers[0].mNumberChannels;
+            self.audioCallback(rFrame);
+            R_BufferUnRetain(rFrame);
+        }
+    }else{
+        int blackSize = _sizePerPacket - R_BufferSize(&_alignCacheFrame->retain);
+        int leftSize  = frame->mBuffers[0].mDataByteSize;
+        while (leftSize >= blackSize) {
+            R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, blackSize);
             _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
-            _alignCacheFrame->pts     = GTimeMake(_sendFrameCount * 1000 / _audioFormat.mSampleRate + _startTime, 1000);
+            if (_alignWithBlack) {
+                _alignCacheFrame->pts = GTimeMake(_sendFrameCount * 1000 / _audioFormat.mSampleRate + _startTime, 1000);
+                
+            } else {
+                _alignCacheFrame->pts = GTimeMake(time, 1000);
+            }
             self.audioCallback(_alignCacheFrame);
             R_BufferUnRetain(&_alignCacheFrame->retain);
             _sendFrameCount += PCM_FRAME_COUNT;
             _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
-            GJLOG(GNULL, GJ_LOGDEBUG, "采集延迟，填充空白帧");
+            leftSize         = leftSize - blackSize;
+            blackSize        = _sizePerPacket;
         }
-    }
-
-    int blackSize = _sizePerPacket - R_BufferSize(&_alignCacheFrame->retain);
-    int leftSize  = frame->mBuffers[0].mDataByteSize;
-    while (leftSize >= blackSize) {
-        R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, blackSize);
-        _alignCacheFrame->channel = frame->mBuffers[0].mNumberChannels;
-        if (_alignWithBlack) {
-            _alignCacheFrame->pts = GTimeMake(_sendFrameCount * 1000 / _audioFormat.mSampleRate + _startTime, 1000);
-
-        } else {
-            _alignCacheFrame->pts = GTimeMake(time, 1000);
+        if (leftSize > 0) {
+            R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, leftSize);
         }
-        self.audioCallback(_alignCacheFrame);
-        R_BufferUnRetain(&_alignCacheFrame->retain);
-        _sendFrameCount += PCM_FRAME_COUNT;
-        _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
-        leftSize         = leftSize - blackSize;
-        blackSize        = _sizePerPacket;
-    }
-    if (leftSize > 0) {
-        R_BufferWrite(&_alignCacheFrame->retain, frame->mBuffers[0].mData + frame->mBuffers[0].mDataByteSize - leftSize, leftSize);
     }
 }
 
@@ -234,11 +237,22 @@ static AEAudioController *shareAudioController;
         //其他的每次配置参数的时候已经应用了,无需再配置
     }
 
+    GJAudioFormat format = {0};
+    format.mBitsPerChannel = _audioFormat.mBitsPerChannel;
+    format.mChannelsPerFrame = _audioFormat.mChannelsPerFrame;
+    format.mSampleRate = _audioFormat.mSampleRate;
+    format.mFramePerPacket = 1024;
+    format.mType = GJAudioType_PCM;
+    if (_alignmentContext) {
+        audioAlignmentDelloc(&_alignmentContext);
+    }
+    audioAlignmentAlloc(&_alignmentContext, &format);
+
     if (_alignCacheFrame) {
         R_BufferUnRetain(&_alignCacheFrame->retain);
     }
     _alignCacheFrame = (R_GJPCMFrame *) GJRetainBufferPoolGetSizeData(_bufferPool, _sizePerPacket);
-
+    
     NSTimeInterval preferredBufferDuration = _sizePerPacket / _audioFormat.mBytesPerFrame / _audioFormat.mSampleRate;
     if (preferredBufferDuration - _audioController.preferredBufferDuration > 0.01 || preferredBufferDuration - _audioController.preferredBufferDuration < -0.01) {
         [_audioController setPreferredBufferDuration:preferredBufferDuration];
@@ -270,6 +284,10 @@ static AEAudioController *shareAudioController;
     if (configError) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "Apply audio session Config error:%s", configError.description.UTF8String);
     }
+    if (_alignmentContext) {
+        audioAlignmentDelloc(&_alignmentContext);
+    }
+    
     if (_alignCacheFrame) {
         R_BufferUnRetain(&_alignCacheFrame->retain);
         _alignCacheFrame = GNULL;
@@ -451,9 +469,7 @@ static AEAudioController *shareAudioController;
     if (_audioController.running) {
         [self stopRecode];
     }
-    if (_alignCacheFrame) {
-        R_BufferUnRetain(&_alignCacheFrame->retain);
-    }
+    
     if (_bufferPool) {
         GJRetainBufferPool *pool = _bufferPool;
         _bufferPool              = GNULL;
@@ -462,6 +478,16 @@ static AEAudioController *shareAudioController;
             GJRetainBufferPoolFree(pool);
         });
     }
+    
+    if (_alignmentContext) {
+        audioAlignmentDelloc(&_alignmentContext);
+    }
+    
+    if (_alignCacheFrame) {
+        R_BufferUnRetain(&_alignCacheFrame->retain);
+        _alignCacheFrame = GNULL;
+    }
+    
     [_audioController removeInputReceiver:_audioMixer];
     [_audioController removeChannels:_mixPlayers.allValues];
 }
