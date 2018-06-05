@@ -257,7 +257,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     GLong dPTS   = (GTimeSencondValue(pts) - GTimeSencondValue(netShake->collectStartPts)) * 1000;
     GLong shake  = dClock - dPTS; //统计少发的抖动
     GLong dShake = shake;
-    if (shake < 0) { shake = -shake * 0.5; } //不能直接变为负数，因为后面会使用到符号
+    if (shake < 0) { shake = -shake * 0.0; } //不能直接变为负数，因为后面会使用到符号
 #ifdef NETWORK_DELAY
     GLong delay     = 0;
     GLong testShake = 0;
