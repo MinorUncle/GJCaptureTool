@@ -151,7 +151,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context, GJTrafficS
                         for (int i = 1; i < context->increaseCount - 1; i++) {
                             //因为一直有空闲，所以前面连续空闲的网速一定大于此网速，更新前面的受限满速到当前码率（不是受限情况不更新）;
 
-                            context->netSpeedUnit[collectCount - i % context->netSpeedCheckInterval] = -currentBitRate;
+                            context->netSpeedUnit[(collectCount - i) % context->netSpeedCheckInterval] = -currentBitRate;
                         }
                     }
 

@@ -9,6 +9,7 @@
 #include "GJAudioAlignment.h"
 #include "TPCircularBuffer/TPCircularBuffer.h"
 #include "GMemCheck.h"
+#include "GJLog.h"
 struct _GJAudioAlignmentContext {
     GInt32 sizePerFrame;
     GInt32 sizePerPacket;
@@ -86,6 +87,7 @@ GInt32 audioAlignmentUpdate(GJAudioAlignmentContext *context, GUInt8 *inData, GI
             memcpy(head, inData, addSize);
             TPCircularBufferProduce(&context->ringBuffer, addSize);
             tailSize += addSize;
+            GJAssert(0, "无效pts");
         } else {
             GLong msPts = GTimeMSValue(*inoutPts);
             if (msPts < context->lastPts) {//重启pts
@@ -107,7 +109,7 @@ GInt32 audioAlignmentUpdate(GJAudioAlignmentContext *context, GUInt8 *inData, GI
                 appendSize = GALIGN(appendSize, context->sizePerFrame);
                 memset(head, 0, appendSize);
                 head += appendSize;
-                printf("audioalignment  dpts:%ld ,音频数据不足，补充空数据 fillEmptySize:%d\n",delPts, appendSize);
+                GJLOG(GNULL, GJ_LOGDEBUG, "audioalignment  dpts:%ld ,音频数据不足，补充空数据 fillEmptySize:%d\n",delPts, appendSize);
                 
                 memcpy(head, inData, size);
                 
@@ -120,7 +122,7 @@ GInt32 audioAlignmentUpdate(GJAudioAlignmentContext *context, GUInt8 *inData, GI
                 dropSize = GALIGN(dropSize, context->sizePerFrame);
 
                 if (dropSize < tailSize) {
-                    printf("audioalignment  dpts:%ld, 音频采集数据太快，丢数据 dropSize:%d\n",delPts,dropSize);
+                    GJLOG(GNULL, GJ_LOGDEBUG, "audioalignment  dpts:%ld, 音频采集数据太快，丢数据 dropSize:%d\n",delPts,dropSize);
                     TPCircularBufferConsume(&context->ringBuffer, dropSize);
                     tail += dropSize;
                     tailSize -= dropSize;
@@ -128,7 +130,7 @@ GInt32 audioAlignmentUpdate(GJAudioAlignmentContext *context, GUInt8 *inData, GI
 #ifdef DEBUG
                     GJAssert(tailSize == GALIGN(tailSize, context->sizePerFrame), "逻辑有误，tailSize一定是sizePerFrame字节对齐");
 #endif
-                    printf("audioalignment dpts:%ld 音频采集数据太快，丢数据 tailSize:%d,input size:%d\n",delPts,tailSize,dropSize-tailSize);
+                   GJLOG(GNULL, GJ_LOGDEBUG, "audioalignment dpts:%ld 音频采集数据太快，丢数据 tailSize:%d,input size:%d\n",delPts,tailSize,dropSize-tailSize);
                     TPCircularBufferConsume(&context->ringBuffer, tailSize);
                     tail += tailSize;
                     GInt32 leftDropSize = dropSize - tailSize;
@@ -148,7 +150,7 @@ GInt32 audioAlignmentUpdate(GJAudioAlignmentContext *context, GUInt8 *inData, GI
                 memcpy(head, inData,size);
                 TPCircularBufferProduce(&context->ringBuffer,size);
                 tailSize += size;
-//                printf("audioalignment  add dataSize:%d tailSize:%d\n",size,tailSize);
+//                GJLOG(GNULL, GJ_LOGDEBUG, "audioalignment add dataSize:%d tailSize:%d\n",size,tailSize);
             }else{//否则最优情况，可以不用复制到缓冲区，直接输出
                 didOut = GTrue;
                 GInt32 leftAddSize =  size;
@@ -159,12 +161,13 @@ GInt32 audioAlignmentUpdate(GJAudioAlignmentContext *context, GUInt8 *inData, GI
                     inoutPts->value = context->alignmentSize / context->sizePerMs + context->startPts;
                     inoutPts->scale = 1000;
                     retValue = 0;
+//                    GJLOG(GNULL, GJ_LOGDEBUG,"audioalignment read dataSize:%d, leftsize:%d",context->sizePerPacket,leftAddSize);
                 }
                 leftAddSize = GALIGN(leftAddSize, context->sizePerFrame);
                 if (leftAddSize > 0) {
-//                    printf("audioalignment  add2 dataSize:%d\n",leftAddSize);
-                    memcpy(head,inData + context->sizePerPacket,leftAddSize);
+                    memcpy(head,inData + (size - leftAddSize),leftAddSize);
                     TPCircularBufferProduce(&context->ringBuffer,leftAddSize);
+//                    GJLOG(GNULL, GJ_LOGDEBUG, "audioalignment add1 dataSize:%d tailSize:%d\n",size,tailSize);
                     if (leftAddSize > context->sizePerPacket) {
                         retValue = 1;
                     }
@@ -175,7 +178,6 @@ GInt32 audioAlignmentUpdate(GJAudioAlignmentContext *context, GUInt8 *inData, GI
     
     if (!didOut && tailSize >= context->sizePerPacket) {
         if (outData) {
-//            printf("audioalignment  read dataSize:%d\n",context->sizePerPacket);
             memcpy(outData, tail, context->sizePerPacket);
             TPCircularBufferConsume(&context->ringBuffer, context->sizePerPacket);
             context->alignmentSize += context->sizePerPacket;
@@ -183,6 +185,7 @@ GInt32 audioAlignmentUpdate(GJAudioAlignmentContext *context, GUInt8 *inData, GI
             inoutPts->scale = 1000;
             tailSize -= context->sizePerPacket;
             retValue = 0;
+//            GJLOG(GNULL, GJ_LOGDEBUG,"audioalignment read1 dataSize:%d, leftSize:%d",context->sizePerPacket,tailSize);
         }
         if (tailSize >= context->sizePerPacket) {
             retValue = 1;

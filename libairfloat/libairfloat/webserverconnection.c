@@ -65,11 +65,12 @@ ssize_t _web_server_connection_socket_recieve_callback(socket_p socket, const vo
     ssize_t ret = 0;
     
     web_request_p request = web_request_create();
-    printf("\nreceive from socket:%p ip:%s begin data:<<<\n",socket,sockaddr_get_host(socket_get_remote_end_point(socket)));
-    for (int i = 0; i<data_size; i++) {
-        printf("%c",((char*)data)[i]);
-    }
-    printf(">>>>end\n\n");
+//    printf("\n receive from socket:%p ip:%s begin data:<<<\n",socket,sockaddr_get_host(socket_get_remote_end_point(socket)));
+//    size_t logSize = data_size>30?30:data_size;
+//    for (int i = 0; i<logSize; i++) {
+//        printf("%c",((char*)data)[i]);
+//    }
+//    printf(">>>>end\n\n");
 
     if ((ret = web_request_parse(request, data, data_size)) > 0) {
         
