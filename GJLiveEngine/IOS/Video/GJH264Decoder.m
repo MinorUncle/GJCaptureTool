@@ -248,7 +248,7 @@ void decodeOutputCallback(
             ppsSize = avcc[8 + spsSize + 1] << 8;
             ppsSize |= avcc[8 + spsSize + 2];
 
-            GJAssert(avccSize == 8 + spsSize + 3 + ppsSize, "格式有问题");
+            GJAssert(avccSize >= 8 + spsSize + 3 + ppsSize, "格式有问题");
             *pSps     = sps;
             *pPps     = pps;
             *pSpsSize = spsSize;

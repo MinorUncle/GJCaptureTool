@@ -175,6 +175,7 @@ typedef struct _PullSessionInfo {
 } GJPullSessionInfo;
 
 typedef struct _PullFristFrameInfo {
+    GLong delay;//in ms;
     GSize size;
 } GJPullFristFrameInfo;
 

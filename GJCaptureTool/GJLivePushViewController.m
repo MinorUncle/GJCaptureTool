@@ -1016,7 +1016,7 @@
 }
 
 -(void)livePull:(GJLivePull *)livePull fristFrameDecode:(GJPullFristFrameInfo *)info{
-    NSLog(@"pull w:%f,h:%f",info->size.width,info->size.height);
+    NSLog(@"pull w:%f,h:%f delay:%ld",info->size.width,info->size.height,info->delay);
 }
 -(void)livePull:(GJLivePull *)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString *)infoDesc{
     switch (type) {
@@ -1122,6 +1122,7 @@
 
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
+    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
     [_pushManager.livePush startPreview];
 }
 
