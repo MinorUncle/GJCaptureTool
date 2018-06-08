@@ -10,7 +10,7 @@
 #define GJPlatformHeader_h
 
 #ifdef DEBUG
-#define MEMORY_CHECK 1
+#define MEMORY_CHECK 0
 #else
 #define MEMORY_CHECK 0
 #endif

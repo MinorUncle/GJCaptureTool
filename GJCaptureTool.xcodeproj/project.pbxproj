@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
 		6A03892B1FF13004005AC7CE /* Particle.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A03892A1FF13004005AC7CE /* Particle.png */; };
+		6A04022020CA5A190098A86C /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
+		6A0402EB20CA651B0098A86C /* libAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A8E278020C4DA5400777B38 /* libAudioEngine.a */; };
 		6A0C84671FA84A00007C7CEA /* Version.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0C84661FA84A00007C7CEA /* Version.h */; };
 		6A1A1B0A1F2ED67A0043595F /* AACEncoderFromPCM_OLD.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */; };
 		6A1A1B111F2F36F10043595F /* IOS_RAOPPlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A9856C41F2B3D2500128480 /* IOS_RAOPPlay.m */; };
@@ -37,7 +39,6 @@
 		6A53951A20AA7BF900E9E3C9 /* AutoLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A53951820AA7BF900E9E3C9 /* AutoLock.h */; };
 		6A53951B20AA7BF900E9E3C9 /* AutoLock.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A53951920AA7BF900E9E3C9 /* AutoLock.m */; };
 		6A559C311F3D3A3500698C19 /* GJStreamPull.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453841F14C16C0009FB64 /* GJStreamPull.h */; };
-		6A58221E202AF2C5002AFF76 /* libkcptun.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A582206202AF29D002AFF76 /* libkcptun.a */; settings = {ATTRIBUTES = (Required, ); }; };
 		6A582239202AF473002AFF76 /* client.json in Resources */ = {isa = PBXBuildFile; fileRef = 6A582238202AF473002AFF76 /* client.json */; };
 		6A5E04C520A44AE20030A0B8 /* FFAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */; };
 		6A5E04C620A44AE20030A0B8 /* FFAudioDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */; };
@@ -47,14 +48,11 @@
 		6A70C2FB2043A5C90070E347 /* FFVideoDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4FE1ECB4DFE0009E49A /* FFVideoDecoder.m */; };
 		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
-		6A8E277020C4D9FA00777B38 /* libAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A8E277120C4D9FA00777B38 /* libAudioEngine.a */; };
-		6A8E27C520C4DAEF00777B38 /* libAirReceive.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A8E27C620C4DAEF00777B38 /* libAirReceive.a */; };
 		6A8E27D520C4EE3F00777B38 /* GJAudioAlignment.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A8E27D320C4EE3F00777B38 /* GJAudioAlignment.c */; };
 		6A8E27D620C4EE3F00777B38 /* GJAudioAlignment.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A8E27D420C4EE3F00777B38 /* GJAudioAlignment.h */; };
 		6A8E27D920C52FFC00777B38 /* GTime.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A8E27D720C52FFC00777B38 /* GTime.c */; };
 		6A8E27DA20C52FFC00777B38 /* GTime.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A8E27D820C52FFC00777B38 /* GTime.h */; };
 		6A8F5E351F340E3C00FA57A4 /* GJAudioQueuePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4E51ECB4DFE0009E49A /* GJAudioQueuePlayer.m */; };
-		6A8F5E361F341FFC00FA57A4 /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6A96CCA41F2195C5000DC4FE /* GJScreenRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */; };
 		6A96CCA51F2195C5000DC4FE /* GJScreenRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */; };
 		6A9856C51F2B3D2500128480 /* IOS_RAOPPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */; };
@@ -136,8 +134,6 @@
 		AE70A53F1ECB4DFE0009E49A /* GJH264Encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4FB1ECB4DFE0009E49A /* GJH264Encoder.h */; };
 		AE70A5501ECB4DFE0009E49A /* GJBridegContext.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A50D1ECB4DFE0009E49A /* GJBridegContext.h */; };
 		AE70A5531ECB50A20009E49A /* libGJImageFilters.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0417FEE21E5ECB8D00D5B5D9 /* libGJImageFilters.a */; };
-		AE70A5551ECB50A20009E49A /* libMp4v2Code.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 045C61B01E1CE4390047E673 /* libMp4v2Code.a */; };
-		AE70A5561ECB50A20009E49A /* librtmp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E21E84BE3F002A2A2D /* librtmp.a */; };
 		AE70A5571ECB50FA0009E49A /* GJLiveEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE70A4B81ECB4D930009E49A /* GJLiveEngine.framework */; };
 		AE8AADFE1FF7BDE100964479 /* GJBridgeContext.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A50C1ECB4DFE0009E49A /* GJBridgeContext.c */; };
 		AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */; };
@@ -654,15 +650,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6A8E27C520C4DAEF00777B38 /* libAirReceive.a in Frameworks */,
-				6A8E277020C4D9FA00777B38 /* libAudioEngine.a in Frameworks */,
+				6A0402EB20CA651B0098A86C /* libAudioEngine.a in Frameworks */,
 				6A42F16020AED6A300083B01 /* libavcodec.a in Frameworks */,
 				6A42F16120AED6A300083B01 /* libavformat.a in Frameworks */,
 				6A42F16220AED6A300083B01 /* libavutil.a in Frameworks */,
-				6A58221E202AF2C5002AFF76 /* libkcptun.a in Frameworks */,
 				AE70A5531ECB50A20009E49A /* libGJImageFilters.a in Frameworks */,
-				AE70A5551ECB50A20009E49A /* libMp4v2Code.a in Frameworks */,
-				AE70A5561ECB50A20009E49A /* librtmp.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1745,7 +1737,7 @@
 				6AF9DDB91FA976A100F6B4F7 /* GJSunSystemARScene.m in Sources */,
 				C561ACB51D51D3DC00113453 /* main.m in Sources */,
 				C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */,
-				6A8F5E361F341FFC00FA57A4 /* GJLivePushViewController.m in Sources */,
+				6A04022020CA5A190098A86C /* GJLivePushViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

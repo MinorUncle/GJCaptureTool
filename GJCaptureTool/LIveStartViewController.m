@@ -11,8 +11,7 @@
 //static NSString* pullUlr = @"rtmp://192.168.199.187/live/room";
 static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/76043170.flv";
 //static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
-//static NSString* pullUlr = @"http://122.225.67.216/alsource.pull.inke.cn/live/1528251549548745.flv?ikDnsOp=1001&ikHost=ali&ikOp=0&codecInfo=8192&ikLog=0&dpSrcG=22&ikMinBuf=3800&ikMaxBuf=4800&ikSlowRate=1.0&ikFastRate=1.2";
-//static NSString* pullUlr = @"http://10.0.21.39/hls/room.m3u8";
+//static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/99805818.flv";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/126782584.flv";
 //static NSString* pullUlr = @"rtmp://10.0.21.232/live/room";
 //static NSString* pullUlr = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";

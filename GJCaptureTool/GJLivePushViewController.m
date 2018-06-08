@@ -1016,8 +1016,13 @@
 }
 
 -(void)livePull:(GJLivePull *)livePull fristFrameDecode:(GJPullFristFrameInfo *)info{
-    NSLog(@"pull w:%f,h:%f delay:%ld",info->size.width,info->size.height,info->delay);
+    NSLog(@"fristFrameDecode w:%f,h:%f delay:%ld",info->size.width,info->size.height,info->delay);
 }
+
+-(void)livePull:(GJLivePull *)livePull fristFrameRender:(GJPullFristFrameInfo *)info{
+    NSLog(@"fristFrameRender w:%f,h:%f delay:%ld",info->size.width,info->size.height,info->delay);
+}
+
 -(void)livePull:(GJLivePull *)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString *)infoDesc{
     switch (type) {
         case kLivePullReadPacketError:

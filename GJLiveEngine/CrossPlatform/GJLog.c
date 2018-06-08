@@ -157,7 +157,7 @@ GVoid GJ_LogSetLevel(GJ_LogLevel level) {
     //            break;
     //    }
 
-    RTMP_LogSetLevel(RTMP_LOGWARNING);
+//    RTMP_LogSetLevel(RTMP_LOGWARNING);
     av_log_set_level(AV_LOG_WARNING);
 
 #else

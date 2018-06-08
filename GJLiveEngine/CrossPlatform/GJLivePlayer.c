@@ -677,7 +677,7 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
 #else
 
         if (_syncControl->videoInfo.trafficStatus.leave.count == 0 && player->callback) {
-            player->callback(player->userDate, GJPlayMessage_FristRender, GNULL);
+            player->callback(player->userDate, GJPlayMessage_FristRender, cImageBuf);
         }
         player->videoPlayer->renderFrame(player->videoPlayer, cImageBuf);
 #endif

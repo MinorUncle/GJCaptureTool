@@ -149,8 +149,13 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
             break;
 #endif
         case GJLivePull_decodeFristAudioFrame: {
-
+  
         } break;
+        case GJLivePull_fristRender:{
+            if ([livePull.delegate respondsToSelector:@selector(livePull:fristFrameRender:)]) {
+                [livePull.delegate livePull:livePull fristFrameRender:parm];
+            }
+        }
         default:
             GJLOG(DEFAULT_LOG, GJ_LOGERROR, "not catch info：%d", messageType);
             break;

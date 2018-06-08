@@ -182,6 +182,8 @@ GVoid GJLivePull_Dealloc(GJLivePullContext **pullContext) {
 static GVoid livePlayCallback(GHandle userDate, GJPlayMessage message, GHandle param) {
     GJLivePullContext *   livePull    = userDate;
     GJLivePullMessageType pullMessage = GJLivePull_messageInvalid;
+    
+    GJPullFristFrameInfo info = {0};
     switch (message) {
         case GJPlayMessage_BufferStart:
             pullMessage = GJLivePull_bufferStart;
@@ -193,8 +195,15 @@ static GVoid livePlayCallback(GHandle userDate, GJPlayMessage message, GHandle p
             pullMessage = GJLivePull_bufferEnd;
             break;
         case GJPlayMessage_FristRender:
+        {
+            R_GJPixelFrame* frame = param;
+            info.delay = GTimeSubtractMSValue(GJ_Gettime(), livePull->startPullClock);
+            info.size.width = frame->width;
+            info.size.height = frame->height;
+            param = &info;
             pullMessage = GJLivePull_fristRender;
             break;
+        }
         case GJPlayMessage_NetShakeUpdate:
             pullMessage = GJLivePull_netShakeUpdate;
             break;
@@ -317,7 +326,7 @@ static GVoid h264DecodeCompleteCallback(GHandle userData, R_GJPixelFrame *frame)
         pullContext->fristVideoDecodeClock = GJ_Gettime();
         GJLivePlay_AddVideoSourceFormat(pullContext->player, frame->type);
         GJPullFristFrameInfo info = {0};
-        info.delay = GTimeSubtractMSValue(pullContext->fristVideoPullClock, pullContext->startPullClock);
+        info.delay = GTimeSubtractMSValue(pullContext->fristVideoDecodeClock, pullContext->startPullClock);
         info.size.width           = (GFloat32) frame->width; //CGSizeMake((float)frame->width, (float)frame->height);
         info.size.height          = (GFloat32) frame->height;
         pullContext->callback(pullContext->userData, GJLivePull_decodeFristVideoFrame, &info);
