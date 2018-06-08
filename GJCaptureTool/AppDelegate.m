@@ -9,6 +9,7 @@
 #import "AppDelegate.h"
 #import "ViewController.h"
 #import "LIveStartViewController.h"
+#import "UncaughtExceptionHandler.h"
 @interface AppDelegate ()
 
 @end
@@ -17,9 +18,10 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    [UncaughtExceptionHandler InstallUncaughtExceptionHandler];
+
     // Override point for customization after application launch.
     self.window = [[UIWindow alloc]initWithFrame:[UIScreen mainScreen].bounds];
-    
     
     LIveStartViewController* controller = [[LIveStartViewController alloc]init];
 //    ViewController * controller = [[ViewController alloc]init];

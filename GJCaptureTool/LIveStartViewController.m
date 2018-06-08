@@ -44,6 +44,9 @@ static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/76043170";//kkæ
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    
+//    int a[2] = {0};
+//    a[2] = 2;
 //    self.navigationController.navigationBarHidden = YES;
     self.view.backgroundColor = [UIColor whiteColor];
 

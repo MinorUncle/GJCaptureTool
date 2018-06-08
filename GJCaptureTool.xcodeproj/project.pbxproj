@@ -56,6 +56,8 @@
 		6A96CCA41F2195C5000DC4FE /* GJScreenRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */; };
 		6A96CCA51F2195C5000DC4FE /* GJScreenRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */; };
 		6A9856C51F2B3D2500128480 /* IOS_RAOPPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */; };
+		6A9F6DC820CA7ABD00C210B4 /* UncaughtExceptionHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A9F6DC620CA7ABD00C210B4 /* UncaughtExceptionHandler.h */; };
+		6A9F6DC920CA7ABD00C210B4 /* UncaughtExceptionHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A9F6DC720CA7ABD00C210B4 /* UncaughtExceptionHandler.m */; };
 		6AA453681F146A1A0009FB64 /* GJStreamPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453661F146A1A0009FB64 /* GJStreamPush.h */; };
 		6AA649011FC2C99F00AA3CAC /* LIveStartViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB297E41F4D8A9C00115220 /* LIveStartViewController.m */; };
 		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
@@ -439,6 +441,8 @@
 		6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GJScreenRecorder.m; path = ../GJScreenRecorder.m; sourceTree = "<group>"; };
 		6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_RAOPPlay.h; sourceTree = "<group>"; };
 		6A9856C41F2B3D2500128480 /* IOS_RAOPPlay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_RAOPPlay.m; sourceTree = "<group>"; };
+		6A9F6DC620CA7ABD00C210B4 /* UncaughtExceptionHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UncaughtExceptionHandler.h; sourceTree = "<group>"; };
+		6A9F6DC720CA7ABD00C210B4 /* UncaughtExceptionHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UncaughtExceptionHandler.m; sourceTree = "<group>"; };
 		6AA453661F146A1A0009FB64 /* GJStreamPush.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJStreamPush.h; sourceTree = "<group>"; };
 		6AA453841F14C16C0009FB64 /* GJStreamPull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJStreamPull.h; sourceTree = "<group>"; };
 		6AA453861F14D4950009FB64 /* GJFFmpegPull.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFFmpegPull.c; sourceTree = "<group>"; };
@@ -833,6 +837,8 @@
 			children = (
 				6A53950F20A9AA0E00E9E3C9 /* GJDNSCacheTool.h */,
 				6A53951020A9AA0E00E9E3C9 /* GJDNSCacheTool.m */,
+				6A9F6DC620CA7ABD00C210B4 /* UncaughtExceptionHandler.h */,
+				6A9F6DC720CA7ABD00C210B4 /* UncaughtExceptionHandler.m */,
 				6A53951820AA7BF900E9E3C9 /* AutoLock.h */,
 				6A53951920AA7BF900E9E3C9 /* AutoLock.m */,
 			);
@@ -1305,6 +1311,7 @@
 				6A5E04C520A44AE20030A0B8 /* FFAudioDecoder.h in Headers */,
 				AE70A5141ECB4DFE0009E49A /* GJLiveDefine.h in Headers */,
 				AE70A51A1ECB4DFE0009E49A /* GJUtil.h in Headers */,
+				6A9F6DC820CA7ABD00C210B4 /* UncaughtExceptionHandler.h in Headers */,
 				AE70A53F1ECB4DFE0009E49A /* GJH264Encoder.h in Headers */,
 				AE70A5311ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h in Headers */,
 				6A1A1B0A1F2ED67A0043595F /* AACEncoderFromPCM_OLD.h in Headers */,
@@ -1684,6 +1691,7 @@
 				6ABF2B291F0B413600721DB3 /* IOS_VideoProduce.m in Sources */,
 				AE70A51B1ECB4DFE0009E49A /* sps_decode.c in Sources */,
 				6A42F16620AED90D00083B01 /* GJLog.c in Sources */,
+				6A9F6DC920CA7ABD00C210B4 /* UncaughtExceptionHandler.m in Sources */,
 				6ABF2B1B1F0B413600721DB3 /* IOS_AACDecode.m in Sources */,
 				AE8AADFE1FF7BDE100964479 /* GJBridgeContext.c in Sources */,
 				6AF217781FBD98A1004732D1 /* GJFFmpegPush.c in Sources */,
