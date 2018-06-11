@@ -16,8 +16,8 @@ typedef struct _GJMessageDispatcher GJMessageDispatcher;
 typedef struct _GJMessage GJMessage;
 typedef void (*MessageHandle)(GHandle sender, GHandle receiver,GInt32 type,GLong arg);
 GJMessageDispatcher* defaultDispatcher();
-void destroyDispatcher(GJMessageDispatcher* dispatcher);
-void deliveryMessage(GJMessageDispatcher* dispatcher,MessageHandle handle,GHandle sender,GHandle receive,GInt32 type,GLong arg);
+//void destroyDispatcher(GJMessageDispatcher* dispatcher);
+//void deliveryMessage(GJMessageDispatcher* dispatcher,MessageHandle handle,GHandle sender,GHandle receive,GInt32 type,GLong arg);
 
 void defauleDeliveryMessage0(MessageHandle handle,GHandle sender,GHandle receive,GInt32 type);
 void defauleDeliveryMessage1(MessageHandle handle,GHandle sender,GHandle receive,GInt32 type,GLong arg);

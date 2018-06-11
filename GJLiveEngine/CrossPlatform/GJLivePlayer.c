@@ -36,7 +36,13 @@
 #define MAX_CACHE_DUR 4000 //抖动最大缓存控制，所以最大可能缓存到4000*MAX_CACHE_RATIO都不会追赶，
 #define MIN_CACHE_DUR 200  //抖动最小缓存控制
 #define MAX_CACHE_RATIO 3
-#define HIGHT_PASS_FILTER 0.5 //高通滤波
+
+//#define MAX_HIGH_WATER_RATIO 4       //最大高水准比例
+//#define MIN_HIGH_WATER_RATIO 2       //最小高水准比例
+////当抖动越小时，HIGH_WATER的比例应该越大
+
+//#define HIGHT_PASS_FILTER 0.5 //高通滤波
+#define SMOOTH_FILTER 0.6 //平滑滤波
 
 #define UPDATE_SHAKE_TIME_MIN (2.5 * MAX_CACHE_DUR) //
 #define UPDATE_SHAKE_TIME_MAX (10 * MAX_CACHE_DUR)   //
@@ -263,7 +269,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     GLong dPTS   = (GTimeSencondValue(pts) - GTimeSencondValue(netShake->collectStartPts)) * 1000;
     GLong shake  = dClock - dPTS; //统计少发的抖动
     GLong dShake = shake;
-    if (shake < 0) { shake = -shake * 0.0; } //不能直接变为负数，因为后面会使用到符号
+//    if (shake < 0) { shake = -shake; }
 #ifdef NETWORK_DELAY
     GLong delay     = 0;
     GLong testShake = 0;
@@ -350,7 +356,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 
         if (netShake->preMaxDownShake >= netShake->maxDownShake) { //用>=而不是>，防止抖动比较小时，一直没有更新maxshake,导致要过两个周期才能进入此更新
             //降低时采用滤波器缓冲
-            GLong downShake = netShake->preMaxDownShake * HIGHT_PASS_FILTER + netShake->maxDownShake * (1 - HIGHT_PASS_FILTER);
+            GLong downShake = netShake->preMaxDownShake * (1-SMOOTH_FILTER) + netShake->maxDownShake * SMOOTH_FILTER;
             updateWater(_syncControl, downShake);
             netShake->maxDownShake = downShake;
             player->callback(player->userDate, GJPlayMessage_NetShakeUpdate, &netShake->maxDownShake);
