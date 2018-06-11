@@ -363,8 +363,9 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         netShake->maxDownShake      = MIN_CACHE_DUR;
         netShake->collectStartClock = clock;
         netShake->collectStartPts   = pts;
-        netShake->collectUpdateDur = netShake->paramA * netShake->preMaxDownShake + netShake->paramB;
-        player->callback(player->userDate, GJPlayMessage_NetShakeRangeUpdate, &netShake->collectUpdateDur);
+        GLong currentMaxShake = GMIN(netShake->preMaxDownShake, MAX_CACHE_DUR);
+        netShake->collectUpdateDur = netShake->paramA * currentMaxShake + netShake->paramB;
+        player->callback(player->userDate, GJPlayMessage_NetShakeRangeUpdate, &currentMaxShake);
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update shake max:%ld ,preMax:%ld,UpdateDur:%ld", netShake->maxDownShake, netShake->preMaxDownShake,netShake->collectUpdateDur);
 
 #ifdef NETWORK_DELAY
