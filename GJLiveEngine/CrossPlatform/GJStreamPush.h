@@ -38,7 +38,7 @@ GBool GJStreamPush_SendUncodeVideoData(GJStreamPush *push, R_GJPixelFrame *data)
 GBool GJStreamPush_SendUncodeAudioData(GJStreamPush *push, R_GJPCMFrame *data);
 
 GBool GJStreamPush_StartConnect(GJStreamPush *push, const char *sendUrl);
-GFloat32 GJStreamPush_GetBufferRate(GJStreamPush *push);
+GFloat GJStreamPush_GetBufferRate(GJStreamPush *push);
 GJTrafficStatus GJStreamPush_GetVideoBufferCacheInfo(GJStreamPush *push);
 GJTrafficStatus GJStreamPush_GetAudioBufferCacheInfo(GJStreamPush *push);
 

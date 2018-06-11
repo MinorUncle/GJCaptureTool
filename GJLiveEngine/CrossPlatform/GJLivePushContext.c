@@ -119,10 +119,10 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context, GJTrafficS
                     //减速的目标是比网速小，以减少缓存
                     context->videoNetSpeed -= context->videoBitrate / context->pushConfig->mFps;
                     //发送数量越少降速越快
-                    GFloat32 ratioStep = (context->rateCheckStep - sendCount) * 1.0 / context->rateCheckStep;
+                    GFloat ratioStep = (context->rateCheckStep - sendCount) * 1.0 / context->rateCheckStep;
                     //满速发送时间越长，网速越可靠
-                    GFloat32 ratioFullCount = fullCount * 1.0 / context->netSpeedCheckInterval;
-                    GFloat32 ratio          = (ratioStep + ratioFullCount) / 2;
+                    GFloat ratioFullCount = fullCount * 1.0 / context->netSpeedCheckInterval;
+                    GFloat ratio          = (ratioStep + ratioFullCount) / 2;
                     GJAssert(ratio <= 1.0, "错误");
 
                     GInt32 bitrate = context->videoBitrate - (context->videoBitrate - context->videoNetSpeed) * ratio;
@@ -1010,7 +1010,7 @@ GVoid GJLivePush_StopRecode(GJLivePushContext *context) {
 //    return result;
 //}
 //
-//GBool GJLivePush_SetMixVolume(GJLivePushContext *context, GFloat32 volume) {
+//GBool GJLivePush_SetMixVolume(GJLivePushContext *context, GFloat volume) {
 //    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetMixVolume:%p",context);
 //
 //    return GJCheckBool(context->audioProducer->setMixVolume(context->audioProducer, volume), "setMixVolume");
@@ -1022,12 +1022,12 @@ GVoid GJLivePush_StopRecode(GJLivePushContext *context) {
 //    return GJCheckBool(context->audioProducer->setMixToStream(context->audioProducer, should), "setMixToStream");
 //}
 //
-//GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat32 volume) {
+//GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat volume) {
 //    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetOutVolume:%p",context);
 //    return GJCheckBool(context->audioProducer->setOutVolume(context->audioProducer, volume), "setOutVolume");
 //}
 //
-//GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat32 gain) {
+//GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat gain) {
 //    GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePush_SetInputGain:%p",context);
 //    return GJCheckBool(context->audioProducer->setInputGain(context->audioProducer, gain), "setInputGain");
 //}

@@ -69,12 +69,12 @@ inline static GBool audioResume(struct _GJAudioPlayContext *context) {
     GJAudioQueueDrivePlayer *player = (__bridge GJAudioQueueDrivePlayer *) (context->obaque);
     return [player resume];
 }
-inline static GBool audioSetSpeed(struct _GJAudioPlayContext *context, GFloat32 speed) {
+inline static GBool audioSetSpeed(struct _GJAudioPlayContext *context, GFloat speed) {
     GJAudioQueueDrivePlayer *player = (__bridge GJAudioQueueDrivePlayer *) (context->obaque);
     player.speed                    = speed;
     return GTrue;
 }
-inline static GFloat32 audioGetSpeed(struct _GJAudioPlayContext *context) {
+inline static GFloat audioGetSpeed(struct _GJAudioPlayContext *context) {
     GJAudioQueueDrivePlayer *player = (__bridge GJAudioQueueDrivePlayer *) (context->obaque);
     return player.speed;
 }

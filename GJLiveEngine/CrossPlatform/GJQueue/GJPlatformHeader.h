@@ -60,8 +60,8 @@ typedef int                 GInt;
 
 typedef long                GLong;
 typedef unsigned long       GULong;
-typedef float               GFloat32;
-typedef double              GFloat64;
+typedef float               GFloat;
+typedef double              GDouble;
 typedef GInt8               GBool;
 typedef char                GChar;
 typedef unsigned char       GUChar;
@@ -81,7 +81,7 @@ typedef int32_t             GResult;
 
 #define GMIN(A,B)	({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __a : __b; })
 #define GMAX(A,B)	({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __b : __a; })
-#define GFloatEqual(A,B)({GFloat32 d = (GFloat32)A - (GFloat32)B;d > -0.00001 && d < 0.00001;})
+#define GFloatEqual(A,B)({GFloat d = (GFloat)A - (GFloat)B;d > -0.00001 && d < 0.00001;})
 #if defined( __cplusplus )
 #   define DEFAULT_PARAM(x) =x
 #else

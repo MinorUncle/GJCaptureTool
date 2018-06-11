@@ -170,7 +170,7 @@ GUInt32 queueGetMinCacheSize(GJQueue* q){
     return q->minCacheSize;
 }
 
-GFloat32 queueGetCacheRate(GJQueue* q){
+GFloat queueGetCacheRate(GJQueue* q){
     return (q->inPointer - q->outPointer)*1.0/q->capacity;
 }
 

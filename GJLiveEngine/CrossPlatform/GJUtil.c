@@ -51,7 +51,7 @@ GInt32 GJ_GetCPUCount() {
     return numCPUs;
 }
 
-GFloat32 GJ_GetCPUUsage() {
+GFloat GJ_GetCPUUsage() {
     kern_return_t          kr;
     task_info_data_t       tinfo;
     mach_msg_type_number_t task_info_count;
@@ -111,7 +111,7 @@ GFloat32 GJ_GetCPUUsage() {
     return tot_cpu;
 }
 
-//GFloat32 GJ_GetCPUUsage(){
+//GFloat GJ_GetCPUUsage(){
 //natural_t numCPUsU = 0U;
 //kern_return_t err = host_processor_info(mach_host_self(), PROCESSOR_CPU_LOAD_INFO, &numCPUsU, &cpuInfo, &numCpuInfo);
 //float useTotal = 0;

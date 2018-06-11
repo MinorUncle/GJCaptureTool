@@ -25,12 +25,12 @@ static GBool NeedTestNetwork = GTrue;
 
 //#define GJVIDEODECODE_TEST
 typedef struct GSize {
-    GFloat32 width;
-    GFloat32 height;
+    GFloat width;
+    GFloat height;
 } GSize;
 typedef struct GPoint {
-    GFloat32 x;
-    GFloat32 y;
+    GFloat x;
+    GFloat y;
 } GPoint;
 
 typedef struct GCRect {
@@ -122,20 +122,20 @@ typedef enum _GJNetworkQuality {
     GJNetworkQualityTerrible,
 } GJNetworkQuality;
 typedef struct PushInfo {
-    GFloat32 bitrate;   //byte/s
-    GFloat32 frameRate; //
+    GFloat bitrate;   //byte/s
+    GFloat frameRate; //
     GLong    cacheTime; //in ms
     GLong    cacheCount;
 } GJPushInfo;
 typedef struct PullInfo {
-    GFloat32 bitrate;   //byte/s
-    GFloat32 frameRate; //
+    GFloat bitrate;   //byte/s
+    GFloat frameRate; //
     GLong    cacheTime;
     GLong    cacheCount;
     GTime    lastReceivePts;
 } GJPullInfo;
 typedef struct UnitBufferInfo {
-    GFloat32 percent; //byte/s
+    GFloat percent; //byte/s
     GLong    bufferDur;
     GLong    cachePts;
     GLong    cacheCount;
@@ -157,10 +157,10 @@ typedef struct _PushSessionInfo {
     GLong sessionDuring;
 } GJPushSessionInfo;
 typedef struct _VideoDynamicInfo {
-    GFloat32 currentBitrate;
-    GFloat32 currentFPS;
-    GFloat32 sourceBitrate;
-    GFloat32 sourceFPS;
+    GFloat currentBitrate;
+    GFloat currentFPS;
+    GFloat sourceBitrate;
+    GFloat sourceFPS;
 } VideoDynamicInfo;
 typedef enum _ConnentCloceReason {
     kConnentCloce_Active, //主动关闭

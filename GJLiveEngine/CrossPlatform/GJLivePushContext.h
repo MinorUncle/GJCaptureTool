@@ -73,7 +73,7 @@ typedef struct _GJLivePushContext {
     //不丢帧情况下允许的最小码率,主要用来控制质量，实际码率可能低于此。用于动态码率
     GInt32   videoMinBitrate;
     GInt32   videoNetSpeed;     //最近netSpeedCheckInterval次rateCheck网速为平均网速
-    GFloat32 increaseSpeedRate; //连续检查网络空闲次数大于rateCheckStep的increaseSpeedRate倍，则增加码率
+    GFloat increaseSpeedRate; //连续检查网络空闲次数大于rateCheckStep的increaseSpeedRate倍，则增加码率
 
     GInt32 *netSpeedUnit;          //表示当前发送码率bps，（负数表示受码率限制的发送速率，正数表示不受码率限制的满速速率）
     GInt32  netSpeedCheckInterval; //netSpeedUnit数组长度
@@ -117,10 +117,10 @@ GVoid GJLivePush_DetachAudioProducer(GJLivePushContext *context);
 //GBool GJLivePush_EnableReverb(GJLivePushContext *context, GBool enable);
 //GVoid GJLivePush_StopAudioMix(GJLivePushContext *context);
 //GBool GJLivePush_StartMixFile(GJLivePushContext *context, const GChar *fileName,AudioMixFinishCallback finishCallback);
-//GBool GJLivePush_SetMixVolume(GJLivePushContext *context, GFloat32 volume);
+//GBool GJLivePush_SetMixVolume(GJLivePushContext *context, GFloat volume);
 //GBool GJLivePush_ShouldMixAudioToStream(GJLivePushContext *context, GBool should);
-//GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat32 volume);
-//GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat32 gain);
+//GBool GJLivePush_SetOutVolume(GJLivePushContext *context, GFloat volume);
+//GBool GJLivePush_SetInputGain(GJLivePushContext *context, GFloat gain);
 //GBool GJLivePush_SetMeasurementMode(GJLivePushContext *context, GBool measurementMode);
 
 #pragma mark 视频

@@ -14,7 +14,7 @@ struct _GJAudioAlignmentContext {
     GInt32 sizePerFrame;
     GInt32 sizePerPacket;
     GInt32 samplerate;
-    GFloat64 sizePerMs;//如果时间不是从0开始，则一定要双精度
+    GDouble sizePerMs;//如果时间不是从0开始，则一定要双精度
 
     GInt32     alignmentSize;
     GTimeValue lastPts;

@@ -214,16 +214,16 @@ GVoid stopMixAudioFile(struct _GJAudioProduceContext *context) {
     return [manager stopMix];
 #endif
 }
-GBool setInputGain(struct _GJAudioProduceContext *context, GFloat32 inputGain) {
+GBool setInputGain(struct _GJAudioProduceContext *context, GFloat inputGain) {
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager           = (__bridge GJAudioManager *) (context->obaque);
     manager.audioController.inputGain = inputGain;
-    GFloat32 gain                     = manager.audioController.inputGain;
+    GFloat gain                     = manager.audioController.inputGain;
     return GFloatEqual(gain, inputGain);
 #endif
     return GFalse;
 }
-GBool setMixVolume(struct _GJAudioProduceContext *context, GFloat32 volume) {
+GBool setMixVolume(struct _GJAudioProduceContext *context, GFloat volume) {
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager    = (__bridge GJAudioManager *) (context->obaque);
     manager.mixfilePlay.volume = volume;
@@ -232,7 +232,7 @@ GBool setMixVolume(struct _GJAudioProduceContext *context, GFloat32 volume) {
 #endif
     return GFalse;
 }
-GBool setOutVolume(struct _GJAudioProduceContext *context, GFloat32 volume) {
+GBool setOutVolume(struct _GJAudioProduceContext *context, GFloat volume) {
 #ifdef AMAZING_AUDIO_ENGINE
     GJAudioManager *manager                    = (__bridge GJAudioManager *) (context->obaque);
     manager.audioController.masterOutputVolume = volume;

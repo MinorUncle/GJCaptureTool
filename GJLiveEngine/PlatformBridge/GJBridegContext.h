@@ -124,9 +124,9 @@ typedef struct _GJAudioProduceContext {
     GBool (*enableAudioEchoCancellation)(struct _GJAudioProduceContext *context, GBool enable);
     GBool (*setupMixAudioFile)(struct _GJAudioProduceContext *context, const GChar *file, GBool loop, AudioMixFinishCallback callback, GHandle userData);
     GBool (*startMixAudioFileAtTime)(struct _GJAudioProduceContext *context, GUInt64 time);
-    GBool (*setInputGain)(struct _GJAudioProduceContext *context, GFloat32 inputGain);
-    GBool (*setMixVolume)(struct _GJAudioProduceContext *context, GFloat32 volume);
-    GBool (*setOutVolume)(struct _GJAudioProduceContext *context, GFloat32 volume);
+    GBool (*setInputGain)(struct _GJAudioProduceContext *context, GFloat inputGain);
+    GBool (*setMixVolume)(struct _GJAudioProduceContext *context, GFloat volume);
+    GBool (*setOutVolume)(struct _GJAudioProduceContext *context, GFloat volume);
     GVoid (*stopMixAudioFile)(struct _GJAudioProduceContext *context);
     GBool (*setMixToStream)(struct _GJAudioProduceContext *context, GBool should);
     GBool (*enableReverb)(struct _GJAudioProduceContext *context, GBool enable);
@@ -144,8 +144,8 @@ typedef struct _GJAudioPlayContext {
     GBool (*audioStart)(struct _GJAudioPlayContext *context);
     GVoid (*audioPause)(struct _GJAudioPlayContext *context);
     GBool (*audioResume)(struct _GJAudioPlayContext *context);
-    GBool (*audioSetSpeed)(struct _GJAudioPlayContext *context, GFloat32 speed);
-    GFloat32 (*audioGetSpeed)(struct _GJAudioPlayContext *context);
+    GBool (*audioSetSpeed)(struct _GJAudioPlayContext *context, GFloat speed);
+    GFloat (*audioGetSpeed)(struct _GJAudioPlayContext *context);
     GJPlayStatus (*audioGetStatus)(struct _GJAudioPlayContext *context);
 } GJAudioPlayContext;
 

@@ -21,7 +21,7 @@ typedef enum _TimeSYNCType {
 } TimeSYNCType;
 
 typedef struct _GJBufferInfo {
-    GFloat32 bufferRate;
+    GFloat bufferRate;
     GInt32   bufferCachePts;
     GInt32   bufferDuring;
 } GJBufferInfo;
@@ -69,8 +69,8 @@ typedef struct _GJNetShakeInfo {
     GLong collectUpdateDur;
     GLong  maxDownShake;
     GLong  preMaxDownShake;
-    GFloat32  paramA;//抖动用时计算参数
-    GFloat32  paramB;
+    GFloat  paramA;//抖动用时计算参数
+    GFloat  paramB;
     GTime  collectStartClock;
     GTime  collectStartPts;
 
@@ -96,7 +96,7 @@ typedef struct SyncControl {
     GJCacheInfo    bufferInfo;
     TimeSYNCType   syncType;
     GJNetShakeInfo netShake;
-    GFloat32       speed;
+    GFloat       speed;
 
 } GJSyncControl;
 typedef GVoid (*GJLivePlayCallback)(GHandle userDate, GJPlayMessage message, GHandle param);

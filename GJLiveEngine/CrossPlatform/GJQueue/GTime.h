@@ -32,7 +32,7 @@ static inline GTime GTimeSubtract(GTime minuend, GTime subtrahend)
     GTime time; time.value = minuend.value - subtrahend.value*minuend.scale/subtrahend.scale;time.scale = minuend.scale; return time;
 }
 
-static inline GFloat64 GTimeSubtractSecondValue(GTime minuend, GTime subtrahend)
+static inline GDouble GTimeSubtractSecondValue(GTime minuend, GTime subtrahend)
 {
     return minuend.value*1.0/subtrahend.scale - subtrahend.value*1.0/subtrahend.scale;
 }
@@ -47,9 +47,9 @@ static inline GTime GTimeAdd(GTime addend1, GTime addend2)
     GTime time; time.value = addend1.value + addend2.value*addend1.scale/addend2.scale;time.scale = addend1.scale; return time;
 }
 
-static inline GFloat64 GTimeSencondValue(GTime time)
+static inline GDouble GTimeSencondValue(GTime time)
 {
-    return (GFloat64)time.value/time.scale;
+    return (GDouble)time.value/time.scale;
 }
 
 static inline GLong GTimeMSValue(GTime time)

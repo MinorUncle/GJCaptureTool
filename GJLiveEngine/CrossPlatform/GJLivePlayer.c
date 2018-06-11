@@ -137,7 +137,7 @@ static GBool GJLivePlay_StartDewatering(GJLivePlayer *player) {
         if (player->syncControl.speed <= 1.00001) {
             PLAY_CACHE_LOG(&player->syncControl);
             if (player->callback) {
-                GFloat32 speed = CHASE_SPEED;
+                GFloat speed = CHASE_SPEED;
                 player->callback(player->userDate, GJPlayMessage_DewateringUpdate, &speed);
             }
             player->syncControl.bufferInfo.dewaterTimes++;
@@ -170,7 +170,7 @@ static GBool GJLivePlay_StopDewatering(GJLivePlayer *player) {
 
         PLAY_CACHE_LOG(&player->syncControl);
         if (player->callback) {
-            GFloat32 speed = 1.0f;
+            GFloat speed = 1.0f;
             player->callback(player->userDate, GJPlayMessage_DewateringUpdate, &speed);
         }
 
@@ -185,6 +185,9 @@ static GBool GJLivePlay_StartBuffering(GJLivePlayer *player) {
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->playControl.status == kPlayStatusRunning) {
         PLAY_CACHE_LOG(&player->syncControl);
+        GJSyncControl* _syncControl = &player->syncControl;
+        GLong aCache                         = GTimeSubtractMSValue(_syncControl->audioInfo.trafficStatus.enter.ts, _syncControl->audioInfo.trafficStatus.leave.ts);
+        GJAssert(aCache <= _syncControl->bufferInfo.lowWaterFlag, "为什么数据足够还要缓冲");
         player->playControl.status                   = kPlayStatusBuffering;
         player->playControl.videoQueueWaitTime       = GINT32_MAX;
         player->syncControl.bufferInfo.lastPauseFlag = GTimeMSValue(GJ_Gettime());
@@ -429,6 +432,7 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer *player) {
         bufferInfo.bufferDur = duration;
         bufferInfo.cachePts  = cache;
         bufferInfo.percent   = cache * 1.0 / _syncControl->bufferInfo.lowWaterFlag;
+        GJLOG(GNULL, GJ_LOGDEBUG, "buffer percent:%f", bufferInfo.percent);
 
         if (cache < _syncControl->bufferInfo.lowWaterFlag) {
             player->callback(player->userDate, GJPlayMessage_BufferUpdate, &bufferInfo);

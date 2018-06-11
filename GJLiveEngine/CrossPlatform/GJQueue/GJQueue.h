@@ -91,7 +91,7 @@ GVoid queueSetMinCacheSize(GJQueue* q,GUInt32 cacheSize);
 GUInt32 queueGetMinCacheSize(GJQueue* q);
 
 //    当前缓存数量/总共申请的空间
-GFloat32 queueGetCacheRate(GJQueue* q);
+GFloat queueGetCacheRate(GJQueue* q);
 
 /**
  根据index获得vause,当超过inPointer和outPointer范围则失败，用于遍历数组，不会产生压出队列作用
