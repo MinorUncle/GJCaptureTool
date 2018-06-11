@@ -288,11 +288,16 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         }
 #endif
         if (netShake->maxDownShake > netShake->preMaxDownShake) {
+            
             //增加是全额增加
             updateWater(_syncControl, shake);
             GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "new shake to update shake max then preMax. max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
-
             player->callback(player->userDate, GJPlayMessage_NetShakeUpdate, &shake);
+            
+            //collectUpdateDur相应增加
+            GLong currentMaxShake = GMIN(netShake->maxDownShake, MAX_CACHE_DUR);
+            netShake->collectUpdateDur = netShake->paramA * currentMaxShake + netShake->paramB;
+            player->callback(player->userDate, GJPlayMessage_NetShakeRangeUpdate, &netShake->collectUpdateDur);
 #ifdef NETWORK_DELAY
             if (testShake != shake) {
                 GJLOG(GNULL, GJ_LOGWARNING, "测量值(%ld)与真实值(%ld)不相等", testShake, shake);
@@ -349,6 +354,11 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             updateWater(_syncControl, downShake);
             netShake->maxDownShake = downShake;
             player->callback(player->userDate, GJPlayMessage_NetShakeUpdate, &netShake->maxDownShake);
+            
+            //collectUpdateDur相应降低
+            GLong currentMaxShake = GMIN(netShake->maxDownShake, MAX_CACHE_DUR);
+            netShake->collectUpdateDur = netShake->paramA * currentMaxShake + netShake->paramB;
+            player->callback(player->userDate, GJPlayMessage_NetShakeRangeUpdate, &netShake->collectUpdateDur);
 #ifdef NETWORK_DELAY
             if (testShake != shake) {
                 GJLOG(GNULL, GJ_LOGWARNING, "测量值(%ld)与真实值(%ld)不相等", testShake, shake);
@@ -359,14 +369,13 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
 #endif
         } //在每次的判断中已经增高了，增高是全额增高
 
+
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update shake max:%ld ,preMax:%ld,UpdateDur:%ld", netShake->maxDownShake, netShake->preMaxDownShake,netShake->collectUpdateDur);
+        
         netShake->preMaxDownShake   = netShake->maxDownShake;
         netShake->maxDownShake      = MIN_CACHE_DUR;
         netShake->collectStartClock = clock;
         netShake->collectStartPts   = pts;
-        GLong currentMaxShake = GMIN(netShake->preMaxDownShake, MAX_CACHE_DUR);
-        netShake->collectUpdateDur = netShake->paramA * currentMaxShake + netShake->paramB;
-        player->callback(player->userDate, GJPlayMessage_NetShakeRangeUpdate, &netShake->collectUpdateDur);
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update shake max:%ld ,preMax:%ld,UpdateDur:%ld", netShake->maxDownShake, netShake->preMaxDownShake,netShake->collectUpdateDur);
 
 #ifdef NETWORK_DELAY
         if (NeedTestNetwork) {
