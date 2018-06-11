@@ -112,7 +112,7 @@ static OSStatus encodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 - (BOOL)stop {
 
     if (_encodeConvert) {
-        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AACEncoderFromPCM :%p", _encodeConvert);
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AACEncoderFromPCM :%p", _encodeConvert);
         AudioConverterDispose(_encodeConvert);
         _encodeConvert = nil;
     }
@@ -370,7 +370,7 @@ int get_f_index(unsigned int sampling_frequency) {
         });
     }
 
-    GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AACEncoderFromPCM");
+    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AACEncoderFromPCM");
 }
 #pragma mark - mutex
 

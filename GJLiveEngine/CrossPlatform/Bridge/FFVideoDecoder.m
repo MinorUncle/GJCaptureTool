@@ -270,7 +270,7 @@ inline static GBool decodeStart(struct _FFVideoDecodeContext *context) {
     if (context->obaque) {
         FFDecoder *decoder = (context->obaque);
         FFDecoder_DecodeStart(decoder);
-        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder decodeStart");
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "%p",context);
     }
     pipleNodeUnLock(&context->pipleNode);
     return GTrue;
@@ -283,7 +283,7 @@ inline static GVoid decodeStop(struct _FFVideoDecodeContext *context) {
         if (decoder->isRunning) {
             FFDecoder_DecodeStop(decoder);
         }
-        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder decodeStart");
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "%p",context);
     }
     pipleNodeUnLock(&context->pipleNode);
 };

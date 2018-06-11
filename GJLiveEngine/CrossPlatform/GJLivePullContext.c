@@ -245,14 +245,14 @@ static GVoid pullMessageCallback(GJStreamPull *pull, GHandle receiver, kStreamPu
             livePull->callback(livePull->userData, GJLivePull_receivePacketError, "读取失败");
             break;
         case kStreamPullMessageType_connectSuccess: {
-            GJLOG(livePull, GJ_LOGINFO, "pull connectSuccess");
+            GJLOG(livePull, GJ_LOGDEBUG, "pull connectSuccess");
             livePull->connentClock = GJ_Gettime();
             GLong connentDur       = GTimeMSValue(GTimeSubtract(livePull->connentClock, livePull->startPullClock));
 
             livePull->callback(livePull->userData, GJLivePull_connectSuccess, &connentDur);
         } break;
         case kStreamPullMessageType_closeComplete: {
-            GJLOG(livePull, GJ_LOGINFO, "pull closeComplete");
+            GJLOG(livePull, GJ_LOGDEBUG, "pull closeComplete");
             GJPullSessionInfo info = {0};
             info.sessionDuring     = GTimeMSValue(GTimeSubtract(GJ_Gettime(), livePull->startPullClock));
             livePull->callback(livePull->userData, GJLivePull_closeComplete, (GHandle) &info);

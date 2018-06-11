@@ -365,7 +365,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         netShake->collectStartPts   = pts;
         GLong currentMaxShake = GMIN(netShake->preMaxDownShake, MAX_CACHE_DUR);
         netShake->collectUpdateDur = netShake->paramA * currentMaxShake + netShake->paramB;
-        player->callback(player->userDate, GJPlayMessage_NetShakeRangeUpdate, &currentMaxShake);
+        player->callback(player->userDate, GJPlayMessage_NetShakeRangeUpdate, &netShake->collectUpdateDur);
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update shake max:%ld ,preMax:%ld,UpdateDur:%ld", netShake->maxDownShake, netShake->preMaxDownShake,netShake->collectUpdateDur);
 
 #ifdef NETWORK_DELAY
@@ -698,7 +698,7 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
     }
 
 END:
-    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "playRunLoop out");
+    GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "playRunLoop out");
     _playControl->status          = kPlayStatusStop;
     _playControl->playVideoThread = nil;
     return GNULL;
@@ -755,7 +755,7 @@ GBool GJLivePlay_Start(GJLivePlayer *player) {
     pthread_mutex_lock(&player->playControl.oLock);
 
     if (player->playControl.status != kPlayStatusRunning) {
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "GJLivePlayer start");
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "GJLivePlayer start");
         memset(&player->syncControl, 0, sizeof(player->syncControl));
         player->playControl.status                = kPlayStatusRunning;
         player->syncControl.videoInfo.startPts    = G_TIME_INVALID;

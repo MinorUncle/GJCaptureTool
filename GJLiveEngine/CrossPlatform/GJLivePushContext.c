@@ -228,7 +228,6 @@ static GVoid streamPushMessageCallback(GJStreamPush *sender, GJLivePushContext *
 
     switch (messageType) {
         case kStreamPushMessageType_connectSuccess: {
-            GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "推流连接成功");
             context->connentClock = GJ_Gettime(); //推流是先连接流与解码器管道，连接成功后再连接生产器和编码器
             pipleConnectNode((GJPipleNode *) context->videoProducer, (GJPipleNode *) context->videoEncoder);
             pipleConnectNode((GJPipleNode *) context->audioProducer, (GJPipleNode *) context->audioEncoder);
@@ -246,7 +245,6 @@ static GVoid streamPushMessageCallback(GJStreamPush *sender, GJLivePushContext *
         } break;
         case kStreamPushMessageType_urlPraseError:
         case kStreamPushMessageType_connectError:
-            GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "推流连接失败");
             GJLivePush_StopPush(context);
             context->callback(context->userData, GJLivePush_connectError, "rtmp连接失败");
             break;
@@ -527,7 +525,7 @@ GBool _livePushSetupAudioEncodeIfNeed(GJLivePushContext *context) {
     aDFormat.format.mFramePerPacket = 1024;
     aDFormat.format.mType           = GJAudioType_AAC;
 
-    GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "SetupAudioEncode");
+    GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "SetupAudioEncode");
     if (context->audioEncoder->obaque == GNULL) {
         context->audioEncoder->encodeSetup(context->audioEncoder, aFormat, aDFormat, GNULL, context);
     }
@@ -536,7 +534,7 @@ GBool _livePushSetupAudioEncodeIfNeed(GJLivePushContext *context) {
 
 GBool _livePushSetupVideoEncodeIfNeed(GJLivePushContext *context) {
     GBool result = GTrue;
-    GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "SetupVideoEncode");
+    GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "SetupVideoEncode");
     GJPixelFormat vFormat = {0};
     vFormat.mHeight       = (GUInt32) context->pushConfig->mPushSize.height;
     vFormat.mWidth        = (GUInt32) context->pushConfig->mPushSize.width;
@@ -558,7 +556,7 @@ GBool _livePushSetupVideoEncodeIfNeed(GJLivePushContext *context) {
 
 GBool _livePushSetupAudioRecodeIfNeed(GJLivePushContext *context) {
     GBool result = GTrue;
-    GJLOG(LIVEPUSH_LOG, GJ_LOGINFO, "SetupAudioEncode");
+    GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "SetupAudioEncode");
 
     return result;
 }
