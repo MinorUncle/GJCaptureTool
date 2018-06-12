@@ -71,8 +71,8 @@ typedef struct _GJLivePushContext {
     GInt32    videoBitrate;      //当前编码码率
     GInt32    maxVideoDelay;     //默认最大的延时，超过此延时，则启动连续丢帧，直到延迟恢复到3/4,默认500ms；
     //不丢帧情况下允许的最小码率,主要用来控制质量，实际码率可能低于此。用于动态码率
-    GInt32   videoMinBitrate;
-    GInt32   videoNetSpeed;     //最近netSpeedCheckInterval次rateCheck网速为平均网速
+    GInt32 videoMinBitrate;
+    GInt32 videoNetSpeed;     //最近netSpeedCheckInterval次rateCheck网速为平均网速
     GFloat increaseSpeedRate; //连续检查网络空闲次数大于rateCheckStep的increaseSpeedRate倍，则增加码率
 
     GInt32 *netSpeedUnit;          //表示当前发送码率bps，（负数表示受码率限制的发送速率，正数表示不受码率限制的满速速率）

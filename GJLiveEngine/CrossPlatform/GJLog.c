@@ -80,7 +80,9 @@ static GVoid gj_log_runloop(GJClass *dClass, GJ_LogLevel level, const char *pre,
     }
     listPush(_messageList, strData);
     if (level == GJ_LOGFORBID && dClass->dLevel >= GJ_LOGDEBUG) {
+#ifdef DEBUG
         assert(0);
+#endif
     }
 #endif
 }
@@ -90,9 +92,9 @@ static void *logRunloop(void *userData) {
         GChar *message = GNULL;
         if (listPop(_messageList, (GHandle *) (&message), GINT32_MAX)) {
             fprintf(fmsg, "%s", message);
-#ifdef DEBUG
+//#ifdef DEBUG
             fprintf(stdout, "%s", message);
-#endif
+//#endif
             GJBufferPoolSetData(_logBufferPool, (GUInt8 *) message);
         }
     }

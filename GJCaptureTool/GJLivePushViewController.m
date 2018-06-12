@@ -647,13 +647,20 @@
             NSString* path = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
             path = [path stringByAppendingPathComponent:@"test.mp4"];
             _sizeChangeBtn.enabled = NO;
-            if(![_livePush startStreamPushWithUrl:_pushAddr]){
-                [_livePush stopStreamPush];
-                btn.selected = NO;
-                _sizeChangeBtn.enabled = YES;
-            }
+            dispatch_async(dispatch_get_global_queue(0, 0), ^{
+                if(![_livePush startStreamPushWithUrl:_pushAddr]){
+                    [_livePush stopStreamPush];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        btn.selected = NO;
+                        _sizeChangeBtn.enabled = YES;
+                    });
+                }
+            });
+
         }else{
-            [_livePush stopStreamPush];
+            dispatch_async(dispatch_get_global_queue(0, 0), ^{
+                [_livePush stopStreamPush];
+            });
             _sizeChangeBtn.enabled = YES;
         }
     }
@@ -1135,9 +1142,21 @@
 
 -(void)viewWillDisappear:(BOOL)animated{
     [super viewWillDisappear:animated];
-    [_pushManager.livePush stopPreview];
-    [_pushManager.livePush stopStreamPush];
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        [_pushManager.livePush stopPreview];
+        [_pushManager.livePush stopStreamPush];
+        _pushManager = nil;
+        
+        for (PullManager* pull in _pulls) {
+            [pull.pull stopStreamPull];
+        }
+        [_pulls removeAllObjects];
+        
+        GJBufferPoolClean(defauleBufferPool(),GTrue);
+        NSLog(@"clean over");
+    });
 }
+
 -(void)buildUI{
     if (_pushAddr.length > 3)[self.view addSubview:_pushManager.view];
     
@@ -1229,21 +1248,7 @@
     
 }
 
--(void)viewDidDisappear:(BOOL)animated{
-    [super viewDidDisappear:animated];
-    for (PullManager* pull in _pulls) {
-        [pull.pull stopStreamPull];
-    }
-    [_pulls removeAllObjects];
-    [_pushManager.livePush stopStreamPush];
-    
-    //        GJBufferPoolClean(defauleBufferPool(),GTrue);
-    
-    dispatch_async(dispatch_get_global_queue(0, 0), ^{
-        GJBufferPoolClean(defauleBufferPool(),GTrue);
-        NSLog(@"clean over");
-    });
-}
+
 //static void ReleaseCVPixelBuffer(void *pixel, const void *data, size_t size)
 //{
 //    CVPixelBufferRef pixelBuffer = (CVPixelBufferRef)pixel;

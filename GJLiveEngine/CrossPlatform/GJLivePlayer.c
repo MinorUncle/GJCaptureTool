@@ -39,13 +39,13 @@
 
 //#define MAX_HIGH_WATER_RATIO 4       //最大高水准比例
 //#define MIN_HIGH_WATER_RATIO 2       //最小高水准比例
-////当抖动越小时，HIGH_WATER的比例应该越大
+//当抖动越小时，HIGH_WATER的比例应该越大
 
 //#define HIGHT_PASS_FILTER 0.5 //高通滤波
-#define SMOOTH_FILTER 0.6 //平滑滤波
+#define SMOOTH_FILTER 0.7 //平滑滤波
 
-#define UPDATE_SHAKE_TIME_MIN (10 * MAX_CACHE_DUR) //
-#define UPDATE_SHAKE_TIME_MAX (40 * MAX_CACHE_DUR)   //
+#define UPDATE_SHAKE_TIME_MIN (5 * MAX_CACHE_DUR) //
+#define UPDATE_SHAKE_TIME_MAX (15 * MAX_CACHE_DUR)   //
 
 /*  抖动估计时间（y）和和当前抖动大小(x)成线性关系, y = ax + b;
  *  其中已知两个对应关系采样点（MIN_CACHE_DUR,UPDATE_SHAKE_TIME_MIN）和(MAX_CACHE_DUR,UPDATE_SHAKE_TIME_MAX);
@@ -450,7 +450,7 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer *player) {
         bufferInfo.bufferDur = duration;
         bufferInfo.cachePts  = cache;
         bufferInfo.percent   = cache * 1.0 / _syncControl->bufferInfo.lowWaterFlag;
-        GJLOG(GNULL, GJ_LOGDEBUG, "buffer percent:%f", bufferInfo.percent);
+        GJLOG(GNULL, GJ_LOGINFO, "buffer percent:%f", bufferInfo.percent);
 
         if (cache < _syncControl->bufferInfo.lowWaterFlag) {
             player->callback(player->userDate, GJPlayMessage_BufferUpdate, &bufferInfo);
@@ -787,7 +787,7 @@ GBool GJLivePlay_Start(GJLivePlayer *player) {
 
         player->syncControl.netShake.preMaxDownShake  = MIN_CACHE_DUR;
         player->syncControl.netShake.maxDownShake     = MIN_CACHE_DUR;
-        player->syncControl.netShake.collectUpdateDur = UPDATE_SHAKE_TIME_MIN * 2;
+        player->syncControl.netShake.collectUpdateDur = UPDATE_SHAKE_TIME_MIN;
         player->syncControl.netShake.paramA           = (UPDATE_SHAKE_TIME_MAX-UPDATE_SHAKE_TIME_MIN)/(MAX_CACHE_DUR - MIN_CACHE_DUR);
         player->syncControl.netShake.paramB           = UPDATE_SHAKE_TIME_MAX - player->syncControl.netShake.paramA*MAX_CACHE_DUR;
         player->callback(player->userDate, GJPlayMessage_NetShakeRangeUpdate, &player->syncControl.netShake.collectUpdateDur);

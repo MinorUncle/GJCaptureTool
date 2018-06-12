@@ -50,6 +50,9 @@
         GJ_AudioProduceContextCreate(&_audioProducer);
 
         GJLivePush_Create(&_livePush, livePushCallback, (__bridge GHandle)(self));
+        _videoProducer->videoProduceSetup(_videoProducer, GNULL, GNULL);
+        _audioProducer->audioProduceSetup(_audioProducer, GNULL, GNULL);
+
         GJLivePush_AttachAudioProducer(_livePush, _audioProducer);
         GJLivePush_AttachVideoProducer(_livePush, _videoProducer);
 
@@ -202,10 +205,12 @@
         GJLivePush_Dealloc(&_livePush);
     }
     if (_audioProducer) {
+        _audioProducer->audioProduceUnSetup(_audioProducer);
         GJ_AudioProduceContextDealloc(&_audioProducer);
         _audioProducer = GNULL;
     }
     if (_videoProducer) {
+        _videoProducer->videoProduceUnSetup(_videoProducer);
         GJ_VideoProduceContextDealloc(&_videoProducer);
         _videoProducer = GNULL;
     }

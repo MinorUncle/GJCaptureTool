@@ -437,22 +437,18 @@ GBool GJLivePush_Create(GJLivePushContext **pushContext, GJLivePushCallback call
 GVoid GJLivePush_AttachAudioProducer(GJLivePushContext *context, GJAudioProduceContext *audioProducer) {
     GJAssert(context->audioEncoder != GNULL && context->audioProducer == GNULL && audioProducer != GNULL, "状态错误");
     context->audioProducer = audioProducer;
-    context->audioProducer->audioProduceSetup(context->audioProducer, GNULL, context);
 }
 GVoid GJLivePush_DetachAudioProducer(GJLivePushContext *context) {
     if (context->audioProducer) {
-        context->audioProducer->audioProduceUnSetup(context->audioProducer);
         context->audioProducer = GNULL;
     }
 }
 GVoid GJLivePush_AttachVideoProducer(GJLivePushContext *context, GJVideoProduceContext *videoProducer) {
     GJAssert(context->videoEncoder != GNULL && context->videoProducer == GNULL && videoProducer != GNULL, "状态错误");
     context->videoProducer = videoProducer;
-    context->videoProducer->videoProduceSetup(context->videoProducer, GNULL, context);
 }
 GVoid GJLivePush_DetachVideoProducer(GJLivePushContext *context) {
     if (context->videoProducer) {
-        context->videoProducer->videoProduceUnSetup(context->videoProducer);
         context->videoProducer = GNULL;
     }
 }

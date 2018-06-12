@@ -59,7 +59,7 @@ static GHandle sendRunloop(GHandle parm) {
     push->app_ctx->func_on_app_event = app_func_event;
     av_dict_set_int(&option, "send_buffer_size", 30000, 0);
     av_dict_set_int(&option, "ijkapplication", (GInt64) push->app_ctx, 0);
-    av_dict_set_int(&option, "dns_cache", 0, 0);
+    av_dict_set_int(&option, "dns_cache", 1, 0);
 
     GInt32 ret = avio_open2(&push->formatContext->pb, push->pushUrl, AVIO_FLAG_WRITE | AVIO_FLAG_NONBLOCK, GNULL, &option);
 

@@ -51,7 +51,7 @@ static GHandle pullRunloop(GHandle parm) {
     av_dict_set_int(&options, "fpsprobesize", 0, 0);
     av_dict_set(&options, "fflags", "keepside", 0);
     av_dict_set_int(&options, "fflags", pull->formatContext->flags | AVFMT_FLAG_KEEP_SIDE_DATA, 0);
-    av_dict_set_int(&options, "dns_cache", 0, 0);
+    av_dict_set_int(&options, "dns_cache", 1, 0);
 
     GInt32 result = avformat_open_input(&pull->formatContext, (const GChar *) pull->pullUrl, GNULL, &options);
     av_dict_free(&options);
@@ -188,11 +188,11 @@ static GHandle pullRunloop(GHandle parm) {
         R_BufferUnRetain(packet);
 
 #ifdef DEBUG
-//        GLong preDTS[2],prePTS[2];
-//        GInt32 type = pkt.stream_index == asIndex;
-//        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%lld ddts:%lld size:%d isKey:%d\n",type, pkt.pts, pkt.dts,pkt.pts - prePTS[type],pkt.dts - preDTS[type], pkt.size,(pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY);
-//        preDTS[type] = pkt.dts;
-//        prePTS[type] = pkt.pts;
+        GLong preDTS[2],prePTS[2];
+        GInt32 type = pkt.stream_index == asIndex;
+        GJLOG(GNULL,GJ_LOGDEBUG,"receive type:%d pts:%lld dts:%lld dpts:%lld ddts:%lld size:%d isKey:%d\n",type, pkt.pts, pkt.dts,pkt.pts - prePTS[type],pkt.dts - preDTS[type], pkt.size,(pkt.flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY);
+        preDTS[type] = pkt.dts;
+        prePTS[type] = pkt.pts;
 
 #endif
         av_packet_unref(&pkt);
