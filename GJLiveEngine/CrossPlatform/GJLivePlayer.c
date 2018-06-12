@@ -34,7 +34,7 @@
 #define AUDIO_PTS_PRECISION 100 //改为100，2帧
 
 #define MAX_CACHE_DUR 4000 //抖动最大缓存控制，所以最大可能缓存到4000*MAX_CACHE_RATIO都不会追赶，
-#define MIN_CACHE_DUR 200  //抖动最小缓存控制
+#define MIN_CACHE_DUR 400  //抖动最小缓存控制
 #define MAX_CACHE_RATIO 3
 
 //#define MAX_HIGH_WATER_RATIO 4       //最大高水准比例
@@ -44,8 +44,8 @@
 //#define HIGHT_PASS_FILTER 0.5 //高通滤波
 #define SMOOTH_FILTER 0.6 //平滑滤波
 
-#define UPDATE_SHAKE_TIME_MIN (2.5 * MAX_CACHE_DUR) //
-#define UPDATE_SHAKE_TIME_MAX (10 * MAX_CACHE_DUR)   //
+#define UPDATE_SHAKE_TIME_MIN (10 * MAX_CACHE_DUR) //
+#define UPDATE_SHAKE_TIME_MAX (40 * MAX_CACHE_DUR)   //
 
 /*  抖动估计时间（y）和和当前抖动大小(x)成线性关系, y = ax + b;
  *  其中已知两个对应关系采样点（MIN_CACHE_DUR,UPDATE_SHAKE_TIME_MIN）和(MAX_CACHE_DUR,UPDATE_SHAKE_TIME_MAX);
@@ -191,9 +191,11 @@ static GBool GJLivePlay_StartBuffering(GJLivePlayer *player) {
     pthread_mutex_lock(&player->playControl.oLock);
     if (player->playControl.status == kPlayStatusRunning) {
         PLAY_CACHE_LOG(&player->syncControl);
+#ifdef DEBUG
         GJSyncControl* _syncControl = &player->syncControl;
         GLong aCache                         = GTimeSubtractMSValue(_syncControl->audioInfo.trafficStatus.enter.ts, _syncControl->audioInfo.trafficStatus.leave.ts);
         GJAssert(aCache <= _syncControl->bufferInfo.lowWaterFlag, "为什么数据足够还要缓冲");
+#endif
         player->playControl.status                   = kPlayStatusBuffering;
         player->playControl.videoQueueWaitTime       = GINT32_MAX;
         player->syncControl.bufferInfo.lastPauseFlag = GTimeMSValue(GJ_Gettime());
@@ -469,7 +471,7 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer *player) {
                 GJLOG(GNULL, GJ_LOGDEBUG, "StartDewatering with cache:%ld", cache);
                 GJLivePlay_StartDewatering(player);
             }
-        } else if (cache < _syncControl->bufferInfo.lowWaterFlag * 1.5) {
+        } else if (cache < (_syncControl->bufferInfo.lowWaterFlag +  _syncControl->bufferInfo.highWaterFlag)/2) {
             if (_syncControl->speed > 1.0) {
                 GJLOG(GNULL, GJ_LOGDEBUG, "StopDewatering with cache:%ld", cache);
                 GJLivePlay_StopDewatering(player);
