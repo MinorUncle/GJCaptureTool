@@ -90,7 +90,7 @@ void _parameters_parse(struct parameters_t* p, const void* data, size_t data_siz
                 
                 line_start += line_length + delimiter_length;
                 
-                if (line_start[0] == ' ')
+                if (i<data_size && line_start[0] == ' ')
                     line_start++;
                 
             }

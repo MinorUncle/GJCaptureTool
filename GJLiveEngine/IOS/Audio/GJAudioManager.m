@@ -92,9 +92,10 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)setAudioFormat:(AudioStreamBasicDescription)audioFormat {
-    AUTO_LOCK(_lock);
+    [_lock lock];
     if (_audioController && _audioController.running) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "运行状态无法修改格式");
+        [_lock unlock];
         return;
     }
     if ((int64_t) audioFormat.mSampleRate == (int64_t) _audioFormat.mSampleRate &&
@@ -106,6 +107,7 @@ static AEAudioController *shareAudioController;
         audioFormat.mBytesPerPacket == _audioFormat.mBytesPerPacket &&
         audioFormat.mFramesPerPacket == _audioFormat.mFramesPerPacket) {
         //无需修改
+        [_lock unlock];
         return;
     }
     _audioFormat = audioFormat;
@@ -120,6 +122,7 @@ static AEAudioController *shareAudioController;
         }
     }
     _sizePerPacket = PCM_FRAME_COUNT * audioFormat.mBytesPerFrame;
+    [_lock unlock];
 }
 
 - (void)audioMixerProduceFrameWith:(AudioBufferList *)frame time:(int64_t)time {
@@ -171,7 +174,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)addMixPlayer:(id<AEAudioPlayable>)player key:(id<NSCopying>)key {
-    AUTO_LOCK(_lock);
+    [_lock lock];
     if (![_mixPlayers.allKeys containsObject:key]) {
         [_mixPlayers setObject:player forKey:key];
         [_audioController addChannels:@[ player ]];
@@ -179,10 +182,11 @@ static AEAudioController *shareAudioController;
             [_audioController addOutputReceiver:_audioMixer];
         }
     }
+    [_lock unlock];
 }
 
 - (void)removeMixPlayerWithkey:(id<NSCopying>)key {
-    AUTO_LOCK(_lock);
+    [_lock lock];
     if ([_mixPlayers.allKeys containsObject:key]) {
         id<AEAudioPlayable> player = _mixPlayers[key];
         [_mixPlayers removeObjectForKey:key];
@@ -192,10 +196,12 @@ static AEAudioController *shareAudioController;
         [player teardown];
         [_audioController removeChannels:@[ player ]];
     }
+    [_lock unlock];
+
 }
 
 - (BOOL)startRecode:(NSError **)error {
-    AUTO_LOCK(_lock);
+    [_lock lock];
     GJLOG(GNULL, GJ_LOGDEBUG, "%p", self);
     _sendFrameCount = 0;
     _startTime      = GTimeMSValue(GJ_Gettime());
@@ -261,12 +267,13 @@ static AEAudioController *shareAudioController;
     if (![_audioController start:error]) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "AEAudioController start error:%s", (*error).description.UTF8String);
     }
+    [_lock unlock];
 
     return *error == nil;
 }
 
 - (void)stopRecode {
-    AUTO_LOCK(_lock);
+    [_lock lock];
 
     GJLOG(GNULL, GJ_LOGDEBUG, "%p", self);
     if (_mixfilePlay) {
@@ -292,6 +299,7 @@ static AEAudioController *shareAudioController;
         R_BufferUnRetain(&_alignCacheFrame->retain);
         _alignCacheFrame = GNULL;
     }
+    [_lock unlock];
 }
 
 - (AEPlaythroughChannel *)playthrough {
@@ -311,7 +319,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)setUseMeasurementMode:(BOOL)useMeasurementMode {
-    AUTO_LOCK(_lock);
+    [_lock lock];
 
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setUseMeasurementMode:%d", useMeasurementMode);
     _useMeasurementMode = useMeasurementMode;
@@ -320,10 +328,11 @@ static AEAudioController *shareAudioController;
             _audioController.useMeasurementMode = useMeasurementMode;
         }
     }
+    [_lock unlock];
 }
 
 - (void)setAce:(BOOL)ace {
-    AUTO_LOCK(_lock);
+    [_lock lock];
 
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setAce:%d", ace);
     _ace = ace;
@@ -332,10 +341,12 @@ static AEAudioController *shareAudioController;
             [_audioController setVoiceProcessingEnabled:ace];
         }
     }
+    [_lock unlock];
+
 }
 
 - (void)setAudioInEarMonitoring:(BOOL)audioInEarMonitoring {
-    AUTO_LOCK(_lock);
+    [_lock lock];
 
     if (![self isHeadphones]) {
         _needResumeEarMonitoring = audioInEarMonitoring;
@@ -344,6 +355,7 @@ static AEAudioController *shareAudioController;
         _needResumeEarMonitoring = NO;
         [self _setAudioInEarMonitoring:audioInEarMonitoring];
     }
+    [_lock unlock];
 }
 
 - (void)_setAudioInEarMonitoring:(BOOL)audioInEarMonitoring {
@@ -370,7 +382,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)setEnableReverb:(BOOL)enable {
-    AUTO_LOCK(_lock);
+    [_lock lock];
 
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setEnableReverb:%d", enable);
     _enableReverb = enable;
@@ -387,10 +399,12 @@ static AEAudioController *shareAudioController;
             [_audioController removeFilter:_reverb];
         }
     }
+    [_lock unlock];
+
 }
 
 - (void)setMixToSream:(BOOL)mixToSream {
-    AUTO_LOCK(_lock);
+    [_lock lock];
 
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setMixToSream:%d", mixToSream);
     _mixToSream = mixToSream;
@@ -404,10 +418,12 @@ static AEAudioController *shareAudioController;
         }
 #endif
     }
+    
+    [_lock unlock];
 }
 
 - (BOOL)setMixFile:(NSURL *)file finish:(MixFinishBlock)finishBlock {
-    AUTO_LOCK(_lock);
+    [_lock lock];
 
     if (_mixfilePlay != nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
@@ -416,6 +432,7 @@ static AEAudioController *shareAudioController;
     }
 
     if (_audioController == nil || !_audioController.running) {
+        [_lock unlock];
         return NO;
     }
 
@@ -423,6 +440,7 @@ static AEAudioController *shareAudioController;
     _mixfilePlay = [[AEAudioFilePlayer alloc] initWithURL:file error:&error];
     if (_mixfilePlay == nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "AEAudioFilePlayer alloc error:%s", error.localizedDescription.UTF8String);
+        [_lock unlock];
         return GFalse;
     } else {
         __weak GJAudioManager *wkSelf = self;
@@ -438,6 +456,7 @@ static AEAudioController *shareAudioController;
             wkSelf.mixfilePlay                 = nil;
         };
         [self addMixPlayer:_mixfilePlay key:_mixfilePlay.description];
+        [_lock unlock];
         return GTrue;
     }
 }
@@ -453,7 +472,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)stopMix {
-    AUTO_LOCK(_lock);
+    [_lock lock];
     if (_mixfilePlay == nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "重复stop mix");
     } else {
@@ -462,6 +481,8 @@ static AEAudioController *shareAudioController;
         _mixfilePlay.completionBlock = nil;
         _mixfilePlay                 = nil;
     }
+    [_lock unlock];
+
 }
 
 - (void)dealloc {

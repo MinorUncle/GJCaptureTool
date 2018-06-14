@@ -22,7 +22,6 @@
 extern "C" {
 #endif
 
-typedef struct _GJRetainBuffer GJRetainBuffer;
 
 typedef GBool (*RetainReleaseCallBack)(struct _GJRetainBuffer *data);
 
@@ -40,6 +39,7 @@ struct _GJRetainBuffer {
     RetainReleaseCallBack retainReleaseCallBack;
     GVoid *               parm;
 };
+typedef struct _GJRetainBuffer GJRetainBuffer;
 
 #if MEMORY_CHECK
 GVoid R_BufferMemCheck(GJRetainBuffer *buffer);

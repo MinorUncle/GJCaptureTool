@@ -354,7 +354,7 @@ static void _GJLivePush_UpdateQualityInfo(GJLivePushContext *context, GInt32 des
 }
 
 static void *thread_pthread_head(void *ctx) {
-    pthread_setname_np("RAOP RUN THREAD");
+    pthread_setname_np("Loop.GJ_RAOP");
 #ifdef RAOP
     struct raop_server_settings_t setting;
     setting.name                 = GNULL;
@@ -729,7 +729,7 @@ GVoid GJLivePush_Dealloc(GJLivePushContext **pushContext) {
             GJLivePush_DetachVideoProducer(context);
         }
 
-        if (serverThread == GNULL) {
+        if (serverThread != GNULL) {
 #ifdef RAOP
             if (raopServer) {
                 raop_server_stop(raopServer);
@@ -745,8 +745,8 @@ GVoid GJLivePush_Dealloc(GJLivePushContext **pushContext) {
             }
 #endif
         } else {
-            //            requestStopServer    = GTrue;
-            //            requestDestoryServer = GTrue;
+                        requestStopServer    = GTrue;
+                        requestDestoryServer = GTrue;
         }
 
         pthread_mutex_lock(&context->lock);

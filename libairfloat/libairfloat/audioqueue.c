@@ -148,7 +148,7 @@ void audio_packet_shift_buffer(struct audio_packet_t* ap, size_t size) {
         
     } else {
         
-        memcpy(ap->buffer, &((char*)ap->buffer)[size], ap->buffer_size - size);
+        memmove(ap->buffer, &((char*)ap->buffer)[size], ap->buffer_size - size);
         ap->buffer_size -= size;
         
     }

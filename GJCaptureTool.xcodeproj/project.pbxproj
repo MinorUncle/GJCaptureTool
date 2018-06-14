@@ -45,6 +45,7 @@
 		6A63463C20414074000F14E2 /* GJMessageDispatcher.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A63463A20414074000F14E2 /* GJMessageDispatcher.c */; };
 		6A63463D20414074000F14E2 /* GJMessageDispatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A63463B20414074000F14E2 /* GJMessageDispatcher.h */; };
 		6A63464320417942000F14E2 /* GJFFmpegPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA453861F14D4950009FB64 /* GJFFmpegPull.c */; };
+		6A6DB50320D1F80000BC6A18 /* libAirReceive.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ABDA0E420C5400800BD8070 /* libAirReceive.a */; };
 		6A70C2FB2043A5C90070E347 /* FFVideoDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4FE1ECB4DFE0009E49A /* FFVideoDecoder.m */; };
 		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
@@ -654,6 +655,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6A6DB50320D1F80000BC6A18 /* libAirReceive.a in Frameworks */,
 				6A0402EB20CA651B0098A86C /* libAudioEngine.a in Frameworks */,
 				6A42F16020AED6A300083B01 /* libavcodec.a in Frameworks */,
 				6A42F16120AED6A300083B01 /* libavformat.a in Frameworks */,

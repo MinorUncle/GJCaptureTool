@@ -58,7 +58,7 @@ typedef struct _LogMessage {
 static GVoid gj_log_runloop(GJClass *dClass, GJ_LogLevel level, const char *pre, const char *format, va_list vl) {
 #ifdef GJ_DEBUG
     GJAssert(dClass != GNULL, "dClass不能为null,在本文件转换");
-    //    GJBufferPoolGetSizeData(x, <#y#>)
+    //    GJBufferPoolGetSizeData(x, y)
     char str[MAX_PRINT_LEN] = "";
     vsnprintf(str, MAX_PRINT_LEN - 1, format, vl);
     if (!fmsg) fmsg = stderr;
