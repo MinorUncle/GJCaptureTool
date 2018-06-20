@@ -179,9 +179,9 @@ void web_server_connection_take_off(struct web_server_connection_t* wc) {
     
     mutex_unlock(wc->mutex);
     
-    const char *ip = sockaddr_get_host(socket_get_remote_end_point(wc->socket));
-    
-    log_message(LOG_INFO, "RAOPConnection (%p) took over connection from %s:%d", wc, ip, sockaddr_get_port(socket_get_remote_end_point(wc->socket)));
+//    const char *ip = sockaddr_get_host(socket_get_remote_end_point(wc->socket));
+//    
+//    log_message(LOG_INFO, "RAOPConnection (%p) took over connection from %s:%d", wc, ip, sockaddr_get_port(socket_get_remote_end_point(wc->socket)));
     
 }
 

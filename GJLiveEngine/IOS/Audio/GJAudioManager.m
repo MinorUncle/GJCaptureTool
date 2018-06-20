@@ -15,6 +15,29 @@
 
 #define PCM_FRAME_COUNT 1024
 
+@interface GJRecursiveLock:NSRecursiveLock
+{
+    NSMutableArray* _log;
+}
+@property(nonatomic,retain)NSMutableArray<NSString*>* log;
+@end
+@implementation GJRecursiveLock
+-(NSMutableArray<NSString *> *)log{
+    if (_log == nil) {
+        _log = [NSMutableArray arrayWithCapacity:4];
+    }
+    return _log;
+}
+-(void)lock:(char*)log{
+    [super lock];
+    [self.log addObject:[NSString stringWithUTF8String:log]];
+}
+-(void)unlock{
+    [self.log removeLastObject];
+    [super unlock];
+}
+@end
+#define GJ_LOCK(_lock) [_lock lock:(char*)__func__]
 //static GJAudioManager* _staticManager;
 @interface GJAudioManager () {
     GInt32        _sizePerPacket;
@@ -25,7 +48,7 @@
     GJAudioAlignmentContext* _alignmentContext;
     R_GJPCMFrame *_alignCacheFrame;
 }
-@property (nonatomic, retain) NSRecursiveLock *lock;
+@property (nonatomic, retain) GJRecursiveLock *lock;
 @end
 static AEAudioController *shareAudioController;
 @implementation           GJAudioManager
@@ -35,8 +58,9 @@ static AEAudioController *shareAudioController;
 - (instancetype)init {
     self = [super init];
     if (self) {
+        
         _mixToSream = YES;
-        _lock       = [[NSRecursiveLock alloc] init];
+        _lock       = [[GJRecursiveLock alloc] init];
         _mixPlayers = [NSMutableDictionary dictionaryWithCapacity:2];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotific:) name:AVAudioSessionRouteChangeNotification object:nil];
         GJRetainBufferPoolCreate(&_bufferPool, 1, GTrue, R_GJPCMFrameMalloc, GNULL, GNULL);
@@ -92,7 +116,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)setAudioFormat:(AudioStreamBasicDescription)audioFormat {
-    [_lock lock];
+    GJ_LOCK(_lock);
     if (_audioController && _audioController.running) {
         GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "运行状态无法修改格式");
         [_lock unlock];
@@ -174,7 +198,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)addMixPlayer:(id<AEAudioPlayable>)player key:(id<NSCopying>)key {
-    [_lock lock];
+    GJ_LOCK(_lock);
     if (![_mixPlayers.allKeys containsObject:key]) {
         [_mixPlayers setObject:player forKey:key];
         [_audioController addChannels:@[ player ]];
@@ -186,7 +210,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)removeMixPlayerWithkey:(id<NSCopying>)key {
-    [_lock lock];
+    GJ_LOCK(_lock);
     if ([_mixPlayers.allKeys containsObject:key]) {
         id<AEAudioPlayable> player = _mixPlayers[key];
         [_mixPlayers removeObjectForKey:key];
@@ -201,7 +225,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (BOOL)startRecode:(NSError **)error {
-    [_lock lock];
+    GJ_LOCK(_lock);
     GJLOG(GNULL, GJ_LOGDEBUG, "%p", self);
     _sendFrameCount = 0;
     _startTime      = GTimeMSValue(GJ_Gettime());
@@ -273,7 +297,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)stopRecode {
-    [_lock lock];
+    GJ_LOCK(_lock);
 
     GJLOG(GNULL, GJ_LOGDEBUG, "%p", self);
     if (_mixfilePlay) {
@@ -319,7 +343,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)setUseMeasurementMode:(BOOL)useMeasurementMode {
-    [_lock lock];
+    GJ_LOCK(_lock);
 
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setUseMeasurementMode:%d", useMeasurementMode);
     _useMeasurementMode = useMeasurementMode;
@@ -332,7 +356,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)setAce:(BOOL)ace {
-    [_lock lock];
+    GJ_LOCK(_lock);
 
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setAce:%d", ace);
     _ace = ace;
@@ -346,7 +370,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)setAudioInEarMonitoring:(BOOL)audioInEarMonitoring {
-    [_lock lock];
+    GJ_LOCK(_lock);
 
     if (![self isHeadphones]) {
         _needResumeEarMonitoring = audioInEarMonitoring;
@@ -382,7 +406,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)setEnableReverb:(BOOL)enable {
-    [_lock lock];
+    GJ_LOCK(_lock);
 
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setEnableReverb:%d", enable);
     _enableReverb = enable;
@@ -404,7 +428,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)setMixToSream:(BOOL)mixToSream {
-    [_lock lock];
+    GJ_LOCK(_lock);
 
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "setMixToSream:%d", mixToSream);
     _mixToSream = mixToSream;
@@ -423,7 +447,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (BOOL)setMixFile:(NSURL *)file finish:(MixFinishBlock)finishBlock {
-    [_lock lock];
+    GJ_LOCK(_lock);
 
     if (_mixfilePlay != nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "上一个文件没有关闭，自动关闭");
@@ -472,7 +496,7 @@ static AEAudioController *shareAudioController;
 }
 
 - (void)stopMix {
-    [_lock lock];
+    GJ_LOCK(_lock);
     if (_mixfilePlay == nil) {
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "重复stop mix");
     } else {

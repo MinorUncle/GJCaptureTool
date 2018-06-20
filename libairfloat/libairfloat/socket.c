@@ -383,7 +383,7 @@ void socket_set_closed_callback(struct socket_t* s, socket_closed_callback callb
 ssize_t socket_send(struct socket_t* s, const void* buffer, size_t size) {
     
     
-    printf("\nsend to socket:%p ip:%s begin data:<<<\n\n",socket,sockaddr_get_host(s->remote_end_point));
+    printf("\nsend to socket:%p ip:%s begin data:<<<\n\n",socket,s->remote_end_point?sockaddr_get_host(s->remote_end_point):NULL);
     for (int i = 0; i<size; i++) {
         printf("%c",((char*)buffer)[i]);
     }
@@ -454,7 +454,7 @@ void socket_close(struct socket_t* s) {
         if (s->callbacks.closed) {
             mutex_unlock(s->mutex);
             s->callbacks.closed(s, s->callbacks.ctx.closed);
-            mutex_lock(s->mutex);
+            return;//callbacks.closed里面会销毁
         }
         
     }
@@ -505,7 +505,7 @@ struct sockaddr* socket_get_remote_end_point(struct socket_t* s) {
     struct sockaddr* ret = s->remote_end_point;
     
     mutex_unlock(s->mutex);
-    
+//    assert(ret != NULL);
     return ret;
     
 }
