@@ -77,7 +77,7 @@ GJAudioFormat decodeGetDestFormat(struct _FFAudioDecodeContext *context) {
     format.mBitsPerChannel             = dest.mBitsPerChannel;
     format.mChannelsPerFrame           = dest.mChannelsPerFrame;
     format.mType                       = GJAudioType_PCM;
-    format.mFramePerPacket             = dest.mFramesPerPacket;
+    format.mFramePerPacket             = decode.sourceFormat.mFramesPerPacket;
     format.mSampleRate                 = dest.mSampleRate;
     format.mFormatFlags                = dest.mFormatFlags;
     return format;

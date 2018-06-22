@@ -65,7 +65,7 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
     });
     [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
-- (void)createDecompSession {
+- (OSStatus)createDecompSession {
     if (_decompressionSession != nil) {
         VTDecompressionSessionInvalidate(_decompressionSession);
     }
@@ -87,6 +87,7 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
                                                    &callBackRecord,
                                                    &_decompressionSession);
     NSLog(@"Video Decompression Session Create: %@  code:%d  thread:%@", (status == noErr) ? @"successful!" : @"failed...", (int) status, [NSThread currentThread]);
+    return status;
 }
 
 void decodeOutputCallback(
@@ -173,6 +174,7 @@ void decodeOutputCallback(
 }
 - (void)stopDecode {
     if (_isRunning) {
+        GJLOG(GNULL, GJ_LOGDEBUG, "%p", self);
         _isRunning = NO;
         queueEnablePop(_inputQueue, GFalse);
         queueEnablePop(_gopQueue, GFalse);
@@ -296,8 +298,8 @@ void decodeOutputCallback(
 #endif
 
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "reCreate decoder ,format:%p", _formatDesc);
-        [self createDecompSession];
-        if (_decompressionSession) {
+        OSStatus result = [self createDecompSession];
+        if (result == noErr || result == kVTVideoDecoderNotAvailableNowErr) {
             _spsData = [NSData dataWithBytes:sps length:spsSize];
             _ppsData = [NSData dataWithBytes:pps length:ppsSize];
         } else {
@@ -345,7 +347,11 @@ void decodeOutputCallback(
             GJLOG(GNULL, GJ_LOGWARNING, "解码器没有初始化，且收到的非i帧，丢帧");
             return noErr;
         } else if (_spsData != nil && _ppsData != nil) {
-            [self createDecompSession];
+            OSStatus result = [self createDecompSession];
+            if (result != noErr) {
+                GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "sps,pps存在，但是解码器一直创建失败，需要优化（推到后台后会创建成功）");
+                return noErr;
+            }
         } else {
             GJLOG(GNULL, GJ_LOGFORBID, "解码器没有初始化，且收到的i帧，但是没有sps,pps信息，丢帧");
             return noErr;

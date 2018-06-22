@@ -484,9 +484,9 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
 
     GJPlayControl *_playControl = &((GJLivePlayer *) player)->playControl;
     GJSyncControl *_syncControl = &((GJLivePlayer *) player)->syncControl;
-
+ GJAudioFormat* format = &((GJLivePlayer *) player)->audioFormat;
     R_GJPCMFrame *audioBuffer;
-    if (_playControl->status == kPlayStatusRunning && queuePop(_playControl->audioQueue, (GHandle *) &audioBuffer, 0)) {
+    if (_playControl->status == kPlayStatusRunning && queuePop(_playControl->audioQueue, (GHandle *) &audioBuffer, format->mFramePerPacket*1000/format->mSampleRate)) {
 
         *outSize = R_BufferSize(&audioBuffer->retain);
         memcpy(data, R_BufferStart(&audioBuffer->retain), *outSize);

@@ -55,7 +55,7 @@ static int stopCount;
     audioAlignmentAlloc(&_alignmentContext, &format);
     
     __block BOOL result = NO;
-    if ([NSThread isMainThread]) {
+    if (1) {
         result = [self _createEncodeConverter];
     } else {
         dispatch_sync(dispatch_get_main_queue(), ^{

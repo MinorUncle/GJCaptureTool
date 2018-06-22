@@ -1132,12 +1132,6 @@ extern GTime GJ_Gettime() ;
             break;
     }
     
-
-}
-
--(void)viewWillAppear:(BOOL)animated{
-    [super viewWillAppear:animated];
-    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
     if(_pushManager){
         [_pushManager.livePush startPreview];
     }else{
@@ -1145,6 +1139,12 @@ extern GTime GJ_Gettime() ;
             [pull takeSelect:pull.pullBtn];
         }
     }
+}
+
+-(void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:animated];
+    [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
+
 }
 
 -(void)viewWillDisappear:(BOOL)animated{
@@ -1209,7 +1209,7 @@ extern GTime GJ_Gettime() ;
         }
         _pushManager.frame = rect;
     }else{
-        rect.size.height = 0;
+        rect.size.height = self.navigationController.navigationBar.bounds.size.height + [UIApplication sharedApplication].statusBarFrame.size.height;
     }
 
     if (_pullAddr.length > 3) {
