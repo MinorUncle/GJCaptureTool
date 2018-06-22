@@ -323,8 +323,8 @@ static GVoid h264DecodeCompleteCallback(GHandle userData, R_GJPixelFrame *frame)
 
     GJLivePullContext *pullContext = userData;
     if (G_TIME_IS_INVALID(pullContext->fristVideoDecodeClock)) {
-        pullContext->fristVideoDecodeClock = GJ_Gettime();
         GJLivePlay_AddVideoSourceFormat(pullContext->player, frame->type);
+        pullContext->fristVideoDecodeClock = GJ_Gettime();
         GJPullFristFrameInfo info = {0};
         info.delay = GTimeSubtractMSValue(pullContext->fristVideoDecodeClock, pullContext->startPullClock);
         info.size.width           = (GFloat) frame->width; //CGSizeMake((float)frame->width, (float)frame->height);

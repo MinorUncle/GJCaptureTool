@@ -18,10 +18,10 @@
 #ifdef CA_TIME
 #include <QuartzCore/CABase.h>
 #endif
+#define USE_CLOCK
 GTime GJ_Gettime() {
 #ifdef USE_CLOCK
-    static clockd = CLOCKS_PER_SEC / 1000000;
-    return clock() / clockd;
+    return GTimeMake(clock() / (CLOCKS_PER_SEC / 1000),1000);
 #endif
 #ifdef CA_TIME
     return GTimeMake(CACurrentMediaTime() * 1000, 1000);

@@ -702,9 +702,6 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
         }
 #else
 
-        if (_syncControl->videoInfo.trafficStatus.leave.count == 0 && player->callback) {
-            player->callback(player->userDate, GJPlayMessage_FristRender, cImageBuf);
-        }
         player->videoPlayer->renderFrame(player->videoPlayer, cImageBuf);
 #endif
 
@@ -766,6 +763,16 @@ GVoid GJLivePlay_AddAudioSourceFormat(GJLivePlayer *player, GJAudioFormat audioF
 }
 GVoid GJLivePlay_AddVideoSourceFormat(GJLivePlayer *player, GJPixelType pixelFormat) {
     GJLOG(GNULL, GJ_LOGDEBUG, "GJLivePlay_AddVideoSourceFormat:%p", player);
+    if (player->playControl.playVideoThread == GNULL) {
+        
+        pthread_mutex_lock(&player->playControl.oLock);
+        
+        if (player->playControl.status != kPlayStatusStop) {
+            pthread_create(&player->playControl.playVideoThread, GNULL, GJLivePlay_VideoRunLoop, player);
+        }
+        
+        pthread_mutex_unlock(&player->playControl.oLock);
+    }
 }
 GBool GJLivePlay_Start(GJLivePlayer *player) {
     GBool                            result = GTrue;
@@ -921,19 +928,10 @@ GVoid GJLivePlay_Resume(GJLivePlayer *player) {
 }
 
 inline static GBool _internal_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
-    //    printf("add play video pts:%lld\n",videoFrame->pts);
-    if (player->playControl.playVideoThread == GNULL) {
-
+    GJLOG(GNULL, GJ_LOGALL,"add play video pts:%ld\n",GTimeMSValue(videoFrame->pts));
+    if (unlikely(G_TIME_IS_INVALID(player->syncControl.videoInfo.startPts))) {
         player->syncControl.videoInfo.startPts               = videoFrame->pts;
         player->syncControl.videoInfo.trafficStatus.leave.ts = videoFrame->pts; ///防止videoInfo.startPts不为从0开始时，videocache过大，
-
-        pthread_mutex_lock(&player->playControl.oLock);
-
-        if (player->playControl.status != kPlayStatusStop) {
-            pthread_create(&player->playControl.playVideoThread, GNULL, GJLivePlay_VideoRunLoop, player);
-        }
-
-        pthread_mutex_unlock(&player->playControl.oLock);
     }
 
     R_BufferRetain(videoFrame);
@@ -1007,6 +1005,12 @@ GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) 
     }
     player->syncControl.videoInfo.inDtsSeries = videoFrame->dts.value;
 
+    if (unlikely(player->syncControl.videoInfo.trafficStatus.enter.count == 0 && player->sortIndex <= 0)) { //第一次直接进入，加快第一帧显示
+        if (player->callback) {
+            player->callback(player->userDate, GJPlayMessage_FristRender, videoFrame);
+        }
+        player->videoPlayer->renderFrame(player->videoPlayer, videoFrame);
+    }
     //没有数据或者有 比较早的b帧，直接放入排序队列末尾
     if (player->sortIndex <= 0 || player->sortQueue[player->sortIndex - 1]->pts.value > videoFrame->pts.value) {
         player->sortQueue[player->sortIndex++] = videoFrame;

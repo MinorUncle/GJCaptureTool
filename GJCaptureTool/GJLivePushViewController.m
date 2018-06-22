@@ -1021,13 +1021,14 @@
         }
     });
 }
-
+extern GTime GJ_Gettime() ;
 -(void)livePull:(GJLivePull *)livePull fristFrameDecode:(GJPullFristFrameInfo *)info{
-    NSLog(@"fristFrameDecode w:%f,h:%f delay:%ld",info->size.width,info->size.height,info->delay);
+    NSLog(@"fristFrameDecode w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,GTimeMSValue(GJ_Gettime()));
+    
 }
 
 -(void)livePull:(GJLivePull *)livePull fristFrameRender:(GJPullFristFrameInfo *)info{
-    NSLog(@"fristFrameRender w:%f,h:%f delay:%ld",info->size.width,info->size.height,info->delay);
+    NSLog(@"fristFrameRender w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,GTimeMSValue(GJ_Gettime()));
 }
 
 -(void)livePull:(GJLivePull *)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString *)infoDesc{
@@ -1137,7 +1138,13 @@
 -(void)viewWillAppear:(BOOL)animated{
     [super viewWillAppear:animated];
     [[UIApplication sharedApplication] setIdleTimerDisabled:YES];
-    [_pushManager.livePush startPreview];
+    if(_pushManager){
+        [_pushManager.livePush startPreview];
+    }else{
+        for (PullManager* pull in _pulls) {
+            [pull takeSelect:pull.pullBtn];
+        }
+    }
 }
 
 -(void)viewWillDisappear:(BOOL)animated{

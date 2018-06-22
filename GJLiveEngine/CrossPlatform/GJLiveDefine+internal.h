@@ -20,6 +20,16 @@
 #define SEND_TIMEOUT 3
 
 #define SEND_SEI
+
+#ifdef __GNUC__
+# define likely(p)     __builtin_expect(!!(p), 1)
+# define unlikely(p)   __builtin_expect(!!(p), 0)
+# define unreachable() __builtin_unreachable()
+#else
+# define likely(p)     (!!(p))
+# define unlikely(p)   (!!(p))
+# define unreachable() ((void)0)
+#endif
 //#define TEST
 
 #define GRationalMake(num, den) \

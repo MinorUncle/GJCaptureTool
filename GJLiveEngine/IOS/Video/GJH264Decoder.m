@@ -153,6 +153,9 @@ void decodeOutputCallback(
     _isRunning = YES;
     queueEnablePop(_inputQueue, GTrue);
     queueEnablePop(_gopQueue, GTrue);
+    queueEnablePush(_inputQueue, GTrue);
+    queueEnablePush(_gopQueue, GTrue);
+
 
     GJLOG(GNULL, GJ_LOGDEBUG, "%p", self);
 
@@ -172,10 +175,10 @@ void decodeOutputCallback(
     if (_isRunning) {
         _isRunning = NO;
         queueEnablePop(_inputQueue, GFalse);
-        queueBroadcastPop(_inputQueue);
         queueEnablePop(_gopQueue, GFalse);
-        queueBroadcastPop(_gopQueue);
-
+        queueEnablePush(_inputQueue, GFalse);
+        queueEnablePush(_gopQueue, GFalse);
+        
         queueFuncClean(_inputQueue, R_BufferUnRetainUnTrack);
         queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
 
