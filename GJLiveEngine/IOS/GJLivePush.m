@@ -100,48 +100,44 @@
 }
 
 - (bool)startStreamPushWithUrl:(NSString *)url {
-    if (_timer != nil) {
-        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "请先关闭上一个流");
-        return NO;
-    } else {
-        memset(&_videoInfo, 0, sizeof(_videoInfo));
-        memset(&_audioInfo, 0, sizeof(_audioInfo));
-        memset(&_pushSessionStatus, 0, sizeof(_pushSessionStatus));
-        _pushUrl = url;
-        if ([NSThread isMainThread]) {
-            _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency
-                                                      target:self
-                                                    selector:@selector(updateGaterInfo:)
-                                                    userInfo:nil
-                                                     repeats:YES];
+    @synchronized(self){
+        if (_timer != nil) {
+            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "请先关闭上一个流");
+            return NO;
         } else {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                _timer = [NSTimer scheduledTimerWithTimeInterval:_gaterFrequency
-                                                          target:self
-                                                        selector:@selector(updateGaterInfo:)
-                                                        userInfo:nil
-                                                         repeats:YES];
-            });
+            GJLOG(GNULL, GJ_LOGDEBUG, "%p",self);
+            memset(&_videoInfo, 0, sizeof(_videoInfo));
+            memset(&_audioInfo, 0, sizeof(_audioInfo));
+            memset(&_pushSessionStatus, 0, sizeof(_pushSessionStatus));
+            _pushUrl = url;
+            _timer = [NSTimer timerWithTimeInterval:_gaterFrequency target:self selector:@selector(updateGaterInfo:) userInfo:nil repeats:YES];
+            if ([NSThread isMainThread]) {
+                [[NSRunLoop currentRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
+            } else {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    if (_timer) {
+                        [[NSRunLoop currentRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
+                    }
+                });
+            }
+            _audioProducer->audioProduceStart(_audioProducer);
+            _videoProducer->startProduce(_videoProducer);
+            return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
         }
-        _audioProducer->audioProduceStart(_audioProducer);
-        _videoProducer->startProduce(_videoProducer);
-        return GJLivePush_StartPush(_livePush, _pushUrl.UTF8String);
     }
 }
 
 - (void)stopStreamPush {
-    if ([NSThread isMainThread]) {
-        [_timer invalidate];
-        _timer = nil;
-    } else {
-        dispatch_async(dispatch_get_main_queue(), ^{
+    @synchronized(self){
+        if (_timer) {
+            GJLOG(GNULL, GJ_LOGDEBUG, "%p",self);
             [_timer invalidate];
             _timer = nil;
-        });
+            _audioProducer->audioProduceStop(_audioProducer);
+            _videoProducer->stopProduce(_videoProducer);
+            GJLivePush_StopPush(_livePush);
+        }
     }
-    _audioProducer->audioProduceStop(_audioProducer);
-    _videoProducer->stopProduce(_videoProducer);
-    GJLivePush_StopPush(_livePush);
 }
 
 - (BOOL)startUIRecodeWithRootView:(UIView *)view
@@ -164,6 +160,7 @@
                            fps:(NSInteger)fps
                    updateBlock:(OverlaysUpdate)updateBlock {
     @synchronized(self) {
+        GJLOG(GNULL, GJ_LOGDEBUG, "%d", fps);
         if (_stickerCallback != GNULL) {
             [self chanceSticker];
         }

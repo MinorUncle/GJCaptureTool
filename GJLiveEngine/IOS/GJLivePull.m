@@ -190,44 +190,44 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
 }
 
 - (bool)startStreamPullWithUrl:(NSString *)url {
-    if (_timer != nil) {
-        GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "请先关闭上一个流");
-        return NO;
-    } else {
-        if ([NSThread isMainThread]) {
-            _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
-            GJLOG(DEFAULT_LOG, GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
+    @synchronized(self){
+        if (_timer != nil) {
+            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "请先关闭上一个流");
+            return NO;
         } else {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                _timer = [NSTimer scheduledTimerWithTimeInterval:self.gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
-                GJLOG(DEFAULT_LOG, GJ_LOGINFO, "NSTimer PULL START:%s", [NSString stringWithFormat:@"%@", _timer].UTF8String);
-            });
+            _timer = [NSTimer timerWithTimeInterval:_gaterFrequency target:self selector:@selector(updateStatusCallback) userInfo:nil repeats:YES];
+
+            if ([NSThread isMainThread]) {
+                [[NSRunLoop currentRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
+            } else {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    if (_timer) {
+                        [[NSRunLoop currentRunLoop] addTimer:_timer forMode:NSRunLoopCommonModes];
+                    }
+                });
+            }
+            
+            _pullUrl = url;
+            memset(&_videoTraffic, 0, sizeof(_videoTraffic));
+            memset(&_audioTraffic, 0, sizeof(_audioTraffic));
+            memset(&_pullSessionStatus, 0, sizeof(_pullSessionStatus));
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotic:) name:AVAudioSessionInterruptionNotification object:nil];
+            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
+            
+            return GJLivePull_StartPull(_pullContext, url.UTF8String);
         }
-
-        _pullUrl = url;
-        memset(&_videoTraffic, 0, sizeof(_videoTraffic));
-        memset(&_audioTraffic, 0, sizeof(_audioTraffic));
-        memset(&_pullSessionStatus, 0, sizeof(_pullSessionStatus));
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotic:) name:AVAudioSessionInterruptionNotification object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didBecomeActive:) name:UIApplicationDidBecomeActiveNotification object:nil];
-
-        return GJLivePull_StartPull(_pullContext, url.UTF8String);
     }
+
 }
 
 - (void)stopStreamPull {
-    if ([NSThread isMainThread]) {
-        [_timer invalidate];
-        _timer = nil;
-    } else {
-        dispatch_async(dispatch_get_main_queue(), ^{
+    @synchronized(self){
+        if (_timer) {
             [_timer invalidate];
             _timer = nil;
-        });
+            GJLivePull_StopPull(_pullContext);
+        }
     }
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        GJLivePull_StopPull(_pullContext);
-    });
 }
 
 - (UIView *)getPreviewView {

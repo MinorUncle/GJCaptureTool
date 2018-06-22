@@ -113,7 +113,7 @@ inline static GBool audioProduceStart(struct _GJAudioProduceContext *context) {
     result                      = [recode startRecodeAudio];
 #endif
 #ifdef AMAZING_AUDIO_ENGINE
-    if ([NSThread isMainThread]) {
+    if (1) {
         NSError *       error;
         GJAudioManager *manager = (__bridge GJAudioManager *) (context->obaque);
         if (![manager startRecode:&error]) {

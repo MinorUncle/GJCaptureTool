@@ -790,7 +790,7 @@ GBool GJLivePlay_Start(GJLivePlayer *player) {
 
         player->syncControl.speed                    = 1.0;
         player->syncControl.bufferInfo.lowWaterFlag  = MIN_CACHE_DUR;
-        player->syncControl.bufferInfo.highWaterFlag = MAX_CACHE_DUR;
+        player->syncControl.bufferInfo.highWaterFlag = MIN_CACHE_DUR * 4;
 
         player->syncControl.netShake.preMaxDownShake  = MIN_CACHE_DUR;
         player->syncControl.netShake.maxDownShake     = MIN_CACHE_DUR;

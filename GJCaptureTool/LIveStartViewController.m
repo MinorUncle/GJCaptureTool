@@ -9,7 +9,7 @@
 #import "LIveStartViewController.h"
 #import "GJLivePushViewController.h"
 //static NSString* pullUlr = @"rtmp://192.168.199.187/live/room";
-static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/120785724.flv";
+static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/135844676.flv";
 //static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
 //static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/76043170.flv";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/128312870.flv";
@@ -24,7 +24,8 @@ static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/120785724.flv";
 //static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/73257119";//kk服务器地址
 //static NSString* pushUrl = @"rtmp://192.168.199.187/live/room";
 //static NSString* pushUrl = @"rtmp://10.0.16.119/live/room";
-static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/76043170";//kk服务器地址
+static NSString* pushUrl = nil;
+//static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/76043170";//kk服务器地址
 //static NSString* pushUrl = @"rtmp://192.168.199.187/live/room";
 //static NSString* pushUrl = @"rtmp://10.0.21.72/live/room";
 //static NSString* pushUrl = @"rtmp://10.0.20.150/live/room";
@@ -123,7 +124,7 @@ static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/76043170";//kk�
 ////
     GJLivePushViewController* c = [[GJLivePushViewController alloc]init];
     c.pullAddr = pull;
-//    c.pushAddr = push;
+    c.pushAddr = push;
     
     if (btn == _arStartBtn) {
         c.type = kGJCaptureTypeAR;

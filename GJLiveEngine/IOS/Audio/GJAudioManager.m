@@ -253,7 +253,13 @@ static AEAudioController *shareAudioController;
         //第一次需要的时候才申请，并初始化所有参数
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
-            shareAudioController = [[AEAudioController alloc] initWithAudioDescription:_audioFormat inputEnabled:YES];
+            if ([NSThread isMainThread]) {
+                shareAudioController = [[AEAudioController alloc] initWithAudioDescription:_audioFormat inputEnabled:YES];
+            }else{
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    shareAudioController = [[AEAudioController alloc] initWithAudioDescription:_audioFormat inputEnabled:YES];
+                });
+            }
         });
         _audioController = shareAudioController;
         [self setAudioFormat:_audioFormat];

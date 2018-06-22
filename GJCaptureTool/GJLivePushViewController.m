@@ -728,8 +728,8 @@
             dispatch_async(dispatch_get_main_queue(), ^{
                 _pushStateLab.text =@"尝试重连中";
             });
-            [_livePush stopStreamPush];
             dispatch_async(dispatch_get_global_queue(0, 0), ^{
+                [_livePush stopStreamPush];
                 if (_pushStartBtn.selected) {
                     if(![_livePush startStreamPushWithUrl:_pushAddr]){
                         NSLog(@"startStreamPushWithUrl error");
