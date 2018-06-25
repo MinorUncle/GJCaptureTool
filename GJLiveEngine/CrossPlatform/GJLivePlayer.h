@@ -87,7 +87,6 @@ typedef struct _SyncInfo {
     //    GTime           cPTS;
     GTime           startTime;
     GTime           startPts;
-    GLong           inDtsSeries;
     GJTrafficStatus trafficStatus;
 } SyncInfo;
 typedef struct SyncControl {
@@ -111,8 +110,7 @@ typedef struct _GJLivePlayContext {
     GJPictureDisplayContext *videoPlayer;
     GJAudioPlayContext *     audioPlayer;
     GJAudioFormat            audioFormat;
-    R_GJPixelFrame *         sortQueue[10]; //用于排序,最大5个连续b帧
-    GInt32                   sortIndex;
+  
 } GJLivePlayer;
 
 GBool GJLivePlay_Create(GJLivePlayer **player, GJLivePlayCallback callback, GHandle userData);

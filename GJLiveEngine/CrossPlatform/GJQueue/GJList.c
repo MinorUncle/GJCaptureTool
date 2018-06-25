@@ -7,10 +7,16 @@
 //
 
 #include "GJList.h"
-#include "GJPlatformHeader.h"
-typedef struct _GJListNode {
-    GUInt8* data;
-    struct _GJListNode* next;
-}GJListNode;
 
 
+
+GVoid listDelete(GJListNode* sup,GJListNode* next){
+    GJAssert(sup != GNULL && next!= GNULL, "不能为GNULL");
+    while (sup) {
+        if (sup->next == next) {
+            sup->next = next->next;
+            break;
+        }
+        sup = sup->next;
+    }
+}

@@ -761,8 +761,6 @@ GBool GJLivePlay_Start(GJLivePlayer *player) {
         player->syncControl.videoInfo.startPts    = G_TIME_INVALID;
         player->syncControl.audioInfo.startPts    = G_TIME_INVALID;
         player->syncControl.audioInfo.startTime   = G_TIME_INVALID;
-        player->syncControl.videoInfo.inDtsSeries = -GINT32_MAX;
-        player->syncControl.audioInfo.inDtsSeries = -GINT32_MAX;
 
         player->syncControl.speed                    = 1.0;
         player->syncControl.bufferInfo.lowWaterFlag  = MIN_CACHE_DUR;
@@ -829,11 +827,6 @@ GVoid GJLivePlay_Stop(GJLivePlayer *player) {
         queueFuncClean(player->playControl.imageQueue, R_BufferUnRetainUnTrack);
         queueFuncClean(player->playControl.audioQueue, R_BufferUnRetainUnTrack);
 
-        for (int i = player->sortIndex - 1; i >= 0; i--) {
-            R_GJPixelFrame *pixelFrame = player->sortQueue[i];
-            R_BufferUnRetain(&pixelFrame->retain);
-        }
-        player->sortIndex = 0;
         pthread_mutex_unlock(&player->playControl.oLock);
 
     } else {
@@ -903,11 +896,37 @@ GVoid GJLivePlay_Resume(GJLivePlayer *player) {
     pthread_mutex_unlock(&player->playControl.oLock);
 }
 
-inline static GBool _internal_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
-    GJLOG(GNULL, GJ_LOGDEBUG,"add play video pts:%ld\n",GTimeMSValue(videoFrame->pts));
-    if (unlikely(G_TIME_IS_INVALID(player->syncControl.videoInfo.startPts))) {
+GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
+    GJLOG(GNULL, GJ_LOGDEBUG, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts.value,videoFrame->dts.value);
+    
+    if (videoFrame->pts.value < player->syncControl.videoInfo.trafficStatus.enter.ts.value) {
+        
+        pthread_mutex_lock(&player->playControl.oLock);
+        GInt32 length = queueGetLength(player->playControl.imageQueue);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频dts不递增，抛弃之前的视频帧：%d帧", length);
+        if (length > 0) {
+            queueEnablePop(player->playControl.imageQueue, GFalse);
+            queueFuncClean(player->playControl.imageQueue, R_BufferUnRetainUnTrack);
+            
+            queueEnablePop(player->playControl.imageQueue, GTrue);
+        }
+    
+        player->syncControl.videoInfo.trafficStatus.leave.ts = videoFrame->pts;
+        pthread_mutex_unlock(&player->playControl.oLock);
+    }
+    
+    if (player->playControl.status == kPlayStatusStop) {
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "播放器stop状态收到视频帧，直接丢帧");
+        return GFalse;
+    }
+
+    if (unlikely(player->syncControl.videoInfo.trafficStatus.enter.count == 0)) {
         player->syncControl.videoInfo.startPts               = videoFrame->pts;
         player->syncControl.videoInfo.trafficStatus.leave.ts = videoFrame->pts; ///防止videoInfo.startPts不为从0开始时，videocache过大，
+        if (player->callback) {
+            player->callback(player->userDate, GJPlayMessage_FristRender, videoFrame);
+        }
+        player->videoPlayer->renderFrame(player->videoPlayer, videoFrame);
     }
 
     static GInt64 prePts;
@@ -954,66 +973,66 @@ RETRY:
     }
     return result;
 }
-GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
-
-        GJLOG(GNULL, GJ_LOGDEBUG, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts.value,videoFrame->dts.value);
-
-    if (videoFrame->dts.value < player->syncControl.videoInfo.inDtsSeries) {
-
-        pthread_mutex_lock(&player->playControl.oLock);
-        GInt32 length = queueGetLength(player->playControl.imageQueue);
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频dts不递增，抛弃之前的视频帧：%d帧", length);
-        if (length > 0) {
-            queueEnablePop(player->playControl.imageQueue, GFalse);
-            queueFuncClean(player->playControl.imageQueue, R_BufferUnRetainUnTrack);
-
-            queueEnablePop(player->playControl.imageQueue, GTrue);
-        }
-
-        for (int i = player->sortIndex - 1; i >= 0; i--) {
-            R_GJPixelFrame *pixelFrame = player->sortQueue[i];
-            R_BufferUnRetain(&pixelFrame->retain);
-        }
-        player->sortIndex                                    = 0;
-        player->syncControl.videoInfo.trafficStatus.leave.ts = videoFrame->pts;
-        player->syncControl.videoInfo.inDtsSeries            = -GINT32_MAX;
-        pthread_mutex_unlock(&player->playControl.oLock);
-    }
-
-    if (player->playControl.status == kPlayStatusStop) {
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "播放器stop状态收到视频帧，直接丢帧");
-        return GFalse;
-    }
-    player->syncControl.videoInfo.inDtsSeries = videoFrame->dts.value;
-
-    if (unlikely(player->syncControl.videoInfo.trafficStatus.enter.count == 0 && player->sortIndex <= 0)) { //第一次直接进入，加快第一帧显示
-        if (player->callback) {
-            player->callback(player->userDate, GJPlayMessage_FristRender, videoFrame);
-        }
-        player->videoPlayer->renderFrame(player->videoPlayer, videoFrame);
-    }
-    //没有数据或者有 比较早的b帧，直接放入排序队列末尾
-    if (player->sortIndex <= 0 || player->sortQueue[player->sortIndex - 1]->pts.value > videoFrame->pts.value) {
-        player->sortQueue[player->sortIndex++] = videoFrame;
-        R_BufferRetain(videoFrame);
-        return GTrue;
-    }
-    //比前面最小的要大，说明b帧完成，可以倒序全部放入
-    for (int i = player->sortIndex - 1; i >= 0; i--) {
-        R_GJPixelFrame *pixelFrame = player->sortQueue[i];
-        GBool           ret        = _internal_AddVideoData(player, pixelFrame);
-        //取消排序队列的引用
-        R_BufferUnRetain(&pixelFrame->retain);
-        if (!ret) {
-            return GFalse;
-        }
-    }
-    //刚接受的一个是最大的，继续放入排序队列，用于判断下一帧释放b帧
-    player->sortIndex    = 1;
-    player->sortQueue[0] = videoFrame;
-    R_BufferRetain(videoFrame);
-    return GTrue;
-}
+//GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
+//
+//        GJLOG(GNULL, GJ_LOGDEBUG, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts.value,videoFrame->dts.value);
+//
+//    if (videoFrame->dts.value < player->syncControl.videoInfo.inDtsSeries) {
+//
+//        pthread_mutex_lock(&player->playControl.oLock);
+//        GInt32 length = queueGetLength(player->playControl.imageQueue);
+//        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频dts不递增，抛弃之前的视频帧：%d帧", length);
+//        if (length > 0) {
+//            queueEnablePop(player->playControl.imageQueue, GFalse);
+//            queueFuncClean(player->playControl.imageQueue, R_BufferUnRetainUnTrack);
+//
+//            queueEnablePop(player->playControl.imageQueue, GTrue);
+//        }
+//
+//        for (int i = player->sortIndex - 1; i >= 0; i--) {
+//            R_GJPixelFrame *pixelFrame = player->sortQueue[i];
+//            R_BufferUnRetain(&pixelFrame->retain);
+//        }
+//        player->sortIndex                                    = 0;
+//        player->syncControl.videoInfo.trafficStatus.leave.ts = videoFrame->pts;
+//        player->syncControl.videoInfo.inDtsSeries            = -GINT32_MAX;
+//        pthread_mutex_unlock(&player->playControl.oLock);
+//    }
+//
+//    if (player->playControl.status == kPlayStatusStop) {
+//        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "播放器stop状态收到视频帧，直接丢帧");
+//        return GFalse;
+//    }
+//    player->syncControl.videoInfo.inDtsSeries = videoFrame->dts.value;
+//
+//    if (unlikely(player->syncControl.videoInfo.trafficStatus.enter.count == 0 && player->sortIndex <= 0)) { //第一次直接进入，加快第一帧显示
+//        if (player->callback) {
+//            player->callback(player->userDate, GJPlayMessage_FristRender, videoFrame);
+//        }
+//        player->videoPlayer->renderFrame(player->videoPlayer, videoFrame);
+//    }
+//    //没有数据或者有 比较早的b帧，直接放入排序队列末尾
+//    if (player->sortIndex <= 0 || player->sortQueue[player->sortIndex - 1]->pts.value > videoFrame->pts.value) {
+//        player->sortQueue[player->sortIndex++] = videoFrame;
+//        R_BufferRetain(videoFrame);
+//        return GTrue;
+//    }
+//    //比前面最小的要大，说明b帧完成，可以倒序全部放入
+//    for (int i = player->sortIndex - 1; i >= 0; i--) {
+//        R_GJPixelFrame *pixelFrame = player->sortQueue[i];
+//        GBool           ret        = _internal_AddVideoData(player, pixelFrame);
+//        //取消排序队列的引用
+//        R_BufferUnRetain(&pixelFrame->retain);
+//        if (!ret) {
+//            return GFalse;
+//        }
+//    }
+//    //刚接受的一个是最大的，继续放入排序队列，用于判断下一帧释放b帧
+//    player->sortIndex    = 1;
+//    player->sortQueue[0] = videoFrame;
+//    R_BufferRetain(videoFrame);
+//    return GTrue;
+//}
 GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
 
     GJLOG(GNULL, GJ_LOGALL, "收到音频 PTS:%lld DTS:%lld size:%d", audioFrame->pts.value, audioFrame->dts.value,R_BufferSize(audioFrame));
@@ -1022,7 +1041,7 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
     GBool          result       = GTrue;
     GJAssert(R_BufferSize(&audioFrame->retain), "size 不能为0");
 
-    if (audioFrame->dts.value < _syncControl->audioInfo.inDtsSeries) {
+    if (audioFrame->dts.value < _syncControl->audioInfo.trafficStatus.enter.ts.value) {
         //加锁，防止此状态停止
         pthread_mutex_lock(&_playControl->oLock);
         GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "音频dts不递增，抛弃之前的音频帧：%d帧", queueGetLength(_playControl->audioQueue));
@@ -1035,7 +1054,6 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
             queueEnablePop(_playControl->audioQueue, GTrue);
         }
 
-        _syncControl->audioInfo.inDtsSeries               = -GINT32_MAX;
         _syncControl->audioInfo.trafficStatus.leave.ts    = audioFrame->pts; //防止此时获得audioCache时误差太大，防止pts重新开始时，视频远落后音频
         _syncControl->audioInfo.trafficStatus.leave.clock = GJ_Gettime();
         pthread_mutex_unlock(&_playControl->oLock);
@@ -1084,7 +1102,6 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
     
 RETRY:
     if (queuePush(_playControl->audioQueue, audioFrame, GINT32_MAX)) {
-        _syncControl->audioInfo.inDtsSeries            = audioFrame->dts.value;
         _syncControl->audioInfo.trafficStatus.enter.ts = audioFrame->pts;
         _syncControl->audioInfo.trafficStatus.enter.clock = GJ_Gettime();
         _syncControl->audioInfo.trafficStatus.enter.count++;

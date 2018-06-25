@@ -12,7 +12,13 @@
 #import "libavformat/avformat.h"
 #import <UIKit/UIApplication.h>
 #import "sps_decode.h"
+#import "GJList.h"
 #define VIDEO_DECODER_CACHE_COUNT 20
+
+typedef enum _DecodeFlag{
+    kDecodeFlagNeedDrop = 1 << 0,
+    kDecodeFlagKey = 1 << 1,
+}DecodeFlag;
 @interface GJH264Decoder () {
     dispatch_queue_t _decodeQueue; //解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
     NSData *         _spsData;
@@ -22,8 +28,8 @@
     GBool            _isActive;
     GBool            _needFlush;
     GInt             _maxRefFrames;
-#define MAX_REF_FRAMES 5
-    GVoid*            _sortQueue[MAX_REF_FRAMES];
+    GJListNode*      _sortqQueue;
+    GInt             _sortLength;
 }
 @property (nonatomic) VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
@@ -45,7 +51,8 @@ inline static GVoid cvImagereleaseCallBack(GJRetainBuffer *buffer, GHandle userD
         _decodeQueue = dispatch_queue_create("videoDecodeQueue", DISPATCH_QUEUE_SERIAL);
         queueCreate(&_inputQueue, VIDEO_DECODER_CACHE_COUNT, YES, GFalse);
         queueCreate(&_gopQueue, 100, YES, GTrue);
-
+        _sortLength = 0;
+        _sortqQueue = GNULL;
         _isActive = [UIApplication sharedApplication].applicationState == UIApplicationStateActive;
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(receiveNotification:) name:UIApplicationDidBecomeActiveNotification object:nil];
@@ -108,11 +115,13 @@ void decodeOutputCallback(
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "解码error1:%d", (int) status);
         return;
     }
-    if ((GLong) sourceFrameRefCon < 0) {
+    DecodeFlag decodeFlag = (DecodeFlag) sourceFrameRefCon;
+    if (decodeFlag == kDecodeFlagNeedDrop) {
+        GJAssert(0, "decodeFlag to drop decodeFrame");
         return;
     }
+    
     GTime pts = GTimeMake(presentationTimeStamp.value, presentationTimeStamp.timescale);
-    GTime dts = GTimeMake((GInt64) sourceFrameRefCon, 1000);
 
     GJH264Decoder *decoder = (__bridge GJH264Decoder *) (decompressionOutputRefCon);
 
@@ -120,17 +129,64 @@ void decodeOutputCallback(
     frame->height         = (GInt32) CVPixelBufferGetHeight(imageBuffer);
     frame->width          = (GInt32) CVPixelBufferGetWidth(imageBuffer);
     frame->pts            = pts;
-    frame->dts            = dts;
+    frame->dts            = GTimeMake(0, 1000);
     frame->type           = CVPixelBufferGetPixelFormatType(imageBuffer);
     frame->flag           = kGJFrameFlag_P_CVPixelBuffer;
     CVPixelBufferRetain(imageBuffer);
     ((CVImageBufferRef *) R_BufferStart(&frame->retain))[0] = imageBuffer;
 
-    //    static GTime prePts,preDts;
-    //    GJLOG(GNULL,GJ_LOGINFO,"receive type:video pts:%lld dts:%lld dpts:%lld ddts:%lld", pts.value,dts.value, dts.value - preDts.value,dts.value - preDts.value);
-    //    preDts = dts;prePts = pts;
-    decoder.completeCallback(frame);
-    R_BufferUnRetain(&frame->retain);
+    
+    if (!decoder->_sortqQueue || ((R_GJPixelFrame*)listData(decoder->_sortqQueue))->pts.value > frame->pts.value) {
+        GJListNode* newNode = listCreate(frame);
+        newNode->next = decoder->_sortqQueue;
+        decoder->_sortqQueue = newNode;
+        decoder->_sortLength ++;
+    }else{
+        GJListNode* node = decoder->_sortqQueue;
+        bool frameInserted = GFalse;
+        while (!frameInserted) {
+            if (!node->next || ((R_GJPixelFrame*)listData(node->next))->pts.value > frame->pts.value) {
+
+                GJListNode* newNode = listCreate(frame);
+                listInsert(node, newNode);
+                frameInserted = GTrue;
+                decoder->_sortLength ++;
+                break;
+            }
+            node = node->next;
+        }
+    }
+    
+    if (decodeFlag == kDecodeFlagKey) {
+        GJListNode* newNode = decoder->_sortqQueue;
+        while (newNode) {
+            R_GJPixelFrame* currentFrame = (R_GJPixelFrame*)listData(newNode);
+            //    static GTime prePts,preDts;
+            //    GJLOG(GNULL,GJ_LOGINFO,"receive type:video pts:%lld dts:%lld dpts:%lld ddts:%lld", pts.value,dts.value, dts.value - preDts.value,dts.value - preDts.value);
+            //    preDts = dts;prePts = pts;
+            decoder.completeCallback(currentFrame);
+            R_BufferUnRetain(&currentFrame->retain);
+            GJListNode* temNode = newNode;
+            newNode = newNode->next;
+            listFree(temNode);
+        }
+        decoder->_sortqQueue = 0;
+        decoder->_sortLength = 0;
+    }else if (decoder->_sortLength > decoder->_maxRefFrames){
+        R_GJPixelFrame* currentFrame = (R_GJPixelFrame*)listData(decoder->_sortqQueue);
+        //    static GTime prePts,preDts;
+        //    GJLOG(GNULL,GJ_LOGINFO,"receive type:video pts:%lld dts:%lld dpts:%lld ddts:%lld", pts.value,dts.value, dts.value - preDts.value,dts.value - preDts.value);
+        //    preDts = dts;prePts = pts;
+        decoder.completeCallback(currentFrame);
+        R_BufferUnRetain(&currentFrame->retain);
+        
+        GJListNode* temNode = decoder->_sortqQueue;
+        decoder->_sortqQueue = decoder->_sortqQueue->next;
+        listFree(temNode);
+        decoder->_sortLength --;
+    }
+    
+
 }
 
 - (uint8_t *)startCodeIndex:(uint8_t *)sour size:(long)size codeSize:(uint8_t *)codeSize {
@@ -150,6 +206,7 @@ void decodeOutputCallback(
     }
     return codeIndex;
 }
+
 - (BOOL)startDecode {
     if (_isRunning) {
         GJAssert(0, "重复开始");
@@ -176,6 +233,7 @@ void decodeOutputCallback(
     });
     return YES;
 }
+
 - (void)stopDecode {
     if (_isRunning) {
         GJLOG(GNULL, GJ_LOGDEBUG, "%p", self);
@@ -194,7 +252,19 @@ void decodeOutputCallback(
 
 - (void)flush {
     VTDecompressionSessionFinishDelayedFrames(_decompressionSession);
+    VTDecompressionSessionWaitForAsynchronousFrames(_decompressionSession);
     _needFlush = GTrue;
+    
+    GJListNode* newNode = _sortqQueue;
+    while (newNode) {
+        R_GJPixelFrame* currentFrame = (R_GJPixelFrame*)listData(newNode);
+        R_BufferUnRetain(&currentFrame->retain);
+        GJListNode* temNode = newNode;
+        newNode = newNode->next;
+        listFree(temNode);
+    }
+    _sortqQueue = 0;
+    _sortLength = 0;
 }
 
 - (void)decodePacket:(R_GJPacket *)packet {
@@ -395,7 +465,7 @@ void decodeOutputCallback(
         OSStatus          status       = kVTVideoDecoderMalfunctionErr;
         sampleBuffer                   = [self createSampleBufferWithData:packetData size:packetSize pts:GTimeMSValue(packet->pts)];
         if (sampleBuffer) {
-            status = [self decodeSampleBuffer:sampleBuffer dts:GTimeMSValue(packet->dts) flag:0];
+            status = [self decodeSampleBuffer:sampleBuffer decodeFlag:(!!isKeyPacket)*kDecodeFlagKey flag:0];
             CFRelease(sampleBuffer);
         }
 
@@ -424,7 +494,7 @@ void decodeOutputCallback(
                             CMSampleBufferRef oldSampleBuffer = NULL;
                             oldSampleBuffer                   = [self createSampleBufferWithData:oldPacketData size:oldPacketSize pts:GTimeMSValue(oldPacket->pts)];
                             if (oldSampleBuffer) {
-                                oldStatus = [self decodeSampleBuffer:oldSampleBuffer dts:-1 flag:kVTDecodeFrame_DoNotOutputFrame];
+                                oldStatus = [self decodeSampleBuffer:oldSampleBuffer decodeFlag:kDecodeFlagNeedDrop flag:kVTDecodeFrame_DoNotOutputFrame];
                                 CFRelease(oldSampleBuffer);
                             }
                             if (oldStatus != noErr) {
@@ -556,7 +626,7 @@ ERROR:
     return sampleBuffer;
 }
 
-- (OSStatus)decodeSampleBuffer:(CMSampleBufferRef)sampleBuffer dts:(GLong)dts flag:(VTDecodeFrameFlags)flag {
+- (OSStatus)decodeSampleBuffer:(CMSampleBufferRef)sampleBuffer decodeFlag:(DecodeFlag)decodeFlag flag:(VTDecodeFrameFlags)flag {
 
     CFArrayRef             attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
     CFMutableDictionaryRef dict        = (CFMutableDictionaryRef) CFArrayGetValueAtIndex(attachments, 0);
@@ -567,7 +637,7 @@ ERROR:
     //                assert(status == 0);
     VTDecodeFrameFlags flags = 0;
     VTDecodeInfoFlags  flagOut;
-    OSStatus           status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags, (GVoid *) dts, &flagOut);
+    OSStatus           status = VTDecompressionSessionDecodeFrame(_decompressionSession, sampleBuffer, flags, (GVoid *) decodeFlag, &flagOut);
     return status;
 }
 //解码
