@@ -904,7 +904,7 @@ GVoid GJLivePlay_Resume(GJLivePlayer *player) {
 }
 
 inline static GBool _internal_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
-    GJLOG(GNULL, GJ_LOGALL,"add play video pts:%ld\n",GTimeMSValue(videoFrame->pts));
+    GJLOG(GNULL, GJ_LOGDEBUG,"add play video pts:%ld\n",GTimeMSValue(videoFrame->pts));
     if (unlikely(G_TIME_IS_INVALID(player->syncControl.videoInfo.startPts))) {
         player->syncControl.videoInfo.startPts               = videoFrame->pts;
         player->syncControl.videoInfo.trafficStatus.leave.ts = videoFrame->pts; ///防止videoInfo.startPts不为从0开始时，videocache过大，
@@ -956,7 +956,7 @@ RETRY:
 }
 GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
 
-        GJLOG(GNULL, GJ_LOGALL, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts.value,videoFrame->dts.value);
+        GJLOG(GNULL, GJ_LOGDEBUG, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts.value,videoFrame->dts.value);
 
     if (videoFrame->dts.value < player->syncControl.videoInfo.inDtsSeries) {
 

@@ -158,7 +158,7 @@ GBool FFDecoder_DecodePacket(FFDecoder *decoder, R_GJPacket *packet) {
                 GInt width, height, fps;
                 if ((packet->flag & GJPacketFlag_KEY) == GJPacketFlag_KEY &&
                     packet->extendDataSize > 0 &&
-                    h264_decode_sps(R_BufferStart(&packet->retain) + packet->extendDataOffset + 4, packet->extendDataSize - 4, &width, &height, &fps)) {
+                    h264_decode_sps(R_BufferStart(&packet->retain) + packet->extendDataOffset + 4, packet->extendDataSize - 4, &width, &height, &fps,GNULL)) {
                     decoder->decoderContext->width  = width;
                     decoder->decoderContext->height = height;
                     decoder->timebase               = av_make_q(1, 1);

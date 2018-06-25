@@ -11,6 +11,7 @@
 #import "sps_decode.h"
 #import "libavformat/avformat.h"
 #import <UIKit/UIApplication.h>
+#import "sps_decode.h"
 #define VIDEO_DECODER_CACHE_COUNT 20
 @interface GJH264Decoder () {
     dispatch_queue_t _decodeQueue; //解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
@@ -20,6 +21,9 @@
     GJQueue *        _gopQueue;
     GBool            _isActive;
     GBool            _needFlush;
+    GInt             _maxRefFrames;
+#define MAX_REF_FRAMES 5
+    GVoid*            _sortQueue[MAX_REF_FRAMES];
 }
 @property (nonatomic) VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
@@ -300,6 +304,9 @@ void decodeOutputCallback(
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "reCreate decoder ,format:%p", _formatDesc);
         OSStatus result = [self createDecompSession];
         if (result == noErr || result == kVTVideoDecoderNotAvailableNowErr) {
+            h264_decode_sps(sps, spsSize, NULL, NULL, NULL, &_maxRefFrames);
+            if(_maxRefFrames > 5)_maxRefFrames = 5;
+            if (_maxRefFrames <= 0)_maxRefFrames = 2;
             _spsData = [NSData dataWithBytes:sps length:spsSize];
             _ppsData = [NSData dataWithBytes:pps length:ppsSize];
         } else {

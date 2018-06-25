@@ -115,7 +115,7 @@ static void de_emulation_prevention(BYTE* buf,unsigned int* buf_size)
  
  * @成功则返回1 , 失败则返回0
  */
-int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps)
+int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps,int* max_ref_frames)
 {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored"-Wunused-variable"
@@ -185,9 +185,15 @@ int h264_decode_sps(BYTE * buf,unsigned int nLen,int* width,int* height,int* fps
         int gaps_in_frame_num_value_allowed_flag=u(1,buf,&pStartBit);
         int pic_width_in_mbs_minus1=Ue(buf,nLen,&pStartBit);
         int pic_height_in_map_units_minus1=Ue(buf,nLen,&pStartBit);
-        
-        (*Width)=(pic_width_in_mbs_minus1+1)*16;
-        (*Height)=(pic_height_in_map_units_minus1+1)*16;
+        if (max_ref_frames) {
+            *max_ref_frames = num_ref_frames;
+        }
+        if (Width) {
+            (*Width)=(pic_width_in_mbs_minus1+1)*16;
+        }
+        if (Height) {
+            (*Height)=(pic_height_in_map_units_minus1+1)*16;
+        }
         
         int frame_mbs_only_flag=u(1,buf,&pStartBit);
         if(!frame_mbs_only_flag){
