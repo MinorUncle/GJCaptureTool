@@ -9,21 +9,21 @@
 #include "GJBufferPool.h"
 #include <stdlib.h>
 #include "GJLog.h"
-#include "GJList.h"
+#include "GJListQueue.h"
 #include "GJUtil.h"
 
 /**
  多线程支持，可以是不同size；尽量使用相同size（仅仅多个判断），
  */
 struct _GJBufferPool {
-    GJList *queue; //不用链表而用数组是避免一直动态创建和销毁结点数据。
+    GJListQueue *queue; //不用链表而用数组是避免一直动态创建和销毁结点数据。
     GInt32  generateSize;
     GUInt32 minSize;
 
 #if MEMORY_CHECK
 
     //跟踪离开bufferpool的数据
-    GJList *leaveList;
+    GJListQueue *leaveList;
 #endif
 };
 #define GATHER_TIME

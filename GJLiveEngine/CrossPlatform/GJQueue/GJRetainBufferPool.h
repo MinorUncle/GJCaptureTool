@@ -40,7 +40,7 @@ typedef struct GJRetainBufferPool{
 #if MEMORY_CHECK
     
     //跟踪离开bufferpool的数据
-    GJList*     leaveList;
+    GJListQueue*     leaveList;
 #endif
 }GJRetainBufferPool;
     

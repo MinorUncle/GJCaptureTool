@@ -15,7 +15,7 @@
 
 #include "GJPlatformHeader.h"
 #if MEMORY_CHECK
-#include "GJList.h"
+#include "GJListQueue.h"
 #endif
 
 #ifdef __cplusplus
@@ -33,8 +33,8 @@ struct _GJRetainBuffer {
     GUInt8 *data;
 #if MEMORY_CHECK
     GBool   needCheck;
-    GJList *retainList;   //retain调用的函数名
-    GJList *unretainList; //unretain调用的函数名
+    GJListQueue *retainList;   //retain调用的函数名
+    GJListQueue *unretainList; //unretain调用的函数名
 #endif
     RetainReleaseCallBack retainReleaseCallBack;
     GVoid *               parm;

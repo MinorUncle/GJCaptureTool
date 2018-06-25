@@ -9,7 +9,7 @@
 #ifndef GJUtil_h
 #define GJUtil_h
 #include "GJPlatformHeader.h"
-#include "GJList.h"
+#include "GJListQueue.h"
 #include "GTime.h"
 /**
  获得当前时间

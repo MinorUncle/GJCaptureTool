@@ -12,7 +12,7 @@
 #include <libavutil/log.h>
 #include "log.h"
 #include <pthread.h>
-#include "GJList.h"
+#include "GJListQueue.h"
 #include "GJBufferPool.h"
 
 #define MAX_PRINT_LEN 2048
@@ -49,7 +49,7 @@ inline static GVoid gj_log_default(GJClass *dClass, GJ_LogLevel level, const cha
 }
 
 static pthread_t     _logRunloop;
-static GJList *      _messageList;
+static GJListQueue *      _messageList;
 static GJBufferPool *_logBufferPool;
 typedef struct _LogMessage {
 

@@ -85,8 +85,8 @@
 		6AD06E7E20B53B86004DF75B /* GJBufferPool.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5320B53B86004DF75B /* GJBufferPool.c */; };
 		6AD06E7F20B53B86004DF75B /* GJBufferPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5420B53B86004DF75B /* GJBufferPool.h */; };
 		6AD06E8020B53B86004DF75B /* GJDebug.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5520B53B86004DF75B /* GJDebug.h */; };
-		6AD06E8120B53B86004DF75B /* GJList.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5620B53B86004DF75B /* GJList.c */; };
-		6AD06E8220B53B86004DF75B /* GJList.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5720B53B86004DF75B /* GJList.h */; };
+		6AD06E8120B53B86004DF75B /* GJListQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5620B53B86004DF75B /* GJListQueue.c */; };
+		6AD06E8220B53B86004DF75B /* GJListQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5720B53B86004DF75B /* GJListQueue.h */; };
 		6AD06E8420B53B86004DF75B /* GJPlatformHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */; };
 		6AD06E8520B53B86004DF75B /* GJQueue+cplus.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5A20B53B86004DF75B /* GJQueue+cplus.h */; };
 		6AD06E8620B53B86004DF75B /* GJQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5B20B53B86004DF75B /* GJQueue.c */; };
@@ -471,8 +471,8 @@
 		6AD06E5320B53B86004DF75B /* GJBufferPool.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJBufferPool.c; sourceTree = "<group>"; };
 		6AD06E5420B53B86004DF75B /* GJBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJBufferPool.h; sourceTree = "<group>"; };
 		6AD06E5520B53B86004DF75B /* GJDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJDebug.h; sourceTree = "<group>"; };
-		6AD06E5620B53B86004DF75B /* GJList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJList.c; sourceTree = "<group>"; };
-		6AD06E5720B53B86004DF75B /* GJList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJList.h; sourceTree = "<group>"; };
+		6AD06E5620B53B86004DF75B /* GJListQueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJListQueue.c; sourceTree = "<group>"; };
+		6AD06E5720B53B86004DF75B /* GJListQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJListQueue.h; sourceTree = "<group>"; };
 		6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPlatformHeader.h; sourceTree = "<group>"; };
 		6AD06E5A20B53B86004DF75B /* GJQueue+cplus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GJQueue+cplus.h"; sourceTree = "<group>"; };
 		6AD06E5B20B53B86004DF75B /* GJQueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJQueue.c; sourceTree = "<group>"; };
@@ -912,8 +912,8 @@
 				6AD06E5320B53B86004DF75B /* GJBufferPool.c */,
 				6AD06E5420B53B86004DF75B /* GJBufferPool.h */,
 				6AD06E5520B53B86004DF75B /* GJDebug.h */,
-				6AD06E5620B53B86004DF75B /* GJList.c */,
-				6AD06E5720B53B86004DF75B /* GJList.h */,
+				6AD06E5620B53B86004DF75B /* GJListQueue.c */,
+				6AD06E5720B53B86004DF75B /* GJListQueue.h */,
 				6A8E27D720C52FFC00777B38 /* GTime.c */,
 				6A8E27D820C52FFC00777B38 /* GTime.h */,
 				6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */,
@@ -1318,7 +1318,7 @@
 				AE70A5311ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h in Headers */,
 				6A1A1B0A1F2ED67A0043595F /* AACEncoderFromPCM_OLD.h in Headers */,
 				6ABF2B1E1F0B413600721DB3 /* IOS_AudioDrivePlayer.h in Headers */,
-				6AD06E8220B53B86004DF75B /* GJList.h in Headers */,
+				6AD06E8220B53B86004DF75B /* GJListQueue.h in Headers */,
 				6ABF2B261F0B413600721DB3 /* IOS_PictureDisplay.h in Headers */,
 				AE3A2C171F07F69800C24BAA /* AirTunesPlay.h in Headers */,
 				6AD06E8D20B53B86004DF75B /* GJSignal.h in Headers */,
@@ -1723,7 +1723,7 @@
 				AE70A5201ECB4DFE0009E49A /* AACEncoderFromPCM.m in Sources */,
 				AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */,
 				6A70C2FB2043A5C90070E347 /* FFVideoDecoder.m in Sources */,
-				6AD06E8120B53B86004DF75B /* GJList.c in Sources */,
+				6AD06E8120B53B86004DF75B /* GJListQueue.c in Sources */,
 				6ABF2B211F0B413600721DB3 /* IOS_AudioProduce.m in Sources */,
 				6A5E04C620A44AE20030A0B8 /* FFAudioDecoder.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
