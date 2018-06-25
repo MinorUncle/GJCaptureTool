@@ -33,10 +33,16 @@ GBool signalCreate(GJSignal** pSignal){
 
 GBool signalWait(GJSignal* signal,GUInt32 ms){
     GInt32 ret = 0;
+    
     pthread_mutex_lock(&signal->lock);
     if (signal->reset == GFalse) {
         pthread_mutex_unlock(&signal->lock);
         return GTrue;
+    }
+    if (ms < 4) {
+        return GFalse;
+    }else{
+        ms -= 4;
     }
     struct timespec ts;
     struct timeval tv;

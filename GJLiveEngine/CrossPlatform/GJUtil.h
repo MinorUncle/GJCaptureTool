@@ -17,7 +17,7 @@
  @return scale in us
  */
 GTime GJ_Gettime();
-
+GLong getCurrentTime();
 GInt32 GJ_GetCPUCount();
 GFloat GJ_GetCPUUsage();
 

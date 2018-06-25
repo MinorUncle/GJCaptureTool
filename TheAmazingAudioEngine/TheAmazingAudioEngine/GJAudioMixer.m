@@ -15,6 +15,8 @@
 #endif
 
 #define MAX_FRAME_COUNT 4096
+
+extern long getCurrentTime();
 @interface GJAudioMixer(){
     AUGraph                         _graph;
     AUNode                          _mixerNode;
@@ -81,7 +83,7 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
         [mixer->_unitReceiveBox addObject:@((long)source)];
 
         if (mixer->_unitReceiveBox.count == mixer->_listenIntputCount) {
-            [mixer unitRenderWithCount:frames time:(int64_t)(CACurrentMediaTime()*1000)];
+            [mixer unitRenderWithCount:frames time:(int64_t)getCurrentTime()];
         }
         
         return;
@@ -153,7 +155,7 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
 #endif
                     NSNumber* v = mixer->_receiveSource[key];
                     float dt = frames * 1000 /  mixer->_audioController.audioDescription.mSampleRate;
-                    [mixer.delegate audioMixerProduceFrameWith:mixer->_inputSourcBufferCache[v.unsignedIntegerValue] time:(int64_t)(CACurrentMediaTime()*1000 - dt)];
+                    [mixer.delegate audioMixerProduceFrameWith:mixer->_inputSourcBufferCache[v.unsignedIntegerValue] time:(int64_t)(getCurrentTime() - dt)];
                     NSLog(@"只有一个source 但是之前已经收到了一个相同的source:%p",(void*)key.longValue);
 #ifdef ENABLE_IGNORE
                 }
@@ -161,7 +163,7 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
             }
             
         }
-        [mixer.delegate audioMixerProduceFrameWith:audio time:(int64_t)(CACurrentMediaTime()*1000)];
+        [mixer.delegate audioMixerProduceFrameWith:audio time:(int64_t)getCurrentTime()];
         [mixer->_unitReceiveBox removeAllObjects];
     }else{
         if ([mixer->_unitReceiveBox containsObject:sourceN]) {//重复
@@ -181,7 +183,7 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
                 }
             }
             float dt = frames * 1000 /  mixer->_audioController.audioDescription.mSampleRate;
-            [mixer unitRenderWithCount:frames time:(int64_t)(CACurrentMediaTime()*1000 - dt)];
+            [mixer unitRenderWithCount:frames time:(int64_t)(getCurrentTime() - dt)];
             [mixer->_unitReceiveBox removeAllObjects];
             [mixer->_receiveSource removeAllObjects];
             bus = 0;
@@ -199,7 +201,7 @@ static void receiverCallback(__unsafe_unretained id    receiver,__unsafe_unretai
                 mixer->_inputSourcBufferCache[bus]->mBuffers[i].mDataByteSize = audio->mBuffers[i].mDataByteSize;
             }
             if (mixer->_unitReceiveBox.count == mixer->_listenIntputCount) {
-                [mixer unitRenderWithCount:frames time:(int64_t)(CACurrentMediaTime()*1000)];
+                [mixer unitRenderWithCount:frames time:(int64_t)getCurrentTime()];
             }else if(mixer->_unitReceiveBox.count > mixer->_listenIntputCount){
                 NSLog(@"不可能出现的错误 source:%p  time:%f",source,time->mSampleTime);
                 assert(0);

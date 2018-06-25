@@ -62,6 +62,11 @@ static inline struct timespec getMsToTime(GUInt32 ms){
     //    ts.tv_sec = tv.tv_sec + ms/1000 + tu / 1000000;
     //    ts.tv_nsec = tu % 1000000 * 1000;
     
+    if (ms < 4) {
+        ms = 0;
+    }else{
+        ms -= 4;
+    }
     int sec, usec;
     gettimeofday(&tv, GNULL);
     sec = ms / 1000;

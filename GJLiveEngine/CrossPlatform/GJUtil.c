@@ -29,6 +29,16 @@ GTime GJ_Gettime() {
 #endif
 }
 
+GLong getCurrentTime(){
+#ifdef CA_TIME
+    return CACurrentMediaTime() * 1000;
+#else
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec * 1000 + tv.tv_usec / 1000;
+#endif
+}
+
 GVoid GJ_GetTimeStr(GChar *dest) {
     struct tm *local;
 
