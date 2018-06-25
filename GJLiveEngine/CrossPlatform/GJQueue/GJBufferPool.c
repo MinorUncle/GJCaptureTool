@@ -72,13 +72,13 @@ GBool GJBufferPoolCreate(GJBufferPool **pool, GUInt32 minSize, GBool atomic) {
     } else {
         p = *pool;
     }
-    if (!listCreate(&p->queue, GTrue)) {
+    if (!listQueueCreate(&p->queue, GTrue)) {
         free(p);
         return GFalse;
     }
 
 #if MEMORY_CHECK
-    if (!listCreate(&p->leaveList, 5)) {
+    if (!listQueueCreate(&p->leaveList, 5)) {
         free(p);
         GJAssert(0, "跟踪器启动失败");
     }
@@ -104,8 +104,8 @@ GVoid GJBufferPoolClean(GJBufferPool *p, GBool complete) {
 #ifdef DEBUG
         GLong startMS = GJ_Gettime().value;
 #endif
-        if (p->generateSize > listLength(p->queue)) {
-            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, ":%p,还有%d个buffer没有释放,需要等待\n", p, p->generateSize - listLength(p->queue));
+        if (p->generateSize > listQueueLength(p->queue)) {
+            GJLOG(DEFAULT_LOG, GJ_LOGWARNING, ":%p,还有%d个buffer没有释放,需要等待\n", p, p->generateSize - listQueueLength(p->queue));
         }
         while (p->generateSize > 0) {
             GUInt8 *data;
@@ -114,7 +114,7 @@ GVoid GJBufferPoolClean(GJBufferPool *p, GBool complete) {
             // 未回收的所有retain列表       p ((GJRetainBuffer*)(p->leaveList->head->data+16))->retainList->head->data//16为R_RetainBuffer的前缀检查数据GJRBufferDataHead的大小
             // 未回收的所有unretain列表       p ((GJRetainBuffer*)(p->leaveList->head->data+16))->unretainList->head->data//16为R_RetainBuffer的前缀检查数据GJRBufferDataHead的大小
 
-            if (listPop(p->queue, (GHandle *) &data, GINT32_MAX)) {
+            if (listQueuePop(p->queue, (GHandle *) &data, GINT32_MAX)) {
 
 #if MEMORY_CHECK
 
@@ -136,7 +136,7 @@ GVoid GJBufferPoolClean(GJBufferPool *p, GBool complete) {
         GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJBufferPoolClean：%p 完成", p);
     } else {
         GUInt8 *data;
-        while (listPop(p->queue, (GHandle *) &data, 0)) {
+        while (listQueuePop(p->queue, (GHandle *) &data, 0)) {
 #if MEMORY_CHECK
 
             GJBufferPoolCheck(p, (GUInt8 *) data);
@@ -149,7 +149,7 @@ GVoid GJBufferPoolClean(GJBufferPool *p, GBool complete) {
 
 #if MEMORY_CHECK
     if (complete) {
-        GJAssert(listLength(p->leaveList) == 0, "跟踪器有误,还存在数据");
+        GJAssert(listQueueLength(p->leaveList) == 0, "跟踪器有误,还存在数据");
     }
 #endif
     return;
@@ -159,9 +159,9 @@ GVoid GJBufferPoolFree(GJBufferPool *pool) {
     if (!pool) {
         return;
     }
-    listFree(&pool->queue);
+    listQueueFree(&pool->queue);
 #if MEMORY_CHECK
-    listFree(&pool->leaveList);
+    listQueueFree(&pool->leaveList);
 #endif
 
     free(pool);
@@ -187,7 +187,7 @@ GUInt8 *_GJBufferPoolGetSizeData(GJBufferPool *p, GInt32 size, const GChar *file
     GUInt8 *data;
 
     GJAssert(size >= p->minSize, "GJBufferPoolGetSizeData size less then minsize");
-    if (listPop(p->queue, (GVoid **) &data, 0)) {
+    if (listQueuePop(p->queue, (GVoid **) &data, 0)) {
         GJBufferDataHead *head = (GJBufferDataHead *) (data - sizeof(GJBufferDataHead));
 
         if (head->size < size) {
@@ -227,7 +227,7 @@ GUInt8 *_GJBufferPoolGetSizeData(GJBufferPool *p, GInt32 size, const GChar *file
 
 #if MEMORY_CHECK
     _GJBufferPoolUpdateTrackInfo(p, data, file, func, lineTracker);
-    GJAssert(listPush(p->leaveList, data), "跟踪器失败");
+    GJAssert(listQueuePush(p->leaveList, data), "跟踪器失败");
 #endif
     return (GUInt8 *) data;
 }
@@ -235,7 +235,7 @@ GUInt8 *_GJBufferPoolGetSizeData(GJBufferPool *p, GInt32 size, const GChar *file
 GUInt8 *GJBufferPoolGetData(GJBufferPool *p, const GChar *file DEFAULT_PARAM(GNull), const GChar *func, GInt32 lineTracker) {
     GUInt8 *data;
 
-    if (!listPop(p->queue, (GVoid **) &data, 0)) {
+    if (!listQueuePop(p->queue, (GVoid **) &data, 0)) {
 #if MEMORY_CHECK
         data                   = (GUInt8 *) malloc(p->minSize + sizeof(GJBufferDataHead) + sizeof(GJBufferDataTail));
         GJBufferDataHead *pre  = (GJBufferDataHead *) data;
@@ -254,7 +254,7 @@ GUInt8 *GJBufferPoolGetData(GJBufferPool *p, const GChar *file DEFAULT_PARAM(GNu
 #if MEMORY_CHECK
     _GJBufferPoolUpdateTrackInfo(p, data, GNULL, func, lineTracker);
 
-    GJAssert(listPush(p->leaveList, data), "跟踪器失败");
+    GJAssert(listQueuePush(p->leaveList, data), "跟踪器失败");
 #endif
     return (GUInt8 *) data;
 }
@@ -267,8 +267,8 @@ GBool GJBufferPoolSetData(GJBufferPool* p,GUInt8* data){
     
 #if MEMORY_CHECK
     GJBufferPoolCheck(p,data);
-    listDelete(p->leaveList, data);
+    listQueueDelete(p->leaveList, data);
 #endif
     
-    return listPush(p->queue,data);
+    return listQueuePush(p->queue,data);
 }

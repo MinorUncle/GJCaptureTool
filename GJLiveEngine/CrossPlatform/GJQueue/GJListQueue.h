@@ -13,11 +13,11 @@
 #include "GJPlatformHeader.h"
 typedef struct _GJListQueue GJListQueue;
 
-typedef GBool (*ListSwopFunc)(GHandle up, GHandle down, GBool* stop);
+typedef GBool (*listQueueSwopFunc)(GHandle up, GHandle down, GBool* stop);
 
 //创建一个GJListQueue*
-GBool   listCreate(GJListQueue** outQ,GBool atomic DEFAULT_PARAM(GTrue));
-GBool   listFree(GJListQueue** inQ);
+GBool   listQueueCreate(GJListQueue** outQ,GBool atomic DEFAULT_PARAM(GTrue));
+GBool   listQueueFree(GJListQueue** inQ);
 
 /**
  入链,高位进，低位出
@@ -27,10 +27,10 @@ GBool   listFree(GJListQueue** inQ);
  //等待时间，只有链表满了才会等待，只有设置了limit才会满。(暂时没有需求，为了效率没有实现。)
  @return return value description
  */
-GBool   listPush(GJListQueue* list,GHandle temBuffer);
+GBool   listQueuePush(GJListQueue* list,GHandle temBuffer);
 
-GBool   listPop(GJListQueue* list,GHandle* temBuffer,GUInt32 ms DEFAULT_PARAM(0));
-GBool   listDelete(GJListQueue* list,GHandle temBuffer);
+GBool   listQueuePop(GJListQueue* list,GHandle* temBuffer,GUInt32 ms DEFAULT_PARAM(0));
+GBool   listQueueDelete(GJListQueue* list,GHandle temBuffer);
 
 /**
  清除，并返回数据.
@@ -43,9 +43,9 @@ GBool   listDelete(GJListQueue* list,GHandle temBuffer);
  @param outCount outCount description
  @return return value description
  */
-GBool   listClean(GJListQueue* list, GHandle* outBuffer,GInt32* outCount);
-GVoid   listEnablePush(GJListQueue* list,GBool enable);
-GVoid   listEnablePop(GJListQueue* list,GBool enable);
+GBool   listQueueClean(GJListQueue* list, GHandle* outBuffer,GInt32* outCount);
+GVoid   listQueueEnablePush(GJListQueue* list,GBool enable);
+GVoid   listQueueEnablePop(GJListQueue* list,GBool enable);
 /**
 一次冒泡交换。
 
@@ -54,16 +54,16 @@ GVoid   listEnablePop(GJListQueue* list,GBool enable);
  @param func 每次交换的回调，不能为空
  @return 是否执行交换操作
  */
-GBool listSwop(GJListQueue* list, GBool order, ListSwopFunc func);
+GBool listQueueSwop(GJListQueue* list, GBool order, listQueueSwopFunc func);
 
 //最多能存储的上限
 //GVoid   listSetLimit(GJListQueue* list,GInt32 limit);//(暂时没有需求，为了效率没有实现。)
 
 
-GInt32  listLength(GJListQueue* list);
+GInt32  listQueueLength(GJListQueue* list);
 
 #if MEMORY_CHECK
-GInt32 listGenerateSize(GJListQueue* list);
+GInt32 listQueueGenerateSize(GJListQueue* list);
 #endif
 
 #endif /* GJListQueue_h */

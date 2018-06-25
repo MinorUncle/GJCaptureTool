@@ -78,7 +78,7 @@ static GVoid gj_log_runloop(GJClass *dClass, GJ_LogLevel level, const char *pre,
         strData      = (GChar *) GJBufferPoolGetSizeData(_logBufferPool, (GInt32) strLen);
         sprintf(strData, "[%02d:%02d:%02d:%03d][%s][%s]:%s\n", local->tm_hour, local->tm_min, local->tm_sec, t.tv_usec / 1000, levels[level], pre, str);
     }
-    listPush(_messageList, strData);
+    listQueuePush(_messageList, strData);
     if (level == GJ_LOGFORBID && dClass->dLevel >= GJ_LOGDEBUG) {
 #ifdef DEBUG
         assert(0);
@@ -90,7 +90,7 @@ static void *logRunloop(void *userData) {
     pthread_setname_np("Loop.GJLog");
     while (fmsg) {
         GChar *message = GNULL;
-        if (listPop(_messageList, (GHandle *) (&message), GINT32_MAX)) {
+        if (listQueuePop(_messageList, (GHandle *) (&message), GINT32_MAX)) {
             fprintf(fmsg, "%s", message);
 //#ifdef DEBUG
             fprintf(stdout, "%s", message);
@@ -106,19 +106,19 @@ GVoid GJ_LogSetOutput(char *file) {
     if (fmsg != NULL && fmsg != stderr) {
         fclose(fmsg);
         fmsg = NULL;
-        listEnablePop(_messageList, GFalse);
+        listQueueEnablePop(_messageList, GFalse);
         pthread_join(_logRunloop, GNULL);
         _logRunloop = GNULL;
         cb          = gj_log_default;
         if (_messageList) {
-            listFree(&_messageList);
+            listQueueFree(&_messageList);
         }
         if (_logBufferPool) {
             GJBufferPoolClean(_logBufferPool, GFalse);
         }
     }
     if (file != NULL) {
-        listCreate(&_messageList, GTrue);
+        listQueueCreate(&_messageList, GTrue);
         GJBufferPoolCreate(&_logBufferPool, 0, GTrue);
         cb   = gj_log_runloop;
         fmsg = fopen(file, "a+");

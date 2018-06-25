@@ -58,7 +58,7 @@ GBool GJRetainBufferPoolCreate(GJRetainBufferPool** pool,GUInt32 minSize,GBool a
     *pool = p;
     
 #if MEMORY_CHECK
-    if (!listCreate(&p->leaveList, 5)){
+    if (!listQueueCreate(&p->leaveList, 5)){
         free(p);
         GJAssert(0, "跟踪器启动失败");
     }
@@ -112,7 +112,7 @@ GBool GJRetainBufferPoolClean(GJRetainBufferPool* p,GBool complete){
     
 #if MEMORY_CHECK
     if (complete) {
-        GJAssert(listLength(p->leaveList)==0, "跟踪器有误,还存在数据");
+        GJAssert(listQueueLength(p->leaveList)==0, "跟踪器有误,还存在数据");
     }
 #endif
     
@@ -126,7 +126,7 @@ GVoid GJRetainBufferPoolFree(GJRetainBufferPool* p){
     queueFree(&p->queue);
     
 #if MEMORY_CHECK
-    listFree(&p->leaveList);
+    listQueueFree(&p->leaveList);
 #endif
     
     free(p);
@@ -143,7 +143,7 @@ static GBool retainReleaseCallBack(GJRetainBuffer * buffer){
     
 #if MEMORY_CHECK
     GJRetainbufferPoolCheck(pool,buffer);
-    listDelete(pool->leaveList, buffer);
+    listQueueDelete(pool->leaveList, buffer);
 #endif
     
     if (pool->noticeCallback != GNULL) {
@@ -203,7 +203,7 @@ GJRetainBuffer* _GJRetainBufferPoolGetData(GJRetainBufferPool* p,const GChar* fi
     GJAssert(R_BufferRetainCount(buffer) == 1, "retain 管理出错");
     
 #if MEMORY_CHECK
-    GJAssert(listPush(p->leaveList, buffer), "跟踪器失败") ;
+    GJAssert(listQueuePush(p->leaveList, buffer), "跟踪器失败") ;
 #endif
     return buffer;
 }
@@ -247,7 +247,7 @@ GJRetainBuffer* _GJRetainBufferPoolGetSizeData(GJRetainBufferPool* p,GInt32 data
     R_BufferClearSize(buffer);
     GJAssert(R_BufferRetainCount(buffer) == 1, "retain 管理出错");
 #if MEMORY_CHECK
-    GJAssert(listPush(p->leaveList, buffer), "跟踪器失败") ;
+    GJAssert(listQueuePush(p->leaveList, buffer), "跟踪器失败") ;
 #endif
     return buffer;
 }

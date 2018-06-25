@@ -118,7 +118,7 @@ static inline GVoid listRecycleNode(GJListQueue* list,GJListQueueNode* node){
     node->next = GNULL;
 }
 
-GBool listCreate(GJListQueue** outQ,GBool atomic){
+GBool listQueueCreate(GJListQueue** outQ,GBool atomic){
     GJListQueue* list = (GJListQueue*)malloc(sizeof(GJListQueue));
     if (!list) {
         return GFalse;
@@ -136,12 +136,12 @@ GBool listCreate(GJListQueue** outQ,GBool atomic){
     return GTrue;
 }
 
-GBool listFree(GJListQueue** inQ){
+GBool listQueueFree(GJListQueue** inQ){
     GJListQueue* list = *inQ;
     if (!list) {
         return GFalse;
     }
-    GJAssert(listLength(list)==0, "listFree 错误，队列存在没有出列的实例");
+    GJAssert(listQueueLength(list)==0, "listQueueFree 错误，队列存在没有出列的实例");
     pthread_cond_destroy(&list->cond);
     pthread_mutex_destroy(&list->lock);
     
@@ -158,7 +158,7 @@ GBool listFree(GJListQueue** inQ){
     return GTrue;
 }
 
-GVoid listEnablePop(GJListQueue* list,GBool enable){
+GVoid listQueueEnablePop(GJListQueue* list,GBool enable){
     listLock(list);
     if(!enable){
         list->popEnable = enable;
@@ -169,7 +169,7 @@ GVoid listEnablePop(GJListQueue* list,GBool enable){
     listUnLock(list);
 }
 
-GVoid listEnablePush(GJListQueue* list,GBool enable){
+GVoid listQueueEnablePush(GJListQueue* list,GBool enable){
     listLock(list);
 
     list->pushEnable = enable;
@@ -178,7 +178,7 @@ GVoid listEnablePush(GJListQueue* list,GBool enable){
 
 }
 
-GBool listClean(GJListQueue*list, GHandle* outBuffer,GInt32* outCount){
+GBool listQueueClean(GJListQueue*list, GHandle* outBuffer,GInt32* outCount){
     GBool result = GTrue;
   
     listLock(list);
@@ -216,7 +216,7 @@ GBool listClean(GJListQueue*list, GHandle* outBuffer,GInt32* outCount){
     return result;
 }
 
-GBool listDelete(GJListQueue* list,GHandle temBuffer){
+GBool listQueueDelete(GJListQueue* list,GHandle temBuffer){
     
     listLock(list);
     if (!list->popEnable) {
@@ -260,7 +260,7 @@ GBool listDelete(GJListQueue* list,GHandle temBuffer){
     return GTrue;
 }
 
-GBool listPop(GJListQueue* list,GHandle* temBuffer,GUInt32 ms){
+GBool listQueuePop(GJListQueue* list,GHandle* temBuffer,GUInt32 ms){
     listLock(list);
     if (!list->popEnable) {
         listUnLock(list);
@@ -323,7 +323,7 @@ GBool listPop(GJListQueue* list,GHandle* temBuffer,GUInt32 ms){
  @param temBuffer temBuffer description
  @return return value description
  */
-GBool listPush(GJListQueue* list,GHandle temBuffer){
+GBool listQueuePush(GJListQueue* list,GHandle temBuffer){
     
     listLock(list);
     if (!list->pushEnable) {
@@ -350,7 +350,7 @@ GBool listPush(GJListQueue* list,GHandle temBuffer){
     return GTrue;
 }
 
-GBool listSwop(GJListQueue* list,GBool order, ListSwopFunc func){
+GBool listQueueSwop(GJListQueue* list,GBool order, listQueueSwopFunc func){
     listLock(list);
 
     GBool swop = GFalse;
@@ -395,12 +395,12 @@ GBool listSwop(GJListQueue* list,GBool order, ListSwopFunc func){
 //    list->upLimit = limit;
 //}
 
-GInt32 listLength(GJListQueue* list){
+GInt32 listQueueLength(GJListQueue* list){
     return list->currentLength;
 }
 
 #if MEMORY_CHECK
-GInt32 listGenerateSize(GJListQueue* list){
+GInt32 listQueueGenerateSize(GJListQueue* list){
     return list->generateSize;
 }
 #endif

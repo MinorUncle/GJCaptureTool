@@ -142,10 +142,10 @@ static inline GVoid _R_BufferRelive(GJRetainBuffer *buffer, const GChar *tracker
     GJAssert(buffer->retainCount == 1, "");
 
     if (buffer->retainList == GNULL) {
-        listCreate(&buffer->retainList, GTrue);
-        listCreate(&buffer->unretainList, GTrue);
+        listQueueCreate(&buffer->retainList, GTrue);
+        listQueueCreate(&buffer->unretainList, GTrue);
     }
-    listPush(buffer->retainList, (GHandle) tracker);
+    listQueuePush(buffer->retainList, (GHandle) tracker);
 #endif
 }
 /**
@@ -162,10 +162,10 @@ static inline GVoid _R_BufferRetain(GJRetainBuffer *buffer, const GChar *tracker
 #if MEMORY_CHECK
     GJAssert(buffer->retainCount > 1, "0及以下的retaincount不能retain");
     if (buffer->retainList == GNULL) {
-        listCreate(&buffer->retainList, GTrue);
-        listCreate(&buffer->unretainList, GTrue);
+        listQueueCreate(&buffer->retainList, GTrue);
+        listQueueCreate(&buffer->unretainList, GTrue);
     }
-    listPush(buffer->retainList, (GHandle) tracker);
+    listQueuePush(buffer->retainList, (GHandle) tracker);
 #endif
 }
 #else

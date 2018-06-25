@@ -88,16 +88,16 @@ GVoid _R_BufferUnRetain(GJRetainBuffer* buffer,const GChar* tracker){
     R_BufferMemCheck(buffer);
     GJAssert(buffer->retainCount > 0, "retain 管理出错");
     
-    listPush(buffer->unretainList, (GHandle)tracker);
+    listQueuePush(buffer->unretainList, (GHandle)tracker);
 #endif
     
     if (__sync_fetch_and_add(&buffer->retainCount,-1) <= 1) {//count是减一之前的值，，当连续unretain的时候，第一个unretain到达此的时候，第二个刚走完__sync_fetch_and_add，容易引起第一个先进入count的情况。所以修改为返回结果直接判断
 #if MEMORY_CHECK
-        GJAssert(listLength(buffer->unretainList) == listLength(buffer->retainList), "释放的个数与引用的个数不相等");
-        listClean(buffer->retainList, GNULL, GNULL);
-        listClean(buffer->unretainList, GNULL, GNULL);
-        listFree(&buffer->retainList);
-        listFree(&buffer->unretainList);
+        GJAssert(listQueueLength(buffer->unretainList) == listQueueLength(buffer->retainList), "释放的个数与引用的个数不相等");
+        listQueueClean(buffer->retainList, GNULL, GNULL);
+        listQueueClean(buffer->unretainList, GNULL, GNULL);
+        listQueueFree(&buffer->retainList);
+        listQueueFree(&buffer->unretainList);
 #endif
 
         if (buffer->retainReleaseCallBack) {

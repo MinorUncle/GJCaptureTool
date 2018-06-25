@@ -11,6 +11,8 @@
 		6A03892B1FF13004005AC7CE /* Particle.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A03892A1FF13004005AC7CE /* Particle.png */; };
 		6A04022020CA5A190098A86C /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6A0402EB20CA651B0098A86C /* libAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A8E278020C4DA5400777B38 /* libAudioEngine.a */; };
+		6A045F8320E0E0D10035840F /* GJList.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A045F8120E0E0D10035840F /* GJList.c */; };
+		6A045F8420E0E0D10035840F /* GJList.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A045F8220E0E0D10035840F /* GJList.h */; };
 		6A0C84671FA84A00007C7CEA /* Version.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0C84661FA84A00007C7CEA /* Version.h */; };
 		6A1A1B0A1F2ED67A0043595F /* AACEncoderFromPCM_OLD.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */; };
 		6A1A1B111F2F36F10043595F /* IOS_RAOPPlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A9856C41F2B3D2500128480 /* IOS_RAOPPlay.m */; };
@@ -393,6 +395,8 @@
 		046F5B331E305714007901EB /* x264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = x264.h; path = ../../../../x264Code/x264/include/x264.h; sourceTree = "<group>"; };
 		046F7E411E306C8E00712A2B /* libx264_back.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libx264_back.a; sourceTree = "<group>"; };
 		6A03892A1FF13004005AC7CE /* Particle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Particle.png; sourceTree = "<group>"; };
+		6A045F8120E0E0D10035840F /* GJList.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GJList.c; sourceTree = "<group>"; };
+		6A045F8220E0E0D10035840F /* GJList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJList.h; sourceTree = "<group>"; };
 		6A0C84661FA84A00007C7CEA /* Version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Version.h; sourceTree = "<group>"; };
 		6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RtmpCode.xcodeproj; path = ../rtmpAndOpenssl/RtmpCode.xcodeproj; sourceTree = "<group>"; };
 		6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AACEncoderFromPCM_OLD.h; sourceTree = "<group>"; };
@@ -914,6 +918,8 @@
 				6AD06E5520B53B86004DF75B /* GJDebug.h */,
 				6AD06E5620B53B86004DF75B /* GJListQueue.c */,
 				6AD06E5720B53B86004DF75B /* GJListQueue.h */,
+				6A045F8120E0E0D10035840F /* GJList.c */,
+				6A045F8220E0E0D10035840F /* GJList.h */,
 				6A8E27D720C52FFC00777B38 /* GTime.c */,
 				6A8E27D820C52FFC00777B38 /* GTime.h */,
 				6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */,
@@ -1282,6 +1288,7 @@
 				6AD06E7F20B53B86004DF75B /* GJBufferPool.h in Headers */,
 				AE70A52B1ECB4DFE0009E49A /* GJAudioQueueRecoder.h in Headers */,
 				6A63463D20414074000F14E2 /* GJMessageDispatcher.h in Headers */,
+				6A045F8420E0E0D10035840F /* GJList.h in Headers */,
 				AE70A5131ECB4DFE0009E49A /* GJLiveDefine+internal.h in Headers */,
 				6AD06E8020B53B86004DF75B /* GJDebug.h in Headers */,
 				6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */,
@@ -1727,6 +1734,7 @@
 				6ABF2B211F0B413600721DB3 /* IOS_AudioProduce.m in Sources */,
 				6A5E04C620A44AE20030A0B8 /* FFAudioDecoder.m in Sources */,
 				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
+				6A045F8320E0E0D10035840F /* GJList.c in Sources */,
 				6ABF2B251F0B413600721DB3 /* IOS_H264Encode.m in Sources */,
 				6A8E27D920C52FFC00777B38 /* GTime.c in Sources */,
 				6A53951B20AA7BF900E9E3C9 /* AutoLock.m in Sources */,
