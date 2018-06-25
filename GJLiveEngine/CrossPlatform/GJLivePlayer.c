@@ -897,13 +897,13 @@ GVoid GJLivePlay_Resume(GJLivePlayer *player) {
 }
 
 GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) {
-    GJLOG(GNULL, GJ_LOGDEBUG, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts.value,videoFrame->dts.value);
+    GJLOG(GNULL, GJ_LOGALL, "收到视频 PTS:%lld DTS:%lld\n",videoFrame->pts.value,videoFrame->dts.value);
     
     if (videoFrame->pts.value < player->syncControl.videoInfo.trafficStatus.enter.ts.value) {
         
         pthread_mutex_lock(&player->playControl.oLock);
         GInt32 length = queueGetLength(player->playControl.imageQueue);
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频dts不递增，抛弃之前的视频帧：%d帧", length);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGWARNING, "视频pts不递增，抛弃之前的视频帧：%d帧", length);
         if (length > 0) {
             queueEnablePop(player->playControl.imageQueue, GFalse);
             queueFuncClean(player->playControl.imageQueue, R_BufferUnRetainUnTrack);

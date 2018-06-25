@@ -252,7 +252,6 @@ void decodeOutputCallback(
 
 - (void)flush {
     VTDecompressionSessionFinishDelayedFrames(_decompressionSession);
-    VTDecompressionSessionWaitForAsynchronousFrames(_decompressionSession);
     _needFlush = GTrue;
     
     GJListNode* newNode = _sortqQueue;

@@ -154,7 +154,7 @@ static  GJAudioSessionCenter* _gjAudioSession;
         
     }
     
-    if (![_category isEqualToString:[AVAudioSession sharedInstance].category] || options != [AVAudioSession sharedInstance].categoryOptions) {
+    if (![category isEqualToString:[AVAudioSession sharedInstance].category] || options != [AVAudioSession sharedInstance].categoryOptions) {
         
         _category = category;
         _categoryOptions = options;
