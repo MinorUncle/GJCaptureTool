@@ -26,7 +26,7 @@
     R_GJPacket *                 _prePacket;
     AudioStreamPacketDescription tPacketDesc;
     ASC                          _asc;
-    GJSignal *                   _stopFinshSignal;
+//    GJSignal *                   _stopFinshSignal;//去掉信号，直接在解码循环里面判断，减少等待
 
     GJAudioAlignmentContext*     _alignmentContext;
 }
@@ -76,7 +76,6 @@ static int stopCount;
     _decodeQueue = dispatch_queue_create("audioDecodeQueue", DISPATCH_QUEUE_SERIAL);
     queueCreate(&_resumeQueue, 60, true, GFalse);
     //    queueSetDebugLeval(_resumeQueue, GJ_LOGALL);
-    signalCreate(&_stopFinshSignal);
 }
 + (AudioStreamBasicDescription)defaultSourceFormateDescription {
     AudioStreamBasicDescription format = {0};
@@ -99,11 +98,13 @@ static int stopCount;
 }
 
 - (void)start {
-    GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AACDecode Start:%p", self);
-    _running = YES;
-    queueEnablePop(_resumeQueue, GTrue);
-    queueEnablePush(_resumeQueue, GTrue);
-    startCount++;
+    dispatch_sync(_decodeQueue, ^{//需要再_decodeQueue中执行，防止快速的重启，导致上一次解码结束处理有误
+        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AACDecode Start:%p", self);
+        _running = YES;
+        queueEnablePop(_resumeQueue, GTrue);
+        queueEnablePush(_resumeQueue, GTrue);
+        startCount++;
+    });
 }
 - (void)stop {
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "AACDecode stop:%p", self);
@@ -111,22 +112,8 @@ static int stopCount;
     stopCount++;
     queueEnablePop(_resumeQueue, GFalse);
     queueEnablePush(_resumeQueue, GFalse);
-    queueBroadcastPop(_resumeQueue);
+//    signalWait(_stopFinshSignal, INT_MAX);
 
-    signalWait(_stopFinshSignal, INT_MAX);
-
-    if (_decodeConvert) {
-        AudioConverterDispose(_decodeConvert);
-        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AudioConverterDispose");
-        _decodeConvert = nil;
-    }
-
-    queueFuncClean(_resumeQueue, R_BufferUnRetainUnTrack);
-
-    if (_prePacket) {
-        R_BufferUnRetain(&_prePacket->retain);
-        _prePacket = NULL;
-    }
 }
 //编码输入
 static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNumberDataPackets, AudioBufferList *ioData, AudioStreamPacketDescription **outDataPacketDescription, void *inUserData) {
@@ -308,7 +295,6 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
 
     AudioStreamPacketDescription packetDesc;
     AudioBufferList              outCacheBufferList;
-    signalReset(_stopFinshSignal);
     while (_running) {
         memset(&packetDesc, 0, sizeof(packetDesc));
         memset(&outCacheBufferList, 0, sizeof(AudioBufferList));
@@ -356,8 +342,19 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         _currentPts = -1;
         R_BufferUnRetain(&frame->retain);
     }
-    GJLOG(GNULL, GJ_LOGDEBUG, "signalEmit：%p", _stopFinshSignal);
-    signalEmit(_stopFinshSignal);
+    
+    if (_decodeConvert) {
+        AudioConverterDispose(_decodeConvert);
+        GJLOG(DEFAULT_LOG, GJ_LOGINFO, "AudioConverterDispose");
+        _decodeConvert = nil;
+    }
+    
+    queueFuncClean(_resumeQueue, R_BufferUnRetainUnTrack);
+    
+    if (_prePacket) {
+        R_BufferUnRetain(&_prePacket->retain);
+        _prePacket = NULL;
+    }
 }
 
 - (void)dealloc {
@@ -378,7 +375,6 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
     if (_alignmentContext) {
         audioAlignmentDelloc(&_alignmentContext);
     }
-    signalDestory(&_stopFinshSignal);
     GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "gjpcmdecodeformaac delloc:%p", self);
 }
 

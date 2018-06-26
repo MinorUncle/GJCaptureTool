@@ -225,10 +225,14 @@ void decodeOutputCallback(
         R_GJPacket *packet;
         while (_isRunning) {
             if (queuePop(_inputQueue, (GHandle *) &packet, GINT32_MAX)) {
+                if (_needFlush) {
+                    [self _destorySortQueue];
+                }
                 [self _decodePacket:packet];
                 R_BufferUnRetain(packet);
             }
         }
+        [self _destorySortQueue];
         GJLOG(GNULL, GJ_LOGDEBUG, "video decode runloop end:%p", self);
     });
     return YES;
@@ -250,10 +254,7 @@ void decodeOutputCallback(
     }
 }
 
-- (void)flush {
-    VTDecompressionSessionFinishDelayedFrames(_decompressionSession);
-    _needFlush = GTrue;
-    
+-(void)_destorySortQueue{
     GJListNode* newNode = _sortqQueue;
     while (newNode) {
         R_GJPixelFrame* currentFrame = (R_GJPixelFrame*)listData(newNode);
@@ -264,6 +265,12 @@ void decodeOutputCallback(
     }
     _sortqQueue = 0;
     _sortLength = 0;
+}
+
+- (void)flush {
+    VTDecompressionSessionFinishDelayedFrames(_decompressionSession);
+    _needFlush = GTrue;
+    
 }
 
 - (void)decodePacket:(R_GJPacket *)packet {

@@ -97,6 +97,7 @@ static void resetSyncToStartPts(GJSyncControl *sync, GTime startPts) {
 }
 
 static GBool changeSyncType(GJSyncControl *sync, TimeSYNCType syncType) {
+    GTime current = GJ_Gettime();
     if (syncType == kTimeSYNCVideo) {
         sync->syncType = kTimeSYNCVideo;
         resetSyncToStartPts(sync, sync->videoInfo.trafficStatus.leave.ts);
@@ -106,7 +107,7 @@ static GBool changeSyncType(GJSyncControl *sync, TimeSYNCType syncType) {
         resetSyncToStartPts(sync, sync->audioInfo.trafficStatus.leave.ts);
         sync->netShake.collectStartPts = sync->audioInfo.trafficStatus.enter.ts;
     }
-    sync->netShake.collectStartClock = GJ_Gettime();
+    sync->netShake.collectStartClock = current;
     return GTrue;
 }
 
@@ -635,7 +636,7 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
 
     DISPLAY:
 #ifdef DEBUG
-//        GJLOG(GNULL, GJ_LOGDEBUG,"before render wait delay:%ld, video pts:%lld", delay, _syncControl->videoInfo.trafficStatus.leave.ts.value);
+//        GJLOG(GNULL, GJ_LOGDEBUG,"before render wait delay:%ld, video pts:%lld clock:%ld", delay, _syncControl->videoInfo.trafficStatus.leave.ts.value,timeStandards);
 //        GLong beforeTime = GTimeMSValue(GJ_Gettime());
 #endif
         if (delay > 4 && signalWait(_playControl->stopSignal, (GUInt32) delay)) {
@@ -668,7 +669,7 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
 //
 //        GLong currentDelay = (GLong)((GTimeMSValue(cImageBuf->pts) - currentTimeStandards) / _syncControl->speed);
 //
-//        GJLOG(GNULL,GJ_LOGDEBUG,"render currentPts:%ld currentTime:%ld dpts:%ld dtime:%ld beforeDelay:%ld cache:%d renderDelay:%ld ,rendDur:%ld\n", currentPTS, currentTime,currentPTS - prePTS,currentTime - preTime,delay,queueGetLength(_playControl->imageQueue),currentDelay,currentTime-beforeTime);
+//        GJLOG(GNULL,GJ_LOGDEBUG,"render currentClock:%ld, currentPts:%ld currentTime:%ld dpts:%ld dtime:%ld beforeDelay:%ld cache:%d renderDelay:%ld ,rendDur:%ld\n",currentTimeStandards, currentPTS, currentTime,currentPTS - prePTS,currentTime - preTime,delay,queueGetLength(_playControl->imageQueue),currentDelay,currentTime-beforeTime);
 //
 //        prePTS =  currentPTS;
 //        preTime =  currentTime;
@@ -910,7 +911,7 @@ GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) 
             
             queueEnablePop(player->playControl.imageQueue, GTrue);
         }
-    
+        player->syncControl.videoInfo.startPts               = videoFrame->pts;
         player->syncControl.videoInfo.trafficStatus.leave.ts = videoFrame->pts;
         pthread_mutex_unlock(&player->playControl.oLock);
     }
@@ -1053,9 +1054,10 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
             queueFuncClean(_playControl->audioQueue, R_BufferUnRetainUnTrack);
             queueEnablePop(_playControl->audioQueue, GTrue);
         }
-
+        GTime current = GJ_Gettime();
         _syncControl->audioInfo.trafficStatus.leave.ts    = audioFrame->pts; //防止此时获得audioCache时误差太大，防止pts重新开始时，视频远落后音频
-        _syncControl->audioInfo.trafficStatus.leave.clock = GJ_Gettime();
+        _syncControl->audioInfo.trafficStatus.leave.clock = current;
+        _syncControl->audioInfo.trafficStatus.leave.ts_drift = GTimeSubtractMSValue(audioFrame->pts, current)-30;//预测30ms后播放此帧，只是用作没有播放前的视频同步，播放音频后会自动更新
         pthread_mutex_unlock(&_playControl->oLock);
     }
 
@@ -1072,9 +1074,12 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
         //        if (_playControl->status == kPlayStatusBuffering) {
         //            GJLivePlay_StopBuffering(player);
         //        }
+        GTime current = GJ_Gettime();
         _syncControl->audioInfo.trafficStatus.enter.ts    = audioFrame->pts; ///防止audioInfo.startPts==0 导致startshakepts=0;
         _syncControl->audioInfo.trafficStatus.leave.ts    = audioFrame->pts; ///防止audioInfo.startPts不为从0开始时，audiocache过大，
-        _syncControl->audioInfo.trafficStatus.leave.clock = GJ_Gettime();
+        _syncControl->audioInfo.trafficStatus.leave.clock = current;
+        _syncControl->audioInfo.trafficStatus.leave.ts_drift = GTimeSubtractMSValue(audioFrame->pts, current)-30;//预测30ms后播放此帧，只是用作没有播放前的视频同步，播放音频后会自动更新
+
         if (changeSyncType(_syncControl, kTimeSYNCAudio)) {
             //加锁，防止正好关闭播放
             pthread_mutex_lock(&_playControl->oLock);
