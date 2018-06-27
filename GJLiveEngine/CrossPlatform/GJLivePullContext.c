@@ -322,7 +322,7 @@ static GVoid aacDecodeCompleteCallback(GHandle userData, R_GJPCMFrame *frame) {
 static GVoid h264DecodeCompleteCallback(GHandle userData, R_GJPixelFrame *frame) {
 
     GJLivePullContext *pullContext = userData;
-    if (G_TIME_IS_INVALID(pullContext->firstVideoDecodeClock)) {
+    if (unlikely(G_TIME_IS_INVALID(pullContext->firstVideoDecodeClock))) {
         GJLivePlay_AddVideoSourceFormat(pullContext->player, frame->type);
         pullContext->firstVideoDecodeClock = GJ_Gettime();
         GJPullFirstFrameInfo info = {0};

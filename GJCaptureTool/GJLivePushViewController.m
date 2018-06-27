@@ -1022,13 +1022,13 @@
     });
 }
 extern GTime GJ_Gettime() ;
--(void)livePull:(GJLivePull *)livePull fristFrameDecode:(GJPullFristFrameInfo *)info{
-    NSLog(@"fristFrameDecode w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,GTimeMSValue(GJ_Gettime()));
+-(void)livePull:(GJLivePull *)livePull firstFrameDecode:(GJPullFirstFrameInfo *)info{
+    NSLog(@"firstFrameDecode w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,GTimeMSValue(GJ_Gettime()));
     
 }
 
--(void)livePull:(GJLivePull *)livePull fristFrameRender:(GJPullFristFrameInfo *)info{
-    NSLog(@"fristFrameRender w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,GTimeMSValue(GJ_Gettime()));
+-(void)livePull:(GJLivePull *)livePull firstFrameRender:(GJPullFirstFrameInfo *)info{
+    NSLog(@"firstFrameRender w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,GTimeMSValue(GJ_Gettime()));
 }
 
 -(void)livePull:(GJLivePull *)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString *)infoDesc{

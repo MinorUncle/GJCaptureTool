@@ -117,7 +117,7 @@ void decodeOutputCallback(
     }
     DecodeFlag decodeFlag = (DecodeFlag) sourceFrameRefCon;
     if (decodeFlag == kDecodeFlagNeedDrop) {
-        GJAssert(0, "decodeFlag to drop decodeFrame");
+        GJLOG(GNULL, GJ_LOGWARNING, "decodeFlag to drop decodeFrame");
         return;
     }
     
@@ -355,7 +355,10 @@ void decodeOutputCallback(
 
         uint8_t *parameterSetPointers[2] = {sps, pps};
         size_t   parameterSetSizes[2]    = {spsSize, ppsSize};
-
+        if (_formatDesc) {
+            CFRelease(_formatDesc);
+        }
+        
         OSStatus status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault, 2,
                                                                               (const uint8_t *const *) parameterSetPointers,
                                                                               parameterSetSizes, 4,
