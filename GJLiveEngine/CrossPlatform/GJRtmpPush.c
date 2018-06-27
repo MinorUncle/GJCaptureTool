@@ -161,10 +161,10 @@ static GHandle sendRunloop(GHandle parm) {
             }
 
             GInt32  ppPreSize = 5; //flv tag前置预留大小大小
-            GUInt8  fristByte = 0x27;
+            GUInt8  firstByte = 0x27;
             GUInt8 *nal_start = R_BufferStart(&packet->retain) + packet->dataOffset;
             if ((nal_start[4] & 0x1f) == 7) {
-                fristByte = 0x17;
+                firstByte = 0x17;
             }
 
             GInt32 preSize = ppPreSize + RTMP_MAX_HEADER_SIZE;
@@ -197,7 +197,7 @@ static GHandle sendRunloop(GHandle parm) {
             rtmpPacket.m_nInfoField2     = push->rtmp->m_stream_id;
             rtmpPacket.m_nTimeStamp      = (uint32_t) packet->dts;
             if (packet->dataSize > 0) {
-                body[iIndex++] = fristByte;
+                body[iIndex++] = firstByte;
                 body[iIndex++] = 0x01; // AVC NALU
                 GInt32 ct      = (GInt32)(packet->pts - packet->dts);
 
@@ -407,14 +407,14 @@ GBool RTMP_AllocAndPakcetAVCSequenceHeader(GJStreamPush *push, GUInt8 *sps, GInt
 //    GUInt8 *pp = GNULL;
 //    GInt32 ppSize = 0;
 //    GInt32 ppPreSize = 0;//flv tag前置预留大小大小
-//    GUInt8 fristByte = 0x27;
+//    GUInt8 firstByte = 0x27;
 //    if (packet->flag == GJPacketFlag_KEY) {
 //        ppPreSize = 5;
 //        ppSize = packet->dataSize;
 //        pp = packet->dataOffset+packet->retain.data;
 //        if ((pp[0] & 0x1F) == 5 || (pp[0] & 0x1F) == 6) {
 //            isKey = GTrue;
-//            fristByte = 0x17;
+//            firstByte = 0x17;
 //        }
 //    }else{
 //        GJAssert(0, "没有pp");
@@ -452,7 +452,7 @@ GBool RTMP_AllocAndPakcetAVCSequenceHeader(GJStreamPush *push, GUInt8 *sps, GInt
 //    sendPacket->m_nInfoField2 = sender->rtmp->m_stream_id;
 //    sendPacket->m_nTimeStamp = (uint32_t)packet->pts;
 //    if (packet->dataSize > 0) {
-//        body[iIndex++] = fristByte;
+//        body[iIndex++] = firstByte;
 //        body[iIndex++] = 0x01;// AVC NALU
 //
 //        body[iIndex++] = 0x00;

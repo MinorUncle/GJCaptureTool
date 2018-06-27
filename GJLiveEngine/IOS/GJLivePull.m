@@ -111,10 +111,10 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
         case GJLivePull_bufferEnd: {
             //            GJCacheInfo info;
         } break;
-        case GJLivePull_decodeFristVideoFrame: {
-            //                GJPullFristFrameInfo info = {0};
+        case GJLivePull_decodeFirstVideoFrame: {
+            //                GJPullFirstFrameInfo info = {0};
             //                info.size = *(GSize*)parm;
-            [livePull.delegate livePull:livePull fristFrameDecode:parm];
+            [livePull.delegate livePull:livePull firstFrameDecode:parm];
         } break;
         case GJLivePull_dewateringUpdate: {
             if ([livePull.delegate respondsToSelector:@selector(livePull:dewaterUpdate:)]) {
@@ -148,12 +148,12 @@ static void livePullCallback(GHandle pull, GJLivePullMessageType messageType, GH
             }
             break;
 #endif
-        case GJLivePull_decodeFristAudioFrame: {
+        case GJLivePull_decodeFirstAudioFrame: {
   
         } break;
-        case GJLivePull_fristRender:{
-            if ([livePull.delegate respondsToSelector:@selector(livePull:fristFrameRender:)]) {
-                [livePull.delegate livePull:livePull fristFrameRender:parm];
+        case GJLivePull_firstRender:{
+            if ([livePull.delegate respondsToSelector:@selector(livePull:firstFrameRender:)]) {
+                [livePull.delegate livePull:livePull firstFrameRender:parm];
             }
         }
         default:

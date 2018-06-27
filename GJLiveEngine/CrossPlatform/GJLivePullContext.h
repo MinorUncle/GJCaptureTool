@@ -25,12 +25,12 @@ typedef enum _GJLivePullMessageType {
     GJLivePull_connectError,
     GJLivePull_urlPraseError,
     GJLivePull_receivePacketError,
-    GJLivePull_decodeFristVideoFrame,
-    GJLivePull_decodeFristAudioFrame,
+    GJLivePull_decodeFirstVideoFrame,
+    GJLivePull_decodeFirstAudioFrame,
     GJLivePull_bufferStart,
     GJLivePull_bufferEnd,
     GJLivePull_bufferUpdate, //UnitBufferInfo
-    GJLivePull_fristRender,
+    GJLivePull_firstRender,
 #ifdef NETWORK_DELAY
     GJLivePull_testNetShakeUpdate, //GTime
     GJLivePull_testKeyDelayUpdate, //GTime
@@ -53,10 +53,10 @@ typedef struct _GJLivePullContext {
     GJLivePlayer *        player;
     GTime                 startPullClock;
     GTime                 connentClock;
-    GTime                 fristVideoPullClock;
-    GTime                 fristAudioPullClock;
-    GTime                 fristVideoDecodeClock;
-    GTime                 fristAudioDecodeClock;
+    GTime                 firstVideoPullClock;
+    GTime                 firstAudioPullClock;
+    GTime                 firstVideoDecodeClock;
+    GTime                 firstAudioDecodeClock;
 
     GJLivePullCallback callback;
     GHandle            userData;

@@ -95,11 +95,11 @@ typedef enum _LiveInfoType {
     //推流信息
     //(GJPushStatus*)
     kLivePushUpdateStatus,
-    kLivePushDecodeFristFrame,
+    kLivePushDecodeFirstFrame,
 
     kLivePullCloseSuccess,
     kLivePullConnectSuccess, //推流成功，
-    kLivePullDecodeFristFrame,
+    kLivePullDecodeFirstFrame,
     //拉流信息
     //(GJPullStatus*)
     kLivePullUpdateStatus,
@@ -174,10 +174,10 @@ typedef struct _PullSessionInfo {
     GLong buffingCount;
 } GJPullSessionInfo;
 
-typedef struct _PullFristFrameInfo {
+typedef struct _PullFirstFrameInfo {
     GLong delay;//in ms;
     GSize size;
-} GJPullFristFrameInfo;
+} GJPullFirstFrameInfo;
 
 typedef enum {
     GJPixelType_32BGRA               = kCVPixelFormatType_32BGRA,

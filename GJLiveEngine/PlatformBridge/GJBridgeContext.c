@@ -8,7 +8,7 @@
 
 #include "GJBridegContext.h"
 #include "GJLog.h"
-static GBool pipleProduceDataCallback(GJPipleNode* node, GJRetainBuffer* data,GJMediaType dataType){
+GBool pipleProduceDataCallback(GJPipleNode* node, GJRetainBuffer* data,GJMediaType dataType){
     pipleNodeLock(node);
     for (int i = 0; i < node->subCount; i++) {
         node->subNodes[i]->receiveData(node->subNodes[i],data,dataType);
@@ -17,9 +17,7 @@ static GBool pipleProduceDataCallback(GJPipleNode* node, GJRetainBuffer* data,GJ
     return GTrue;
 }
 
-NodeFlowDataFunc pipleNodeFlowFunc(GJPipleNode* node){
-    return pipleProduceDataCallback;
-}
+
 
 NodeFlowDataFunc pipleNodeInit(GJPipleNode* node,NodeFlowDataFunc receiveData){
     GJAssert(node && node->lock == GNULL && node->subNodes == GNULL, "重复初始化，或者初始化前没有清零");

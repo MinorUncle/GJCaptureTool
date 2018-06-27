@@ -17,8 +17,8 @@
 @required
 
 - (void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullSessionStatus *)status;
-- (void)livePull:(GJLivePull *)livePull fristFrameDecode:(GJPullFristFrameInfo *)info;
-- (void)livePull:(GJLivePull *)livePull fristFrameRender:(GJPullFristFrameInfo *)info;
+- (void)livePull:(GJLivePull *)livePull firstFrameDecode:(GJPullFirstFrameInfo *)info;
+- (void)livePull:(GJLivePull *)livePull firstFrameRender:(GJPullFirstFrameInfo *)info;
 - (void)livePull:(GJLivePull *)livePull closeConnent:(GJPullSessionInfo *)info resion:(GJConnentCloceReason)reason;
 - (void)livePull:(GJLivePull *)livePull connentSuccessWithElapsed:(int)elapsed;
 - (void)livePull:(GJLivePull *)livePull bufferUpdatePercent:(float)percent duration:(long)duration;

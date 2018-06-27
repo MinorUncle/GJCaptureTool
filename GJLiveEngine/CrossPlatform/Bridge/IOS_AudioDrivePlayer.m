@@ -28,6 +28,10 @@ inline static GBool audioPlaySetup(struct _GJAudioPlayContext *context, GJAudioF
     if (![[GJAudioSessionCenter shareSession] requestPlay:YES key:[NSString stringWithFormat:@"%p", player] error:&error]) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "request play session fail:%s", error.localizedDescription.UTF8String);
     }
+    
+    if (![[GJAudioSessionCenter shareSession] requestMix:YES key:[NSString stringWithFormat:@"%p", player] error:&error]) {
+        GJLOG(DEFAULT_LOG, GJ_LOGERROR, "request requestMix fail:%s", error.localizedDescription.UTF8String);
+    }
 
     if (![[GJAudioSessionCenter shareSession] activeSession:YES key:[NSString stringWithFormat:@"%p", player] error:&error]) {
         GJLOG(DEFAULT_LOG, GJ_LOGERROR, "activeSession session fail:%s", error.localizedDescription.UTF8String);
@@ -45,6 +49,9 @@ inline static GVoid audioPlayUnSetup(struct _GJAudioPlayContext *context) {
         NSError *                error;
         if (![[GJAudioSessionCenter shareSession] requestPlay:NO key:[NSString stringWithFormat:@"%p", player] error:&error]) {
             GJLOG(DEFAULT_LOG, GJ_LOGERROR, "request play session fail:%s", error.localizedDescription.UTF8String);
+        }
+        if (![[GJAudioSessionCenter shareSession] requestMix:NO key:[NSString stringWithFormat:@"%p", player] error:&error]) {
+            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "request requestMix fail:%s", error.localizedDescription.UTF8String);
         }
         if (![[GJAudioSessionCenter shareSession] activeSession:NO key:[NSString stringWithFormat:@"%p", player] error:&error]) {
             GJLOG(DEFAULT_LOG, GJ_LOGERROR, "activeSession session fail:%s", error.localizedDescription.UTF8String);

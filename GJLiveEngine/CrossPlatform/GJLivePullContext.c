@@ -70,11 +70,11 @@ GBool GJLivePull_StartPull(GJLivePullContext *context, const GChar *url) {
         if (context->streamPull != GNULL) {
             GJLOG(context, GJ_LOGERROR, "请先停止上一个流");
         } else {
-            context->fristAudioDecodeClock = G_TIME_INVALID;
-            context->fristAudioPullClock   = G_TIME_INVALID;
-            context->fristVideoPullClock   = G_TIME_INVALID;
+            context->firstAudioDecodeClock = G_TIME_INVALID;
+            context->firstAudioPullClock   = G_TIME_INVALID;
+            context->firstVideoPullClock   = G_TIME_INVALID;
             context->connentClock          = G_TIME_INVALID;
-            context->fristVideoDecodeClock = G_TIME_INVALID;
+            context->firstVideoDecodeClock = G_TIME_INVALID;
             context->audioUnDecodeByte = context->videoUnDecodeByte = 0;
             context->audioTraffic = context->videoTraffic = (GJTrafficStatus){0};
 
@@ -183,7 +183,7 @@ static GVoid livePlayCallback(GHandle userDate, GJPlayMessage message, GHandle p
     GJLivePullContext *   livePull    = userDate;
     GJLivePullMessageType pullMessage = GJLivePull_messageInvalid;
     
-    GJPullFristFrameInfo info = {0};
+    GJPullFirstFrameInfo info = {0};
     switch (message) {
         case GJPlayMessage_BufferStart:
             pullMessage = GJLivePull_bufferStart;
@@ -194,14 +194,14 @@ static GVoid livePlayCallback(GHandle userDate, GJPlayMessage message, GHandle p
         case GJPlayMessage_BufferEnd:
             pullMessage = GJLivePull_bufferEnd;
             break;
-        case GJPlayMessage_FristRender:
+        case GJPlayMessage_FirstRender:
         {
             R_GJPixelFrame* frame = param;
             info.delay = GTimeSubtractMSValue(GJ_Gettime(), livePull->startPullClock);
             info.size.width = frame->width;
             info.size.height = frame->height;
             param = &info;
-            pullMessage = GJLivePull_fristRender;
+            pullMessage = GJLivePull_firstRender;
             break;
         }
         case GJPlayMessage_NetShakeUpdate:
@@ -305,13 +305,13 @@ void pullDataCallback(GJStreamPull *pull, R_GJPacket *packet, void *parm) {
 }
 static GVoid aacDecodeCompleteCallback(GHandle userData, R_GJPCMFrame *frame) {
     GJLivePullContext *livePull = userData;
-    if (G_TIME_IS_INVALID(livePull->fristAudioDecodeClock)) {
+    if (G_TIME_IS_INVALID(livePull->firstAudioDecodeClock)) {
         GJAudioFormat destformat = livePull->audioDecoder->decodeGetDestFormat(livePull->audioDecoder);
         if (destformat.mSampleRate > 0) {
             //            pthread_mutex_lock(&livePull->lock);//调用stopAudio时，使用了信号机制，会等到此回调结束，所以不用锁
             if (livePull->streamPull) { //没有停止
                 GJLivePlay_AddAudioSourceFormat(livePull->player, destformat);
-                livePull->fristAudioDecodeClock = GJ_Gettime();
+                livePull->firstAudioDecodeClock = GJ_Gettime();
 
                 pipleConnectNode(&livePull->audioDecoder->pipleNode, &livePull->player->pipleNode);
             }
@@ -322,14 +322,14 @@ static GVoid aacDecodeCompleteCallback(GHandle userData, R_GJPCMFrame *frame) {
 static GVoid h264DecodeCompleteCallback(GHandle userData, R_GJPixelFrame *frame) {
 
     GJLivePullContext *pullContext = userData;
-    if (G_TIME_IS_INVALID(pullContext->fristVideoDecodeClock)) {
+    if (G_TIME_IS_INVALID(pullContext->firstVideoDecodeClock)) {
         GJLivePlay_AddVideoSourceFormat(pullContext->player, frame->type);
-        pullContext->fristVideoDecodeClock = GJ_Gettime();
-        GJPullFristFrameInfo info = {0};
-        info.delay = GTimeSubtractMSValue(pullContext->fristVideoDecodeClock, pullContext->startPullClock);
+        pullContext->firstVideoDecodeClock = GJ_Gettime();
+        GJPullFirstFrameInfo info = {0};
+        info.delay = GTimeSubtractMSValue(pullContext->firstVideoDecodeClock, pullContext->startPullClock);
         info.size.width           = (GFloat) frame->width; //CGSizeMake((float)frame->width, (float)frame->height);
         info.size.height          = (GFloat) frame->height;
-        pullContext->callback(pullContext->userData, GJLivePull_decodeFristVideoFrame, &info);
+        pullContext->callback(pullContext->userData, GJLivePull_decodeFirstVideoFrame, &info);
         pipleConnectNode(&pullContext->videoDecoder->pipleNode, &pullContext->player->pipleNode);
     }
     return;

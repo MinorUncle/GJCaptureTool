@@ -7,6 +7,7 @@
 //
 
 #import "GJAudioQueueDrivePlayer.h"
+#import <AVFoundation/AVFoundation.h>
 #import "GJLog.h"
 #import "GJQueue.h"
 #define DEFALUT_BUFFER_COUNT 4

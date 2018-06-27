@@ -44,7 +44,6 @@ typedef struct GJPipleNode {
  */
 NodeFlowDataFunc pipleNodeInit(GJPipleNode *node, NodeFlowDataFunc receiveData);
 GBool pipleNodeUnInit(GJPipleNode *node);
-NodeFlowDataFunc pipleNodeFlowFunc(GJPipleNode *node);
 GBool pipleConnectNode(GJPipleNode *superNode, GJPipleNode *subNode);
 
 /**
@@ -55,6 +54,11 @@ GBool pipleConnectNode(GJPipleNode *superNode, GJPipleNode *subNode);
  @return return value description
  */
 GBool pipleDisConnectNode(GJPipleNode *superNode, GJPipleNode *subNode);
+
+GBool pipleProduceDataCallback(GJPipleNode* node, GJRetainBuffer* data,GJMediaType dataType);
+static inline NodeFlowDataFunc pipleNodeFlowFunc(GJPipleNode* node){
+    return pipleProduceDataCallback;
+}
 
 typedef struct _GJRecodeContext {
     GHandle obaque;

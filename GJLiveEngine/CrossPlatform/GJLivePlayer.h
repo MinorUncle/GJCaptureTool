@@ -36,7 +36,7 @@ typedef enum _GJPlayMessage {
     GJPlayMessage_TestKeyDelayUpdate, //影响抖动的关键延迟
 #endif
     GJPlayMessage_DewateringUpdate, //gbool
-    GJPlayMessage_FristRender,
+    GJPlayMessage_FirstRender,
 } GJPlayMessage;
 typedef struct CacheInfo {
     GLong lowWaterFlag;

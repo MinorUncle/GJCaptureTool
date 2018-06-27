@@ -925,7 +925,7 @@ GBool GJLivePlay_AddVideoData(GJLivePlayer *player, R_GJPixelFrame *videoFrame) 
         player->syncControl.videoInfo.startPts               = videoFrame->pts;
         player->syncControl.videoInfo.trafficStatus.leave.ts = videoFrame->pts; ///防止videoInfo.startPts不为从0开始时，videocache过大，
         if (player->callback) {
-            player->callback(player->userDate, GJPlayMessage_FristRender, videoFrame);
+            player->callback(player->userDate, GJPlayMessage_FirstRender, videoFrame);
         }
         player->videoPlayer->renderFrame(player->videoPlayer, videoFrame);
     }
@@ -1008,7 +1008,7 @@ RETRY:
 //
 //    if (unlikely(player->syncControl.videoInfo.trafficStatus.enter.count == 0 && player->sortIndex <= 0)) { //第一次直接进入，加快第一帧显示
 //        if (player->callback) {
-//            player->callback(player->userDate, GJPlayMessage_FristRender, videoFrame);
+//            player->callback(player->userDate, GJPlayMessage_FirstRender, videoFrame);
 //        }
 //        player->videoPlayer->renderFrame(player->videoPlayer, videoFrame);
 //    }
