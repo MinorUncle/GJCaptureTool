@@ -213,6 +213,7 @@ extern GVoid GJ_AACDecodeContextCreate(FFAudioDecodeContext **context);
 extern GVoid GJ_H264DecodeContextCreate(FFVideoDecodeContext **context);
 extern GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext **context);
 extern GVoid GJ_H264EncodeContextCreate(GJEncodeToH264eContext **context);
+extern GVoid GJ_FFEncodeContextCreate(GJEncodeToH264eContext **context);
 extern GVoid GJ_FFDecodeContextCreate(FFVideoDecodeContext **context);
 extern GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext **context);
 extern GVoid GJ_PictureDisplayContextCreate(GJPictureDisplayContext **context);
@@ -224,6 +225,7 @@ extern GVoid GJ_H264DecodeContextDealloc(FFVideoDecodeContext **context);
 extern GVoid GJ_FFDecodeContextDealloc(FFVideoDecodeContext **context);
 extern GVoid GJ_AACEncodeContextDealloc(GJEncodeToAACContext **context);
 extern GVoid GJ_H264EncodeContextDealloc(GJEncodeToH264eContext **context);
+extern GVoid GJ_FFEncodeContextDealloc(GJEncodeToH264eContext **context);
 extern GVoid GJ_AudioPlayContextDealloc(GJAudioPlayContext **context);
 extern GVoid GJ_PictureDisplayContextDealloc(GJPictureDisplayContext** context);
 

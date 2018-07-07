@@ -10,7 +10,8 @@
 #import <AVFoundation/AVFoundation.h>
 #import "GJLog.h"
 #import "GJQueue.h"
-#define DEFALUT_BUFFER_COUNT 4
+#define DEFALUT_BUFFER_COUNT 3
+#define DEFALUT_SAMPLE_COUNT 1024
 
 @interface GJAudioQueueDrivePlayer () {
     AudioQueueRef _audioQueue;
@@ -57,14 +58,14 @@
             format.mBytesPerFrame    = format.mChannelsPerFrame * format.mBitsPerChannel / 8;
             format.mBytesPerPacket   = format.mBytesPerFrame * format.mFramesPerPacket;
             format.mFormatFlags      = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
-            maxBufferSize            = format.mBytesPerFrame * 1024;
+            maxBufferSize            = format.mBytesPerFrame * DEFALUT_SAMPLE_COUNT;
             break;
         }
         case kAudioFormatMPEG4AAC: {
             format.mSampleRate       = sampleRate;           // 3
             format.mFormatID         = kAudioFormatMPEG4AAC; // 2
             format.mChannelsPerFrame = channel;              // 4
-            format.mFramesPerPacket  = 1024;
+            format.mFramesPerPacket  = DEFALUT_SAMPLE_COUNT;
             maxBufferSize            = format.mFramesPerPacket * channel * 4;
             break;
         }
@@ -172,7 +173,7 @@
             for (int i = 0; i < _cacheBufferCount - 1; ++i) {
                 AudioQueueBufferRef buffer;
                 OSStatus            status = AudioQueueAllocateBuffer(_audioQueue, _maxBufferSize, &buffer);
-                buffer->mAudioDataByteSize = _format.mBytesPerFrame * 1024;
+                buffer->mAudioDataByteSize = _format.mBytesPerFrame * DEFALUT_SAMPLE_COUNT;
                 memset(buffer->mAudioData, 0, buffer->mAudioDataByteSize);
                 status = AudioQueueEnqueueBuffer(_audioQueue, buffer, 0, NULL);
                 if (status != noErr) {
@@ -370,7 +371,7 @@ static void pcmAudioQueueOutputCallback(void *inClientData, AudioQueueRef inAQ, 
     if (player.fillDataCallback(inBuffer->mAudioData, &dataSize)) {
         inBuffer->mAudioDataByteSize = dataSize;
     } else {
-        inBuffer->mAudioDataByteSize = player.format.mBytesPerFrame * 1024;
+        inBuffer->mAudioDataByteSize = player.format.mBytesPerFrame * DEFALUT_SAMPLE_COUNT;
         memset(inBuffer->mAudioData, 0, inBuffer->mAudioDataByteSize);
         GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "play silence audio");
     }
