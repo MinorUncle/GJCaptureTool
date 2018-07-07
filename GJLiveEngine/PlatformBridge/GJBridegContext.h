@@ -103,7 +103,6 @@ typedef struct _GJVideoProduceContext {
     GBool (*setStreamMirror)(struct _GJVideoProduceContext *context, GBool mirror);
 
     GBool (*setFrameRate)(struct _GJVideoProduceContext *context, GInt32 fps);
-    GBool (*setVideoFormat)(struct _GJVideoProduceContext *context, GJPixelFormat format);
     GHandle (*getFreshDisplayImage)(struct _GJVideoProduceContext *context);
 
     GBool (*addSticker)(struct _GJVideoProduceContext *context, const GVoid *overlays, GInt32 fps, GJStickerUpdateCallback callback, const GVoid *userData);
@@ -113,6 +112,8 @@ typedef struct _GJVideoProduceContext {
     GVoid (*stopTrackImage)(struct _GJVideoProduceContext *context);
     GVoid (*setDropStep)(struct _GJVideoProduceContext *context, GRational videoDropStep);
     GBool (*setMute)(struct _GJVideoProduceContext *context, GBool enable);
+    GBool (*setPixelformat)(struct _GJVideoProduceContext *context,const GJPixelFormat* format);
+    GJPixelFormat (*getPixelformat)(struct _GJVideoProduceContext *context);
 
 } GJVideoProduceContext;
 

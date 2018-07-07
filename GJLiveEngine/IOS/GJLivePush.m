@@ -87,7 +87,7 @@
     format.mHeight = pushConfig.mPushSize.height;
     format.mWidth  = pushConfig.mPushSize.width;
     format.mType   = GJPixelType_YpCbCr8BiPlanar_Full;
-    _videoProducer->setVideoFormat(_videoProducer, format);
+    _videoProducer->setPixelformat(_videoProducer, &format);
     _videoProducer->setFrameRate(_videoProducer, pushConfig.mFps);
 
     GJAudioFormat aFormat     = {0};
