@@ -14,6 +14,7 @@
 #import "GJLog.h"
 #import "GJBufferPool.h"
 #import <ARKit/ARConfiguration.h>
+#import "ZipArchive/ZipArchive.h"
 
 @interface GJSliderView:UISlider{
     UILabel * _titleLab;
@@ -93,6 +94,8 @@
     NSMutableArray<UIView*>* _btnViewsArry;
     UITapGestureRecognizer* _tapGesture;
     UIScrollView*   _contentView;
+    NSArray<NSString*>* _stickerPath;
+
 }
 
 @property (strong, nonatomic) GJLivePush *livePush;
@@ -154,7 +157,8 @@
                        @"540*960":[NSValue valueWithCGSize:CGSizeMake(540, 960)],
                        @"720*1280":[NSValue valueWithCGSize:CGSizeMake(720, 1280)]
                        };
-        
+        _stickerPath = @[@"bear",@"bd",@"hkbs",@"lb",@"null"];
+
         GJPushConfig config = {0};
         config.mAudioChannel = 1;
         config.mAudioSampleRate = 44100;
@@ -282,6 +286,31 @@
     [_contentView addSubview:_changeCamera];
     [_btnViewsArry addObject:_changeCamera];
 
+    _preMirror = [[UIButton alloc]init];
+    _preMirror.backgroundColor = [UIColor clearColor];
+    [_preMirror setTitle:@"预览镜像" forState:UIControlStateNormal];
+    [_preMirror setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_preMirror addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    [_contentView addSubview:_preMirror];
+    [_btnViewsArry addObject:_preMirror];
+    
+    _streamMirror = [[UIButton alloc]init];
+    _streamMirror.backgroundColor = [UIColor clearColor];
+    [_streamMirror setTitle:@"推流镜像" forState:UIControlStateNormal];
+    [_streamMirror setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_streamMirror addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    [_contentView addSubview:_streamMirror];
+    [_btnViewsArry addObject:_streamMirror];
+    
+    _faceSticker = [[UIButton alloc]init];
+    _faceSticker.backgroundColor = [UIColor clearColor];
+    [_faceSticker setTitle:@"开启人脸贴纸" forState:UIControlStateNormal];
+    [_faceSticker setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
+    [_faceSticker addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
+    [_contentView addSubview:_faceSticker];
+    [_btnViewsArry addObject:_faceSticker];
+
+    
     _videoMute = [[UIButton alloc]init];
     _videoMute.backgroundColor = [UIColor clearColor];
     [_videoMute setTitle:@"暂停视频" forState:UIControlStateNormal];
@@ -676,6 +705,39 @@
             });
             _sizeChangeBtn.enabled = YES;
         }
+    }else if (btn == _preMirror){
+        _livePush.previewMirror = btn.selected;
+    }else if (btn == _streamMirror){
+        _livePush.streamMirror = btn.selected;
+    }else if (btn == _faceSticker){
+        NSString* zpath = [[NSBundle mainBundle]pathForResource:_stickerPath[btn.tag%_stickerPath.count] ofType:@"zip"];
+        NSString*   unzipPath = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES)[0];
+        NSString* destPath = [unzipPath stringByAppendingPathComponent:_stickerPath[btn.tag%_stickerPath.count]];
+        
+        BOOL isDir;
+        BOOL exist = [[NSFileManager defaultManager] fileExistsAtPath:destPath isDirectory:&isDir];
+        
+        if (!exist || !isDir) {
+            ZipArchive* zip = [[ZipArchive alloc]init];
+            if([zip UnzipOpenFile:zpath]){
+                if (![zip UnzipFileTo:unzipPath overWrite:NO]) {
+                    printf("error\n");
+                }
+                [zip UnzipCloseFile];
+            };
+        }
+        
+        if (zpath) {
+            NSString* path = [[NSBundle mainBundle]pathForResource:@"track_data" ofType:@"dat"];
+            [_livePush prepareVideoEffectWithBaseData:path];
+            [_livePush updateFaceStickTemplatePath:destPath];
+            [_faceSticker setTitle:[NSString stringWithFormat:@"人脸贴图:%@",_stickerPath[btn.tag%_stickerPath.count]] forState:UIControlStateNormal];
+        }else{
+            [_livePush updateFaceStickTemplatePath:nil];
+            [_faceSticker setTitle:@"人脸贴图:无" forState:UIControlStateNormal];
+        }
+        btn.tag ++;
+        
     }
 }
 

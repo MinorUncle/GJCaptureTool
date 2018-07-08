@@ -152,4 +152,9 @@ typedef void (^OverlaysUpdate)(NSInteger index, const GJOverlayAttribute *_Nulla
 
 //- (void)videoRecodeWithPath:(NSString*)path;
 
+-(BOOL)prepareVideoEffectWithBaseData:(NSString*)dataPath;
+-(void)chanceVideoEffect;
+- (BOOL) updateFaceStickTemplatePath:(NSString*)dataPath;
+
+
 @end

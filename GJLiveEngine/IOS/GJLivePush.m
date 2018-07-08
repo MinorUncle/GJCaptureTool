@@ -393,6 +393,17 @@
     return CGSizeMake(size.width, size.height);
 }
 
+
+#pragma mark VIDEO EFFECT
+-(BOOL)prepareVideoEffectWithBaseData:(NSString*)dataPath{
+    return _videoProducer->prepareVideoEffectWithBaseData(_videoProducer,dataPath.UTF8String);
+}
+-(void)chanceVideoEffect{
+    _videoProducer->chanceVideoEffect(_videoProducer);
+}
+- (BOOL) updateFaceStickTemplatePath:(NSString*)dataPath{
+   return _videoProducer->updateFaceStickTemplatePath(_videoProducer,dataPath.UTF8String);
+}
 #pragma mark GJLIvePush callback
 static GVoid audioMixFinishCallback(GHandle userData, const GChar *filePath, GHandle error) {
     GJLivePush *self = (__bridge GJLivePush *) (userData);

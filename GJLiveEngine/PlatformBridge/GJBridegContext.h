@@ -114,7 +114,9 @@ typedef struct _GJVideoProduceContext {
     GBool (*setMute)(struct _GJVideoProduceContext *context, GBool enable);
     GBool (*setPixelformat)(struct _GJVideoProduceContext *context,const GJPixelFormat* format);
     GJPixelFormat (*getPixelformat)(struct _GJVideoProduceContext *context);
-
+    GBool (*prepareVideoEffectWithBaseData)(struct _GJVideoProduceContext* context,const GChar* dataPath);
+    GVoid (*chanceVideoEffect)(struct _GJVideoProduceContext* context);
+    GBool (*updateFaceStickTemplatePath)(struct _GJVideoProduceContext* context,const GChar* dataPath);
 } GJVideoProduceContext;
 
 typedef struct _GJAudioProduceContext {

@@ -511,10 +511,18 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (BOOL)prepareVideoEffectWithBaseData:(NSString *)baseDataPath {
+    if (_faceHandle) {
+        if (![_faceHandle.dataPath isEqualToString:baseDataPath]) {
+            [self chanceVideoEffect];
+        }else{
+            return NO ;
+        }
+    }
+    _faceHandle          = [[ARCSoftFaceHandle alloc] initWithDataPath:baseDataPath];
+    self.camera.delegate = _faceHandle;
+    _faceSticker         = [[ARCSoftFaceSticker alloc] init];
+    
     runAsynchronouslyOnVideoProcessingQueue(^{
-        _faceHandle          = [[ARCSoftFaceHandle alloc] initWithDataPath:baseDataPath];
-        self.camera.delegate = _faceHandle;
-        _faceSticker         = [[ARCSoftFaceSticker alloc] init];
         [self addFilter:_faceSticker deep:kFilterFaceSticker];
     });
     return YES;
@@ -531,6 +539,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (BOOL)updateFaceStickerWithTemplatePath:(NSString *)path {
+    _faceHandle.forceFaceDetect = (path!=nil);
     return [_faceSticker updateTemplatePath:path];
 }
 
@@ -778,7 +787,11 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 - (void)setPreviewMirror:(BOOL)previewMirror {
     _previewMirror = previewMirror;
     if (_imageView) {
-        [_imageView setInputRotation:kGPUImageFlipHorizonal atIndex:0];
+        if (previewMirror) {
+            [_imageView setInputRotation:kGPUImageFlipHorizonal atIndex:0];
+        }else{
+            [_imageView setInputRotation:kGPUImageNoRotation atIndex:0];
+        }
     }
 }
 
@@ -1065,9 +1078,30 @@ inline static GSize getCaptureSize(struct _GJVideoProduceContext *context) {
     return size;
 }
 
-GBool setMute(struct _GJVideoProduceContext *context, GBool enable) {
+inline static GBool setMute(struct _GJVideoProduceContext *context, GBool enable) {
     setDropStep(context, GRationalMake(enable == GTrue, 1));
     return GTrue;
+}
+
+inline static GBool prepareVideoEffectWithBaseData(struct _GJVideoProduceContext* context,const GChar* dataPath){
+    if (!dataPath) {
+        return GFalse;
+    }
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    return [recode prepareVideoEffectWithBaseData:[NSString stringWithUTF8String:dataPath]];
+}
+
+GVoid chanceVideoEffect(struct _GJVideoProduceContext* context){
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    [recode chanceVideoEffect];
+}
+
+GBool updateFaceStickTemplatePath(struct _GJVideoProduceContext* context,const GChar* dataPath){
+    if (!dataPath) {
+        return GFalse;
+    }
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    return [recode updateFaceStickerWithTemplatePath:[NSString stringWithUTF8String:dataPath]];
 }
 
 GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
@@ -1104,6 +1138,9 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     context->setDropStep           = setDropStep;
     context->setMute               = setMute;
     context->getPixelformat        =videoProduceGetVideoFormat;
+    context->prepareVideoEffectWithBaseData =  prepareVideoEffectWithBaseData;
+    context->chanceVideoEffect = chanceVideoEffect;
+    context->updateFaceStickTemplatePath = updateFaceStickTemplatePath;
 }
 
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {
