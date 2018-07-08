@@ -522,7 +522,7 @@ GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
             preTime = GJ_Gettime().value;
         }
         GInt64 currentTime = GJ_Gettime().value;
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "消耗音频 PTS:%lld size:%d dTime:%lld ,ts_drift:%ld", audioBuffer->pts.value, R_BufferSize(&audioBuffer->retain), currentTime - preTime,_syncControl->audioInfo.trafficStatus.leave.ts_drift);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "消耗音频 PTS:%lld size:%d dTime:%lld ,ts_drift:%ld", audioBuffer->pts.value, R_BufferSize(&audioBuffer->retain), currentTime - preTime,_syncControl->audioInfo.trafficStatus.leave.ts_drift);
         preTime = currentTime;
 #endif
         if (_playControl->freshAudioFrame != GNULL) {
@@ -643,10 +643,10 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
         }
 
     DISPLAY:
-#ifdef DEBUG
-        GJLOG(GNULL, GJ_LOGDEBUG,"before render wait delay:%ld, video pts:%lld clock:%ld", delay, _syncControl->videoInfo.trafficStatus.leave.ts.value,timeStandards);
-        GLong beforeTime = GTimeMSValue(GJ_Gettime());
-#endif
+//#ifdef DEBUG
+//        GJLOG(GNULL, GJ_LOGDEBUG,"before render wait delay:%ld, video pts:%lld clock:%ld", delay, _syncControl->videoInfo.trafficStatus.leave.ts.value,timeStandards);
+//        GLong beforeTime = GTimeMSValue(GJ_Gettime());
+//#endif
         if (delay > 4 && signalWait(_playControl->stopSignal, (GUInt32) delay)) {
             //bug 等待过程中速度变化无法感知，会有误差
             GJAssert(_playControl->status == kPlayStatusStop, "err signal emit");
@@ -667,21 +667,21 @@ static GHandle GJLivePlay_VideoRunLoop(GHandle parm) {
 
         player->videoPlayer->renderFrame(player->videoPlayer, cImageBuf);
 
-#ifdef DEBUG  //delay display
-        static GLong prePTS;
-        static GLong preTime;
-        GLong currentPTS = GTimeMSValue(cImageBuf->pts);
-        GLong currentTime = GTimeMSValue(GJ_Gettime());
-
-        GLong currentTimeStandards = getClockLine(_syncControl);
-
-        GLong currentDelay = (GLong)((GTimeMSValue(cImageBuf->pts) - currentTimeStandards) / _syncControl->speed);
-
-        GJLOG(GNULL,GJ_LOGDEBUG,"render currentClock:%ld, currentPts:%ld currentTime:%ld dpts:%ld dtime:%ld beforeDelay:%ld cache:%d renderDelay:%ld ,rendDur:%ld\n",currentTimeStandards, currentPTS, currentTime,currentPTS - prePTS,currentTime - preTime,delay,queueGetLength(_playControl->imageQueue),currentDelay,currentTime-beforeTime);
-
-        prePTS =  currentPTS;
-        preTime =  currentTime;
-#endif
+//#ifdef DEBUG  //delay display
+//        static GLong prePTS;
+//        static GLong preTime;
+//        GLong currentPTS = GTimeMSValue(cImageBuf->pts);
+//        GLong currentTime = GTimeMSValue(GJ_Gettime());
+//
+//        GLong currentTimeStandards = getClockLine(_syncControl);
+//
+//        GLong currentDelay = (GLong)((GTimeMSValue(cImageBuf->pts) - currentTimeStandards) / _syncControl->speed);
+//
+//        GJLOG(GNULL,GJ_LOGDEBUG,"render currentClock:%ld, currentPts:%ld currentTime:%ld dpts:%ld dtime:%ld beforeDelay:%ld cache:%d renderDelay:%ld ,rendDur:%ld\n",currentTimeStandards, currentPTS, currentTime,currentPTS - prePTS,currentTime - preTime,delay,queueGetLength(_playControl->imageQueue),currentDelay,currentTime-beforeTime);
+//
+//        prePTS =  currentPTS;
+//        preTime =  currentTime;
+//#endif
 
     DROP:
         

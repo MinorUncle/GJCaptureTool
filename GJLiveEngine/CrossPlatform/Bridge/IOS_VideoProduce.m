@@ -575,33 +575,44 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
  @return 裁剪的比例
  */
 - (CGRect)getCropRectWithSourceSize:(CGSize)originSize target:(CGSize)targetSize {
-    CGSize sourceSize  = originSize;
-    CGSize previewSize = _imageView.bounds.size;
-    CGRect region      = CGRectZero;
+    __block CGSize sourceSize  = originSize;
+    __block CGRect region      = CGRectZero;
 
-    if (_imageView && _imageView.superview != nil) {
-        switch (_imageView.contentMode) {
-            case UIViewContentModeScaleAspectFill: //显示在显示视图内
-            {
-                float scaleX = sourceSize.width / previewSize.width;
-                float scaleY = sourceSize.height / previewSize.height;
-                if (scaleX <= scaleY) {
-                    float  scale     = scaleX;
-                    CGSize scaleSize = CGSizeMake(previewSize.width * scale, previewSize.height * scale);
-                    region.origin.x  = 0;
-                    region.origin.y  = (sourceSize.height - scaleSize.height) / 2;
-                    sourceSize.height -= region.origin.y * 2;
-                } else {
-                    float  scale     = scaleY;
-                    CGSize scaleSize = CGSizeMake(previewSize.width * scale, previewSize.height * scale);
-                    region.origin.x  = (sourceSize.width - scaleSize.width) / 2;
-                    region.origin.y  = 0;
-                    sourceSize.width -= region.origin.x * 2;
+    if (_imageView){
+        void (^updateImageRegion)() = ^(){
+            if( _imageView.superview != nil) {
+                CGSize previewSize = _imageView.bounds.size;
+                switch (_imageView.contentMode) {
+                    case UIViewContentModeScaleAspectFill: //显示在显示视图内
+                    {
+                        float scaleX = sourceSize.width / previewSize.width;
+                        float scaleY = sourceSize.height / previewSize.height;
+                        if (scaleX <= scaleY) {
+                            float  scale     = scaleX;
+                            CGSize scaleSize = CGSizeMake(previewSize.width * scale, previewSize.height * scale);
+                            region.origin.x  = 0;
+                            region.origin.y  = (sourceSize.height - scaleSize.height) / 2;
+                            sourceSize.height -= region.origin.y * 2;
+                        } else {
+                            float  scale     = scaleY;
+                            CGSize scaleSize = CGSizeMake(previewSize.width * scale, previewSize.height * scale);
+                            region.origin.x  = (sourceSize.width - scaleSize.width) / 2;
+                            region.origin.y  = 0;
+                            sourceSize.width -= region.origin.x * 2;
+                        }
+                    } break;
+
+                    default:
+                        break;
                 }
-            } break;
-
-            default:
-                break;
+            }
+        };
+        if ([NSThread isMainThread]) {
+            updateImageRegion();
+        }else{
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                updateImageRegion();
+            });
         }
     }
 
@@ -724,32 +735,33 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 }
 
 - (void)updateCropSize {
-    runSynchronouslyOnVideoProcessingQueue(^{
-        if (_camera == nil) return;
-        CGSize size    = _destSize;
-        CGSize capture = self.camera.captureSize;
-        if (capture.height < 2 || capture.width < 2) {
-            return;
+    if (_camera == nil) return;
+    CGSize size    = _destSize;
+    CGSize capture = self.camera.captureSize;
+    if (capture.height < 2 || capture.width < 2) {
+        return;
+    }
+    if (capture.height - size.height > 0.001 ||
+        size.height - capture.height > 0.001 ||
+        capture.width - size.width > 0.001 ||
+        size.width - capture.width > 0.001) {
+        if (![self.camera isKindOfClass:[GJPaintingCamera class]]) {
+            self.camera.captureSize = size;
         }
-        if (capture.height - size.height > 0.001 ||
-            size.height - capture.height > 0.001 ||
-            capture.width - size.width > 0.001 ||
-            size.width - capture.width > 0.001) {
-            if (![self.camera isKindOfClass:[GJPaintingCamera class]]) {
-                self.camera.captureSize = size;
-            }
-            capture = self.camera.captureSize;
-        }
-
-        CGRect region              = [self getCropRectWithSourceSize:capture target:_destSize];
+        capture = self.camera.captureSize;
+    }
+    
+    CGRect region              = [self getCropRectWithSourceSize:capture target:_destSize];
+    runAsynchronouslyOnVideoProcessingQueue(^{
+       
         self.cropFilter.cropRegion = region;
         [_cropFilter forceProcessingAtSize:_destSize];
     });
 }
 
 - (void)setOutputOrientation:(UIInterfaceOrientation)outputOrientation {
-    _outputOrientation = outputOrientation;
-    if (_camera) {
+    if (_camera && self.camera.outputImageOrientation != outputOrientation) {
+        _outputOrientation = outputOrientation;
         self.camera.outputImageOrientation = outputOrientation;
         [self updateCropSize];
     }

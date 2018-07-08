@@ -92,6 +92,7 @@
     NSMutableArray<UIView*>* _tipViewsArry;
     NSMutableArray<UIView*>* _btnViewsArry;
     UITapGestureRecognizer* _tapGesture;
+    UIScrollView*   _contentView;
 }
 
 @property (strong, nonatomic) GJLivePush *livePush;
@@ -111,6 +112,10 @@
 @property (strong, nonatomic) UIButton *sticker;
 @property (strong, nonatomic) UIButton *sizeChangeBtn;
 @property (strong, nonatomic) UIButton *aecBtn;
+@property (strong, nonatomic) UIButton *preMirror;
+@property (strong, nonatomic) UIButton *streamMirror;
+@property (strong, nonatomic) UIButton *faceSticker;
+
 @property (strong, nonatomic) UIView *view;
 
 
@@ -179,13 +184,16 @@
 }
 -(void)buildUI{
     self.view = [[UIView alloc]init];
-    _timeLab = [[UILabel alloc]init];
-    [self.view addSubview:_timeLab];
-    
+//    _timeLab = [[UILabel alloc]init];
+//    [self.view addSubview:_timeLab];
     
     _livePush.previewView.contentMode = UIViewContentModeScaleAspectFit;
     _livePush.previewView.backgroundColor = [UIColor blackColor];
     [self.view addSubview:_livePush.previewView];
+    
+    _contentView = [[UIScrollView alloc]init];
+    
+    [self.view addSubview:_contentView];
     
     _pushStartBtn = [[UIButton alloc]init];
     [_pushStartBtn setTitle:@"推流开始" forState:UIControlStateNormal];
@@ -193,7 +201,7 @@
     [_pushStartBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
     [_pushStartBtn setTitleColor:[UIColor grayColor] forState:UIControlStateSelected];
     [_pushStartBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_pushStartBtn];
+    [_contentView addSubview:_pushStartBtn];
     [_btnViewsArry addObject:_pushStartBtn];
     
     _pushStateLab = [[UILabel alloc]init];
@@ -245,7 +253,7 @@
     [_audioMixBtn setTitle:@"结束混音" forState:UIControlStateSelected];
     [_audioMixBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_audioMixBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_audioMixBtn];
+    [_contentView addSubview:_audioMixBtn];
     [_btnViewsArry addObject:_audioMixBtn];
 
     _earPlay = [[UIButton alloc]init];
@@ -254,7 +262,7 @@
     [_earPlay setTitle:@"结束耳返" forState:UIControlStateSelected];
     [_earPlay setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_earPlay addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_earPlay];
+    [_contentView addSubview:_earPlay];
     [_btnViewsArry addObject:_earPlay];
 
     _mixStream = [[UIButton alloc]init];
@@ -263,7 +271,7 @@
     [_mixStream setTitle:@"允许混音入流" forState:UIControlStateSelected];
     [_mixStream setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_mixStream addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_mixStream];
+    [_contentView addSubview:_mixStream];
     [_btnViewsArry addObject:_mixStream];
 
     _changeCamera = [[UIButton alloc]init];
@@ -271,7 +279,7 @@
     [_changeCamera setTitle:@"切换相机" forState:UIControlStateNormal];
     [_changeCamera setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_changeCamera addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_changeCamera];
+    [_contentView addSubview:_changeCamera];
     [_btnViewsArry addObject:_changeCamera];
 
     _videoMute = [[UIButton alloc]init];
@@ -280,7 +288,7 @@
     [_videoMute setTitle:@"开启视频" forState:UIControlStateSelected];
     [_videoMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_videoMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_videoMute];
+    [_contentView addSubview:_videoMute];
     [_btnViewsArry addObject:_videoMute];
 
     _audioMute = [[UIButton alloc]init];
@@ -289,7 +297,7 @@
     [_audioMute setTitle:@"开启音频" forState:UIControlStateSelected];
     [_audioMute setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_audioMute addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_audioMute];
+    [_contentView addSubview:_audioMute];
     [_btnViewsArry addObject:_audioMute];
 
 //    _uiRecode = [[UIButton alloc]init];
@@ -299,7 +307,7 @@
 //    [_uiRecode setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
 //    [_uiRecode addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
 //    _uiRecode.backgroundColor = [UIColor clearColor];
-//    [self.view addSubview:_uiRecode];
+//    [_contentView addSubview:_uiRecode];
     
     _reverb = [[UIButton alloc]init];
     _reverb.backgroundColor = [UIColor clearColor];
@@ -307,7 +315,7 @@
     [_reverb setTitle:@"关闭混响" forState:UIControlStateSelected];
     [_reverb setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_reverb addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_reverb];
+    [_contentView addSubview:_reverb];
     [_btnViewsArry addObject:_reverb];
 
     _messureModel = [[UIButton alloc]init];
@@ -316,7 +324,7 @@
     [_messureModel setTitle:@"关闭messure模式" forState:UIControlStateSelected];
     [_messureModel setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_messureModel addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_messureModel];
+    [_contentView addSubview:_messureModel];
     [_btnViewsArry addObject:_messureModel];
 
     _sticker = [[UIButton alloc]init];
@@ -325,7 +333,7 @@
     [_sticker setTitle:@"结束贴纸" forState:UIControlStateSelected];
     [_sticker setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_sticker addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_sticker];
+    [_contentView addSubview:_sticker];
     [_btnViewsArry addObject:_sticker];
 
     _aecBtn = [[UIButton alloc]init];
@@ -334,7 +342,7 @@
     [_aecBtn setTitle:@"关闭回声消除" forState:UIControlStateSelected];
     [_aecBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_aecBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-    [self.view addSubview:_aecBtn];
+    [_contentView addSubview:_aecBtn];
     [_btnViewsArry addObject:_aecBtn];
 
     _sizeChangeBtn = [[UIButton alloc]init];
@@ -343,7 +351,7 @@
     [_sizeChangeBtn setTitleColor:[UIColor blackColor] forState:UIControlStateSelected];
     [_sizeChangeBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
     _sizeChangeBtn.backgroundColor = [UIColor clearColor];
-    [self.view addSubview:_sizeChangeBtn];
+    [_contentView addSubview:_sizeChangeBtn];
     [_btnViewsArry addObject:_sizeChangeBtn];
 
     _inputGain = [[GJSliderView alloc]init];
@@ -353,7 +361,7 @@
 //    _inputGain.continuous = NO;
     _inputGain.value = 1.0;
     [_inputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
-    [self.view addSubview:_inputGain];
+    [_contentView addSubview:_inputGain];
     [_btnViewsArry addObject:_inputGain];
     
     _mixGain = [[GJSliderView alloc]init];
@@ -363,7 +371,7 @@
     _mixGain.value = 1.0;
 //    _mixGain.continuous = NO;
     [_mixGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
-    [self.view addSubview:_mixGain];
+    [_contentView addSubview:_mixGain];
     [_btnViewsArry addObject:_mixGain];
 
     _outputGain = [[GJSliderView alloc]init];
@@ -373,7 +381,7 @@
 //    _outputGain.continuous = NO;
     _outputGain.value = 1.0;
     [_outputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
-    [self.view addSubview:_outputGain];
+    [_contentView addSubview:_outputGain];
     [_btnViewsArry addObject:_outputGain];
 
     if (_livePush.captureType == kGJCaptureTypePaint) {
@@ -383,7 +391,7 @@
         [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
         [_paintBtn setTitleColor:[UIColor grayColor] forState:UIControlStateSelected];
         [_paintBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-        [self.view addSubview:_paintBtn];
+        [_contentView addSubview:_paintBtn];
     }else{
         _tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
         [_view addGestureRecognizer:_tapGesture];
@@ -444,15 +452,20 @@
     }
     
     
-    NSInteger rightCount = _btnViewsArry.count;
+#define ITEM_H 40
     rect.origin = CGPointMake(frame.size.width - size.width, hOffset);
-    rect.size = CGSizeMake(size.width, (self.view.bounds.size.height-hOffset) / rightCount);
+    rect.size = CGSizeMake(size.width, self.view.bounds.size.height - hOffset);
+    _contentView.frame = rect;
+    
+    rect.origin = CGPointZero;
+    rect.size.height = ITEM_H;
     
     for (UIView* view in _btnViewsArry) {
         view.frame = rect;
         rect.origin.y = CGRectGetMaxY(rect);
     }
    
+    _contentView.contentSize = CGSizeMake(size.width, ITEM_H*_btnViewsArry.count);
 }
 
 -(void)valueChange:(UISlider*)slider{
