@@ -112,6 +112,8 @@
 		6AF9DDB61FA9763D00F6B4F7 /* SCNViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AF9DDB51FA9763C00F6B4F7 /* SCNViewController.h */; };
 		6AF9DDB91FA976A100F6B4F7 /* GJSunSystemARScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AF9DDB81FA976A100F6B4F7 /* GJSunSystemARScene.m */; };
 		6AF9DDBB1FA97A6000F6B4F7 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 6AF9DDBA1FA97A5F00F6B4F7 /* art.scnassets */; };
+		AE048BE420F0479E006F1148 /* FFVideoEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE048BE220F0479D006F1148 /* FFVideoEncoder.h */; };
+		AE048BFD20F0558B006F1148 /* FFVideoEncoder.c in Sources */ = {isa = PBXBuildFile; fileRef = AE048BE320F0479D006F1148 /* FFVideoEncoder.c */; };
 		AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */ = {isa = PBXBuildFile; fileRef = AE3634131F08120600E3C0AD /* decoder_alac_apple.m */; };
 		AE3A2C171F07F69800C24BAA /* AirTunesPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C151F07F69800C24BAA /* AirTunesPlay.h */; };
 		AE3A2C2C1F07F74500C24BAA /* GJAudioManager.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C2A1F07F74500C24BAA /* GJAudioManager.h */; };
@@ -502,6 +504,8 @@
 		6AF9DDB71FA976A100F6B4F7 /* GJSunSystemARScene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJSunSystemARScene.h; sourceTree = "<group>"; };
 		6AF9DDB81FA976A100F6B4F7 /* GJSunSystemARScene.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GJSunSystemARScene.m; sourceTree = "<group>"; };
 		6AF9DDBA1FA97A5F00F6B4F7 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
+		AE048BE220F0479D006F1148 /* FFVideoEncoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FFVideoEncoder.h; sourceTree = "<group>"; };
+		AE048BE320F0479D006F1148 /* FFVideoEncoder.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = FFVideoEncoder.c; sourceTree = "<group>"; };
 		AE3634131F08120600E3C0AD /* decoder_alac_apple.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = decoder_alac_apple.m; sourceTree = "<group>"; };
 		AE3A2C151F07F69800C24BAA /* AirTunesPlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AirTunesPlay.h; sourceTree = "<group>"; };
 		AE3A2C161F07F69800C24BAA /* AirTunesPlay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AirTunesPlay.m; sourceTree = "<group>"; };
@@ -893,6 +897,8 @@
 				6ABF2B111F0B413600721DB3 /* IOS_AudioProduce.m */,
 				6ABF2B141F0B413600721DB3 /* IOS_H264Encode.h */,
 				6ABF2B151F0B413600721DB3 /* IOS_H264Encode.m */,
+				AE048BE220F0479D006F1148 /* FFVideoEncoder.h */,
+				AE048BE320F0479D006F1148 /* FFVideoEncoder.c */,
 				6ABF2B161F0B413600721DB3 /* IOS_PictureDisplay.h */,
 				6ABF2B171F0B413600721DB3 /* IOS_PictureDisplay.m */,
 				6ABF2B181F0B413600721DB3 /* IOS_VideoProduce.h */,
@@ -1288,6 +1294,7 @@
 				6AD06E7F20B53B86004DF75B /* GJBufferPool.h in Headers */,
 				AE70A52B1ECB4DFE0009E49A /* GJAudioQueueRecoder.h in Headers */,
 				6A63463D20414074000F14E2 /* GJMessageDispatcher.h in Headers */,
+				AE048BE420F0479E006F1148 /* FFVideoEncoder.h in Headers */,
 				6A045F8420E0E0D10035840F /* GJList.h in Headers */,
 				AE70A5131ECB4DFE0009E49A /* GJLiveDefine+internal.h in Headers */,
 				6AD06E8020B53B86004DF75B /* GJDebug.h in Headers */,
@@ -1703,6 +1710,7 @@
 				6ABF2B1B1F0B413600721DB3 /* IOS_AACDecode.m in Sources */,
 				AE8AADFE1FF7BDE100964479 /* GJBridgeContext.c in Sources */,
 				6AF217781FBD98A1004732D1 /* GJFFmpegPush.c in Sources */,
+				AE048BFD20F0558B006F1148 /* FFVideoEncoder.c in Sources */,
 				6A63463C20414074000F14E2 /* GJMessageDispatcher.c in Sources */,
 				6ABF2B1F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m in Sources */,
 				6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */,

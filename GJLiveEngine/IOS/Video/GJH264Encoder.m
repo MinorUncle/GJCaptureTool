@@ -79,6 +79,7 @@
             requestFlush = NO;
         }
         //        printf("encode pts:%lld\n",pts);
+        GTimeValue begin = GJ_Gettime().value;
         OSStatus status = VTCompressionSessionEncodeFrame(
             _enCodeSession,
             imageBuffer,
@@ -87,7 +88,7 @@
             (__bridge CFDictionaryRef) properties,
             NULL,
             NULL);
-
+        printf("encode time:%lld\n",GJ_Gettime().value-begin);
         if (status == 0) {
             _encodeframeCount++;
             return YES;

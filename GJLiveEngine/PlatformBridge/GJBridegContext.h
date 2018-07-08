@@ -103,7 +103,6 @@ typedef struct _GJVideoProduceContext {
     GBool (*setStreamMirror)(struct _GJVideoProduceContext *context, GBool mirror);
 
     GBool (*setFrameRate)(struct _GJVideoProduceContext *context, GInt32 fps);
-    GBool (*setVideoFormat)(struct _GJVideoProduceContext *context, GJPixelFormat format);
     GHandle (*getFreshDisplayImage)(struct _GJVideoProduceContext *context);
 
     GBool (*addSticker)(struct _GJVideoProduceContext *context, const GVoid *overlays, GInt32 fps, GJStickerUpdateCallback callback, const GVoid *userData);
@@ -113,6 +112,8 @@ typedef struct _GJVideoProduceContext {
     GVoid (*stopTrackImage)(struct _GJVideoProduceContext *context);
     GVoid (*setDropStep)(struct _GJVideoProduceContext *context, GRational videoDropStep);
     GBool (*setMute)(struct _GJVideoProduceContext *context, GBool enable);
+    GBool (*setPixelformat)(struct _GJVideoProduceContext *context,const GJPixelFormat* format);
+    GJPixelFormat (*getPixelformat)(struct _GJVideoProduceContext *context);
 
 } GJVideoProduceContext;
 
@@ -212,6 +213,7 @@ extern GVoid GJ_AACDecodeContextCreate(FFAudioDecodeContext **context);
 extern GVoid GJ_H264DecodeContextCreate(FFVideoDecodeContext **context);
 extern GVoid GJ_AACEncodeContextCreate(GJEncodeToAACContext **context);
 extern GVoid GJ_H264EncodeContextCreate(GJEncodeToH264eContext **context);
+extern GVoid GJ_FFEncodeContextCreate(GJEncodeToH264eContext **context);
 extern GVoid GJ_FFDecodeContextCreate(FFVideoDecodeContext **context);
 extern GVoid GJ_AudioPlayContextCreate(GJAudioPlayContext **context);
 extern GVoid GJ_PictureDisplayContextCreate(GJPictureDisplayContext **context);
@@ -223,6 +225,7 @@ extern GVoid GJ_H264DecodeContextDealloc(FFVideoDecodeContext **context);
 extern GVoid GJ_FFDecodeContextDealloc(FFVideoDecodeContext **context);
 extern GVoid GJ_AACEncodeContextDealloc(GJEncodeToAACContext **context);
 extern GVoid GJ_H264EncodeContextDealloc(GJEncodeToH264eContext **context);
+extern GVoid GJ_FFEncodeContextDealloc(GJEncodeToH264eContext **context);
 extern GVoid GJ_AudioPlayContextDealloc(GJAudioPlayContext **context);
 extern GVoid GJ_PictureDisplayContextDealloc(GJPictureDisplayContext** context);
 

@@ -189,6 +189,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 - (void)setPixelFormat:(GJPixelFormat)pixelFormat {
     _pixelFormat  = pixelFormat;
+    _pixelFormat.mType = GJPixelType_32BGRA;
     self.destSize = CGSizeMake((CGFloat) pixelFormat.mWidth, (CGFloat) pixelFormat.mHeight);
 }
 
@@ -204,7 +205,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
 
 - (void)setCaptureType:(GJCaptureType)captureType {
     if (_camera != nil) {
-        GJLOG(GNULL, GJ_LOGWARNING, "setCaptureType 无效，请先停止预览和推流");
+        GJLOG(GNULL, GJ_LOGFORBID, "setCaptureType 无效，请先停止预览和推流");
     }
     _captureType = captureType;
 }
@@ -885,11 +886,16 @@ inline static GVoid videoProduceUnSetup(struct _GJVideoProduceContext *context) 
     }
 }
 
-inline static GBool videoProduceSetVideoFormat(struct _GJVideoProduceContext *context, GJPixelFormat format) {
+inline static GBool videoProduceSetVideoFormat(struct _GJVideoProduceContext *context, const GJPixelFormat* format) {
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
 
-    [recode setPixelFormat:format];
+    [recode setPixelFormat:*format];
     return GTrue;
+}
+inline static GJPixelFormat videoProduceGetVideoFormat(struct _GJVideoProduceContext *context) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    
+    return recode.pixelFormat;
 }
 
 inline static GBool videoProduceStart(struct _GJVideoProduceContext *context) {
@@ -1091,12 +1097,13 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     context->setARScene            = videoProduceSetARScene;
     context->setCaptureView        = videoProduceSetCaptureView;
     context->setCaptureType        = videoProduceSetCaptureType;
-    context->setVideoFormat        = videoProduceSetVideoFormat;
+    context->setPixelformat        = videoProduceSetVideoFormat;
     context->startTrackImage       = startTrackImage;
     context->stopTrackImage        = stopTrackImage;
     context->getFreshDisplayImage  = getFreshDisplayImage;
     context->setDropStep           = setDropStep;
     context->setMute               = setMute;
+    context->getPixelformat        =videoProduceGetVideoFormat;
 }
 
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {

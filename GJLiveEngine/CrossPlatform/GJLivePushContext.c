@@ -531,10 +531,10 @@ GBool _livePushSetupAudioEncodeIfNeed(GJLivePushContext *context) {
 GBool _livePushSetupVideoEncodeIfNeed(GJLivePushContext *context) {
     GBool result = GTrue;
     GJLOG(LIVEPUSH_LOG, GJ_LOGDEBUG, "SetupVideoEncode");
-    GJPixelFormat vFormat = {0};
-    vFormat.mHeight       = (GUInt32) context->pushConfig->mPushSize.height;
-    vFormat.mWidth        = (GUInt32) context->pushConfig->mPushSize.width;
-    vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
+    GJPixelFormat vFormat = context->videoProducer->getPixelformat(context->videoProducer);
+    GJAssert(vFormat.mHeight == (GUInt32) context->pushConfig->mPushSize.height, "产生的大小要等于推流大小");
+    GJAssert(vFormat.mWidth == (GUInt32) context->pushConfig->mPushSize.width, "产生的大小要等于推流大小");
+    
     if (context->videoEncoder->obaque == GNULL) {
         context->videoEncoder->encodeSetup(context->videoEncoder, vFormat, h264PacketOutCallback, context);
     }
@@ -641,15 +641,15 @@ GBool GJLivePush_StartPush(GJLivePushContext *context, const GChar *url) {
             aDFormat.format.mFramePerPacket = 1024;
             aDFormat.format.mType           = GJAudioType_AAC;
 
-            GJPixelFormat vFormat = {0};
-            vFormat.mHeight       = (GUInt32) context->pushConfig->mPushSize.height;
-            vFormat.mWidth        = (GUInt32) context->pushConfig->mPushSize.width;
-            vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
+//            GJPixelFormat vFormat = {0};
+//            vFormat.mHeight       = (GUInt32) context->pushConfig->mPushSize.height;
+//            vFormat.mWidth        = (GUInt32) context->pushConfig->mPushSize.width;
+//            vFormat.mType         = GJPixelType_YpCbCr8BiPlanar_Full;
 
             GJVideoStreamFormat vf;
             vf.format.mFps    = context->pushConfig->mFps;
-            vf.format.mWidth  = vFormat.mWidth;
-            vf.format.mHeight = vFormat.mHeight;
+            vf.format.mWidth  = context->pushConfig->mPushSize.width;
+            vf.format.mHeight = context->pushConfig->mPushSize.height;
             vf.format.mType   = GJVideoType_H264;
             vf.bitrate        = context->pushConfig->mVideoBitrate;
 
