@@ -270,6 +270,9 @@ static GVoid pullMessageCallback(GJStreamPull *pull, GHandle receiver, kStreamPu
                 GJAssert(0, "收到不支持的流格式");
             }
         } break;
+        case kStreamPullMessageType_EOF: {
+            GJLOG(livePull, GJ_LOGDEBUG, "pull EOF");
+        } break;
         default:
             GJLOG(livePull, GJ_LOGFORBID, "not catch info：%d", messageType);
             break;

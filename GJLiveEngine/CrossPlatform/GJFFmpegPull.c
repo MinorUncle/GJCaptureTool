@@ -165,7 +165,11 @@ static GHandle pullRunloop(GHandle parm) {
             R_BufferUnRetain(packet);
             GJLOG(GNULL, GJ_LOGERROR, "av_read_frame error:%s\n", av_err2str(ret));
             av_packet_unref(&pkt);
-            message = kStreamPullMessageType_receivePacketError;
+            if (ret == -541478725) {
+                message = kStreamPullMessageType_EOF;
+            }else{
+                message = kStreamPullMessageType_receivePacketError;
+            }
             goto END;
         }
 

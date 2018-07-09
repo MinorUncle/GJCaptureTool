@@ -18,7 +18,8 @@ typedef enum _kStreamPullMessageType {
     kStreamPullMessageType_closeComplete,
     kStreamPullMessageType_connectError,
     kStreamPullMessageType_urlPraseError,
-    kStreamPullMessageType_receivePacketError
+    kStreamPullMessageType_receivePacketError,
+    kStreamPullMessageType_EOF,
 } kStreamPullMessageType;
 
 typedef struct _GJStreamPull GJStreamPull;

@@ -48,7 +48,7 @@ static GVoid livePullCallback(GHandle userDate, GJLivePullMessageType message, G
     if (self) {
         GJLivePull_Create(&(_pullContext), livePullCallback, (__bridge GHandle)(self));
         _enablePreview  = YES;
-        _gaterFrequency = 2.0;
+        _gaterFrequency = 1.0;
         _lock           = [[NSRecursiveLock alloc] init];
 
 #ifdef USE_KCP

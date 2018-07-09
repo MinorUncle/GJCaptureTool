@@ -58,6 +58,7 @@
 		24552C1C9C0EDE443A631DF3 /* h264_cavlc.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA49E2D1F15C8D60009FB64 /* h264_cavlc.c */; };
 		2528DC135207A840A61EC997 /* file_open.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA4A45C1F15CA770009FB64 /* file_open.c */; };
 		25E85E86D4197B3DD74F0B2D /* graphdump.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA4A6191F15CD260009FB64 /* graphdump.c */; };
+		2707298D20F38B6F00DA051F /* h264dec.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA489611F15C0A90009FB64 /* h264dec.c */; };
 		2740BBA777EBBAEF698B52E0 /* rl.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA4A1641F15C8DE0009FB64 /* rl.c */; };
 		276BEE81505A5EF6BFF3A6FB /* sinewin_fixed.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA4A1A51F15C8DF0009FB64 /* sinewin_fixed.c */; };
 		2913FB38C87AE989772CC800 /* movenccenc.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA489DE1F15C0AA0009FB64 /* movenccenc.c */; };
@@ -8485,6 +8486,7 @@
 				214C12F3AF16C5E13F2B26DE /* id3v2.c in Sources */,
 				F4DC2C339B44A2AEAB71B23F /* ijkutils.c in Sources */,
 				80FAC8B77AE7519058561BD6 /* img2.c in Sources */,
+				2707298D20F38B6F00DA051F /* h264dec.c in Sources */,
 				2A5B6996C799872F43CEB35D /* isom.c in Sources */,
 				871EB13E6AC423B57A3F6553 /* metadata.c in Sources */,
 				03F36E1B6BE68BA241480709 /* mov.c in Sources */,

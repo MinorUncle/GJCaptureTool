@@ -19,6 +19,85 @@ typedef enum _DecodeFlag{
     kDecodeFlagNeedDrop = 1 << 0,
     kDecodeFlagKey = 1 << 1,
 }DecodeFlag;
+
+#define SDL_FOURCC(a, b, c, d) \
+(((uint32_t)a) | (((uint32_t)b) << 8) | (((uint32_t)c) << 16) | (((uint32_t)d) << 24))
+
+#define IJK_VTB_FCC_AVC    SDL_FOURCC('C', 'c', 'v', 'a')
+#define IJK_VTB_FCC_ESD    SDL_FOURCC('s', 'd', 's', 'e')
+#define IJK_VTB_FCC_AVC1   SDL_FOURCC('1', 'c', 'v', 'a')
+
+
+static void dict_set_i32(CFMutableDictionaryRef dict, CFStringRef key,
+                         int32_t value)
+{
+    CFNumberRef number;
+    number = CFNumberCreate(NULL, kCFNumberSInt32Type, &value);
+    CFDictionarySetValue(dict, key, number);
+    CFRelease(number);
+}
+
+
+static void dict_set_string(CFMutableDictionaryRef dict, CFStringRef key, const char * value)
+{
+    CFStringRef string;
+    string = CFStringCreateWithCString(NULL, value, kCFStringEncodingASCII);
+    CFDictionarySetValue(dict, key, string);
+    CFRelease(string);
+}
+
+static void dict_set_boolean(CFMutableDictionaryRef dict, CFStringRef key, BOOL value)
+{
+    CFDictionarySetValue(dict, key, value ? kCFBooleanTrue: kCFBooleanFalse);
+}
+
+
+static void dict_set_object(CFMutableDictionaryRef dict, CFStringRef key, CFTypeRef *value)
+{
+    CFDictionarySetValue(dict, key, value);
+}
+
+static void dict_set_data(CFMutableDictionaryRef dict, CFStringRef key, uint8_t * value, uint64_t length)
+{
+    CFDataRef data;
+    data = CFDataCreate(NULL, value, (CFIndex)length);
+    CFDictionarySetValue(dict, key, data);
+    CFRelease(data);
+}
+
+static CMFormatDescriptionRef CreateFormatDescriptionFromCodecData(uint32_t format_id, int width, int height, const uint8_t *extradata, int extradata_size, uint32_t atom)
+{
+    CMFormatDescriptionRef fmt_desc = NULL;
+    OSStatus status;
+    
+    CFMutableDictionaryRef par = CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks,&kCFTypeDictionaryValueCallBacks);
+    CFMutableDictionaryRef atoms = CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks,&kCFTypeDictionaryValueCallBacks);
+    CFMutableDictionaryRef extensions = CFDictionaryCreateMutable(NULL, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+    
+    /* CVPixelAspectRatio dict */
+    dict_set_i32(par, CFSTR ("HorizontalSpacing"), 0);
+    dict_set_i32(par, CFSTR ("VerticalSpacing"), 0);
+    /* SampleDescriptionExtensionAtoms dict */
+    dict_set_data(atoms, CFSTR ("avcC"), (uint8_t *)extradata, extradata_size);
+    
+    /* Extensions dict */
+    dict_set_string(extensions, CFSTR ("CVImageBufferChromaLocationBottomField"), "left");
+    dict_set_string(extensions, CFSTR ("CVImageBufferChromaLocationTopField"), "left");
+    dict_set_boolean(extensions, CFSTR("FullRangeVideo"), FALSE);
+    dict_set_object(extensions, CFSTR ("CVPixelAspectRatio"), (CFTypeRef *) par);
+    dict_set_object(extensions, CFSTR ("SampleDescriptionExtensionAtoms"), (CFTypeRef *) atoms);
+    status = CMVideoFormatDescriptionCreate(NULL, format_id, width, height, extensions, &fmt_desc);
+    
+    CFRelease(extensions);
+    CFRelease(atoms);
+    CFRelease(par);
+    
+    if (status == 0)
+        return fmt_desc;
+    else
+        return NULL;
+}
+
 @interface GJH264Decoder () {
     dispatch_queue_t _decodeQueue; //解码线程在子线程，主要为了避免decodeBuffer：阻塞，节省时间去接收数据
     NSData *         _spsData;
@@ -30,6 +109,7 @@ typedef enum _DecodeFlag{
     GInt             _maxRefFrames;
     GJListNode*      _sortqQueue;
     GInt             _sortLength;
+    GInt64           _prePts;
 }
 @property (nonatomic) VTDecompressionSessionRef decompressionSession;
 @property (nonatomic, assign) CMVideoFormatDescriptionRef formatDesc;
@@ -283,16 +363,35 @@ void decodeOutputCallback(
 - (void)findInfoWithData:(GUInt8 *)start dataSize:(int)dataSize sps:(GUInt8 **)pSps spsSize:(int *)pSpsSize pps:(GUInt8 **)pPps ppsSize:(int *)pPpsSize {
     int     spsSize = 0, ppsSize = 0;
     GUInt8 *sps = NULL, *pps = NULL;
-    if ((start[4] & 0x1f) == 7) {
-        spsSize = ntohl(*(uint32_t *) start);
-        sps     = start + 4;
-        if ((start[spsSize + 8] & 0x1f) == 8) {
-            memcpy(&ppsSize, spsSize + sps, 4);
-            ppsSize = ntohl(*(uint32_t *) (sps + spsSize));
-            pps     = sps + spsSize + 4;
-        } else {
-            GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "包含sps而不包含pps");
+    if (dataSize>4 && (start[4] & 0x1f) == 7) {
+        if (start[0]==0 && start[1] == 0 && start[2] == 0 && start[3] ==1) {
+            GInt32 index = 4;
+            sps     = start + 4;
+            while (index < dataSize) {
+                if (start[index]==0 && start[index+1] == 0 && start[index+2] == 0 && start[index+3] ==1) {
+                    if ((start[index+4] & 0x1f) == 8) {
+                        spsSize = index - 4;
+                        pps = start + index + 4;
+                    }else{
+                        break;
+                    }
+                }
+                index++;
+            }
+            GJAssert(pps != nil, "包含sps而不包含pps");
+            ppsSize = (GInt32)(start + index - pps);
+        }else{
+            spsSize = ntohl(*(uint32_t *) start);
+            sps     = start + 4;
+            if ((start[spsSize + 8] & 0x1f) == 8) {
+                memcpy(&ppsSize, spsSize + sps, 4);
+                ppsSize = ntohl(*(uint32_t *) (sps + spsSize));
+                pps     = sps + spsSize + 4;
+            } else {
+                GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "包含sps而不包含pps");
+            }
         }
+       
     } else {
         GInt32 index = 0;
         while (index < dataSize) {
@@ -321,31 +420,33 @@ void decodeOutputCallback(
     *pPpsSize = ppsSize;
 }
 
-- (void)findInfoWithAVCC:(GUInt8 *)avcc dataSize:(int)avccSize sps:(GUInt8 **)pSps spsSize:(int *)pSpsSize pps:(GUInt8 **)pPps ppsSize:(int *)pPpsSize {
-    int     spsSize = 0, ppsSize = 0;
-    GUInt8 *sps = NULL, *pps = NULL;
-    if (avccSize > 9 && (avcc[8] & 0x1f) == 7) {
-        sps     = avcc + 8;
-        spsSize = avcc[6] << 8;
-        spsSize |= avcc[7];
-        if (avccSize > spsSize + 8 + 3 && (avcc[spsSize + 8 + 3] & 0x1f) == 8) {
-            pps     = avcc + 8 + spsSize + 3;
-            ppsSize = avcc[8 + spsSize + 1] << 8;
-            ppsSize |= avcc[8 + spsSize + 2];
+//- (void)findInfoWithAVCC:(GUInt8 *)avcc dataSize:(int)avccSize sps:(GUInt8 **)pSps spsSize:(int *)pSpsSize pps:(GUInt8 **)pPps ppsSize:(int *)pPpsSize {
+//    int     spsSize = 0, ppsSize = 0;
+//    GUInt8 *sps = NULL, *pps = NULL;
+//    if (avccSize > 9 && (avcc[8] & 0x1f) == 7) {
+//        sps     = avcc + 8;
+//        spsSize = avcc[6] << 8;
+//        spsSize |= avcc[7];
+//        if (avccSize > spsSize + 8 + 3 && (avcc[spsSize + 8 + 3] & 0x1f) == 8) {
+//            pps     = avcc + 8 + spsSize + 3;
+//            ppsSize = avcc[8 + spsSize + 1] << 8;
+//            ppsSize |= avcc[8 + spsSize + 2];
+//
+//            GJAssert(avccSize >= 8 + spsSize + 3 + ppsSize, "格式有问题");
+//            *pSps     = sps;
+//            *pPps     = pps;
+//            *pSpsSize = spsSize;
+//            *pPpsSize = ppsSize;
+//
+//            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "receive decode sps size:%d:", spsSize);
+//            GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
+//            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "receive decode pps size:%d:", ppsSize);
+//            GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
+//        }
+//    }
+//}
 
-            GJAssert(avccSize >= 8 + spsSize + 3 + ppsSize, "格式有问题");
-            *pSps     = sps;
-            *pPps     = pps;
-            *pSpsSize = spsSize;
-            *pPpsSize = ppsSize;
 
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "receive decode sps size:%d:", spsSize);
-            GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
-            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "receive decode pps size:%d:", ppsSize);
-            GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
-        }
-    }
-}
 - (void)updateSpsPps:(GUInt8 *)sps spsSize:(int)spsSize pps:(GUInt8 *)pps ppsSize:(int)ppsSize {
     if (sps && pps && (_decompressionSession == nil || memcmp(sps, _spsData.bytes, spsSize) || memcmp(pps, _ppsData.bytes, ppsSize))) {
         GJLOG(DEFAULT_LOG, GJ_LOGINFO, "decode sps size:%d:", spsSize);
@@ -410,12 +511,21 @@ void decodeOutputCallback(
     GBool    isKeyPacket = GFalse;
     if ((packet->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType) {
         pkt                    = ((AVPacket *) (R_BufferStart(packet) + packet->extendDataOffset));
+        if (pkt->pts < 0 && pkt->duration > 0) {
+            pkt->pts = _prePts + pkt->duration;
+            packet->pts = GTimeMake(pkt->pts/1000, 1000);
+            _prePts = pkt->pts;
+        }
         GInt32  extendDataSize = 0;
         GUInt8 *extendData     = av_packet_get_side_data(pkt, AV_PKT_DATA_NEW_EXTRADATA, &extendDataSize);
-        [self findInfoWithAVCC:extendData dataSize:extendDataSize sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
-        if (sps && pps) {
-            [self updateSpsPps:sps spsSize:spsSize pps:pps ppsSize:ppsSize];
+        if (extendDataSize > 0) {
+            [self findInfoWithData:extendData dataSize:extendDataSize sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
+            ////        [self findInfoWithAVCC:extendData dataSize:extendDataSize sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
+            if (sps && pps) {
+                [self updateSpsPps:sps spsSize:spsSize pps:pps ppsSize:ppsSize];
+            }
         }
+        
         packetSize  = (int) pkt->size;
         packetData  = pkt->data;
         isKeyPacket = (pkt->flags & AV_PKT_FLAG_KEY) == AV_PKT_FLAG_KEY;
@@ -423,7 +533,9 @@ void decodeOutputCallback(
     } else if ((packet->flag & GJPacketFlag_P_AVStreamType) == GJPacketFlag_P_AVStreamType) {
         AVStream *         stream   = ((AVStream **) (R_BufferStart(packet) + packet->extendDataOffset))[0];
         AVCodecParameters *codecpar = stream->codecpar;
-        [self findInfoWithAVCC:codecpar->extradata dataSize:codecpar->extradata_size sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
+//        CMVideoFormatDescriptionRef formatDesc = CreateFormatDescriptionFromCodecData(IJK_VTB_FCC_AVC1, 0, 0, codecpar->extradata, codecpar->extradata_size, IJK_VTB_FCC_AVC);
+        [self findInfoWithData:codecpar->extradata dataSize:codecpar->extradata_size sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
+//        [self findInfoWithAVCC:codecpar->extradata dataSize:codecpar->extradata_size sps:&sps spsSize:&spsSize pps:&pps ppsSize:&ppsSize];
         GJAssert(sps != GNULL && pps != NULL, "没有sps，pps");
         [self updateSpsPps:sps spsSize:spsSize pps:pps ppsSize:ppsSize];
     }
@@ -537,26 +649,27 @@ ERROR:
 - (CMSampleBufferRef)createSampleBufferWithData:(GUInt8 *)packetData size:(GLong)packetSize pts:(GInt64)pts {
 
 //#if MEMORY_CHECK  格式检查，针对不规则流
-////<-----conversion
-//    if (((GUInt16*)packetData)[0] == 0 && packetData[2] == 0 && packetData[3] == 1) {
+//<-----conversion
+    if (((GUInt16*)packetData)[0] == 0 && packetData[2] == 0 && packetData[3] == 1) {
 
-//        GUInt8* preNal = GNULL;
-//        for (int i = 3; i<packetSize-4; i++) {
-//            if (packetData[i] == 0) {
-//                if (packetData[i+1] == 0) {
-//                    if (packetData[i+2] == 0) {
-//                        if (packetData[i+3] == 1) {
-//                            if (preNal != GNULL) {
-//                                GInt32 nalSize = (GInt32)(packetData + i - preNal);
-//                                nalSize = htonl(nalSize);
-//                                memcpy(preNal-4, &nalSize, 4);
-//                            }
-//                            preNal = packetData + i+4;
-//                            i+=3;//跳过4-1个
-//                        }else if(packetData[i+3] != 0){//3-1
-//                            i+=2;
-//                        }//否则//1-1
-//                    }else if(packetData[i+2] == 1){//匹配成功0x000001，3-1,
+        GUInt8* preNal = packetData+4;
+        for (int i = 3; i<packetSize-4; i++) {
+            if (packetData[i] == 0) {
+                if (packetData[i+1] == 0) {
+                    if (packetData[i+2] == 0) {
+                        if (packetData[i+3] == 1) {
+                            if (preNal != GNULL) {
+                                GInt32 nalSize = (GInt32)(packetData + i - preNal);
+                                nalSize = htonl(nalSize);
+                                memcpy(preNal-4, &nalSize, 4);
+                            }
+                            preNal = packetData + i+4;
+                            i+=3;//跳过4-1个
+                        }else if(packetData[i+3] != 0){//3-1
+                            i+=2;
+                        }//否则//1-1
+                    }else if(packetData[i+2] == 1){//匹配成功0x000001，3-1,
+                        assert(0);
 //                        AVPacket* pkt = ((AVPacket*)(R_BufferStart(packet) + packet->extendDataOffset));
 //
 //                        av_grow_packet(pkt,1);
@@ -569,21 +682,21 @@ ERROR:
 //                        }
 //                        preNal = packetData + i +4;
 //                        i+=3;
-//                    }else{
-//                        i+=2;
-//                    }
-//                }else{
-//                    i++;
-//                }
-//            }
-//        }
-//        if (preNal) {
-//            GInt32 nalSize = (GInt32)(packetData + packetSize - preNal);
-//            nalSize = htonl(nalSize);
-//            memcpy(preNal-4, &nalSize, 4);
-//        }
-//    }
-///->>>
+                    }else{
+                        i+=2;
+                    }
+                }else{
+                    i++;
+                }
+            }
+        }
+        if (preNal) {
+            GInt32 nalSize = (GInt32)(packetData + packetSize - preNal);
+            nalSize = htonl(nalSize);
+            memcpy(preNal-4, &nalSize, 4);
+        }
+    }
+//->>>
 
 //格式检查，针对不规则流
 #ifdef DEBUG
