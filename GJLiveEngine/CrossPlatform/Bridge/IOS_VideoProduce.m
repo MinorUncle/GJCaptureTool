@@ -521,7 +521,8 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     _faceHandle          = [[ARCSoftFaceHandle alloc] initWithDataPath:baseDataPath];
     self.camera.delegate = _faceHandle;
     _faceSticker         = [[ARCSoftFaceSticker alloc] init];
-    
+    _faceSticker.faceStatus = _faceHandle.faceStatus;
+    _faceSticker.faceInformation = _faceHandle.faceInformation;
     runAsynchronouslyOnVideoProcessingQueue(^{
         [self addFilter:_faceSticker deep:kFilterFaceSticker];
     });
@@ -1097,11 +1098,8 @@ GVoid chanceVideoEffect(struct _GJVideoProduceContext* context){
 }
 
 GBool updateFaceStickTemplatePath(struct _GJVideoProduceContext* context,const GChar* dataPath){
-    if (!dataPath) {
-        return GFalse;
-    }
     IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
-    return [recode updateFaceStickerWithTemplatePath:[NSString stringWithUTF8String:dataPath]];
+    return [recode updateFaceStickerWithTemplatePath:dataPath!=GNULL?[NSString stringWithUTF8String:dataPath]:nil];
 }
 
 GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {

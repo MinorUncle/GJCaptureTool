@@ -734,6 +734,7 @@
             [_faceSticker setTitle:[NSString stringWithFormat:@"人脸贴图:%@",_stickerPath[btn.tag%_stickerPath.count]] forState:UIControlStateNormal];
         }else{
             [_livePush updateFaceStickTemplatePath:nil];
+            [_livePush chanceVideoEffect];
             [_faceSticker setTitle:@"人脸贴图:无" forState:UIControlStateNormal];
         }
         btn.tag ++;
