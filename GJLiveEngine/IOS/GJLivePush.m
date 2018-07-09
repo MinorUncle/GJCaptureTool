@@ -160,7 +160,7 @@
                            fps:(NSInteger)fps
                    updateBlock:(OverlaysUpdate)updateBlock {
     @synchronized(self) {
-        GJLOG(GNULL, GJ_LOGDEBUG, "%d", fps);
+        GJLOG(GNULL, GJ_LOGDEBUG, "%ld", (long)fps);
         if (_stickerCallback != GNULL) {
             [self chanceSticker];
         }

@@ -536,6 +536,7 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     _faceHandle          = nil;
     runSynchronouslyOnVideoProcessingQueue(^{
         [self removeFilterWithdeep:kFilterFaceSticker];
+        _faceSticker = nil;
     });
 }
 
