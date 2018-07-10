@@ -82,6 +82,7 @@
                 isRGB       = GTrue;
                 break;
             case AV_PIX_FMT_YUV420P:
+            case AV_PIX_FMT_YUVJ420P:
                 yuvFormat = GJPixelFormatI420;
                 isYUV     = GTrue;
                 break;

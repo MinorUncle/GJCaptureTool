@@ -36,11 +36,16 @@ static void *FFDecoder_DecodeRunloop(GHandle arg) {
     FFDecoder * decoder = (FFDecoder *) arg;
     R_GJPacket *packetData;
     AVPacket    packet;
+    GInt64 prePts = 0;
     while (decoder->isRunning && queuePop(decoder->cacheQueue, (GHandle *) &packetData, GINT32_MAX)) {
         AVFrame * frame      = av_frame_alloc();
         AVPacket *sendPacket = GNULL;
         if ((packetData->flag & GJPacketFlag_AVPacketType) == GJPacketFlag_AVPacketType) {
             sendPacket = ((AVPacket *) (R_BufferStart(packetData) + packetData->extendDataOffset));
+            if (sendPacket->pts < 0 && sendPacket->duration > 0) {
+                sendPacket->pts = sendPacket->duration+prePts;
+                prePts = sendPacket->pts;
+            }
         } else {
             av_init_packet(&packet);
             packet.data = GNULL;
