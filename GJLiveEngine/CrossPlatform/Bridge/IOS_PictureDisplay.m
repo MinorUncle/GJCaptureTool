@@ -45,81 +45,88 @@
 }
 
 - (void)displayImage:(R_GJPixelFrame *)frame {
-    if (!_enableRender) {
-        return;
-    }
-    if ((frame->flag & kGJFrameFlag_P_CVPixelBuffer) == kGJFrameFlag_P_CVPixelBuffer) {
-        CVImageBufferRef image = ((CVImageBufferRef *) R_BufferStart(frame))[0];
-
-        if (![_imageInput isKindOfClass:[GJImagePixelImageInput class]]) {
-            OSType format = CVPixelBufferGetPixelFormatType(image);
-            _imageInput   = [[GJImagePixelImageInput alloc] initWithFormat:(GJYUVPixelImageFormat) format];
-            if (_enableRender) {
-                [_imageInput addTarget:_displayView];
-            }
+    R_BufferRetain(frame);
+    runAsynchronouslyOnVideoProcessingQueue(^{
+        if (!_enableRender) {
+            R_BufferUnRetain(frame);
+            return;
         }
-        [(GJImagePixelImageInput *) _imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
-    } else if ((frame->flag & kGJFrameFlag_P_AVFrame) == kGJFrameFlag_P_AVFrame) {
-        AVFrame *          image  = ((AVFrame **) R_BufferStart(frame))[0];
-        enum AVPixelFormat format = image->format;
 
-        GPUPixelFormat   pixelFormat = GPUPixelFormatBGRA;
-        GJYUVPixelFormat yuvFormat   = GJPixelFormatI420;
-
-        BOOL isRGB = GFalse;
-        BOOL isYUV = GFalse;
-        switch (format) {
-            case AV_PIX_FMT_RGBA:
-                pixelFormat = GPUPixelFormatRGBA;
-                isRGB       = GTrue;
-                break;
-            case AV_PIX_FMT_BGRA:
-                pixelFormat = GPUPixelFormatBGRA;
-                isRGB       = GTrue;
-                break;
-            case AV_PIX_FMT_RGB24:
-                pixelFormat = GPUPixelFormatRGB;
-                isRGB       = GTrue;
-                break;
-            case AV_PIX_FMT_YUV420P:
-            case AV_PIX_FMT_YUVJ420P:
-                yuvFormat = GJPixelFormatI420;
-                isYUV     = GTrue;
-                break;
-            case AV_PIX_FMT_NV12:
-                yuvFormat = GJPixelFormatNV12;
-                isYUV     = GTrue;
-                break;
-            case AV_PIX_FMT_NV21:
-                yuvFormat = GJPixelFormatNV21;
-                isYUV     = GTrue;
-                break;
-            default:
-                GJAssert(0, "不支持");
-                break;
-        }
-        if (isRGB) {
-            if (![_imageInput isKindOfClass:[GPUImageRawDataInput class]]) {
-                _imageInput = [[GPUImageRawDataInput alloc] initWithBytes:image->data[0] size:CGSizeMake(image->width, image->height) pixelFormat:pixelFormat];
+        if ((frame->flag & kGJFrameFlag_P_CVPixelBuffer) == kGJFrameFlag_P_CVPixelBuffer) {
+            CVImageBufferRef image = ((CVImageBufferRef *) R_BufferStart(frame))[0];
+            
+            if (![_imageInput isKindOfClass:[GJImagePixelImageInput class]]) {
+                OSType format = CVPixelBufferGetPixelFormatType(image);
+                _imageInput   = [[GJImagePixelImageInput alloc] initWithFormat:(GJYUVPixelImageFormat) format];
                 if (_enableRender) {
                     [_imageInput addTarget:_displayView];
                 }
             }
-            [(GPUImageRawDataInput *) _imageInput processData];
-        } else {
-            if (![_imageInput isKindOfClass:[GJImageYUVDataInput class]]) {
-                _imageInput = [[GJImageYUVDataInput alloc] initWithImageSize:CGSizeMake(image->width, image->height) pixelFormat:yuvFormat];
-                if (_enableRender) {
-                    [_imageInput addTarget:_displayView];
-                }
+            [(GJImagePixelImageInput *) _imageInput updateDataWithImageBuffer:image timestamp:kCMTimeZero];
+        } else if ((frame->flag & kGJFrameFlag_P_AVFrame) == kGJFrameFlag_P_AVFrame) {
+            AVFrame *          image  = ((AVFrame **) R_BufferStart(frame))[0];
+            enum AVPixelFormat format = image->format;
+            
+            GPUPixelFormat   pixelFormat = GPUPixelFormatBGRA;
+            GJYUVPixelFormat yuvFormat   = GJPixelFormatI420;
+            
+            BOOL isRGB = GFalse;
+            BOOL isYUV = GFalse;
+            switch (format) {
+                case AV_PIX_FMT_RGBA:
+                    pixelFormat = GPUPixelFormatRGBA;
+                    isRGB       = GTrue;
+                    break;
+                case AV_PIX_FMT_BGRA:
+                    pixelFormat = GPUPixelFormatBGRA;
+                    isRGB       = GTrue;
+                    break;
+                case AV_PIX_FMT_RGB24:
+                    pixelFormat = GPUPixelFormatRGB;
+                    isRGB       = GTrue;
+                    break;
+                case AV_PIX_FMT_YUV420P:
+                case AV_PIX_FMT_YUVJ420P:
+                    yuvFormat = GJPixelFormatI420;
+                    isYUV     = GTrue;
+                    break;
+                case AV_PIX_FMT_NV12:
+                    yuvFormat = GJPixelFormatNV12;
+                    isYUV     = GTrue;
+                    break;
+                case AV_PIX_FMT_NV21:
+                    yuvFormat = GJPixelFormatNV21;
+                    isYUV     = GTrue;
+                    break;
+                default:
+                    GJAssert(0, "不支持");
+                    break;
             }
-            if (yuvFormat == GJPixelFormatI420) {
-                [(GJImageYUVDataInput *) _imageInput updateDataWithY:image->data[0] U:image->data[1] V:image->data[2] type:GJPixelTypeUByte Timestamp:kCMTimeZero];
+            if (isRGB) {
+                if (![_imageInput isKindOfClass:[GPUImageRawDataInput class]]) {
+                    _imageInput = [[GPUImageRawDataInput alloc] initWithBytes:image->data[0] size:CGSizeMake(image->width, image->height) pixelFormat:pixelFormat];
+                    if (_enableRender) {
+                        [_imageInput addTarget:_displayView];
+                    }
+                }
+                [(GPUImageRawDataInput *) _imageInput processData];
             } else {
-                [(GJImageYUVDataInput *) _imageInput updateDataWithY:image->data[0] CrBr:image->data[1] type:GJPixelTypeUByte Timestamp:kCMTimeZero];
+                if (![_imageInput isKindOfClass:[GJImageYUVDataInput class]]) {
+                    _imageInput = [[GJImageYUVDataInput alloc] initWithImageSize:CGSizeMake(image->width, image->height) pixelFormat:yuvFormat];
+                    if (_enableRender) {
+                        [_imageInput addTarget:_displayView];
+                    }
+                }
+                if (yuvFormat == GJPixelFormatI420) {
+                    [(GJImageYUVDataInput *) _imageInput updateDataWithY:image->data[0] U:image->data[1] V:image->data[2] type:GJPixelTypeUByte Timestamp:kCMTimeZero];
+                } else {
+                    [(GJImageYUVDataInput *) _imageInput updateDataWithY:image->data[0] CrBr:image->data[1] type:GJPixelTypeUByte Timestamp:kCMTimeZero];
+                }
             }
         }
-    }
+        R_BufferUnRetain(frame);
+    });
+   
 }
 
 - (void)dealloc {

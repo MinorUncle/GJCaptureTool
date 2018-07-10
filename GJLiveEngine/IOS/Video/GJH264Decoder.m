@@ -360,18 +360,18 @@ void decodeOutputCallback(
     }
 }
 
-- (void)findInfoWithData:(GUInt8 *)start dataSize:(int)dataSize sps:(GUInt8 **)pSps spsSize:(int *)pSpsSize pps:(GUInt8 **)pPps ppsSize:(int *)pPpsSize {
+- (void)findInfoWithData:(GUInt8 *)avcc dataSize:(int)avccSize sps:(GUInt8 **)pSps spsSize:(int *)pSpsSize pps:(GUInt8 **)pPps ppsSize:(int *)pPpsSize {
     int     spsSize = 0, ppsSize = 0;
     GUInt8 *sps = NULL, *pps = NULL;
-    if (dataSize>4 && (start[4] & 0x1f) == 7) {
-        if (start[0]==0 && start[1] == 0 && start[2] == 0 && start[3] ==1) {
+    if (avccSize>4 && (avcc[4] & 0x1f) == 7) {
+        if (avcc[0]==0 && avcc[1] == 0 && avcc[2] == 0 && avcc[3] ==1) {
             GInt32 index = 4;
-            sps     = start + 4;
-            while (index < dataSize) {
-                if (start[index]==0 && start[index+1] == 0 && start[index+2] == 0 && start[index+3] ==1) {
-                    if ((start[index+4] & 0x1f) == 8) {
+            sps     = avcc + 4;
+            while (index < avccSize) {
+                if (avcc[index]==0 && avcc[index+1] == 0 && avcc[index+2] == 0 && avcc[index+3] ==1) {
+                    if ((avcc[index+4] & 0x1f) == 8) {
                         spsSize = index - 4;
-                        pps = start + index + 4;
+                        pps = avcc + index + 4;
                     }else{
                         break;
                     }
@@ -379,11 +379,11 @@ void decodeOutputCallback(
                 index++;
             }
             GJAssert(pps != nil, "包含sps而不包含pps");
-            ppsSize = (GInt32)(start + index - pps);
+            ppsSize = (GInt32)(avcc + index - pps);
         }else{
-            spsSize = ntohl(*(uint32_t *) start);
-            sps     = start + 4;
-            if ((start[spsSize + 8] & 0x1f) == 8) {
+            spsSize = ntohl(*(uint32_t *) avcc);
+            sps     = avcc + 4;
+            if ((avcc[spsSize + 8] & 0x1f) == 8) {
                 memcpy(&ppsSize, spsSize + sps, 4);
                 ppsSize = ntohl(*(uint32_t *) (sps + spsSize));
                 pps     = sps + spsSize + 4;
@@ -392,26 +392,25 @@ void decodeOutputCallback(
             }
         }
        
-    } else {
-        GInt32 index = 0;
-        while (index < dataSize) {
-            if ((start[index + 4] & 0x1f) == 7) {
-                sps = start + index + 4;
-                memcpy(&spsSize, start + index, 4);
-                spsSize = ntohl(spsSize);
-                index += spsSize + 4;
-            } else if ((start[index + 4] & 0x1f) == 8) {
-                pps = start + index + 4;
-                memcpy(&ppsSize, start + index, 4);
-                ppsSize = ntohl(ppsSize);
-                index += ppsSize + 4;
-                break;
-            } else {
-                GUInt32 nalSize = 0;
-                memcpy(&nalSize, start + index, 4);
-                nalSize = ntohl(nalSize);
-                index += nalSize + 4;
-            }
+    } else if (avccSize > 9 && (avcc[8] & 0x1f) == 7) {
+        sps     = avcc + 8;
+        spsSize = avcc[6] << 8;
+        spsSize |= avcc[7];
+        if (avccSize > spsSize + 8 + 3 && (avcc[spsSize + 8 + 3] & 0x1f) == 8) {
+            pps     = avcc + 8 + spsSize + 3;
+            ppsSize = avcc[8 + spsSize + 1] << 8;
+            ppsSize |= avcc[8 + spsSize + 2];
+
+            GJAssert(avccSize >= 8 + spsSize + 3 + ppsSize, "格式有问题");
+            *pSps     = sps;
+            *pPps     = pps;
+            *pSpsSize = spsSize;
+            *pPpsSize = ppsSize;
+
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "receive decode sps size:%d:", spsSize);
+            GJ_LogHexString(GJ_LOGDEBUG, sps, (GUInt32) spsSize);
+            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "receive decode pps size:%d:", ppsSize);
+            GJ_LogHexString(GJ_LOGDEBUG, pps, (GUInt32) ppsSize);
         }
     }
     *pSps     = sps;

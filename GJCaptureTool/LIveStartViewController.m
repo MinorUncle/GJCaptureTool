@@ -9,8 +9,8 @@
 #import "LIveStartViewController.h"
 #import "GJLivePushViewController.h"
 //static NSString* pullUlr = @"rtmp://192.168.199.187/live/room";
-//static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/135042524.flv";
-static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
+static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/131413070.flv";
+//static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
 //static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/76043170.flv";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/128312870.flv";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/126782584.flv";
@@ -123,7 +123,7 @@ static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/73257119";//kkæ
 ////    path = [path stringByAppendingPathComponent:@"demo.mp4"];
 ////
     GJLivePushViewController* c = [[GJLivePushViewController alloc]init];
-    pull = [[NSBundle mainBundle]pathForResource:@"ios" ofType:@"h264"];
+//    pull = [[NSBundle mainBundle]pathForResource:@"ios" ofType:@"h264"];
     c.pullAddr = pull;
     c.pushAddr = push;
     
