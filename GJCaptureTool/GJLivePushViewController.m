@@ -420,7 +420,7 @@
         [_paintBtn setTitleColor:[UIColor redColor] forState:UIControlStateNormal];
         [_paintBtn setTitleColor:[UIColor grayColor] forState:UIControlStateSelected];
         [_paintBtn addTarget:self action:@selector(takeSelect:) forControlEvents:UIControlEventTouchUpInside];
-        [_contentView addSubview:_paintBtn];
+        [self.view addSubview:_paintBtn];
     }else{
         _tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
         [_view addGestureRecognizer:_tapGesture];
@@ -1190,17 +1190,14 @@ extern GTime GJ_Gettime() ;
     switch (_type) {
         case kGJCaptureTypeView:{
             _pushManager.livePush.captureView = _pulls[0].view;
-            _pushManager.livePush.captureType = kGJCaptureTypeView;
             break;
         }
         case kGJCaptureTypePaint:{
-            _pushManager.livePush.captureType = kGJCaptureTypePaint;
             break;
         }
         case kGJCaptureTypeAR:
         {
             _pushManager.livePush.ARScene = [[GJSunSystemARScene alloc]init];
-            _pushManager.livePush.captureType = kGJCaptureTypeAR;
             break;
         }
 
