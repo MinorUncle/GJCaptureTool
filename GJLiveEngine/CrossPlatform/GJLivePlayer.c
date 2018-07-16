@@ -33,7 +33,7 @@
 #define AUDIO_PTS_PRECISION 100 //改为100，2帧
 
 #define MAX_CACHE_DUR 4000 //抖动最大缓存控制，所以最大可能缓存到4000*MAX_CACHE_RATIO都不会追赶，
-#define MIN_CACHE_DUR 400  //抖动最小缓存控制
+#define MIN_CACHE_DUR 200  //抖动最小缓存控制
 #define MAX_CACHE_RATIO 3
 
 //#define MAX_HIGH_WATER_RATIO 4       //最大高水准比例
@@ -41,7 +41,7 @@
 //当抖动越小时，HIGH_WATER的比例应该越大
 
 //#define HIGHT_PASS_FILTER 0.5 //高通滤波
-#define SMOOTH_FILTER 0.7 //平滑滤波
+#define SMOOTH_FILTER 1.0 //平滑滤波,当前抖动和上一个抖动的比重
 
 #define UPDATE_SHAKE_TIME_MIN (5 * MAX_CACHE_DUR) //
 #define UPDATE_SHAKE_TIME_MAX (15 * MAX_CACHE_DUR)   //
@@ -279,7 +279,6 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
     GLong dClock = (GTimeSencondValue(clock) - GTimeSencondValue(netShake->collectStartClock)) * 1000;
     GLong dPTS   = (GTimeSencondValue(pts) - GTimeSencondValue(netShake->collectStartPts)) * 1000;
     GLong shake  = dClock - dPTS; //统计少发的抖动
-    GLong dShake = shake;
 //    if (shake < 0) { shake = -shake; }
 #ifdef NETWORK_DELAY
     GLong delay     = 0;
@@ -308,7 +307,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             
             //增加是全额增加
             updateWater(_syncControl, shake);
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "new shake to update shake max then preMax. max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "new shake to update shake max then preMax. max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
             player->callback(player->userDate, GJPlayMessage_NetShakeUpdate, &shake);
             
             //collectUpdateDur相应增加
@@ -324,46 +323,14 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             }
 #endif
         } else {
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "new shake to update shake max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "new shake to update shake max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
         }
-    }
-//小于0有两种方案，一是按照一定比例下调，二是忽略
-#if 0
-    if(dShake < 0){
-//如果是按照比例下调，则一定重新超时计时器，
-        if(netShake->maxDownShake > netShake->preMaxDownShake){
-//            如果有必要，更新preMaxDownShake
-            netShake->preMaxDownShake =  netShake->maxDownShake;
-        }else if(GTimeMSValue(clock) - GTimeMSValue(netShake->collectStartClock) > (MIN_CACHE_DUR + MAX_CACHE_DUR)*0.5){
-//如果两次连续负数时间大约最大和最小的缓冲时间的平均值，则开始进入此区域（防止连续负数）。表示抖动变小，更新DownShake（此处逻辑有问题，抖动变小随时都有可能）
-//防止高频的负数刷新更新时间，难以到达更新时间，以至于难以减小。
-            netShake->maxDownShake = MIN_CACHE_DUR;
-            netShake->preMaxDownShake =  netShake->preMaxDownShake*HIGHT_PASS_FILTER + netShake->maxDownShake*(1-HIGHT_PASS_FILTER);
-            GJLOG(GNULL, GJ_LOGINFO, "negative shake to update water flage");
-            updateWater(_syncControl,netShake->preMaxDownShake);
-            player->callback(player->userDate,GJPlayMessage_NetShakeUpdate,&netShake->preMaxDownShake);
-        }
-        netShake->maxDownShake = MIN_CACHE_DUR;
+    }else if(shake < 0){
+        //说明有更加激进的发送，更新收集起始区。但是保持maxShake
+        GJLOG(GNULL, GJ_LOGDEBUG, "负数的shake:%ld",shake);
         netShake->collectStartClock = clock;
         netShake->collectStartPts   = pts;
-        GJLOG(GNULL, GJ_LOGINFO, "negative shake to update max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
-#ifdef NETWORK_DELAY
-        if (NeedTestNetwork) {
-            
-            if (netShake->maxTestDownShake > netShake->preMaxTestDownShake) {
-                netShake->preMaxTestDownShake =  netShake->maxTestDownShake;
-                GJLOG(GNULL, GJ_LOGINFO, "real negative shake to update max:%ld ,preMax:%ld", netShake->maxTestDownShake, netShake->preMaxTestDownShake);
-            }
-            netShake->collectStartDelay = delay;
-            netShake->maxTestDownShake = MIN_CACHE_DUR;
-        }
-#endif
-    }
-#endif
-    else if ((dShake < 0 && dClock >= netShake->collectUpdateDur) ||
-             dClock >= 2 * netShake->collectUpdateDur) {
-        //要shake小于0才开始更新抖动计时器，否则表示该包已经有延时了，后面的抖动计算就会偏小。
-        //或者shake一直大于0，表示网络实在太差，也不需要高精度的抖动，则到达翻倍的超时时间也开始更新。
+    }else if (dClock >= netShake->collectUpdateDur) {
 
         if (netShake->preMaxDownShake >= netShake->maxDownShake) { //用>=而不是>，防止抖动比较小时，一直没有更新maxshake,导致要过两个周期才能进入此更新
             //降低时采用滤波器缓冲
@@ -387,7 +354,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         } //在每次的判断中已经增高了，增高是全额增高
 
 
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update shake max:%ld ,preMax:%ld,UpdateDur:%ld", netShake->maxDownShake, netShake->preMaxDownShake,netShake->collectUpdateDur);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "time to update shake max:%ld ,preMax:%ld,UpdateDur:%ld", netShake->maxDownShake, netShake->preMaxDownShake,netShake->collectUpdateDur);
         
         netShake->preMaxDownShake   = netShake->maxDownShake;
         netShake->maxDownShake      = MIN_CACHE_DUR;
