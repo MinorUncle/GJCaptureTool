@@ -106,6 +106,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context, GJTrafficS
                             totalCount++;
                         }
                     }
+                    
                     context->videoNetSpeed /= totalCount;
                     //count越大越准确
                     GJLOG(GNULL, GJ_LOGDEBUG, "busy status, avgRate :%f kB/s currentRate:%f sendByte:%ld cacheCount:%ld cacheTime:%ld ms speedUnitCount:%d", context->videoNetSpeed / 8.0 / 1024, currentBitRate / 8.0 / 1024, sendByte, cacheInCount, cacheInPts, fullCount);
@@ -113,24 +114,25 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context, GJTrafficS
                     GJAssert(sendUseTs > 0 || sendByte == 0, "错误");
 
                     if (context->videoNetSpeed > context->videoBitrate) {
-                        GJLOG(LOG_DEBUG, GJ_LOGDEBUG, "警告:平均网速（%f）大于码率（%f），仍然出现缓存上升（可能出现网速突然下降）,继续降速", context->videoNetSpeed / 8.0 / 1024, context->videoBitrate / 8.0 / 1024);
-                        context->videoNetSpeed = context->videoBitrate;
+                        GJLOG(LOG_DEBUG, GJ_LOGDEBUG, "警告:平均网速（%f）大于码率（%f），仍然出现缓存上升,跳过此次调整", context->videoNetSpeed / 8.0 / 1024, context->videoBitrate / 8.0 / 1024);
+//                        context->videoNetSpeed = context->videoBitrate;
+                    }else{
+                        //减速的目标是比网速小，以减少缓存
+                        context->videoNetSpeed -= context->videoBitrate / context->pushConfig->mFps;
+                        //发送数量越少降速越快
+                        GFloat ratioStep = (context->rateCheckStep - sendCount) * 1.0 / context->rateCheckStep;
+                        //满速发送时间越长，网速越可靠
+                        GFloat ratioFullCount = fullCount * 1.0 / context->netSpeedCheckInterval;
+                        GFloat ratio          = (ratioStep + ratioFullCount) / 2;
+                        GJAssert(ratio <= 1.0, "错误");
+                        
+                        GInt32 bitrate = context->videoBitrate - (context->videoBitrate - context->videoNetSpeed) * ratio;
+                        //bitrate = bitrate - (GInt32)(context->rateCheckStep - sendCount) * context->pushConfig->mVideoBitrate/context->pushConfig->mFps;
+                        _GJLivePush_UpdateQualityInfo(context, bitrate);
                     }
-                    //减速的目标是比网速小，以减少缓存
-                    context->videoNetSpeed -= context->videoBitrate / context->pushConfig->mFps;
-                    //发送数量越少降速越快
-                    GFloat ratioStep = (context->rateCheckStep - sendCount) * 1.0 / context->rateCheckStep;
-                    //满速发送时间越长，网速越可靠
-                    GFloat ratioFullCount = fullCount * 1.0 / context->netSpeedCheckInterval;
-                    GFloat ratio          = (ratioStep + ratioFullCount) / 2;
-                    GJAssert(ratio <= 1.0, "错误");
-
-                    GInt32 bitrate = context->videoBitrate - (context->videoBitrate - context->videoNetSpeed) * ratio;
-                    //bitrate = bitrate - (GInt32)(context->rateCheckStep - sendCount) * context->pushConfig->mVideoBitrate/context->pushConfig->mFps;
-                    _GJLivePush_UpdateQualityInfo(context, bitrate);
                 }
             } else {
-                GJLOG(GNULL, GJ_LOGINFO, "favorableCount count:%d", context->favorableCount);
+                GJLOG(GNULL, GJ_LOGDEBUG, "favorableCount count:%d", context->favorableCount);
                 GInt32 increaseStep = context->favorableCount / (context->rateCheckStep * context->increaseSpeedRate);
                 if (increaseStep > context->increaseCount) {
                     //                    GJAssert(context->increaseCount+1 == increaseStep, "都是一步一步加");//好吧，不一定

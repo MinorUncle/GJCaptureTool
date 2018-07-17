@@ -34,7 +34,9 @@
 
 #define MAX_CACHE_DUR 4000 //抖动最大缓存控制，所以最大可能缓存到4000*MAX_CACHE_RATIO都不会追赶，
 #define MIN_CACHE_DUR 200  //抖动最小缓存控制
-#define MAX_CACHE_RATIO 3
+#define MAX_CACHE_RATIO 2
+#define MIN_CACHE_RATIO 2
+
 
 //#define MAX_HIGH_WATER_RATIO 4       //最大高水准比例
 //#define MIN_HIGH_WATER_RATIO 2       //最小高水准比例
@@ -58,7 +60,7 @@
 #define CHASE_SPEED 1.1f
 
 #define VIDEO_WATI_MIN (1000/60)
-#define VIDEO_FIRST_CACHE_COUNT 2  //第一次缓存2帧开始播放，防止一播放就缓存
+#define VIDEO_FIRST_CACHE_COUNT 2  //第一次缓存2帧开始播放，防止一播放就缓存.就算有音频时视频不缓存也要打开，因为一般视频会先几帧到，可能产生缓冲
 
 GLong getClockLine(GJSyncControl *sync) {
     if (sync->syncType == kTimeSYNCAudio) {
@@ -307,7 +309,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             
             //增加是全额增加
             updateWater(_syncControl, shake);
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "new shake to update shake max then preMax. max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "new shake to update shake max then preMax. max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
             player->callback(player->userDate, GJPlayMessage_NetShakeUpdate, &shake);
             
             //collectUpdateDur相应增加
@@ -323,11 +325,11 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
             }
 #endif
         } else {
-            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "new shake to update shake max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
+            GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGALL, "new shake to update shake max:%ld ,preMax:%ld", netShake->maxDownShake, netShake->preMaxDownShake);
         }
     }else if(shake < 0){
         //说明有更加激进的发送，更新收集起始区。但是保持maxShake
-        GJLOG(GNULL, GJ_LOGDEBUG, "负数的shake:%ld",shake);
+        GJLOG(GNULL, GJ_LOGALL, "负数的shake:%ld",shake);
         netShake->collectStartClock = clock;
         netShake->collectStartPts   = pts;
     }else if (dClock >= netShake->collectUpdateDur) {
@@ -354,7 +356,7 @@ GVoid GJLivePlay_CheckNetShake(GJLivePlayer *player, GTime pts) {
         } //在每次的判断中已经增高了，增高是全额增高
 
 
-        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGDEBUG, "time to update shake max:%ld ,preMax:%ld,UpdateDur:%ld", netShake->maxDownShake, netShake->preMaxDownShake,netShake->collectUpdateDur);
+        GJLOG(GJLivePlay_LOG_SWITCH, GJ_LOGINFO, "time to update shake max:%ld ,preMax:%ld,UpdateDur:%ld", netShake->maxDownShake, netShake->preMaxDownShake,netShake->collectUpdateDur);
         
         netShake->preMaxDownShake   = netShake->maxDownShake;
         netShake->maxDownShake      = MIN_CACHE_DUR;

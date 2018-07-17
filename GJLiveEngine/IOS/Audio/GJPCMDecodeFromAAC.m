@@ -254,7 +254,7 @@ static OSStatus decodeInputDataProc(AudioConverterRef inConverter, UInt32 *ioNum
         _destFormat.mFramesPerPacket  = _destFormat.mBytesPerFrame * _destFormat.mFramesPerPacket;
         _destFormat.mFormatFlags      = kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
     }
-
+    GJAssert(_sourceFormat.mFramesPerPacket == 1024, "_sourceFormat.mFramesPerPacket 不正常");
     UInt32 size = sizeof(AudioStreamBasicDescription);
     AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_destFormat);
     AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &_sourceFormat);
