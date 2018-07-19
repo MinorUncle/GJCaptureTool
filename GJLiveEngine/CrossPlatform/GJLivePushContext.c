@@ -74,6 +74,8 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context, GJTrafficS
     if (context->checkCount++ % context->rateCheckStep == 0) {
         if (GTimeSubtractMSValue(GJ_Gettime(), vBufferStatus.enter.clock) < (1000.0 / context->pushConfig->mFps) / 2) {
             //如果发送间隔很短，则表示是b帧，无论是网络好还是差，都不准确，过滤不检查，同时checkCount--表示下一帧在检查。
+            //网络好时，数据只是放到socket里面里，并没有发送出去，导致计算码率比实际大。
+            //网络差时，
             context->checkCount--;
         } else {
             //            GJLOG(GNULL,GJ_LOGDEBUG,"free level time:%lld enter time:%lld cache count:%ld\n",currentTime-vBufferStatus.leave.clock,currentTime-vBufferStatus.enter.clock,vBufferStatus.enter.count - vBufferStatus.leave.count);
@@ -81,7 +83,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context, GJTrafficS
 
             GLong sendByte        = (vBufferStatus.leave.byte - context->preCheckVideoTraffic.leave.byte);
             GLong sendUseTs       = GTimeSubtractMSValue(vBufferStatus.leave.clock, context->preCheckVideoTraffic.leave.clock);                  //发送消耗的时间
-            sendUseTs             = GMIN(sendUseTs, GTimeSubtractMSValue(vBufferStatus.enter.clock, context->preCheckVideoTraffic.enter.clock)); //一定要取两个时间最小的那个
+            sendUseTs             = GMIN(sendUseTs, GTimeSubtractMSValue(vBufferStatus.enter.clock, context->preCheckVideoTraffic.enter.clock)); //一定要取两个时间最小的那个，因为可能上次添加之后一直没法发送成功数据
             GInt32 currentBitRate = 0;
             if (sendUseTs != 0) {
                 currentBitRate = sendByte * 8 / (sendUseTs / 1000.0);

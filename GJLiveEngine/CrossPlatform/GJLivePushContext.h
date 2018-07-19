@@ -82,7 +82,7 @@ typedef struct _GJLivePushContext {
     GInt32  collectCount;          //已经收集的个数
     GInt32  favorableCount;        //连续良好网速的帧数
     GInt32  increaseCount;         //连续增加网速的个数
-    GInt32  checkCount;            //用于控制检查间隔
+    GInt32  checkCount;            //检查的次数，用于控制检查间隔
     GInt32  captureVideoCount;
     GInt32  dropVideoCount;
 

@@ -9,10 +9,10 @@
 #import "LIveStartViewController.h"
 #import "GJLivePushViewController.h"
 //static NSString* pullUlr = @"rtmp://192.168.199.187/live/room";
-//static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/15589503.flv";
-static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
+static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/136711882.flv";
+//static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
 //static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/76043170.flv";
-//static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/128312870.flv";
+//static NSString* pullUlr = @"http://pull-flv-l1-spe.ixigua.com/test/1dznl4ufn75l3.flv";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/126782584.flv";
 //static NSString* pullUlr = @"rtmp://10.0.16.119/live/room";
 //static NSString* pullUlr = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
@@ -20,8 +20,9 @@ static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
 //static NSString* pullUlr = @"rtmp://10.0.21.72/live/room";
 //static NSString* pullUlr = @"http://10.0.23.238/hls/room.m3u8";
 
+static NSString* pushUrl = @"rtmp://push-rtmp-l1-spe.ixigua.com/test/1dznl4ufn75l3";//kk服务器地址
 
-static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/73257119";//kk服务器地址
+//static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/73257119";//kk服务器地址
 //static NSString* pushUrl = @"rtmp://192.168.199.187/live/room";
 //static NSString* pushUrl = @"rtmp://10.0.16.119/live/room";
 
