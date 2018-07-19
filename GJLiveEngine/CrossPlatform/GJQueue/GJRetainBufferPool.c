@@ -123,6 +123,12 @@ GVoid GJRetainBufferPoolFree(GJRetainBufferPool* p){
     if (!p) {
         return ;
     }
+    ///<<
+//防止pop已经完成，但是signal后面的还没有完成这里就释放了，
+    queueEnablePop(p->queue, GFalse);
+    queueEnablePush(p->queue, GFalse);
+
+    //>>
     queueFree(&p->queue);
     
 #if MEMORY_CHECK

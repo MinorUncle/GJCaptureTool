@@ -36,6 +36,7 @@ static void *FFDecoder_DecodeRunloop(GHandle arg) {
     FFDecoder * decoder = (FFDecoder *) arg;
     R_GJPacket *packetData;
     AVPacket    packet;
+    pthread_setname_np("Loop.FFVideoDecode");
     GInt64 prePts = 0;
     while (decoder->isRunning && queuePop(decoder->cacheQueue, (GHandle *) &packetData, GINT32_MAX)) {
         AVFrame * frame      = av_frame_alloc();

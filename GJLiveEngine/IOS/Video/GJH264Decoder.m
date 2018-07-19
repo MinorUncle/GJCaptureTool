@@ -595,7 +595,7 @@ void decodeOutputCallback(
                 VTDecompressionSessionInvalidate(_decompressionSession);
                 CFRelease(_decompressionSession);
                 _decompressionSession = nil;
-                GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "无效解码器，重启解码器，恢复数据");
+                GJLOG(DEFAULT_LOG, GJ_LOGWARNING, "无效解码器，重启解码器，需要恢复数据%d帧",queueGetLength(_gopQueue));
                 [self createDecompSession];
 
                 OSStatus oldStatus = noErr;
@@ -622,7 +622,13 @@ void decodeOutputCallback(
                                 queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
                                 [self flush];
                                 break;
+                            }else{
+                                GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "恢复gop ");
+
                             }
+                        }else{
+                            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "恢复gop 遇到空帧 ");
+
                         }
                     }
                 }
@@ -639,6 +645,7 @@ void decodeOutputCallback(
                 GJLOG(DEFAULT_LOG, GJ_LOGERROR, "解码错误0：%d  ,format:%p", status, _formatDesc);
             }
         }
+        
     }
 
     return noErr;
@@ -648,7 +655,7 @@ ERROR:
 - (CMSampleBufferRef)createSampleBufferWithData:(GUInt8 *)packetData size:(GLong)packetSize pts:(GInt64)pts {
 
 //#if MEMORY_CHECK  格式检查，针对不规则流
-//<-----conversion
+///<-----conversion
     if (((GUInt16*)packetData)[0] == 0 && packetData[2] == 0 && packetData[3] == 1) {
 
         GUInt8* preNal = packetData+4;

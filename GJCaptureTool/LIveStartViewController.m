@@ -9,8 +9,8 @@
 #import "LIveStartViewController.h"
 #import "GJLivePushViewController.h"
 //static NSString* pullUlr = @"rtmp://192.168.199.187/live/room";
-static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/136741322.flv";
-//static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
+//static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/15589503.flv";
+static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
 //static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/76043170.flv";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/128312870.flv";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/126782584.flv";
@@ -87,7 +87,7 @@ static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/73257119";//kk�
     rect.size.width = self.view.bounds.size.width;
     _startBtn = [[UIButton alloc]initWithFrame:rect];
     [_startBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchUpInside];
-    [_startBtn setTitle:@"普通直播" forState:UIControlStateNormal];
+    [_startBtn setTitle:@"相机直播" forState:UIControlStateNormal];
     [_startBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.view addSubview:_startBtn];
     
@@ -101,14 +101,14 @@ static NSString* pushUrl = @"rtmp://push-test.kktv8.com/livekktv/73257119";//kk�
     rect.origin.y = CGRectGetMaxY(rect)+marrgin;
     _uiStartBtn = [[UIButton alloc]initWithFrame:rect];
     [_uiStartBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchUpInside];
-    [_uiStartBtn setTitle:@"直播3 v" forState:UIControlStateNormal];
+    [_uiStartBtn setTitle:@"view直播" forState:UIControlStateNormal];
     [_uiStartBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.view addSubview:_uiStartBtn];
     
     rect.origin.y = CGRectGetMaxY(rect)+marrgin;
     _paintStartBtn = [[UIButton alloc]initWithFrame:rect];
     [_paintStartBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchUpInside];
-    [_paintStartBtn setTitle:@"直播3 p" forState:UIControlStateNormal];
+    [_paintStartBtn setTitle:@"画笔直播" forState:UIControlStateNormal];
     [_paintStartBtn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
     [self.view addSubview:_paintStartBtn];
     // Do any additional setup after loading the view.

@@ -159,6 +159,8 @@ GVoid GJBufferPoolFree(GJBufferPool *pool) {
     if (!pool) {
         return;
     }
+    listQueueEnablePop(pool->queue, GFalse);
+    listQueueEnablePush(pool->queue, GFalse);
     listQueueFree(&pool->queue);
 #if MEMORY_CHECK
     listQueueFree(&pool->leaveList);

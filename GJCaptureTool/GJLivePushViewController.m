@@ -169,7 +169,7 @@
         }else{
             config.mFps = 30;
         }
-        config.mAudioBitrate = 128*1000;
+        config.mAudioBitrate = 64*1000;
         _livePush = [[GJLivePush alloc]init];
         _livePush.captureType = type;
         [_livePush setPushConfig:config];
@@ -944,7 +944,7 @@
     _pullRateLab.numberOfLines = 0;
     _pullRateLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_pullRateLab];
-    [_viewArr addObject:_pullStateLab];
+    [_viewArr addObject:_pullRateLab];
     
     _videoCacheLab = [[UILabel alloc]init];
     _videoCacheLab.textColor = [UIColor redColor];
@@ -1025,9 +1025,11 @@
     _pull.previewView.frame = rect;
     
     rect.size.height *= 1.0/_viewArr.count;
+    rect.origin.y -= rect.size.height;
+
     for (int i = 0; i<_viewArr.count; i++) {
         UIView* view = _viewArr[i];
-        rect.origin.y = rect.size.height*i;
+        rect.origin.y += rect.size.height;
         view.frame = rect;
     }
 }
@@ -1077,7 +1079,7 @@
 }
 -(void)livePull:(GJLivePull *)livePull netShakeRangeUpdate:(long)shake{
     dispatch_async(dispatch_get_main_queue(), ^{
-        _shakeRange.text = [NSString stringWithFormat:@"shake collect duration:%ld ms",shake];
+        _shakeRange.text = [NSString stringWithFormat:@"shake collect delay:%ld ms",shake];
     });
 }
 
@@ -1104,6 +1106,12 @@ extern GTime GJ_Gettime() ;
 }
 
 -(void)livePull:(GJLivePull *)livePull firstFrameRender:(GJPullFirstFrameInfo *)info{
+    GLong delay = info->delay;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        
+        _pullStateLab.text = [NSString stringWithFormat:@"%@,first render delay:%ld ms",_pullStateLab.text,delay];
+
+    });
     NSLog(@"firstFrameRender w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,GTimeMSValue(GJ_Gettime()));
 }
 
