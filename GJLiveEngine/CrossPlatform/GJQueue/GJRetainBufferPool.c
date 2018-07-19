@@ -209,6 +209,9 @@ GJRetainBuffer* _GJRetainBufferPoolGetData(GJRetainBufferPool* p,const GChar* fi
     GJAssert(R_BufferRetainCount(buffer) == 1, "retain 管理出错");
     
 #if MEMORY_CHECK
+    GHandle temp;
+    listQueuePop(buffer->retainList, &temp, 0);//更新复活点的信息
+    listQueuePush(buffer->retainList, (GHandle)func);
     GJAssert(listQueuePush(p->leaveList, buffer), "跟踪器失败") ;
 #endif
     return buffer;
@@ -253,6 +256,10 @@ GJRetainBuffer* _GJRetainBufferPoolGetSizeData(GJRetainBufferPool* p,GInt32 data
     R_BufferClearSize(buffer);
     GJAssert(R_BufferRetainCount(buffer) == 1, "retain 管理出错");
 #if MEMORY_CHECK
+    GHandle temp;
+    listQueuePop(buffer->retainList, &temp, 0);//更新复活点的信息
+    listQueuePush(buffer->retainList, (GHandle)func);
+
     GJAssert(listQueuePush(p->leaveList, buffer), "跟踪器失败") ;
 #endif
     return buffer;
