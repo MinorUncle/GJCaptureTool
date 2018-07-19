@@ -122,10 +122,10 @@ GVoid GJBufferPoolClean(GJBufferPool *p, GBool complete) {
 #endif
                 data -= sizeof(GJBufferDataHead);
                 free(data);
+                p->generateSize--;
             } else {
                 GJLOG(DEFAULT_LOG, GJ_LOGFORBID, "GJBufferPoolClean error:%p", p);
             }
-            p->generateSize--;
         }
 #ifdef DEBUG
         GLong dl = GJ_Gettime().value - startMS;

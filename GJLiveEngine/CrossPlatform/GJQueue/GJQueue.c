@@ -184,11 +184,15 @@ GInt32 queueGetLength(GJQueue* q){
 }
 
 GBool queuePeekValue(GJQueue* q, GLong index,GVoid** value){
+    
+    queueLockPop(q);
     if (index < 0 || index >= q->inPointer - q->outPointer) {
+        queueUnLockPop(q);
         return GFalse;
     }
     *value = q->queue[(q->outPointer+index) % q->capacity];
     assert(*value);
+    queueUnLockPop(q);
     return GTrue;
 }
 

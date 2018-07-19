@@ -599,39 +599,39 @@ void decodeOutputCallback(
                 [self createDecompSession];
 
                 OSStatus oldStatus = noErr;
-                if (!isKeyPacket) { //非i帧则需要恢复
-                    R_GJPacket *oldPacket     = GNULL;
-                    GInt32      oldPacketSize = 0;
-                    GUInt8 *    oldPacketData = GNULL;
-                    GLong       index         = 0;
-                    oldStatus                 = kVTVideoDecoderMalfunctionErr;
-                    while (queuePeekValue(_gopQueue, index++, (GHandle *) &oldPacket)) {
-                        AVPacket *oldPkt = ((AVPacket *) (R_BufferStart(oldPacket) + oldPacket->extendDataOffset));
-                        oldPacketSize    = (int) oldPkt->size;
-                        oldPacketData    = oldPkt->data;
+                R_GJPacket *oldPacket     = GNULL;
+                GInt32      oldPacketSize = 0;
+                GUInt8 *    oldPacketData = GNULL;
+                GLong       index         = 0;
+                oldStatus                 = kVTVideoDecoderMalfunctionErr;
+                while (queuePeekValue(_gopQueue, index++, (GHandle *) &oldPacket)) {
+                    AVPacket *oldPkt = ((AVPacket *) (R_BufferStart(oldPacket) + oldPacket->extendDataOffset));
+                    oldPacketSize    = (int) oldPkt->size;
+                    oldPacketData    = oldPkt->data;
 
-                        if (oldPacketSize > 0) {
-                            CMSampleBufferRef oldSampleBuffer = NULL;
-                            oldSampleBuffer                   = [self createSampleBufferWithData:oldPacketData size:oldPacketSize pts:GTimeMSValue(oldPacket->pts)];
-                            if (oldSampleBuffer) {
-                                oldStatus = [self decodeSampleBuffer:oldSampleBuffer decodeFlag:kDecodeFlagNeedDrop flag:kVTDecodeFrame_DoNotOutputFrame];
-                                CFRelease(oldSampleBuffer);
-                            }
-                            if (oldStatus != noErr) {
-                                GJLOG(DEFAULT_LOG, GJ_LOGERROR, "恢复gop，gop数据有误， 无法刷新解码器,清除gop,error status：%d", oldStatus);
-                                queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
-                                [self flush];
-                                break;
-                            }else{
-                                GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "恢复gop ");
-
-                            }
+                    if (oldPacketSize > 0) {
+                        CMSampleBufferRef oldSampleBuffer = NULL;
+                        oldSampleBuffer                   = [self createSampleBufferWithData:oldPacketData size:oldPacketSize pts:GTimeMSValue(oldPacket->pts)];
+                        if (oldSampleBuffer) {
+                            oldStatus = [self decodeSampleBuffer:oldSampleBuffer decodeFlag:kDecodeFlagNeedDrop flag:kVTDecodeFrame_DoNotOutputFrame];
+                            CFRelease(oldSampleBuffer);
+                        }
+                        if (oldStatus != noErr) {
+                            GJLOG(DEFAULT_LOG, GJ_LOGERROR, "恢复gop，gop数据有误， 无法刷新解码器,清除gop,error status：%d", oldStatus);
+                            queueFuncClean(_gopQueue, R_BufferUnRetainUnTrack);
+                            [self flush];
+                            break;
                         }else{
-                            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "恢复gop 遇到空帧 ");
+                            GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "恢复gop ");
 
                         }
+                    }else{
+                        GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "恢复gop 遇到空帧 ");
+
                     }
                 }
+                GJLOG(DEFAULT_LOG, GJ_LOGDEBUG, "完成GOP恢复");
+                
 
             } else if (status == kVTVideoDecoderMalfunctionErr) {
                 if (isKeyPacket) {
