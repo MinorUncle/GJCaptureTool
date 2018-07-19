@@ -265,6 +265,7 @@ inline static GVoid decodeUnSetup(struct _FFVideoDecodeContext *context) {
         if (decoder->isRunning) {
             FFDecoder_DecodeStop(decoder);
         }
+        FFDecoder_DecodeDealloc(&decoder);
         context->obaque = GNULL;
         GJLOG(DEFAULT_LOG, GJ_LOGINFO, "GJH264Decoder unsetup");
     }
