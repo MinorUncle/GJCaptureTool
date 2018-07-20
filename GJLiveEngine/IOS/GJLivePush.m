@@ -401,6 +401,32 @@
 -(void)chanceVideoEffect{
     _videoProducer->chanceVideoEffect(_videoProducer);
 }
+
+-(void)setBrightness:(NSInteger)brightness{
+    _brightness = brightness;
+    _videoProducer->brightness(_videoProducer,brightness);
+}
+
+-(void)setSkinRuddy:(NSInteger)skinRuddy{
+    _skinRuddy = skinRuddy;
+    _videoProducer->skinRuddy(_videoProducer,skinRuddy);
+}
+
+-(void)setSkinSoften:(NSInteger)skinSoften{
+    _skinSoften = skinSoften;
+    _videoProducer->skinSoften(_videoProducer,skinSoften);
+}
+
+-(void)setEyeEnlargement:(NSInteger)eyeEnlargement{
+    _eyeEnlargement = eyeEnlargement;
+    _videoProducer->eyeEnlargement(_videoProducer,eyeEnlargement);
+}
+
+-(void)setFaceSlender:(NSInteger)faceSlender{
+    _faceSlender = faceSlender;
+    _videoProducer->faceSlender(_videoProducer,faceSlender);
+}
+
 - (BOOL) updateFaceStickTemplatePath:(NSString*)dataPath{
    return _videoProducer->updateFaceStickTemplatePath(_videoProducer,dataPath.UTF8String);
 }

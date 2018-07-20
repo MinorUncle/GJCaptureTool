@@ -320,6 +320,14 @@ AVCaptureDevicePosition getPositionWithCameraPosition(GJCameraPosition cameraPos
     return _faceHandle.eyesEnlargement;
 }
 
+-(void)setFaceSlender:(NSInteger)faceSlender{
+    _faceHandle.faceSlender = faceSlender;
+}
+
+-(NSInteger)faceSlender{
+    return _faceHandle.faceSlender;
+}
+
 - (void)deleteShowImage {
     [_imageView removeObserver:self forKeyPath:@"frame"];
     _imageView = nil;
@@ -1084,6 +1092,33 @@ inline static GBool setMute(struct _GJVideoProduceContext *context, GBool enable
     setDropStep(context, GRationalMake(enable == GTrue, 1));
     return GTrue;
 }
+static GBool skinRuddy(struct _GJVideoProduceContext *context, GLong skinRuddy) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    recode.skinRuddy = skinRuddy;
+    return recode.skinRuddy == skinRuddy;
+}
+
+static GBool eyeEnlargement(struct _GJVideoProduceContext *context, GLong eyeEnlargement) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    recode.eyeEnlargement = eyeEnlargement;
+    return recode.eyeEnlargement == eyeEnlargement;
+}
+static GBool skinSoften(struct _GJVideoProduceContext *context, GLong skinSoften) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    recode.skinSoften = skinSoften;
+    return recode.skinSoften == skinSoften;
+}
+static GBool brightness(struct _GJVideoProduceContext *context, GLong brightness) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    recode.brightness = brightness;
+    return recode.brightness == brightness;
+}
+
+static GBool faceSlender(struct _GJVideoProduceContext *context, GLong faceSlender) {
+    IOS_VideoProduce *recode = (__bridge IOS_VideoProduce *) (context->obaque);
+    recode.faceSlender = faceSlender;
+    return recode.faceSlender == faceSlender;
+}
 
 inline static GBool prepareVideoEffectWithBaseData(struct _GJVideoProduceContext* context,const GChar* dataPath){
     if (!dataPath) {
@@ -1140,6 +1175,12 @@ GVoid GJ_VideoProduceContextCreate(GJVideoProduceContext **produceContext) {
     context->prepareVideoEffectWithBaseData =  prepareVideoEffectWithBaseData;
     context->chanceVideoEffect = chanceVideoEffect;
     context->updateFaceStickTemplatePath = updateFaceStickTemplatePath;
+    context->skinSoften            = skinSoften;
+    context->skinRuddy             = skinRuddy;
+    context->faceSlender           = faceSlender;
+    context->brightness            = brightness;
+    context->eyeEnlargement        = eyeEnlargement;
+
 }
 
 GVoid GJ_VideoProduceContextDealloc(GJVideoProduceContext **context) {

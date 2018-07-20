@@ -111,6 +111,31 @@ typedef void (^OverlaysUpdate)(NSInteger index, const GJOverlayAttribute *_Nulla
 
 @property (nonatomic, assign) BOOL mixFileNeedToStream;
 
+/**
+ 美白：0-100
+ */
+@property (assign, nonatomic) NSInteger brightness;
+
+/**
+ 磨皮：0-100
+ */
+@property (assign, nonatomic) NSInteger skinSoften;
+
+/**
+ 皮肤红润：0--100
+ */
+@property (nonatomic, assign) NSInteger skinRuddy;
+
+/**
+ 瘦脸：0--100
+ */
+@property (nonatomic, assign) NSInteger faceSlender; //
+
+/**
+ 大眼：0--100
+ */
+@property (nonatomic, assign) NSInteger eyeEnlargement; //
+
 - (void)startPreview;
 
 - (void)stopPreview;

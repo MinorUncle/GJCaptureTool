@@ -117,6 +117,12 @@ typedef struct _GJVideoProduceContext {
     GBool (*prepareVideoEffectWithBaseData)(struct _GJVideoProduceContext* context,const GChar* dataPath);
     GVoid (*chanceVideoEffect)(struct _GJVideoProduceContext* context);
     GBool (*updateFaceStickTemplatePath)(struct _GJVideoProduceContext* context,const GChar* dataPath);
+    GBool (*skinRuddy)(struct _GJVideoProduceContext *context, GLong faceSlender);
+    GBool (*eyeEnlargement)(struct _GJVideoProduceContext *context, GLong faceSlender);
+    GBool (*skinSoften)(struct _GJVideoProduceContext *context, GLong faceSlender);
+    GBool (*brightness)(struct _GJVideoProduceContext *context, GLong faceSlender);
+    GBool (*faceSlender)(struct _GJVideoProduceContext *context, GLong faceSlender);
+
 } GJVideoProduceContext;
 
 typedef struct _GJAudioProduceContext {
