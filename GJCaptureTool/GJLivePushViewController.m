@@ -128,6 +128,11 @@
 @property (strong, nonatomic) GJSliderView *mixGain;
 
 @property (strong, nonatomic) GJSliderView *outputGain;
+@property (strong, nonatomic) GJSliderView *skinSoft;
+@property (strong, nonatomic) GJSliderView *skinRubby;
+@property (strong, nonatomic) GJSliderView *faceSlider;
+@property (strong, nonatomic) GJSliderView *skinBriness;
+@property (strong, nonatomic) GJSliderView *eyeBig;
 
 @property (strong, nonatomic) UILabel *fpsLab;
 @property (strong, nonatomic) UILabel *sendRateLab;
@@ -176,7 +181,14 @@
         //        _livePush.enableAec = YES;
         _livePush.delegate = self;
         _livePush.cameraPosition = GJCameraPositionFront;
-        
+        NSString* path = [[NSBundle mainBundle]pathForResource:@"track_data" ofType:@"dat"];
+//        [_livePush prepareVideoEffectWithBaseData:path];
+//
+//        _livePush.eyeEnlargement = 50;
+//        _livePush.skinSoften = 50;
+//        _livePush.faceSlender = 50;
+//        _livePush.brightness = 50;
+//        _livePush.skinRuddy = 50;
         
         [self buildUI];
         
@@ -224,7 +236,7 @@
 
     _sendRateLab = [[UILabel alloc]init];
     _sendRateLab.textColor = [UIColor redColor];
-    _sendRateLab.text = @"bitrate V:0 KB/s A:0 KB/s";
+    _sendRateLab.text = @"bitrate V:0 A:0";
     _sendRateLab.font = [UIFont systemFontOfSize:10];
     [self.view addSubview:_sendRateLab];
     [_tipViewsArry addObject:_sendRateLab];
@@ -246,7 +258,7 @@
     _currentV = [[UILabel alloc]init];
     _currentV.textColor = [UIColor redColor];
     _currentV.font = [UIFont systemFontOfSize:10];
-    _currentV.text = @"dynamic V rate rate:0 kB/s f:0";
+    _currentV.text = @"encode V b:0 kB/s f:0";
     [self.view addSubview:_currentV];
     [_tipViewsArry addObject:_currentV];
 
@@ -388,8 +400,8 @@
     _inputGain.maximumValue = 1.0;
     _inputGain.minimumValue = 0.0;
 //    _inputGain.continuous = NO;
-    _inputGain.value = 1.0;
     [_inputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    _inputGain.value = 1.0;
     [_contentView addSubview:_inputGain];
     [_btnViewsArry addObject:_inputGain];
     
@@ -397,9 +409,9 @@
     _mixGain.maximumValue = 1.0;
     _mixGain.minimumValue = 0.0;
     _mixGain.title = @"混音音量";
-    _mixGain.value = 1.0;
 //    _mixGain.continuous = NO;
     [_mixGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    _mixGain.value = 1.0;
     [_contentView addSubview:_mixGain];
     [_btnViewsArry addObject:_mixGain];
 
@@ -408,11 +420,62 @@
     _outputGain.minimumValue = 0.0;
     _outputGain.title = @"总音量";
 //    _outputGain.continuous = NO;
-    _outputGain.value = 1.0;
     [_outputGain addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    _outputGain.value = 1.0;
     [_contentView addSubview:_outputGain];
     [_btnViewsArry addObject:_outputGain];
 
+    _eyeBig = [[GJSliderView alloc]init];
+    _eyeBig.maximumValue = 100.0;
+    _eyeBig.minimumValue = 0.0;
+    _eyeBig.title = @"大眼";
+    //    _outputGain.continuous = NO;
+    [_eyeBig addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    _eyeBig.value = _livePush.eyeEnlargement;
+    [_contentView addSubview:_eyeBig];
+    [_btnViewsArry addObject:_eyeBig];
+    
+    _faceSlider = [[GJSliderView alloc]init];
+    _faceSlider.maximumValue = 100.0;
+    _faceSlider.minimumValue = 0.0;
+    _faceSlider.title = @"瘦脸";
+    //    _outputGain.continuous = NO;
+    _faceSlider.value = _livePush.faceSlender;
+    [_faceSlider addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    _faceSlider.value = _livePush.faceSlender;
+    [_contentView addSubview:_faceSlider];
+    [_btnViewsArry addObject:_faceSlider];
+    
+    _skinBriness = [[GJSliderView alloc]init];
+    _skinBriness.maximumValue = 100.0;
+    _skinBriness.minimumValue = 0.0;
+    _skinBriness.title = @"美白";
+    //    _outputGain.continuous = NO;
+    [_skinBriness addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    _skinBriness.value = _livePush.brightness;
+    [_contentView addSubview:_skinBriness];
+    [_btnViewsArry addObject:_skinBriness];
+    
+    _skinRubby = [[GJSliderView alloc]init];
+    _skinRubby.maximumValue = 100.0;
+    _skinRubby.minimumValue = 0.0;
+    _skinRubby.title = @"红润";
+    //    _outputGain.continuous = NO;
+    [_skinRubby addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    _skinRubby.value = _livePush.skinRuddy;
+    [_contentView addSubview:_skinRubby];
+    [_btnViewsArry addObject:_skinRubby];
+    
+    _skinSoft = [[GJSliderView alloc]init];
+    _skinSoft.maximumValue = 100.0;
+    _skinSoft.minimumValue = 0.0;
+    _skinSoft.title = @"磨皮";
+    //    _outputGain.continuous = NO;
+    [_skinSoft addTarget:self action:@selector(valueChange:) forControlEvents:UIControlEventValueChanged];
+    _skinSoft.value = _livePush.skinSoften;
+    [_contentView addSubview:_skinSoft];
+    [_btnViewsArry addObject:_skinSoft];
+    
     if (_livePush.captureType == kGJCaptureTypePaint) {
         _paintBtn = [[UIButton alloc]init];
         [_paintBtn setTitle:@"全屏" forState:UIControlStateNormal];
@@ -423,6 +486,7 @@
         [self.view addSubview:_paintBtn];
     }else{
         _tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+        _tapGesture.numberOfTapsRequired = 3;
         [_view addGestureRecognizer:_tapGesture];
         for (UIGestureRecognizer* g in _outputGain.gestureRecognizers) {
             [_tapGesture requireGestureRecognizerToFail:g];
@@ -473,7 +537,7 @@
     }
     
     rect.origin = CGPointMake(0, hOffset);
-    rect.size = CGSizeMake(frame.size.width*0.5, (frame.size.height-hOffset) / leftCount);
+    rect.size = CGSizeMake(frame.size.width*0.4, (frame.size.height-hOffset) / leftCount);
     
     for (UIView* view in _tipViewsArry) {
         view.frame = rect;
@@ -482,8 +546,8 @@
     
     
 #define ITEM_H 40
-    rect.origin = CGPointMake(frame.size.width - size.width, hOffset);
-    rect.size = CGSizeMake(size.width, self.view.bounds.size.height - hOffset);
+    rect.origin = CGPointMake(size.width, hOffset);
+    rect.size = CGSizeMake(frame.size.width - size.width, self.view.bounds.size.height - hOffset);
     _contentView.frame = rect;
     
     rect.origin = CGPointZero;
@@ -508,6 +572,21 @@
     }else if (slider == _outputGain){
         _outputGain.title = [NSString stringWithFormat:@"输出音量：%0.2f",slider.value];
         [_livePush setMasterOutVolume:slider.value];
+    }else if (slider == _skinSoft){
+        _skinSoft.title = [NSString stringWithFormat:@"磨皮：%d",(int)slider.value];
+        _livePush.skinSoften = slider.value;
+    }else if (slider == _skinBriness){
+        _skinBriness.title = [NSString stringWithFormat:@"美白：%d",(int)slider.value];
+        _livePush.brightness = slider.value;
+    }else if (slider == _skinRubby){
+        _skinRubby.title = [NSString stringWithFormat:@"红润：%d",(int)slider.value];
+        _livePush.skinRuddy = slider.value;
+    }else if (slider == _eyeBig){
+        _eyeBig.title = [NSString stringWithFormat:@"大眼：%d",(int)slider.value];
+        _livePush.eyeEnlargement = slider.value;
+    }else if (slider == _faceSlider){
+        _faceSlider.title = [NSString stringWithFormat:@"瘦脸：%d",(int)slider.value];
+        _livePush.faceSlender = slider.value;
     }
 }
 
@@ -734,7 +813,7 @@
             [_faceSticker setTitle:[NSString stringWithFormat:@"人脸贴图:%@",_stickerPath[btn.tag%_stickerPath.count]] forState:UIControlStateNormal];
         }else{
             [_livePush updateFaceStickTemplatePath:nil];
-            [_livePush chanceVideoEffect];
+//            [_livePush chanceVideoEffect];
             [_faceSticker setTitle:@"人脸贴图:无" forState:UIControlStateNormal];
         }
         btn.tag ++;
@@ -791,7 +870,7 @@
     if (elapsed->currentBitrate/1024.0/8 > 1000) {
         NSLog(@"error");
     }
-    _currentV.text = [NSString stringWithFormat:@"dynamic V rate:%0.2fkB/s f:%0.2f",elapsed->currentBitrate/1024.0/8.0,elapsed->currentFPS];
+    _currentV.text = [NSString stringWithFormat:@"encode V b:%0.2fkB/s f:%0.2f",elapsed->currentBitrate/1024.0/8.0,elapsed->currentFPS];
 }
 -(void)livePush:(GJLivePush *)livePush errorType:(GJLiveErrorType)type infoDesc:(id)infoDesc{
     switch (type) {
@@ -848,7 +927,7 @@
 }
 
 -(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushSessionStatus *)status{
-    _sendRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f KB/s A:%0.2f KB/s",status->videoStatus.bitrate/1024.0,status->audioStatus.bitrate/1024.0];
+    _sendRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f A:%0.2f",status->videoStatus.bitrate/1024.0,status->audioStatus.bitrate/1024.0];
     _fpsLab.text = [NSString stringWithFormat:@"FPS V:%0.2f,A:%0.2f",status->videoStatus.frameRate,status->audioStatus.frameRate];
     _delayVLab.text = [NSString stringWithFormat:@"cache V t:%ld ms f:%ld",status->videoStatus.cacheTime,status->videoStatus.cacheCount];
     _delayALab.text = [NSString stringWithFormat:@"cache A t:%ld ms f:%ld",status->audioStatus.cacheTime,status->audioStatus.cacheCount];
@@ -917,6 +996,7 @@
     _view = [[UIView alloc]init];
     [_view addSubview:[_pull getPreviewView]];
     _tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
+    _tapGesture.numberOfTapsRequired = 3;
     [_view addGestureRecognizer:_tapGesture];
     _pullBtn = [UIButton buttonWithType:UIButtonTypeSystem];
     _pullBtn.layer.borderWidth = 1;
@@ -1066,7 +1146,7 @@
 -(void)livePull:(GJLivePull *)livePull updatePullStatus:(GJPullSessionStatus *)status{
     GJPullSessionStatus pullStatus = *status;
     dispatch_async(dispatch_get_main_queue(), ^{
-        _pullRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f KB/s A:%0.2f KB/s",pullStatus.videoStatus.bitrate/1024.0,pullStatus.audioStatus.bitrate/1024.0];
+        _pullRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f A:%0.2f",pullStatus.videoStatus.bitrate/1024.0,pullStatus.audioStatus.bitrate/1024.0];
         _videoCacheLab.text = [NSString stringWithFormat:@"cache V t:%ld ms f:%ld",pullStatus.videoStatus.cacheTime,pullStatus.videoStatus.cacheCount];
         _audioCacheLab.text = [NSString stringWithFormat:@"cache A t:%ld ms f:%ld",pullStatus.audioStatus.cacheTime,pullStatus.audioStatus.cacheCount];
     });
