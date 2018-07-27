@@ -486,7 +486,7 @@
         [self.view addSubview:_paintBtn];
     }else{
         _tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
-        _tapGesture.numberOfTapsRequired = 3;
+        _tapGesture.numberOfTouchesRequired = 2;
         [_view addGestureRecognizer:_tapGesture];
         for (UIGestureRecognizer* g in _outputGain.gestureRecognizers) {
             [_tapGesture requireGestureRecognizerToFail:g];
@@ -996,7 +996,7 @@
     _view = [[UIView alloc]init];
     [_view addSubview:[_pull getPreviewView]];
     _tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(fullTap:)];
-    _tapGesture.numberOfTapsRequired = 3;
+    _tapGesture.numberOfTouchesRequired = 2;
     [_view addGestureRecognizer:_tapGesture];
     _pullBtn = [UIButton buttonWithType:UIButtonTypeSystem];
     _pullBtn.layer.borderWidth = 1;

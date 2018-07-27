@@ -9,10 +9,10 @@
 #import "LIveStartViewController.h"
 #import "GJLivePushViewController.h"
 //static NSString* pullUlr = @"rtmp://192.168.199.187/live/room";
-static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/136711882.flv";
+//static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/136084867.flv";
 //static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/73257119.flv";
 //static NSString* pullUlr = @"http://pull-test.kktv8.com/livekktv/76043170.flv";
-//static NSString* pullUlr = @"http://pull-flv-l1-spe.ixigua.com/test/1dznl4ufn75l3.flv";
+static NSString* pullUlr = @"http://pull-rtmp-l1-spe.ixigua.com/test/1dznl4ufn75l3.flv";
 //static NSString* pullUlr = @"http://pull.kktv8.com/livekktv/126782584.flv";
 //static NSString* pullUlr = @"rtmp://10.0.16.119/live/room";
 //static NSString* pullUlr = @"rtmp://live.hkstv.hk.lxdns.com/live/hks";

@@ -29,6 +29,8 @@
 #include "network.h"
 #include "os_support.h"
 #include "url.h"
+#include <sys/ioctl.h>
+#include <sys/filio.h>
 #if HAVE_POLL_H
 #include <poll.h>
 #endif
@@ -606,9 +608,18 @@ static int tcp_read(URLContext *h, uint8_t *buf, int size)
         if (ret)
             return ret;
     }
+//    int64_t begin = av_gettime();
     ret = recv(s->fd, buf, size, 0);
     if (ret > 0)
         av_application_did_io_tcp_read(s->app_ctx, (void*)h, ret);
+    
+//    int buffersize=0;
+//    int retb = getsockopt(s->fd, SOL_SOCKET, SO_RCVBUF, &buffersize, sizeof(buffersize));
+//    if (retb < 0) {
+//        retb = errno;
+//    }
+//    retb = ioctl(s->fd, FIONREAD, &buffersize);
+//    printf("pullRun not read size :%d  read size:%d needsize:%d during:%lld\n",buffersize,ret,size,av_gettime()-begin);
     return ret < 0 ? ff_neterrno() : ret;
 }
 

@@ -134,7 +134,7 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context, GJTrafficS
                     }
                 }
             } else {
-                GJLOG(GNULL, GJ_LOGDEBUG, "favorableCount count:%d", context->favorableCount);
+                GJLOG(GNULL, GJ_LOGINFO, "favorableCount count:%d", context->favorableCount);
                 GInt32 increaseStep = context->favorableCount / (context->rateCheckStep * context->increaseSpeedRate);
                 if (increaseStep > context->increaseCount) {
                     //                    GJAssert(context->increaseCount+1 == increaseStep, "都是一步一步加");//好吧，不一定

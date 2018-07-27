@@ -19,7 +19,7 @@
 		2707294320F24F0D00DA051F /* lb.zip in Resources */ = {isa = PBXBuildFile; fileRef = 2707293F20F24F0D00DA051F /* lb.zip */; };
 		2707294420F24F0D00DA051F /* bear.zip in Resources */ = {isa = PBXBuildFile; fileRef = 2707294020F24F0D00DA051F /* bear.zip */; };
 		2707298C20F389C400DA051F /* ios.h264 in Resources */ = {isa = PBXBuildFile; fileRef = 2707297420F389C400DA051F /* ios.h264 */; };
-		274297D12101958D00CB0817 /* GJFFmpegSeparatePush.c in Sources */ = {isa = PBXBuildFile; fileRef = 274297B72101890E00CB0817 /* GJFFmpegSeparatePush.c */; };
+		274297D22101C99400CB0817 /* GJFFmpegPush.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF33111F0E2CE000721DB3 /* GJFFmpegPush.c */; };
 		6A03892B1FF13004005AC7CE /* Particle.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A03892A1FF13004005AC7CE /* Particle.png */; };
 		6A04022020CA5A190098A86C /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6A0402EB20CA651B0098A86C /* libAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A8E278020C4DA5400777B38 /* libAudioEngine.a */; };
@@ -124,7 +124,6 @@
 		6AF9DDB91FA976A100F6B4F7 /* GJSunSystemARScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AF9DDB81FA976A100F6B4F7 /* GJSunSystemARScene.m */; };
 		6AF9DDBB1FA97A6000F6B4F7 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 6AF9DDBA1FA97A5F00F6B4F7 /* art.scnassets */; };
 		AE048BE420F0479E006F1148 /* FFVideoEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE048BE220F0479D006F1148 /* FFVideoEncoder.h */; };
-		AE048BFD20F0558B006F1148 /* FFVideoEncoder.c in Sources */ = {isa = PBXBuildFile; fileRef = AE048BE320F0479D006F1148 /* FFVideoEncoder.c */; };
 		AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */ = {isa = PBXBuildFile; fileRef = AE3634131F08120600E3C0AD /* decoder_alac_apple.m */; };
 		AE3A2C171F07F69800C24BAA /* AirTunesPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C151F07F69800C24BAA /* AirTunesPlay.h */; };
 		AE3A2C2C1F07F74500C24BAA /* GJAudioManager.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C2A1F07F74500C24BAA /* GJAudioManager.h */; };
@@ -1778,11 +1777,11 @@
 				6A9F6DC920CA7ABD00C210B4 /* UncaughtExceptionHandler.m in Sources */,
 				6ABF2B1B1F0B413600721DB3 /* IOS_AACDecode.m in Sources */,
 				AE8AADFE1FF7BDE100964479 /* GJBridgeContext.c in Sources */,
-				AE048BFD20F0558B006F1148 /* FFVideoEncoder.c in Sources */,
 				6A63463C20414074000F14E2 /* GJMessageDispatcher.c in Sources */,
 				6ABF2B1F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m in Sources */,
 				6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */,
 				6ABF2B1D1F0B413600721DB3 /* IOS_AACEncode.m in Sources */,
+				274297D22101C99400CB0817 /* GJFFmpegPush.c in Sources */,
 				AE3A2C2D1F07F74500C24BAA /* GJAudioManager.m in Sources */,
 				6A8E27D520C4EE3F00777B38 /* GJAudioAlignment.c in Sources */,
 				6AD06E8A20B53B86004DF75B /* GJRetainBufferPool.c in Sources */,
@@ -1815,7 +1814,6 @@
 				6A53951B20AA7BF900E9E3C9 /* AutoLock.m in Sources */,
 				6A96CCA51F2195C5000DC4FE /* GJScreenRecorder.m in Sources */,
 				AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */,
-				274297D12101958D00CB0817 /* GJFFmpegSeparatePush.c in Sources */,
 				6AE37BD41ED5956800B049EB /* GJLivePlayer.c in Sources */,
 				AE70A5321ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m in Sources */,
 				6AD06E8C20B53B86004DF75B /* GJSignal.c in Sources */,
@@ -1880,7 +1878,7 @@
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY = NO;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
@@ -1930,7 +1928,7 @@
 			buildSettings = {
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY = NO;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;

@@ -455,7 +455,6 @@ GVoid GJLivePlay_CheckWater(GJLivePlayer *player) {
         }
     }
 }
-static int slientCount;
 GBool GJAudioDrivePlayerCallback(GHandle player, void *data, GInt32 *outSize) {
 
     GJPlayControl *_playControl = &((GJLivePlayer *) player)->playControl;
@@ -1052,7 +1051,7 @@ GBool GJLivePlay_AddAudioData(GJLivePlayer *player, R_GJPCMFrame *audioFrame) {
         GBool audioStart = GFalse;
         pthread_mutex_lock(&_playControl->oLock);
         if (player->playControl.status != kPlayStatusStop) {
-            if (audioStart = player->audioPlayer->audioStart(player->audioPlayer)) {
+            if ((audioStart = player->audioPlayer->audioStart(player->audioPlayer))) {
                 player->syncControl.audioInfo.startTime = GJ_Gettime();
                 changeSyncType(_syncControl, kTimeSYNCAudio);
             }
