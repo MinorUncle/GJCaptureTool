@@ -22,7 +22,7 @@
 		275299C821183C0C00DD0403 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
 		275299C921183C1100DD0403 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F16F1D4B4146002607B6 /* libz.tbd */; };
 		275299CA21183C9800DD0403 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
-		27529A48211852FA00DD0403 /* GJLiveEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27529A47211852FA00DD0403 /* GJLiveEngine.framework */; };
+		27BD99F221185672006300A6 /* GJLiveEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27BD99F121185671006300A6 /* GJLiveEngine.framework */; };
 		6A03892B1FF13004005AC7CE /* Particle.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A03892A1FF13004005AC7CE /* Particle.png */; };
 		6A04022020CA5A190098A86C /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6A3488431F453803008223AA /* 0.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A34882B1F453803008223AA /* 0.png */; };
@@ -86,7 +86,7 @@
 		27529A2D21184C8700DD0403 /* audio_ffmpeg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = audio_ffmpeg.cpp; sourceTree = "<group>"; };
 		27529A2F21184C8700DD0403 /* OpenGLView20.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenGLView20.m; sourceTree = "<group>"; };
 		27529A3021184C8700DD0403 /* OpenGLView20.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLView20.h; sourceTree = "<group>"; };
-		27529A47211852FA00DD0403 /* GJLiveEngine.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GJLiveEngine.framework; path = "../../Library/Developer/Xcode/DerivedData/GJCaptureTool-ciccfzxydizngfeplsxjdvuoxune/Build/Products/Debug-iphoneos/GJLiveEngine.framework"; sourceTree = "<group>"; };
+		27BD99F121185671006300A6 /* GJLiveEngine.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = GJLiveEngine.framework; sourceTree = "<group>"; };
 		6A03892A1FF13004005AC7CE /* Particle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Particle.png; sourceTree = "<group>"; };
 		6A34882B1F453803008223AA /* 0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 0.png; sourceTree = "<group>"; };
 		6A34882C1F453803008223AA /* 1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 1.png; sourceTree = "<group>"; };
@@ -128,8 +128,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27529A48211852FA00DD0403 /* GJLiveEngine.framework in Frameworks */,
 				275299CA21183C9800DD0403 /* Accelerate.framework in Frameworks */,
+				27BD99F221185672006300A6 /* GJLiveEngine.framework in Frameworks */,
 				275299C921183C1100DD0403 /* libz.tbd in Frameworks */,
 				275299C821183C0C00DD0403 /* libstdc++.tbd in Frameworks */,
 			);
@@ -256,7 +256,7 @@
 		AEFEF2291DB3B9A80004CF39 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				27529A47211852FA00DD0403 /* GJLiveEngine.framework */,
+				27BD99F121185671006300A6 /* GJLiveEngine.framework */,
 				6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */,
 				C573F16F1D4B4146002607B6 /* libz.tbd */,
 				046F599D1E2E1C38007901EB /* libstdc++.tbd */,
@@ -549,6 +549,10 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = K7MDP8Y272;
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../Library/Developer/Xcode/DerivedData/GJCaptureTool-ciccfzxydizngfeplsxjdvuoxune/Build/Products/Debug-iphoneos/GJLiveEngine.framework/Headers\"";
 				INFOPLIST_FILE = "GJCaptureTool/Support Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
@@ -570,6 +574,10 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = K7MDP8Y272;
 				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../Library/Developer/Xcode/DerivedData/GJCaptureTool-ciccfzxydizngfeplsxjdvuoxune/Build/Products/Debug-iphoneos/GJLiveEngine.framework/Headers\"";
 				INFOPLIST_FILE = "GJCaptureTool/Support Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
