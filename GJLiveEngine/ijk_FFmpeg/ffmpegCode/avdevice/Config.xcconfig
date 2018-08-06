@@ -1,6 +1,0 @@
-PROJECT_DIR=/Users/tongguan/Develop/ffmpegCode
-TARGETNAME=avdevice
-PROJECT_FILE_PATH=/Users/tongguan/Develop/ffmpegCode/ffmpegCode.xcodeproj
-GROUP=avdevice/libavdevice
-arch=arm64
-DidBuild=yes
