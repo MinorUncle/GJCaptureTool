@@ -511,8 +511,9 @@ static GVoid livePushCallback(GHandle               userDate,
     _pushSessionStatus.videoStatus.cacheTime = (GLong)(GTimeMSValue(vTime));
     _pushSessionStatus.videoStatus.frameRate =
         (vInfo.leave.count - _videoInfo.leave.count) / _gaterFrequency;
-    _pushSessionStatus.videoStatus.bitrate =
+    _pushSessionStatus.videoStatus.pushBitrate =
         (vInfo.leave.byte - _videoInfo.leave.byte) / _gaterFrequency;
+    _pushSessionStatus.videoStatus.encodeBitrate = (vInfo.enter.byte - _videoInfo.enter.byte) / _gaterFrequency;
     _pushSessionStatus.videoStatus.cacheCount =
         vInfo.enter.count - vInfo.leave.count;
     _videoInfo = vInfo;
@@ -521,8 +522,9 @@ static GVoid livePushCallback(GHandle               userDate,
     _pushSessionStatus.audioStatus.cacheTime = (GLong)(GTimeMSValue(aTime));
     _pushSessionStatus.audioStatus.frameRate =
         (aInfo.leave.count - _audioInfo.leave.count) * 1024.0 / _gaterFrequency;
-    _pushSessionStatus.audioStatus.bitrate =
+    _pushSessionStatus.audioStatus.pushBitrate =
         (aInfo.leave.byte - _audioInfo.leave.byte) / _gaterFrequency;
+    _pushSessionStatus.audioStatus.encodeBitrate = (aInfo.enter.byte - _audioInfo.enter.byte)/_gaterFrequency;
     _pushSessionStatus.audioStatus.cacheCount =
         aInfo.enter.count - aInfo.leave.count;
     _audioInfo = aInfo;

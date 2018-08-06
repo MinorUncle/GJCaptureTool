@@ -121,14 +121,13 @@ static GVoid _GJLivePush_CheckBufferCache(GJLivePushContext *context, GJTrafficS
                     }else{
                         //减速的目标是比网速小，以减少缓存
                         context->videoNetSpeed -= context->videoBitrate / context->pushConfig->mFps;
-                        //发送数量越少降速越快
-                        GFloat ratioStep = (context->rateCheckStep - sendCount) * 1.0 / context->rateCheckStep;
+                        //发送数量越少降速越快//已经在网速上反应了
+//                        GFloat ratioStep = (context->rateCheckStep - sendCount) * 1.0 / context->rateCheckStep;
                         //满速发送时间越长，网速越可靠
-                        GFloat ratioFullCount = fullCount * 1.0 / context->netSpeedCheckInterval;
-                        GFloat ratio          = (ratioStep + ratioFullCount) / 2;
+                        GFloat ratio = fullCount * 1.0 / context->netSpeedCheckInterval;
                         GJAssert(ratio <= 1.0, "错误");
                         
-                        GInt32 bitrate = context->videoBitrate - (context->videoBitrate - context->videoNetSpeed) * ratio;
+                        GInt32 bitrate = context->videoBitrate - (context->videoBitrate - context->videoNetSpeed) * 1;
                         //bitrate = bitrate - (GInt32)(context->rateCheckStep - sendCount) * context->pushConfig->mVideoBitrate/context->pushConfig->mFps;
                         _GJLivePush_UpdateQualityInfo(context, bitrate);
                     }
@@ -302,11 +301,12 @@ static void _GJLivePush_SetCodeBitrate(GJLivePushContext *context, GInt32 destRa
 
 static void _GJLivePush_UpdateQualityInfo(GJLivePushContext *context, GInt32 destRate) {
     if (destRate <= 0) {
+        GJAssert(0, "会小于0吗？");
         destRate = 2 * 8000;
     }
     GJNetworkQuality quality       = GJNetworkQualityGood;
     GRational        videoDropStep = GRationalMake(0, 1);
-    if (destRate >= context->pushConfig->mVideoBitrate - 0.001) {
+    if (destRate >= context->pushConfig->mVideoBitrate - 0.001) {//防止浮点误差
 
         quality  = GJNetworkQualityExcellent;
         destRate = context->pushConfig->mVideoBitrate;
@@ -321,12 +321,16 @@ static void _GJLivePush_UpdateQualityInfo(GJLivePushContext *context, GInt32 des
         quality = GJNetworkQualityGood;
     } else {
         GInt32 minLimit                   = context->videoMinBitrate * (1 - GRationalValue(context->videoMaxDropRate));
-        if (destRate < minLimit) destRate = minLimit;
-        if (destRate <= 0.00001) {
+        if (destRate < minLimit) {
+            //小于最低码率，根据最大丢帧率之后直接降码率
+            videoDropStep = context->videoMaxDropRate;
+            quality = GJNetworkQualityTerrible;
+        }else if (destRate <= 0.00001) {
             //表示一直丢帧，Terrible
             videoDropStep.den = videoDropStep.num = 1;
             quality                               = GJNetworkQualityTerrible;
         } else if (destRate <= context->videoMinBitrate * 0.5) {
+            //videoMinBitrate*(1-num/den)=dest
             videoDropStep.den = context->videoMinBitrate / destRate;
             videoDropStep.num = videoDropStep.den - 1;
             //丢帧大于一半，Terrible

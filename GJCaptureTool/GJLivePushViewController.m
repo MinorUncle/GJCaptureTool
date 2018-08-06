@@ -135,7 +135,8 @@
 @property (strong, nonatomic) GJSliderView *eyeBig;
 
 @property (strong, nonatomic) UILabel *fpsLab;
-@property (strong, nonatomic) UILabel *sendRateLab;
+@property (strong, nonatomic) UILabel *vSendRateLab;
+@property (strong, nonatomic) UILabel *aSendRateLab;
 
 @property (strong, nonatomic) UILabel *pushStateLab;
 
@@ -172,7 +173,7 @@
         if (type == kGJCaptureTypePaint) {
             config.mFps = 30;
         }else{
-            config.mFps = 30;
+            config.mFps = 15;
         }
         config.mAudioBitrate = 64*1000;
         _livePush = [[GJLivePush alloc]init];
@@ -234,12 +235,19 @@
     [self.view addSubview:_fpsLab];
     [_tipViewsArry addObject:_fpsLab];
 
-    _sendRateLab = [[UILabel alloc]init];
-    _sendRateLab.textColor = [UIColor redColor];
-    _sendRateLab.text = @"bitrate V:0 A:0";
-    _sendRateLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_sendRateLab];
-    [_tipViewsArry addObject:_sendRateLab];
+    _vSendRateLab = [[UILabel alloc]init];
+    _vSendRateLab.textColor = [UIColor redColor];
+    _vSendRateLab.text = @"V BPS P:0 E:0";
+    _vSendRateLab.font = [UIFont systemFontOfSize:10];
+    [self.view addSubview:_vSendRateLab];
+    [_tipViewsArry addObject:_vSendRateLab];
+    
+    _aSendRateLab = [[UILabel alloc]init];
+    _aSendRateLab.textColor = [UIColor redColor];
+    _aSendRateLab.text = @"A BPS P:0 E:0";
+    _aSendRateLab.font = [UIFont systemFontOfSize:10];
+    [self.view addSubview:_aSendRateLab];
+    [_tipViewsArry addObject:_aSendRateLab];
 
     _delayVLab = [[UILabel alloc]init];
     _delayVLab.textColor = [UIColor redColor];
@@ -927,7 +935,9 @@
 }
 
 -(void)livePush:(GJLivePush *)livePush updatePushStatus:(GJPushSessionStatus *)status{
-    _sendRateLab.text = [NSString stringWithFormat:@"bitrate V:%0.2f A:%0.2f",status->videoStatus.bitrate/1024.0,status->audioStatus.bitrate/1024.0];
+    _vSendRateLab.text = [NSString stringWithFormat:@"V BPS P:%0.2f E:%0.2f",status->videoStatus.pushBitrate/1024.0,status->videoStatus.encodeBitrate/1024.0];
+    _aSendRateLab.text = [NSString stringWithFormat:@"A BPS P:%0.2f E:%0.2f",status->audioStatus.pushBitrate/1024.0,status->audioStatus.encodeBitrate/1024.0];
+
     _fpsLab.text = [NSString stringWithFormat:@"FPS V:%0.2f,A:%0.2f",status->videoStatus.frameRate,status->audioStatus.frameRate];
     _delayVLab.text = [NSString stringWithFormat:@"cache V t:%ld ms f:%ld",status->videoStatus.cacheTime,status->videoStatus.cacheCount];
     _delayALab.text = [NSString stringWithFormat:@"cache A t:%ld ms f:%ld",status->audioStatus.cacheTime,status->audioStatus.cacheCount];
