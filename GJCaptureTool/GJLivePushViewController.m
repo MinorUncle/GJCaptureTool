@@ -7,11 +7,9 @@
 //
 
 #import "GJLivePushViewController.h"
-#import "GJLivePush.h"
+#import <GJLiveEngine/GJLiveEngine.h>
 #import <AVFoundation/AVFoundation.h>
-#import "GJLivePull.h"
 #import "GJSunSystemARScene.h"
-#import "GJLog.h"
 #import <ARKit/ARConfiguration.h>
 #import "ZipArchive/ZipArchive.h"
 

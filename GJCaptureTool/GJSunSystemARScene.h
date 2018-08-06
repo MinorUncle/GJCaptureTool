@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "SCNViewController.h"
-#import "GJLivePush.h"
+#import <GJLiveEngine/GJLivePush.h>
 
 @interface GJSunSystemARScene:NSObject<GJImageARScene>
 @property(nonatomic,retain) SCNViewController* controller;

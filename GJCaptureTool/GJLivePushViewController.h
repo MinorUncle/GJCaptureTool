@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "GJLiveDefine.h"
+#import <GJLiveEngine/GJLiveDefine.h>
 @interface GJLivePushViewController : UIViewController
 @property(nonatomic,copy)NSString* pullAddr;
 @property(nonatomic,copy)NSString* pushAddr;

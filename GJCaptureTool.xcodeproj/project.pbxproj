@@ -553,7 +553,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../Library/Developer/Xcode/DerivedData/GJCaptureTool-ciccfzxydizngfeplsxjdvuoxune/Build/Products/Debug-iphoneos/GJLiveEngine.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "GJCaptureTool/Support Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -578,7 +578,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)",
 				);
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../Library/Developer/Xcode/DerivedData/GJCaptureTool-ciccfzxydizngfeplsxjdvuoxune/Build/Products/Debug-iphoneos/GJLiveEngine.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "GJCaptureTool/Support Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
