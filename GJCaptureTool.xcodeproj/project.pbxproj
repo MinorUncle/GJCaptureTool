@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 47;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -22,7 +22,7 @@
 		275299C821183C0C00DD0403 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
 		275299C921183C1100DD0403 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F16F1D4B4146002607B6 /* libz.tbd */; };
 		275299CA21183C9800DD0403 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
-		27529A1B21184A9E00DD0403 /* GJLiveEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 275299D92118491A00DD0403 /* GJLiveEngine.framework */; };
+		27529A48211852FA00DD0403 /* GJLiveEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27529A47211852FA00DD0403 /* GJLiveEngine.framework */; };
 		6A03892B1FF13004005AC7CE /* Particle.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A03892A1FF13004005AC7CE /* Particle.png */; };
 		6A04022020CA5A190098A86C /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6A3488431F453803008223AA /* 0.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A34882B1F453803008223AA /* 0.png */; };
@@ -49,28 +49,10 @@
 		C561ACB51D51D3DC00113453 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC8C1D51D3DC00113453 /* main.m */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		275299D82118491A00DD0403 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 275299CD2118491900DD0403 /* GJLiveEngine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 279AC67F2117E86600F5FD7C;
-			remoteInfo = GJLiveEngine;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXFileReference section */
 		040EBEC81DFFD2660040AED0 /* GJCaptureTool.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GJCaptureTool.entitlements; sourceTree = "<group>"; };
 		041702831E5FC3D100D5B5D9 /* GJLivePushViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePushViewController.h; sourceTree = "<group>"; };
 		041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJLivePushViewController.m; sourceTree = "<group>"; };
-		045E4E531E34A9C900289523 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavcodec.a; sourceTree = "<group>"; };
-		045E4E541E34A9C900289523 /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavdevice.a; sourceTree = "<group>"; };
-		045E4E551E34A9C900289523 /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavfilter.a; sourceTree = "<group>"; };
-		045E4E561E34A9C900289523 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavformat.a; sourceTree = "<group>"; };
-		045E4E571E34A9C900289523 /* libavresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavresample.a; sourceTree = "<group>"; };
-		045E4E581E34A9C900289523 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavutil.a; sourceTree = "<group>"; };
-		045E4E591E34A9C900289523 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libswresample.a; sourceTree = "<group>"; };
-		045E4E5A1E34A9C900289523 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libswscale.a; sourceTree = "<group>"; };
 		046F599D1E2E1C38007901EB /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
 		2707292820F24C9E00DA051F /* ZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZipArchive.h; sourceTree = "<group>"; };
 		2707292A20F24C9E00DA051F /* unzip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = unzip.c; sourceTree = "<group>"; };
@@ -89,7 +71,6 @@
 		2707293F20F24F0D00DA051F /* lb.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = lb.zip; sourceTree = "<group>"; };
 		2707294020F24F0D00DA051F /* bear.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = bear.zip; sourceTree = "<group>"; };
 		2707297420F389C400DA051F /* ios.h264 */ = {isa = PBXFileReference; lastKnownFileType = file; path = ios.h264; sourceTree = "<group>"; };
-		275299CD2118491900DD0403 /* GJLiveEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GJLiveEngine.xcodeproj; path = ../GJLiveEngine/GJLiveEngine.xcodeproj; sourceTree = "<group>"; };
 		27529A2121184C8700DD0403 /* g711.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = g711.cpp; sourceTree = "<group>"; };
 		27529A2221184C8700DD0403 /* PlayMediaDecodec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = PlayMediaDecodec.cpp; sourceTree = "<group>"; };
 		27529A2321184C8700DD0403 /* mp4.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mp4.h; sourceTree = "<group>"; };
@@ -105,6 +86,7 @@
 		27529A2D21184C8700DD0403 /* audio_ffmpeg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = audio_ffmpeg.cpp; sourceTree = "<group>"; };
 		27529A2F21184C8700DD0403 /* OpenGLView20.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenGLView20.m; sourceTree = "<group>"; };
 		27529A3021184C8700DD0403 /* OpenGLView20.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLView20.h; sourceTree = "<group>"; };
+		27529A47211852FA00DD0403 /* GJLiveEngine.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GJLiveEngine.framework; path = "../../Library/Developer/Xcode/DerivedData/GJCaptureTool-ciccfzxydizngfeplsxjdvuoxune/Build/Products/Debug-iphoneos/GJLiveEngine.framework"; sourceTree = "<group>"; };
 		6A03892A1FF13004005AC7CE /* Particle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Particle.png; sourceTree = "<group>"; };
 		6A34882B1F453803008223AA /* 0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 0.png; sourceTree = "<group>"; };
 		6A34882C1F453803008223AA /* 1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 1.png; sourceTree = "<group>"; };
@@ -122,18 +104,13 @@
 		6A582238202AF473002AFF76 /* client.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = client.json; sourceTree = "<group>"; };
 		6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrganRun.m4a; sourceTree = "<group>"; };
 		6A85F9941F00F0B00037A64F /* MixTest.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MixTest.mp3; sourceTree = "<group>"; };
-		6A8E277120C4D9FA00777B38 /* libAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		6A8E27C620C4DAEF00777B38 /* libAirReceive.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libAirReceive.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6AB297E31F4D8A9C00115220 /* LIveStartViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LIveStartViewController.h; sourceTree = "<group>"; };
 		6AB297E41F4D8A9C00115220 /* LIveStartViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LIveStartViewController.m; sourceTree = "<group>"; };
-		6AF7ECE31FE7ABE300605E6E /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
 		6AF9DDB51FA9763C00F6B4F7 /* SCNViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCNViewController.h; sourceTree = "<group>"; };
 		6AF9DDB71FA976A100F6B4F7 /* GJSunSystemARScene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJSunSystemARScene.h; sourceTree = "<group>"; };
 		6AF9DDB81FA976A100F6B4F7 /* GJSunSystemARScene.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GJSunSystemARScene.m; sourceTree = "<group>"; };
 		6AF9DDBA1FA97A5F00F6B4F7 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
-		AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		C54FA8A81D21006000A0D3C3 /* GJCaptureTool.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GJCaptureTool.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		C54FA8C81D2103AA00A0D3C3 /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
 		C561ABEA1D51D3DC00113453 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		C561ABEB1D51D3DC00113453 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		C561ABEC1D51D3DC00113453 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -144,10 +121,6 @@
 		C561AC931D51D3DC00113453 /* ViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		C561AC941D51D3DC00113453 /* ViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ViewController.mm; sourceTree = "<group>"; };
 		C573F16F1D4B4146002607B6 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
-		C573F1711D4B416E002607B6 /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
-		C573F1731D4B4175002607B6 /* libbz2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libbz2.tbd; path = usr/lib/libbz2.tbd; sourceTree = SDKROOT; };
-		C573F1751D4B417B002607B6 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
-		C59106031DC899DC00BCC938 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -155,7 +128,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27529A1B21184A9E00DD0403 /* GJLiveEngine.framework in Frameworks */,
+				27529A48211852FA00DD0403 /* GJLiveEngine.framework in Frameworks */,
 				275299CA21183C9800DD0403 /* Accelerate.framework in Frameworks */,
 				275299C921183C1100DD0403 /* libz.tbd in Frameworks */,
 				275299C821183C0C00DD0403 /* libstdc++.tbd in Frameworks */,
@@ -191,17 +164,10 @@
 			path = minizip;
 			sourceTree = "<group>";
 		};
-		275299CE2118491900DD0403 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				275299D92118491A00DD0403 /* GJLiveEngine.framework */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		27529A1E21184B2600DD0403 /* Resource */ = {
 			isa = PBXGroup;
 			children = (
+				6A34882A1F453803008223AA /* Image */,
 				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
 				2707297420F389C400DA051F /* ios.h264 */,
 				2707293D20F24F0C00DA051F /* bd.zip */,
@@ -256,6 +222,18 @@
 			path = OpenGLPlayer;
 			sourceTree = "<group>";
 		};
+		27529A45211851B700DD0403 /* Support Files */ = {
+			isa = PBXGroup;
+			children = (
+				C561AC8C1D51D3DC00113453 /* main.m */,
+				040EBEC81DFFD2660040AED0 /* GJCaptureTool.entitlements */,
+				C561ABFA1D51D3DC00113453 /* LaunchScreen.storyboard */,
+				C561ABFC1D51D3DC00113453 /* Main.storyboard */,
+				C561AC8B1D51D3DC00113453 /* Info.plist */,
+			);
+			path = "Support Files";
+			sourceTree = "<group>";
+		};
 		6A34882A1F453803008223AA /* Image */ = {
 			isa = PBXGroup;
 			children = (
@@ -278,26 +256,10 @@
 		AEFEF2291DB3B9A80004CF39 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				6A8E27C620C4DAEF00777B38 /* libAirReceive.a */,
-				6A8E277120C4D9FA00777B38 /* libAudioEngine.a */,
-				6AF7ECE31FE7ABE300605E6E /* IOSurface.framework */,
+				27529A47211852FA00DD0403 /* GJLiveEngine.framework */,
 				6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */,
-				C573F1751D4B417B002607B6 /* VideoToolbox.framework */,
-				C573F1731D4B4175002607B6 /* libbz2.tbd */,
-				C573F1711D4B416E002607B6 /* libiconv.tbd */,
 				C573F16F1D4B4146002607B6 /* libz.tbd */,
-				C54FA8C81D2103AA00A0D3C3 /* OpenAL.framework */,
-				045E4E531E34A9C900289523 /* libavcodec.a */,
-				045E4E541E34A9C900289523 /* libavdevice.a */,
-				045E4E551E34A9C900289523 /* libavfilter.a */,
-				045E4E561E34A9C900289523 /* libavformat.a */,
-				045E4E571E34A9C900289523 /* libavresample.a */,
-				045E4E581E34A9C900289523 /* libavutil.a */,
-				045E4E591E34A9C900289523 /* libswresample.a */,
-				045E4E5A1E34A9C900289523 /* libswscale.a */,
 				046F599D1E2E1C38007901EB /* libstdc++.tbd */,
-				C59106031DC899DC00BCC938 /* MediaPlayer.framework */,
-				AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -305,8 +267,6 @@
 		C54FA89F1D21006000A0D3C3 = {
 			isa = PBXGroup;
 			children = (
-				275299CD2118491900DD0403 /* GJLiveEngine.xcodeproj */,
-				6A34882A1F453803008223AA /* Image */,
 				C561ABE91D51D3DC00113453 /* GJCaptureTool */,
 				C54FA8A91D21006000A0D3C3 /* Products */,
 				AEFEF2291DB3B9A80004CF39 /* Frameworks */,
@@ -327,13 +287,9 @@
 				27529A1F21184C8700DD0403 /* Discard */,
 				27529A1E21184B2600DD0403 /* Resource */,
 				2707292720F24C9E00DA051F /* ZipArchive */,
-				040EBEC81DFFD2660040AED0 /* GJCaptureTool.entitlements */,
+				27529A45211851B700DD0403 /* Support Files */,
 				C561ABEA1D51D3DC00113453 /* AppDelegate.h */,
 				C561ABEB1D51D3DC00113453 /* AppDelegate.m */,
-				C561ABFA1D51D3DC00113453 /* LaunchScreen.storyboard */,
-				C561ABFC1D51D3DC00113453 /* Main.storyboard */,
-				C561AC8B1D51D3DC00113453 /* Info.plist */,
-				C561AC8C1D51D3DC00113453 /* main.m */,
 				C561AC931D51D3DC00113453 /* ViewController.h */,
 				C561AC941D51D3DC00113453 /* ViewController.mm */,
 				6AF9DDB51FA9763C00F6B4F7 /* SCNViewController.h */,
@@ -395,7 +351,7 @@
 				};
 			};
 			buildConfigurationList = C54FA8A31D21006000A0D3C3 /* Build configuration list for PBXProject "GJCaptureTool" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 6.3";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -405,28 +361,12 @@
 			mainGroup = C54FA89F1D21006000A0D3C3;
 			productRefGroup = C54FA8A91D21006000A0D3C3 /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 275299CE2118491900DD0403 /* Products */;
-					ProjectRef = 275299CD2118491900DD0403 /* GJLiveEngine.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				C54FA8A71D21006000A0D3C3 /* GJCaptureTool */,
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		275299D92118491A00DD0403 /* GJLiveEngine.framework */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.framework;
-			path = GJLiveEngine.framework;
-			remoteRef = 275299D82118491A00DD0403 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		C54FA8A61D21006000A0D3C3 /* Resources */ = {
@@ -610,19 +550,10 @@
 				DEVELOPMENT_TEAM = K7MDP8Y272;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../Library/Developer/Xcode/DerivedData/GJCaptureTool-ciccfzxydizngfeplsxjdvuoxune/Build/Products/Debug-iphoneos/GJLiveEngine.framework/Headers\"";
-				INFOPLIST_FILE = GJCaptureTool/Info.plist;
+				INFOPLIST_FILE = "GJCaptureTool/Support Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/GJCaptureTool/FFmpeg/lib",
-					"$(PROJECT_DIR)/GJCaptureTool/X264/lib",
-					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
-					"$(PROJECT_DIR)/GJCaptureTool",
-					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/lib",
-					"$(PROJECT_DIR)/fat-faac/lib",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = com.melot.engine;
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
@@ -640,19 +571,10 @@
 				DEVELOPMENT_TEAM = K7MDP8Y272;
 				ENABLE_BITCODE = NO;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../Library/Developer/Xcode/DerivedData/GJCaptureTool-ciccfzxydizngfeplsxjdvuoxune/Build/Products/Debug-iphoneos/GJLiveEngine.framework/Headers\"";
-				INFOPLIST_FILE = GJCaptureTool/Info.plist;
+				INFOPLIST_FILE = "GJCaptureTool/Support Files/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/GJCaptureTool/FFmpeg/lib",
-					"$(PROJECT_DIR)/GJCaptureTool/X264/lib",
-					"$(PROJECT_DIR)/GJCaptureTool/rtmpdump/lib",
-					"$(PROJECT_DIR)/GJCaptureTool",
-					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/lib",
-					"$(PROJECT_DIR)/fat-faac/lib",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.melot.engine;
 				PRODUCT_NAME = GJCaptureTool;
