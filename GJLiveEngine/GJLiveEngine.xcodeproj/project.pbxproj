@@ -278,7 +278,6 @@
 		275299172117F72900DD0403 /* GJScreenRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJScreenRecorder.h; sourceTree = "<group>"; };
 		275299182117F72900DD0403 /* GJScreenRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJScreenRecorder.m; sourceTree = "<group>"; };
 		27529963211820E800DD0403 /* GJQueue.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GJQueue.xcodeproj; path = ../../GJQueue/GJQueue.xcodeproj; sourceTree = "<group>"; };
-		275299BB21182A8F00DD0403 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		275299BD21182EA600DD0403 /* GJPlatformHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPlatformHeader.h; sourceTree = "<group>"; };
 		275299BF2118328B00DD0403 /* GJLog.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJLog.c; sourceTree = "<group>"; };
 		275299C02118328D00DD0403 /* GJLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLog.h; sourceTree = "<group>"; };
@@ -400,8 +399,6 @@
 		279AC8F32117F0B200F5FD7C /* FFWriter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = FFWriter.c; sourceTree = "<group>"; };
 		279AC8F42117F0B200F5FD7C /* sps_decode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sps_decode.h; sourceTree = "<group>"; };
 		279AC8F52117F0B200F5FD7C /* Mp4Writer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Mp4Writer.c; sourceTree = "<group>"; };
-		279AC9222117F38900F5FD7C /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
-		279AC9242117F3C900F5FD7C /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -674,9 +671,6 @@
 		279AC8A02117EB3D00F5FD7C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				275299BB21182A8F00DD0403 /* libc++.tbd */,
-				279AC9242117F3C900F5FD7C /* libz.tbd */,
-				279AC9222117F38900F5FD7C /* Accelerate.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
