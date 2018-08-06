@@ -12,7 +12,6 @@
 #import "GJLivePull.h"
 #import "GJSunSystemARScene.h"
 #import "GJLog.h"
-#import "GJBufferPool.h"
 #import <ARKit/ARConfiguration.h>
 #import "ZipArchive/ZipArchive.h"
 
@@ -1189,9 +1188,8 @@
         }
     });
 }
-extern GTime GJ_Gettime() ;
 -(void)livePull:(GJLivePull *)livePull firstFrameDecode:(GJPullFirstFrameInfo *)info{
-    NSLog(@"firstFrameDecode w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,GTimeMSValue(GJ_Gettime()));
+    NSLog(@"firstFrameDecode w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,(long)[[NSDate date]timeIntervalSince1970]*1000);
     
 }
 
@@ -1202,7 +1200,7 @@ extern GTime GJ_Gettime() ;
         _pullStateLab.text = [NSString stringWithFormat:@"%@,first render delay:%ld ms",_pullStateLab.text,delay];
 
     });
-    NSLog(@"firstFrameRender w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,GTimeMSValue(GJ_Gettime()));
+    NSLog(@"firstFrameRender w:%f,h:%f delay:%ld ts:%ld",info->size.width,info->size.height,info->delay,(long)[[NSDate date]timeIntervalSince1970]*1000);
 }
 
 -(void)livePull:(GJLivePull *)livePull errorType:(GJLiveErrorType)type infoDesc:(NSString *)infoDesc{
@@ -1330,7 +1328,7 @@ extern GTime GJ_Gettime() ;
         }
         [_pulls removeAllObjects];
         
-        GJBufferPoolClean(defauleBufferPool(),GTrue);
+        cleanMemory(GTrue);
         NSLog(@"clean over");
     });
 }
@@ -1498,7 +1496,7 @@ extern GTime GJ_Gettime() ;
         _pushManager = nil;
         [_pulls removeAllObjects];
         NSLog(@"释放完成");
-        GJBufferPoolClean(defauleBufferPool(),false);
+        cleanMemory(GFalse);
     }
 }
 

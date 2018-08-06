@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
 		2707293420F24C9E00DA051F /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = 2707292A20F24C9E00DA051F /* unzip.c */; };
 		2707293520F24C9E00DA051F /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = 2707292B20F24C9E00DA051F /* zip.c */; };
 		2707293620F24C9E00DA051F /* ioapi.c in Sources */ = {isa = PBXBuildFile; fileRef = 2707292C20F24C9E00DA051F /* ioapi.c */; };
@@ -19,15 +18,13 @@
 		2707294320F24F0D00DA051F /* lb.zip in Resources */ = {isa = PBXBuildFile; fileRef = 2707293F20F24F0D00DA051F /* lb.zip */; };
 		2707294420F24F0D00DA051F /* bear.zip in Resources */ = {isa = PBXBuildFile; fileRef = 2707294020F24F0D00DA051F /* bear.zip */; };
 		2707298C20F389C400DA051F /* ios.h264 in Resources */ = {isa = PBXBuildFile; fileRef = 2707297420F389C400DA051F /* ios.h264 */; };
-		274297D22101C99400CB0817 /* GJFFmpegPush.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF33111F0E2CE000721DB3 /* GJFFmpegPush.c */; };
+		275299C72118368B00DD0403 /* LIveStartViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB297E41F4D8A9C00115220 /* LIveStartViewController.m */; };
+		275299C821183C0C00DD0403 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
+		275299C921183C1100DD0403 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F16F1D4B4146002607B6 /* libz.tbd */; };
+		275299CA21183C9800DD0403 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
+		275299CB21183CA500DD0403 /* GJLiveEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 279AC6A62117E8B000F5FD7C /* GJLiveEngine.framework */; };
 		6A03892B1FF13004005AC7CE /* Particle.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A03892A1FF13004005AC7CE /* Particle.png */; };
 		6A04022020CA5A190098A86C /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
-		6A0402EB20CA651B0098A86C /* libAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A8E278020C4DA5400777B38 /* libAudioEngine.a */; };
-		6A045F8320E0E0D10035840F /* GJList.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A045F8120E0E0D10035840F /* GJList.c */; };
-		6A045F8420E0E0D10035840F /* GJList.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A045F8220E0E0D10035840F /* GJList.h */; };
-		6A0C84671FA84A00007C7CEA /* Version.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A0C84661FA84A00007C7CEA /* Version.h */; };
-		6A1A1B0A1F2ED67A0043595F /* AACEncoderFromPCM_OLD.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */; };
-		6A1A1B111F2F36F10043595F /* IOS_RAOPPlay.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A9856C41F2B3D2500128480 /* IOS_RAOPPlay.m */; };
 		6A3488431F453803008223AA /* 0.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A34882B1F453803008223AA /* 0.png */; };
 		6A3488441F453803008223AA /* 1.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A34882C1F453803008223AA /* 1.png */; };
 		6A3488451F453803008223AA /* 2.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A34882D1F453803008223AA /* 2.png */; };
@@ -40,347 +37,35 @@
 		6A34884D1F453803008223AA /* index3.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A3488351F453803008223AA /* index3.png */; };
 		6A34884E1F453803008223AA /* index4.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A3488361F453803008223AA /* index4.png */; };
 		6A34884F1F453803008223AA /* index5.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A3488371F453803008223AA /* index5.png */; };
-		6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
-		6A42F16020AED6A300083B01 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A42F15320AED68D00083B01 /* libavcodec.a */; };
-		6A42F16120AED6A300083B01 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A42F15120AED68D00083B01 /* libavformat.a */; };
-		6A42F16220AED6A300083B01 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A42F15B20AED68D00083B01 /* libavutil.a */; };
-		6A42F16520AED90D00083B01 /* GJLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A42F16320AED90C00083B01 /* GJLog.h */; };
-		6A42F16620AED90D00083B01 /* GJLog.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A42F16420AED90C00083B01 /* GJLog.c */; };
-		6A435CA11F2757300046CEA3 /* GJH264Encoder.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4FC1ECB4DFE0009E49A /* GJH264Encoder.m */; };
-		6A435CCD1F2883D30046CEA3 /* IOS_Recoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A435CCB1F2883D30046CEA3 /* IOS_Recoder.h */; };
-		6A53950D20A9A81700E9E3C9 /* GJDNSCache.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A53950B20A9A81700E9E3C9 /* GJDNSCache.h */; };
-		6A53951120A9AA0E00E9E3C9 /* GJDNSCacheTool.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A53950F20A9AA0E00E9E3C9 /* GJDNSCacheTool.h */; };
-		6A53951A20AA7BF900E9E3C9 /* AutoLock.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A53951820AA7BF900E9E3C9 /* AutoLock.h */; };
-		6A53951B20AA7BF900E9E3C9 /* AutoLock.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A53951920AA7BF900E9E3C9 /* AutoLock.m */; };
-		6A559C311F3D3A3500698C19 /* GJStreamPull.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453841F14C16C0009FB64 /* GJStreamPull.h */; };
 		6A582239202AF473002AFF76 /* client.json in Resources */ = {isa = PBXBuildFile; fileRef = 6A582238202AF473002AFF76 /* client.json */; };
-		6A5E04C520A44AE20030A0B8 /* FFAudioDecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */; };
-		6A5E04C620A44AE20030A0B8 /* FFAudioDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */; };
-		6A63463C20414074000F14E2 /* GJMessageDispatcher.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A63463A20414074000F14E2 /* GJMessageDispatcher.c */; };
-		6A63463D20414074000F14E2 /* GJMessageDispatcher.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A63463B20414074000F14E2 /* GJMessageDispatcher.h */; };
-		6A63464320417942000F14E2 /* GJFFmpegPull.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AA453861F14D4950009FB64 /* GJFFmpegPull.c */; };
-		6A6DB50320D1F80000BC6A18 /* libAirReceive.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6ABDA0E420C5400800BD8070 /* libAirReceive.a */; };
-		6A70C2FB2043A5C90070E347 /* FFVideoDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4FE1ECB4DFE0009E49A /* FFVideoDecoder.m */; };
 		6A7B2C671EFBBEF10036CE92 /* OrganRun.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */; };
 		6A85F9951F00F0B10037A64F /* MixTest.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 6A85F9941F00F0B00037A64F /* MixTest.mp3 */; };
-		6A8E27D520C4EE3F00777B38 /* GJAudioAlignment.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A8E27D320C4EE3F00777B38 /* GJAudioAlignment.c */; };
-		6A8E27D620C4EE3F00777B38 /* GJAudioAlignment.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A8E27D420C4EE3F00777B38 /* GJAudioAlignment.h */; };
-		6A8E27D920C52FFC00777B38 /* GTime.c in Sources */ = {isa = PBXBuildFile; fileRef = 6A8E27D720C52FFC00777B38 /* GTime.c */; };
-		6A8E27DA20C52FFC00777B38 /* GTime.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A8E27D820C52FFC00777B38 /* GTime.h */; };
-		6A8F5E351F340E3C00FA57A4 /* GJAudioQueuePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4E51ECB4DFE0009E49A /* GJAudioQueuePlayer.m */; };
-		6A96CCA41F2195C5000DC4FE /* GJScreenRecorder.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */; };
-		6A96CCA51F2195C5000DC4FE /* GJScreenRecorder.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */; };
-		6A9856C51F2B3D2500128480 /* IOS_RAOPPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */; };
-		6A9F6DC820CA7ABD00C210B4 /* UncaughtExceptionHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = 6A9F6DC620CA7ABD00C210B4 /* UncaughtExceptionHandler.h */; };
-		6A9F6DC920CA7ABD00C210B4 /* UncaughtExceptionHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = 6A9F6DC720CA7ABD00C210B4 /* UncaughtExceptionHandler.m */; };
-		6AA453681F146A1A0009FB64 /* GJStreamPush.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AA453661F146A1A0009FB64 /* GJStreamPush.h */; };
-		6AA649011FC2C99F00AA3CAC /* LIveStartViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AB297E41F4D8A9C00115220 /* LIveStartViewController.m */; };
-		6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */; };
-		6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */; };
-		6AB4F4321EF0082200FD4172 /* GJFLVPack.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AB4F4301EF0082200FD4172 /* GJFLVPack.h */; };
-		6ABD5B661E88B73B00404A6B /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E61E84BE3F002A2A2D /* libcrypto.a */; };
-		6ABD5B671E88B73B00404A6B /* libopenssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A0E86E41E84BE3F002A2A2D /* libopenssl.a */; };
-		6ABF2B1A1F0B413600721DB3 /* IOS_AACDecode.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF2B0A1F0B413600721DB3 /* IOS_AACDecode.h */; };
-		6ABF2B1B1F0B413600721DB3 /* IOS_AACDecode.m in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B0B1F0B413600721DB3 /* IOS_AACDecode.m */; };
-		6ABF2B1C1F0B413600721DB3 /* IOS_AACEncode.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF2B0C1F0B413600721DB3 /* IOS_AACEncode.h */; };
-		6ABF2B1D1F0B413600721DB3 /* IOS_AACEncode.m in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B0D1F0B413600721DB3 /* IOS_AACEncode.m */; };
-		6ABF2B1E1F0B413600721DB3 /* IOS_AudioDrivePlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF2B0E1F0B413600721DB3 /* IOS_AudioDrivePlayer.h */; };
-		6ABF2B1F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B0F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m */; };
-		6ABF2B201F0B413600721DB3 /* IOS_AudioProduce.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF2B101F0B413600721DB3 /* IOS_AudioProduce.h */; };
-		6ABF2B211F0B413600721DB3 /* IOS_AudioProduce.m in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B111F0B413600721DB3 /* IOS_AudioProduce.m */; };
-		6ABF2B221F0B413600721DB3 /* IOS_H264Decode.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF2B121F0B413600721DB3 /* IOS_H264Decode.h */; };
-		6ABF2B231F0B413600721DB3 /* IOS_H264Decode.m in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B131F0B413600721DB3 /* IOS_H264Decode.m */; };
-		6ABF2B241F0B413600721DB3 /* IOS_H264Encode.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF2B141F0B413600721DB3 /* IOS_H264Encode.h */; };
-		6ABF2B251F0B413600721DB3 /* IOS_H264Encode.m in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B151F0B413600721DB3 /* IOS_H264Encode.m */; };
-		6ABF2B261F0B413600721DB3 /* IOS_PictureDisplay.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF2B161F0B413600721DB3 /* IOS_PictureDisplay.h */; };
-		6ABF2B271F0B413600721DB3 /* IOS_PictureDisplay.m in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B171F0B413600721DB3 /* IOS_PictureDisplay.m */; };
-		6ABF2B281F0B413600721DB3 /* IOS_VideoProduce.h in Headers */ = {isa = PBXBuildFile; fileRef = 6ABF2B181F0B413600721DB3 /* IOS_VideoProduce.h */; };
-		6ABF2B291F0B413600721DB3 /* IOS_VideoProduce.m in Sources */ = {isa = PBXBuildFile; fileRef = 6ABF2B191F0B413600721DB3 /* IOS_VideoProduce.m */; };
-		6AD06E7E20B53B86004DF75B /* GJBufferPool.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5320B53B86004DF75B /* GJBufferPool.c */; };
-		6AD06E7F20B53B86004DF75B /* GJBufferPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5420B53B86004DF75B /* GJBufferPool.h */; };
-		6AD06E8020B53B86004DF75B /* GJDebug.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5520B53B86004DF75B /* GJDebug.h */; };
-		6AD06E8120B53B86004DF75B /* GJListQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5620B53B86004DF75B /* GJListQueue.c */; };
-		6AD06E8220B53B86004DF75B /* GJListQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5720B53B86004DF75B /* GJListQueue.h */; };
-		6AD06E8420B53B86004DF75B /* GJPlatformHeader.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */; };
-		6AD06E8520B53B86004DF75B /* GJQueue+cplus.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5A20B53B86004DF75B /* GJQueue+cplus.h */; };
-		6AD06E8620B53B86004DF75B /* GJQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5B20B53B86004DF75B /* GJQueue.c */; };
-		6AD06E8720B53B86004DF75B /* GJQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5C20B53B86004DF75B /* GJQueue.h */; };
-		6AD06E8820B53B86004DF75B /* GJRetainBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5D20B53B86004DF75B /* GJRetainBuffer.c */; };
-		6AD06E8920B53B86004DF75B /* GJRetainBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E5E20B53B86004DF75B /* GJRetainBuffer.h */; };
-		6AD06E8A20B53B86004DF75B /* GJRetainBufferPool.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E5F20B53B86004DF75B /* GJRetainBufferPool.c */; };
-		6AD06E8B20B53B86004DF75B /* GJRetainBufferPool.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E6020B53B86004DF75B /* GJRetainBufferPool.h */; };
-		6AD06E8C20B53B86004DF75B /* GJSignal.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E6120B53B86004DF75B /* GJSignal.c */; };
-		6AD06E8D20B53B86004DF75B /* GJSignal.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E6220B53B86004DF75B /* GJSignal.h */; };
-		6AD06E8E20B53B86004DF75B /* GMemCheck.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AD06E6320B53B86004DF75B /* GMemCheck.c */; };
-		6AD06E8F20B53B86004DF75B /* GMemCheck.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AD06E6420B53B86004DF75B /* GMemCheck.h */; };
-		6AE37BD41ED5956800B049EB /* GJLivePlayer.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AE37BCC1ED5956800B049EB /* GJLivePlayer.c */; };
-		6AE37BD51ED5956800B049EB /* GJLivePlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BCD1ED5956800B049EB /* GJLivePlayer.h */; };
-		6AE37BD61ED5956800B049EB /* GJLivePullContext.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AE37BCE1ED5956800B049EB /* GJLivePullContext.c */; };
-		6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BCF1ED5956800B049EB /* GJLivePullContext.h */; };
-		6AE37BD81ED5956800B049EB /* GJLivePushContext.c in Sources */ = {isa = PBXBuildFile; fileRef = 6AE37BD01ED5956800B049EB /* GJLivePushContext.c */; };
-		6AE37BD91ED5956800B049EB /* GJLivePushContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AE37BD11ED5956800B049EB /* GJLivePushContext.h */; };
-		6AF7ECFD1FE7ABE800605E6E /* IOSurface.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6AF7ECE31FE7ABE300605E6E /* IOSurface.framework */; };
-		6AF9DDB61FA9763D00F6B4F7 /* SCNViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 6AF9DDB51FA9763C00F6B4F7 /* SCNViewController.h */; };
 		6AF9DDB91FA976A100F6B4F7 /* GJSunSystemARScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 6AF9DDB81FA976A100F6B4F7 /* GJSunSystemARScene.m */; };
 		6AF9DDBB1FA97A6000F6B4F7 /* art.scnassets in Resources */ = {isa = PBXBuildFile; fileRef = 6AF9DDBA1FA97A5F00F6B4F7 /* art.scnassets */; };
-		AE048BE420F0479E006F1148 /* FFVideoEncoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE048BE220F0479D006F1148 /* FFVideoEncoder.h */; };
-		AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */ = {isa = PBXBuildFile; fileRef = AE3634131F08120600E3C0AD /* decoder_alac_apple.m */; };
-		AE3A2C171F07F69800C24BAA /* AirTunesPlay.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C151F07F69800C24BAA /* AirTunesPlay.h */; };
-		AE3A2C2C1F07F74500C24BAA /* GJAudioManager.h in Headers */ = {isa = PBXBuildFile; fileRef = AE3A2C2A1F07F74500C24BAA /* GJAudioManager.h */; };
-		AE3A2C2D1F07F74500C24BAA /* GJAudioManager.m in Sources */ = {isa = PBXBuildFile; fileRef = AE3A2C2B1F07F74500C24BAA /* GJAudioManager.m */; };
-		AE70A5121ECB4DFE0009E49A /* GJLiveDefine+internal.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4CB1ECB4DFE0009E49A /* GJLiveDefine+internal.c */; };
-		AE70A5131ECB4DFE0009E49A /* GJLiveDefine+internal.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4CC1ECB4DFE0009E49A /* GJLiveDefine+internal.h */; };
-		AE70A5141ECB4DFE0009E49A /* GJLiveDefine.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4CD1ECB4DFE0009E49A /* GJLiveDefine.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AE70A5191ECB4DFE0009E49A /* GJUtil.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4D21ECB4DFE0009E49A /* GJUtil.c */; };
-		AE70A51A1ECB4DFE0009E49A /* GJUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4D31ECB4DFE0009E49A /* GJUtil.h */; };
-		AE70A51B1ECB4DFE0009E49A /* sps_decode.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4D41ECB4DFE0009E49A /* sps_decode.c */; };
-		AE70A51C1ECB4DFE0009E49A /* sps_decode.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4D51ECB4DFE0009E49A /* sps_decode.h */; };
-		AE70A51F1ECB4DFE0009E49A /* AACEncoderFromPCM.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4DA1ECB4DFE0009E49A /* AACEncoderFromPCM.h */; };
-		AE70A5201ECB4DFE0009E49A /* AACEncoderFromPCM.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4DB1ECB4DFE0009E49A /* AACEncoderFromPCM.m */; };
-		AE70A5271ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4E21ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h */; };
-		AE70A5281ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4E31ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m */; };
-		AE70A52B1ECB4DFE0009E49A /* GJAudioQueueRecoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4E61ECB4DFE0009E49A /* GJAudioQueueRecoder.h */; };
-		AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4E71ECB4DFE0009E49A /* GJAudioQueueRecoder.m */; };
-		AE70A5311ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4EC1ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h */; };
-		AE70A5321ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4ED1ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m */; };
-		AE70A5371ECB4DFE0009E49A /* GJLivePull.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4F21ECB4DFE0009E49A /* GJLivePull.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AE70A53B1ECB4DFE0009E49A /* GJLivePush.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4F61ECB4DFE0009E49A /* GJLivePush.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AE70A53C1ECB4DFE0009E49A /* GJLivePush.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4F71ECB4DFE0009E49A /* GJLivePush.m */; };
-		AE70A53D1ECB4DFE0009E49A /* GJH264Decoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4F91ECB4DFE0009E49A /* GJH264Decoder.h */; };
-		AE70A53E1ECB4DFE0009E49A /* GJH264Decoder.m in Sources */ = {isa = PBXBuildFile; fileRef = AE70A4FA1ECB4DFE0009E49A /* GJH264Decoder.m */; };
-		AE70A53F1ECB4DFE0009E49A /* GJH264Encoder.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A4FB1ECB4DFE0009E49A /* GJH264Encoder.h */; };
-		AE70A5501ECB4DFE0009E49A /* GJBridegContext.h in Headers */ = {isa = PBXBuildFile; fileRef = AE70A50D1ECB4DFE0009E49A /* GJBridegContext.h */; };
-		AE70A5531ECB50A20009E49A /* libGJImageFilters.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0417FEE21E5ECB8D00D5B5D9 /* libGJImageFilters.a */; };
-		AE70A5571ECB50FA0009E49A /* GJLiveEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AE70A4B81ECB4D930009E49A /* GJLiveEngine.framework */; };
-		AE8AADFE1FF7BDE100964479 /* GJBridgeContext.c in Sources */ = {isa = PBXBuildFile; fileRef = AE70A50C1ECB4DFE0009E49A /* GJBridgeContext.c */; };
-		AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEFEF22A1DB3B9A80004CF39 /* AVFoundation.framework */; };
-		C54FA8C91D2103AA00A0D3C3 /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C54FA8C81D2103AA00A0D3C3 /* OpenAL.framework */; };
 		C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C561ABEB1D51D3DC00113453 /* AppDelegate.m */; };
 		C561AC9C1D51D3DC00113453 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C561ABEC1D51D3DC00113453 /* Assets.xcassets */; };
 		C561ACA31D51D3DC00113453 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C561ABFA1D51D3DC00113453 /* LaunchScreen.storyboard */; };
 		C561ACA41D51D3DC00113453 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C561ABFC1D51D3DC00113453 /* Main.storyboard */; };
 		C561ACB51D51D3DC00113453 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC8C1D51D3DC00113453 /* main.m */; };
 		C561ACB61D51D3DC00113453 /* OpenGLView20.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC8F1D51D3DC00113453 /* OpenGLView20.m */; };
-		C573F1701D4B4146002607B6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F16F1D4B4146002607B6 /* libz.tbd */; };
-		C573F1721D4B416E002607B6 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F1711D4B416E002607B6 /* libiconv.tbd */; };
-		C573F1741D4B4175002607B6 /* libbz2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F1731D4B4175002607B6 /* libbz2.tbd */; };
-		C573F1761D4B417B002607B6 /* VideoToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F1751D4B417B002607B6 /* VideoToolbox.framework */; };
-		C59106041DC899DC00BCC938 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C59106031DC899DC00BCC938 /* MediaPlayer.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		0417FEDF1E5ECB8D00D5B5D9 /* PBXContainerItemProxy */ = {
+		279AC6A52117E8B000F5FD7C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */;
+			containerPortal = 279AC6932117E8B000F5FD7C /* GJLiveEngine.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 0417FC5E1E5EB0E100D5B5D9;
-			remoteInfo = GJImage;
-		};
-		0417FEE11E5ECB8D00D5B5D9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 0417FCBD1E5EC74E00D5B5D9;
-			remoteInfo = GJImageFilters;
-		};
-		045C61AF1E1CE4390047E673 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C56C9D7E1D87CE1B0092E69D;
-			remoteInfo = Mp4v2Code;
-		};
-		045C61B11E1CE4390047E673 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C5E7F6A51D8E2EB60018CBC6;
-			remoteInfo = Mp4V2_Demo;
-		};
-		6A0E86DF1E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = AE5D85D31DBA0D680092D2A8;
-			remoteInfo = RtmpCode;
-		};
-		6A0E86E11E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = AE5D85F11DBA0D900092D2A8;
-			remoteInfo = rtmp;
-		};
-		6A0E86E31E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = AE5D86171DBA0E3A0092D2A8;
-			remoteInfo = openssl;
-		};
-		6A0E86E51E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = AE973AC51DBB614400B5907F;
-			remoteInfo = crypto;
-		};
-		6A0E86E71E84BE3F002A2A2D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C591E8AE1DC6FF6600BCC938;
-			remoteInfo = RtmpServer;
-		};
-		6A42F14C20AED68D00083B01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C53791C91CF6A4CE00B5CD50;
-			remoteInfo = ffmpegCode;
-		};
-		6A42F14E20AED68D00083B01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C52104321D98FE7000DAB2E1;
-			remoteInfo = swresample;
-		};
-		6A42F15020AED68D00083B01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C52104571D9900A800DAB2E1;
-			remoteInfo = avformat;
-		};
-		6A42F15220AED68D00083B01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C58145551D9E4CF100B9118F;
-			remoteInfo = avcodec;
-		};
-		6A42F15420AED68D00083B01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C58153931D9E4F1D00B9118F;
-			remoteInfo = avdevice;
-		};
-		6A42F15620AED68D00083B01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C58153EE1D9E515500B9118F;
-			remoteInfo = avfilter;
-		};
-		6A42F15820AED68D00083B01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C581556D1D9E520600B9118F;
-			remoteInfo = avresample;
-		};
-		6A42F15A20AED68D00083B01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C58155AB1D9E52AF00B9118F;
-			remoteInfo = avutil;
-		};
-		6A42F15C20AED68D00083B01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C58156EA1D9E531000B9118F;
-			remoteInfo = postproc;
-		};
-		6A42F15E20AED68D00083B01 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = C58157021D9E537800B9118F;
-			remoteInfo = swscale;
-		};
-		6A582203202AF29D002AFF76 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 6A58215F202AAD12002AFF76;
-			remoteInfo = kcpTunDemo;
-		};
-		6A582205202AF29D002AFF76 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 6A58217C202AAD2B002AFF76;
-			remoteInfo = kcptun;
-		};
-		6A6B1A3A207C474E00BFC8FA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 0417FCBC1E5EC74E00D5B5D9;
-			remoteInfo = GJImageFilters;
-		};
-		6A8E277F20C4DA5400777B38 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4C215CEC1523A7D500D36CAD;
-			remoteInfo = AudioEngine;
-		};
-		6A8E278120C4DA5400777B38 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 7A5687101B54610900243427;
-			remoteInfo = "AudioEngine OS X";
-		};
-		6A8E278320C4DA5400777B38 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 17BB5B401BECD101007A2892;
-			remoteInfo = "AudioEngine tvOS";
-		};
-		6A8E27D120C4EAF300777B38 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 4C215CEB1523A7D500D36CAD;
-			remoteInfo = AudioEngine;
-		};
-		6ABDA0E320C5400800BD8070 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 6A8E27BF20C4DAB900777B38 /* AirReceive.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = A1D0DC501950378A004717F5;
-			remoteInfo = AirReceive;
+			remoteGlobalIDString = 279AC67F2117E86600F5FD7C;
+			remoteInfo = GJLiveEngine;
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		04C5C5191E666DC1009DE4A0 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		040EBEC81DFFD2660040AED0 /* GJCaptureTool.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GJCaptureTool.entitlements; sourceTree = "<group>"; };
 		041702831E5FC3D100D5B5D9 /* GJLivePushViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePushViewController.h; sourceTree = "<group>"; };
 		041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJLivePushViewController.m; sourceTree = "<group>"; };
-		0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GJImage.xcodeproj; path = ../GJImage/GJImage.xcodeproj; sourceTree = "<group>"; };
 		043226691DDEF38F0012A0C0 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
 		0432266A1DDEF38F0012A0C0 /* libopenssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopenssl.a; sourceTree = "<group>"; };
-		045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Mp4v2Code.xcodeproj; path = ../GJMp4Demo/Mp4v2Code.xcodeproj; sourceTree = "<group>"; };
 		045E4E531E34A9C900289523 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavcodec.a; sourceTree = "<group>"; };
 		045E4E541E34A9C900289523 /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavdevice.a; sourceTree = "<group>"; };
 		045E4E551E34A9C900289523 /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavfilter.a; sourceTree = "<group>"; };
@@ -423,14 +108,8 @@
 		2707293F20F24F0D00DA051F /* lb.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = lb.zip; sourceTree = "<group>"; };
 		2707294020F24F0D00DA051F /* bear.zip */ = {isa = PBXFileReference; lastKnownFileType = archive.zip; path = bear.zip; sourceTree = "<group>"; };
 		2707297420F389C400DA051F /* ios.h264 */ = {isa = PBXFileReference; lastKnownFileType = file; path = ios.h264; sourceTree = "<group>"; };
-		274297B72101890E00CB0817 /* GJFFmpegSeparatePush.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFFmpegSeparatePush.c; sourceTree = "<group>"; };
+		279AC6932117E8B000F5FD7C /* GJLiveEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GJLiveEngine.xcodeproj; path = GJLiveEngine/GJLiveEngine.xcodeproj; sourceTree = "<group>"; };
 		6A03892A1FF13004005AC7CE /* Particle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Particle.png; sourceTree = "<group>"; };
-		6A045F8120E0E0D10035840F /* GJList.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GJList.c; sourceTree = "<group>"; };
-		6A045F8220E0E0D10035840F /* GJList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJList.h; sourceTree = "<group>"; };
-		6A0C84661FA84A00007C7CEA /* Version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Version.h; sourceTree = "<group>"; };
-		6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = RtmpCode.xcodeproj; path = ../rtmpAndOpenssl/RtmpCode.xcodeproj; sourceTree = "<group>"; };
-		6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AACEncoderFromPCM_OLD.h; sourceTree = "<group>"; };
-		6A1A1B091F2ED67A0043595F /* AACEncoderFromPCM_OLD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AACEncoderFromPCM_OLD.m; sourceTree = "<group>"; };
 		6A34882B1F453803008223AA /* 0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 0.png; sourceTree = "<group>"; };
 		6A34882C1F453803008223AA /* 1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 1.png; sourceTree = "<group>"; };
 		6A34882D1F453803008223AA /* 2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 2.png; sourceTree = "<group>"; };
@@ -443,153 +122,19 @@
 		6A3488351F453803008223AA /* index3.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = index3.png; sourceTree = "<group>"; };
 		6A3488361F453803008223AA /* index4.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = index4.png; sourceTree = "<group>"; };
 		6A3488371F453803008223AA /* index5.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = index5.png; sourceTree = "<group>"; };
-		6A3955401FA33DE4002931D9 /* GJLiveEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJLiveEngine.h; sourceTree = "<group>"; };
-		6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = AudioEngine.xcodeproj; path = TheAmazingAudioEngine/AudioEngine.xcodeproj; sourceTree = "<group>"; };
 		6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
-		6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ffmpegCode.xcodeproj; path = ijk_FFmpeg/ffmpegCode/ffmpegCode.xcodeproj; sourceTree = "<group>"; };
-		6A42F16320AED90C00083B01 /* GJLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLog.h; sourceTree = "<group>"; };
-		6A42F16420AED90C00083B01 /* GJLog.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJLog.c; sourceTree = "<group>"; };
-		6A435CCB1F2883D30046CEA3 /* IOS_Recoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_Recoder.h; sourceTree = "<group>"; };
-		6A435CCC1F2883D30046CEA3 /* IOS_Recoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_Recoder.m; sourceTree = "<group>"; };
-		6A53950A20A9A81700E9E3C9 /* GJDNSCache.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GJDNSCache.c; sourceTree = "<group>"; };
-		6A53950B20A9A81700E9E3C9 /* GJDNSCache.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJDNSCache.h; sourceTree = "<group>"; };
-		6A53950F20A9AA0E00E9E3C9 /* GJDNSCacheTool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJDNSCacheTool.h; sourceTree = "<group>"; };
-		6A53951020A9AA0E00E9E3C9 /* GJDNSCacheTool.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GJDNSCacheTool.m; sourceTree = "<group>"; };
-		6A53951820AA7BF900E9E3C9 /* AutoLock.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AutoLock.h; sourceTree = "<group>"; };
-		6A53951920AA7BF900E9E3C9 /* AutoLock.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AutoLock.m; sourceTree = "<group>"; };
-		6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = kcpTunDemo.xcodeproj; path = ../kcptunCode/kcpTunDemo/kcpTunDemo.xcodeproj; sourceTree = "<group>"; };
 		6A582238202AF473002AFF76 /* client.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = client.json; sourceTree = "<group>"; };
-		6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FFAudioDecoder.h; path = GJLiveEngine/CrossPlatform/Bridge/FFAudioDecoder.h; sourceTree = SOURCE_ROOT; };
-		6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = FFAudioDecoder.m; path = GJLiveEngine/CrossPlatform/Bridge/FFAudioDecoder.m; sourceTree = SOURCE_ROOT; };
-		6A63463A20414074000F14E2 /* GJMessageDispatcher.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GJMessageDispatcher.c; sourceTree = "<group>"; };
-		6A63463B20414074000F14E2 /* GJMessageDispatcher.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJMessageDispatcher.h; sourceTree = "<group>"; };
 		6A7B2C661EFBBEF10036CE92 /* OrganRun.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = OrganRun.m4a; sourceTree = "<group>"; };
 		6A85F9941F00F0B00037A64F /* MixTest.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = MixTest.mp3; sourceTree = "<group>"; };
 		6A8E277120C4D9FA00777B38 /* libAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		6A8E27BF20C4DAB900777B38 /* AirReceive.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = AirReceive.xcodeproj; path = libairfloat/AirReceive.xcodeproj; sourceTree = "<group>"; };
 		6A8E27C620C4DAEF00777B38 /* libAirReceive.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libAirReceive.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		6A8E27D320C4EE3F00777B38 /* GJAudioAlignment.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GJAudioAlignment.c; sourceTree = "<group>"; };
-		6A8E27D420C4EE3F00777B38 /* GJAudioAlignment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJAudioAlignment.h; sourceTree = "<group>"; };
-		6A8E27D720C52FFC00777B38 /* GTime.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = GTime.c; sourceTree = "<group>"; };
-		6A8E27D820C52FFC00777B38 /* GTime.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GTime.h; sourceTree = "<group>"; };
-		6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GJScreenRecorder.h; path = ../GJScreenRecorder.h; sourceTree = "<group>"; };
-		6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GJScreenRecorder.m; path = ../GJScreenRecorder.m; sourceTree = "<group>"; };
-		6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_RAOPPlay.h; sourceTree = "<group>"; };
-		6A9856C41F2B3D2500128480 /* IOS_RAOPPlay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_RAOPPlay.m; sourceTree = "<group>"; };
-		6A9F6DC620CA7ABD00C210B4 /* UncaughtExceptionHandler.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UncaughtExceptionHandler.h; sourceTree = "<group>"; };
-		6A9F6DC720CA7ABD00C210B4 /* UncaughtExceptionHandler.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UncaughtExceptionHandler.m; sourceTree = "<group>"; };
-		6AA453661F146A1A0009FB64 /* GJStreamPush.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJStreamPush.h; sourceTree = "<group>"; };
-		6AA453841F14C16C0009FB64 /* GJStreamPull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJStreamPull.h; sourceTree = "<group>"; };
-		6AA453861F14D4950009FB64 /* GJFFmpegPull.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFFmpegPull.c; sourceTree = "<group>"; };
 		6AB297E31F4D8A9C00115220 /* LIveStartViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LIveStartViewController.h; sourceTree = "<group>"; };
 		6AB297E41F4D8A9C00115220 /* LIveStartViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LIveStartViewController.m; sourceTree = "<group>"; };
-		6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFLVPack.c; sourceTree = "<group>"; };
-		6AB4F4301EF0082200FD4172 /* GJFLVPack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJFLVPack.h; sourceTree = "<group>"; };
-		6ABF2B0A1F0B413600721DB3 /* IOS_AACDecode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_AACDecode.h; sourceTree = "<group>"; };
-		6ABF2B0B1F0B413600721DB3 /* IOS_AACDecode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_AACDecode.m; sourceTree = "<group>"; };
-		6ABF2B0C1F0B413600721DB3 /* IOS_AACEncode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_AACEncode.h; sourceTree = "<group>"; };
-		6ABF2B0D1F0B413600721DB3 /* IOS_AACEncode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_AACEncode.m; sourceTree = "<group>"; };
-		6ABF2B0E1F0B413600721DB3 /* IOS_AudioDrivePlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_AudioDrivePlayer.h; sourceTree = "<group>"; };
-		6ABF2B0F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_AudioDrivePlayer.m; sourceTree = "<group>"; };
-		6ABF2B101F0B413600721DB3 /* IOS_AudioProduce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_AudioProduce.h; sourceTree = "<group>"; };
-		6ABF2B111F0B413600721DB3 /* IOS_AudioProduce.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_AudioProduce.m; sourceTree = "<group>"; };
-		6ABF2B121F0B413600721DB3 /* IOS_H264Decode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_H264Decode.h; sourceTree = "<group>"; };
-		6ABF2B131F0B413600721DB3 /* IOS_H264Decode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_H264Decode.m; sourceTree = "<group>"; };
-		6ABF2B141F0B413600721DB3 /* IOS_H264Encode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_H264Encode.h; sourceTree = "<group>"; };
-		6ABF2B151F0B413600721DB3 /* IOS_H264Encode.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_H264Encode.m; sourceTree = "<group>"; };
-		6ABF2B161F0B413600721DB3 /* IOS_PictureDisplay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_PictureDisplay.h; sourceTree = "<group>"; };
-		6ABF2B171F0B413600721DB3 /* IOS_PictureDisplay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_PictureDisplay.m; sourceTree = "<group>"; };
-		6ABF2B181F0B413600721DB3 /* IOS_VideoProduce.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IOS_VideoProduce.h; sourceTree = "<group>"; };
-		6ABF2B191F0B413600721DB3 /* IOS_VideoProduce.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IOS_VideoProduce.m; sourceTree = "<group>"; };
-		6ABF33111F0E2CE000721DB3 /* GJFFmpegPush.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJFFmpegPush.c; sourceTree = "<group>"; };
-		6AD06E5320B53B86004DF75B /* GJBufferPool.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJBufferPool.c; sourceTree = "<group>"; };
-		6AD06E5420B53B86004DF75B /* GJBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJBufferPool.h; sourceTree = "<group>"; };
-		6AD06E5520B53B86004DF75B /* GJDebug.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJDebug.h; sourceTree = "<group>"; };
-		6AD06E5620B53B86004DF75B /* GJListQueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJListQueue.c; sourceTree = "<group>"; };
-		6AD06E5720B53B86004DF75B /* GJListQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJListQueue.h; sourceTree = "<group>"; };
-		6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPlatformHeader.h; sourceTree = "<group>"; };
-		6AD06E5A20B53B86004DF75B /* GJQueue+cplus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GJQueue+cplus.h"; sourceTree = "<group>"; };
-		6AD06E5B20B53B86004DF75B /* GJQueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJQueue.c; sourceTree = "<group>"; };
-		6AD06E5C20B53B86004DF75B /* GJQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJQueue.h; sourceTree = "<group>"; };
-		6AD06E5D20B53B86004DF75B /* GJRetainBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJRetainBuffer.c; sourceTree = "<group>"; };
-		6AD06E5E20B53B86004DF75B /* GJRetainBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJRetainBuffer.h; sourceTree = "<group>"; };
-		6AD06E5F20B53B86004DF75B /* GJRetainBufferPool.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJRetainBufferPool.c; sourceTree = "<group>"; };
-		6AD06E6020B53B86004DF75B /* GJRetainBufferPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJRetainBufferPool.h; sourceTree = "<group>"; };
-		6AD06E6120B53B86004DF75B /* GJSignal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJSignal.c; sourceTree = "<group>"; };
-		6AD06E6220B53B86004DF75B /* GJSignal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJSignal.h; sourceTree = "<group>"; };
-		6AD06E6320B53B86004DF75B /* GMemCheck.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GMemCheck.c; sourceTree = "<group>"; };
-		6AD06E6420B53B86004DF75B /* GMemCheck.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GMemCheck.h; sourceTree = "<group>"; };
-		6AE37BCC1ED5956800B049EB /* GJLivePlayer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJLivePlayer.c; sourceTree = "<group>"; };
-		6AE37BCD1ED5956800B049EB /* GJLivePlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePlayer.h; sourceTree = "<group>"; };
-		6AE37BCE1ED5956800B049EB /* GJLivePullContext.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJLivePullContext.c; sourceTree = "<group>"; };
-		6AE37BCF1ED5956800B049EB /* GJLivePullContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePullContext.h; sourceTree = "<group>"; };
-		6AE37BD01ED5956800B049EB /* GJLivePushContext.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJLivePushContext.c; sourceTree = "<group>"; };
-		6AE37BD11ED5956800B049EB /* GJLivePushContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePushContext.h; sourceTree = "<group>"; };
-		6AE37BD21ED5956800B049EB /* Mp4Writer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = Mp4Writer.c; sourceTree = "<group>"; };
-		6AE37BD31ED5956800B049EB /* Mp4Writer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp4Writer.h; sourceTree = "<group>"; };
 		6AF7ECE31FE7ABE300605E6E /* IOSurface.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOSurface.framework; path = System/Library/Frameworks/IOSurface.framework; sourceTree = SDKROOT; };
 		6AF9DDB51FA9763C00F6B4F7 /* SCNViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SCNViewController.h; sourceTree = "<group>"; };
 		6AF9DDB71FA976A100F6B4F7 /* GJSunSystemARScene.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GJSunSystemARScene.h; sourceTree = "<group>"; };
 		6AF9DDB81FA976A100F6B4F7 /* GJSunSystemARScene.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = GJSunSystemARScene.m; sourceTree = "<group>"; };
 		6AF9DDBA1FA97A5F00F6B4F7 /* art.scnassets */ = {isa = PBXFileReference; lastKnownFileType = wrapper.scnassets; path = art.scnassets; sourceTree = "<group>"; };
-		AE048BE220F0479D006F1148 /* FFVideoEncoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = FFVideoEncoder.h; sourceTree = "<group>"; };
-		AE048BE320F0479D006F1148 /* FFVideoEncoder.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = FFVideoEncoder.c; sourceTree = "<group>"; };
-		AE3634131F08120600E3C0AD /* decoder_alac_apple.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = decoder_alac_apple.m; sourceTree = "<group>"; };
-		AE3A2C151F07F69800C24BAA /* AirTunesPlay.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AirTunesPlay.h; sourceTree = "<group>"; };
-		AE3A2C161F07F69800C24BAA /* AirTunesPlay.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AirTunesPlay.m; sourceTree = "<group>"; };
-		AE3A2C2A1F07F74500C24BAA /* GJAudioManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioManager.h; sourceTree = "<group>"; };
-		AE3A2C2B1F07F74500C24BAA /* GJAudioManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioManager.m; sourceTree = "<group>"; };
-		AE70A4B81ECB4D930009E49A /* GJLiveEngine.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = GJLiveEngine.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		AE70A4C91ECB4DFE0009E49A /* GJFormats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJFormats.h; sourceTree = "<group>"; };
-		AE70A4CA1ECB4DFE0009E49A /* GJLive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLive.h; sourceTree = "<group>"; };
-		AE70A4CB1ECB4DFE0009E49A /* GJLiveDefine+internal.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "GJLiveDefine+internal.c"; sourceTree = "<group>"; };
-		AE70A4CC1ECB4DFE0009E49A /* GJLiveDefine+internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GJLiveDefine+internal.h"; sourceTree = "<group>"; };
-		AE70A4CD1ECB4DFE0009E49A /* GJLiveDefine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLiveDefine.h; sourceTree = "<group>"; };
-		AE70A4CF1ECB4DFE0009E49A /* GJRtmpPull.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJRtmpPull.m; sourceTree = "<group>"; };
-		AE70A4D11ECB4DFE0009E49A /* GJRtmpPush.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJRtmpPush.c; sourceTree = "<group>"; };
-		AE70A4D21ECB4DFE0009E49A /* GJUtil.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJUtil.c; sourceTree = "<group>"; };
-		AE70A4D31ECB4DFE0009E49A /* GJUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJUtil.h; sourceTree = "<group>"; };
-		AE70A4D41ECB4DFE0009E49A /* sps_decode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sps_decode.c; sourceTree = "<group>"; };
-		AE70A4D51ECB4DFE0009E49A /* sps_decode.h */ = {isa = PBXFileReference; fileEncoding = 2147484705; lastKnownFileType = sourcecode.c.h; lineEnding = 2; path = sps_decode.h; sourceTree = "<group>"; };
-		AE70A4D71ECB4DFE0009E49A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		AE70A4DA1ECB4DFE0009E49A /* AACEncoderFromPCM.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AACEncoderFromPCM.h; sourceTree = "<group>"; };
-		AE70A4DB1ECB4DFE0009E49A /* AACEncoderFromPCM.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AACEncoderFromPCM.m; sourceTree = "<group>"; };
-		AE70A4DE1ECB4DFE0009E49A /* AudioPraseStream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioPraseStream.h; sourceTree = "<group>"; };
-		AE70A4DF1ECB4DFE0009E49A /* AudioPraseStream.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioPraseStream.m; sourceTree = "<group>"; };
-		AE70A4E01ECB4DFE0009E49A /* AudioUnitCapture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AudioUnitCapture.h; sourceTree = "<group>"; };
-		AE70A4E11ECB4DFE0009E49A /* AudioUnitCapture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AudioUnitCapture.m; sourceTree = "<group>"; };
-		AE70A4E21ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioQueueDrivePlayer.h; sourceTree = "<group>"; };
-		AE70A4E31ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioQueueDrivePlayer.m; sourceTree = "<group>"; };
-		AE70A4E41ECB4DFE0009E49A /* GJAudioQueuePlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioQueuePlayer.h; sourceTree = "<group>"; };
-		AE70A4E51ECB4DFE0009E49A /* GJAudioQueuePlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioQueuePlayer.m; sourceTree = "<group>"; };
-		AE70A4E61ECB4DFE0009E49A /* GJAudioQueueRecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioQueueRecoder.h; sourceTree = "<group>"; };
-		AE70A4E71ECB4DFE0009E49A /* GJAudioQueueRecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioQueueRecoder.m; sourceTree = "<group>"; };
-		AE70A4E81ECB4DFE0009E49A /* GJAudioQueueRecoderFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJAudioQueueRecoderFile.h; sourceTree = "<group>"; };
-		AE70A4E91ECB4DFE0009E49A /* GJAudioQueueRecoderFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJAudioQueueRecoderFile.m; sourceTree = "<group>"; };
-		AE70A4EA1ECB4DFE0009E49A /* GJOpenALPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJOpenALPlayer.h; sourceTree = "<group>"; };
-		AE70A4EB1ECB4DFE0009E49A /* GJOpenALPlayer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = GJOpenALPlayer.mm; sourceTree = "<group>"; };
-		AE70A4EC1ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJPCMDecodeFromAAC.h; sourceTree = "<group>"; };
-		AE70A4ED1ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJPCMDecodeFromAAC.m; sourceTree = "<group>"; };
-		AE70A4EE1ECB4DFE0009E49A /* GJCaptureTool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJCaptureTool.h; sourceTree = "<group>"; };
-		AE70A4EF1ECB4DFE0009E49A /* GJCaptureTool.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJCaptureTool.m; sourceTree = "<group>"; };
-		AE70A4F21ECB4DFE0009E49A /* GJLivePull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePull.h; sourceTree = "<group>"; };
-		AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJLivePull.m; sourceTree = "<group>"; };
-		AE70A4F61ECB4DFE0009E49A /* GJLivePush.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePush.h; sourceTree = "<group>"; };
-		AE70A4F71ECB4DFE0009E49A /* GJLivePush.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJLivePush.m; sourceTree = "<group>"; };
-		AE70A4F91ECB4DFE0009E49A /* GJH264Decoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJH264Decoder.h; sourceTree = "<group>"; };
-		AE70A4FA1ECB4DFE0009E49A /* GJH264Decoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJH264Decoder.m; sourceTree = "<group>"; };
-		AE70A4FB1ECB4DFE0009E49A /* GJH264Encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJH264Encoder.h; sourceTree = "<group>"; };
-		AE70A4FC1ECB4DFE0009E49A /* GJH264Encoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GJH264Encoder.m; sourceTree = "<group>"; };
-		AE70A4FD1ECB4DFE0009E49A /* FFVideoDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FFVideoDecoder.h; sourceTree = "<group>"; };
-		AE70A4FE1ECB4DFE0009E49A /* FFVideoDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FFVideoDecoder.m; sourceTree = "<group>"; };
-		AE70A4FF1ECB4DFE0009E49A /* H264Encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264Encoder.h; sourceTree = "<group>"; };
-		AE70A5001ECB4DFE0009E49A /* H264Encoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = H264Encoder.m; sourceTree = "<group>"; };
-		AE70A5011ECB4DFE0009E49A /* H264StreamToTS.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = H264StreamToTS.h; sourceTree = "<group>"; };
-		AE70A5021ECB4DFE0009E49A /* H264StreamToTS.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = H264StreamToTS.m; sourceTree = "<group>"; };
-		AE70A5051ECB4DFE0009E49A /* RtmpSendH264.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RtmpSendH264.h; sourceTree = "<group>"; };
-		AE70A5061ECB4DFE0009E49A /* RtmpSendH264.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RtmpSendH264.m; sourceTree = "<group>"; };
-		AE70A50C1ECB4DFE0009E49A /* GJBridgeContext.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = GJBridgeContext.c; sourceTree = "<group>"; };
-		AE70A50D1ECB4DFE0009E49A /* GJBridegContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJBridegContext.h; sourceTree = "<group>"; };
 		AEEA477A1DC3AB770075EE63 /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		AEEA477B1DC3AB770075EE63 /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
 		AEEA477C1DC3AB770075EE63 /* asn1_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
@@ -687,51 +232,20 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		AE70A4B41ECB4D930009E49A /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				6A6DB50320D1F80000BC6A18 /* libAirReceive.a in Frameworks */,
-				6A0402EB20CA651B0098A86C /* libAudioEngine.a in Frameworks */,
-				6A42F16020AED6A300083B01 /* libavcodec.a in Frameworks */,
-				6A42F16120AED6A300083B01 /* libavformat.a in Frameworks */,
-				6A42F16220AED6A300083B01 /* libavutil.a in Frameworks */,
-				AE70A5531ECB50A20009E49A /* libGJImageFilters.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		C54FA8A51D21006000A0D3C3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				6AF7ECFD1FE7ABE800605E6E /* IOSurface.framework in Frameworks */,
-				6A40DFCE1EE8E1320047E0F0 /* Accelerate.framework in Frameworks */,
-				AE70A5571ECB50FA0009E49A /* GJLiveEngine.framework in Frameworks */,
-				6ABD5B661E88B73B00404A6B /* libcrypto.a in Frameworks */,
-				6ABD5B671E88B73B00404A6B /* libopenssl.a in Frameworks */,
-				046F599E1E2E1C38007901EB /* libstdc++.tbd in Frameworks */,
-				C59106041DC899DC00BCC938 /* MediaPlayer.framework in Frameworks */,
-				AEFEF22B1DB3B9A80004CF39 /* AVFoundation.framework in Frameworks */,
-				C573F1761D4B417B002607B6 /* VideoToolbox.framework in Frameworks */,
-				C573F1741D4B4175002607B6 /* libbz2.tbd in Frameworks */,
-				C573F1721D4B416E002607B6 /* libiconv.tbd in Frameworks */,
-				C573F1701D4B4146002607B6 /* libz.tbd in Frameworks */,
-				C54FA8C91D2103AA00A0D3C3 /* OpenAL.framework in Frameworks */,
+				275299CB21183CA500DD0403 /* GJLiveEngine.framework in Frameworks */,
+				275299CA21183C9800DD0403 /* Accelerate.framework in Frameworks */,
+				275299C921183C1100DD0403 /* libz.tbd in Frameworks */,
+				275299C821183C0C00DD0403 /* libstdc++.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0417FED81E5ECB8C00D5B5D9 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				0417FEE01E5ECB8D00D5B5D9 /* GJImage.app */,
-				0417FEE21E5ECB8D00D5B5D9 /* libGJImageFilters.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		043226681DDEF38F0012A0C0 /* lib */ = {
 			isa = PBXGroup;
 			children = (
@@ -739,15 +253,6 @@
 				0432266A1DDEF38F0012A0C0 /* libopenssl.a */,
 			);
 			path = lib;
-			sourceTree = "<group>";
-		};
-		045C61A01E1CE4380047E673 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				045C61B01E1CE4390047E673 /* libMp4v2Code.a */,
-				045C61B21E1CE4390047E673 /* Mp4V2_Demo.app */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		0460FD921E2862C700F5A308 /* PlayMediaSDK */ = {
@@ -796,14 +301,10 @@
 			path = minizip;
 			sourceTree = "<group>";
 		};
-		6A0E86D01E84BE3E002A2A2D /* Products */ = {
+		279AC6942117E8B000F5FD7C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6A0E86E01E84BE3F002A2A2D /* RtmpCode.app */,
-				6A0E86E21E84BE3F002A2A2D /* librtmp.a */,
-				6A0E86E41E84BE3F002A2A2D /* libopenssl.a */,
-				6A0E86E61E84BE3F002A2A2D /* libcrypto.a */,
-				6A0E86E81E84BE3F002A2A2D /* RtmpServer */,
+				279AC6A62117E8B000F5FD7C /* GJLiveEngine.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -827,289 +328,12 @@
 			path = Image;
 			sourceTree = "<group>";
 		};
-		6A42F14020AED68C00083B01 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				6A42F14D20AED68D00083B01 /* ffmpegCode.app */,
-				6A42F14F20AED68D00083B01 /* libswresample.a */,
-				6A42F15120AED68D00083B01 /* libavformat.a */,
-				6A42F15320AED68D00083B01 /* libavcodec.a */,
-				6A42F15520AED68D00083B01 /* libavdevice.a */,
-				6A42F15720AED68D00083B01 /* libavfilter.a */,
-				6A42F15920AED68D00083B01 /* libavresample.a */,
-				6A42F15B20AED68D00083B01 /* libavutil.a */,
-				6A42F15D20AED68D00083B01 /* libpostproc.a */,
-				6A42F15F20AED68D00083B01 /* libswscale.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		6A435CFE1F28B94B0046CEA3 /* Push */ = {
-			isa = PBXGroup;
-			children = (
-				6AE37BD01ED5956800B049EB /* GJLivePushContext.c */,
-				6AE37BD11ED5956800B049EB /* GJLivePushContext.h */,
-				AE70A4D11ECB4DFE0009E49A /* GJRtmpPush.c */,
-				6AA453661F146A1A0009FB64 /* GJStreamPush.h */,
-				6ABF33111F0E2CE000721DB3 /* GJFFmpegPush.c */,
-				274297B72101890E00CB0817 /* GJFFmpegSeparatePush.c */,
-			);
-			name = Push;
-			sourceTree = "<group>";
-		};
-		6A435CFF1F28B9550046CEA3 /* Pull */ = {
-			isa = PBXGroup;
-			children = (
-				6AE37BCE1ED5956800B049EB /* GJLivePullContext.c */,
-				6AE37BCF1ED5956800B049EB /* GJLivePullContext.h */,
-				6AE37BCD1ED5956800B049EB /* GJLivePlayer.h */,
-				6AE37BCC1ED5956800B049EB /* GJLivePlayer.c */,
-				6AA453841F14C16C0009FB64 /* GJStreamPull.h */,
-				AE70A4CF1ECB4DFE0009E49A /* GJRtmpPull.m */,
-				6AA453861F14D4950009FB64 /* GJFFmpegPull.c */,
-			);
-			name = Pull;
-			sourceTree = "<group>";
-		};
-		6A435D001F28B9A50046CEA3 /* Tool */ = {
-			isa = PBXGroup;
-			children = (
-				6AD06E5020B53B86004DF75B /* GJQueue */,
-				6A42F16420AED90C00083B01 /* GJLog.c */,
-				6A42F16320AED90C00083B01 /* GJLog.h */,
-				AE70A4D21ECB4DFE0009E49A /* GJUtil.c */,
-				AE70A4D31ECB4DFE0009E49A /* GJUtil.h */,
-				6A8E27D320C4EE3F00777B38 /* GJAudioAlignment.c */,
-				6A8E27D420C4EE3F00777B38 /* GJAudioAlignment.h */,
-				6AB4F42F1EF0082200FD4172 /* GJFLVPack.c */,
-				6AB4F4301EF0082200FD4172 /* GJFLVPack.h */,
-				AE70A4D41ECB4DFE0009E49A /* sps_decode.c */,
-				AE70A4D51ECB4DFE0009E49A /* sps_decode.h */,
-				AE70A4C91ECB4DFE0009E49A /* GJFormats.h */,
-				6A53950A20A9A81700E9E3C9 /* GJDNSCache.c */,
-				6A53950B20A9A81700E9E3C9 /* GJDNSCache.h */,
-				AE70A4CA1ECB4DFE0009E49A /* GJLive.h */,
-				6AE37BD21ED5956800B049EB /* Mp4Writer.c */,
-				6AE37BD31ED5956800B049EB /* Mp4Writer.h */,
-				6A63463A20414074000F14E2 /* GJMessageDispatcher.c */,
-				6A63463B20414074000F14E2 /* GJMessageDispatcher.h */,
-			);
-			name = Tool;
-			sourceTree = "<group>";
-		};
-		6A53950E20A9A9E300E9E3C9 /* Tools */ = {
-			isa = PBXGroup;
-			children = (
-				6A53950F20A9AA0E00E9E3C9 /* GJDNSCacheTool.h */,
-				6A53951020A9AA0E00E9E3C9 /* GJDNSCacheTool.m */,
-				6A9F6DC620CA7ABD00C210B4 /* UncaughtExceptionHandler.h */,
-				6A9F6DC720CA7ABD00C210B4 /* UncaughtExceptionHandler.m */,
-				6A53951820AA7BF900E9E3C9 /* AutoLock.h */,
-				6A53951920AA7BF900E9E3C9 /* AutoLock.m */,
-			);
-			path = Tools;
-			sourceTree = "<group>";
-		};
-		6A5821F1202AF29D002AFF76 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				6A582204202AF29D002AFF76 /* kcpTunDemo.app */,
-				6A582206202AF29D002AFF76 /* libkcptun.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		6A8E277A20C4DA5400777B38 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				6A8E278020C4DA5400777B38 /* libAudioEngine.a */,
-				6A8E278220C4DA5400777B38 /* libAudioEngine OS X.a */,
-				6A8E278420C4DA5400777B38 /* libAudioEngine tvOS.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		6ABDA0E020C5400800BD8070 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				6ABDA0E420C5400800BD8070 /* libAirReceive.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		6ABF2B091F0B413600721DB3 /* Bridge */ = {
-			isa = PBXGroup;
-			children = (
-				6ABF2B121F0B413600721DB3 /* IOS_H264Decode.h */,
-				6ABF2B131F0B413600721DB3 /* IOS_H264Decode.m */,
-				6ABF2B0A1F0B413600721DB3 /* IOS_AACDecode.h */,
-				6ABF2B0B1F0B413600721DB3 /* IOS_AACDecode.m */,
-				6ABF2B0C1F0B413600721DB3 /* IOS_AACEncode.h */,
-				6ABF2B0D1F0B413600721DB3 /* IOS_AACEncode.m */,
-				6ABF2B0E1F0B413600721DB3 /* IOS_AudioDrivePlayer.h */,
-				6ABF2B0F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m */,
-				6ABF2B101F0B413600721DB3 /* IOS_AudioProduce.h */,
-				6ABF2B111F0B413600721DB3 /* IOS_AudioProduce.m */,
-				6ABF2B141F0B413600721DB3 /* IOS_H264Encode.h */,
-				6ABF2B151F0B413600721DB3 /* IOS_H264Encode.m */,
-				AE048BE220F0479D006F1148 /* FFVideoEncoder.h */,
-				AE048BE320F0479D006F1148 /* FFVideoEncoder.c */,
-				6ABF2B161F0B413600721DB3 /* IOS_PictureDisplay.h */,
-				6ABF2B171F0B413600721DB3 /* IOS_PictureDisplay.m */,
-				6ABF2B181F0B413600721DB3 /* IOS_VideoProduce.h */,
-				6ABF2B191F0B413600721DB3 /* IOS_VideoProduce.m */,
-				AE70A4FD1ECB4DFE0009E49A /* FFVideoDecoder.h */,
-				AE70A4FE1ECB4DFE0009E49A /* FFVideoDecoder.m */,
-				6A435CCB1F2883D30046CEA3 /* IOS_Recoder.h */,
-				6A435CCC1F2883D30046CEA3 /* IOS_Recoder.m */,
-				6A9856C31F2B3D2500128480 /* IOS_RAOPPlay.h */,
-				6A9856C41F2B3D2500128480 /* IOS_RAOPPlay.m */,
-				6A5E04C320A44AE20030A0B8 /* FFAudioDecoder.h */,
-				6A5E04C420A44AE20030A0B8 /* FFAudioDecoder.m */,
-			);
-			name = Bridge;
-			path = ../CrossPlatform/Bridge;
-			sourceTree = "<group>";
-		};
-		6AD06E5020B53B86004DF75B /* GJQueue */ = {
-			isa = PBXGroup;
-			children = (
-				6AD06E5320B53B86004DF75B /* GJBufferPool.c */,
-				6AD06E5420B53B86004DF75B /* GJBufferPool.h */,
-				6AD06E5520B53B86004DF75B /* GJDebug.h */,
-				6AD06E5620B53B86004DF75B /* GJListQueue.c */,
-				6AD06E5720B53B86004DF75B /* GJListQueue.h */,
-				6A045F8120E0E0D10035840F /* GJList.c */,
-				6A045F8220E0E0D10035840F /* GJList.h */,
-				6A8E27D720C52FFC00777B38 /* GTime.c */,
-				6A8E27D820C52FFC00777B38 /* GTime.h */,
-				6AD06E5920B53B86004DF75B /* GJPlatformHeader.h */,
-				6AD06E5A20B53B86004DF75B /* GJQueue+cplus.h */,
-				6AD06E5B20B53B86004DF75B /* GJQueue.c */,
-				6AD06E5C20B53B86004DF75B /* GJQueue.h */,
-				6AD06E5D20B53B86004DF75B /* GJRetainBuffer.c */,
-				6AD06E5E20B53B86004DF75B /* GJRetainBuffer.h */,
-				6AD06E5F20B53B86004DF75B /* GJRetainBufferPool.c */,
-				6AD06E6020B53B86004DF75B /* GJRetainBufferPool.h */,
-				6AD06E6120B53B86004DF75B /* GJSignal.c */,
-				6AD06E6220B53B86004DF75B /* GJSignal.h */,
-				6AD06E6320B53B86004DF75B /* GMemCheck.c */,
-				6AD06E6420B53B86004DF75B /* GMemCheck.h */,
-			);
-			path = GJQueue;
-			sourceTree = "<group>";
-		};
 		AE10F8DF1D7F1E4B008BAE29 /* lib */ = {
 			isa = PBXGroup;
 			children = (
 				046F7E411E306C8E00712A2B /* libx264_back.a */,
 			);
 			path = lib;
-			sourceTree = "<group>";
-		};
-		AE70A4C51ECB4DFE0009E49A /* GJLiveEngine */ = {
-			isa = PBXGroup;
-			children = (
-				AE70A4D71ECB4DFE0009E49A /* Info.plist */,
-				AE70A4C61ECB4DFE0009E49A /* LiveEngine */,
-				AE70A4D81ECB4DFE0009E49A /* IOS */,
-			);
-			path = GJLiveEngine;
-			sourceTree = "<group>";
-		};
-		AE70A4C61ECB4DFE0009E49A /* LiveEngine */ = {
-			isa = PBXGroup;
-			children = (
-				AE70A5071ECB4DFE0009E49A /* PlatformBridge */,
-				6A435CFF1F28B9550046CEA3 /* Pull */,
-				6A435CFE1F28B94B0046CEA3 /* Push */,
-				6A435D001F28B9A50046CEA3 /* Tool */,
-				AE70A4CB1ECB4DFE0009E49A /* GJLiveDefine+internal.c */,
-				AE70A4CC1ECB4DFE0009E49A /* GJLiveDefine+internal.h */,
-				AE70A4CD1ECB4DFE0009E49A /* GJLiveDefine.h */,
-				6A3955401FA33DE4002931D9 /* GJLiveEngine.h */,
-				6A0C84661FA84A00007C7CEA /* Version.h */,
-			);
-			name = LiveEngine;
-			path = CrossPlatform;
-			sourceTree = "<group>";
-		};
-		AE70A4D81ECB4DFE0009E49A /* IOS */ = {
-			isa = PBXGroup;
-			children = (
-				6ABF2B091F0B413600721DB3 /* Bridge */,
-				AE70A4F81ECB4DFE0009E49A /* Video */,
-				AE70A4D91ECB4DFE0009E49A /* Audio */,
-				6A53950E20A9A9E300E9E3C9 /* Tools */,
-				AE70A4EE1ECB4DFE0009E49A /* GJCaptureTool.h */,
-				AE70A4EF1ECB4DFE0009E49A /* GJCaptureTool.m */,
-				AE70A4F21ECB4DFE0009E49A /* GJLivePull.h */,
-				AE70A4F31ECB4DFE0009E49A /* GJLivePull.m */,
-				AE70A4F61ECB4DFE0009E49A /* GJLivePush.h */,
-				AE70A4F71ECB4DFE0009E49A /* GJLivePush.m */,
-			);
-			path = IOS;
-			sourceTree = "<group>";
-		};
-		AE70A4D91ECB4DFE0009E49A /* Audio */ = {
-			isa = PBXGroup;
-			children = (
-				AE70A4DA1ECB4DFE0009E49A /* AACEncoderFromPCM.h */,
-				AE70A4DB1ECB4DFE0009E49A /* AACEncoderFromPCM.m */,
-				6A1A1B081F2ED67A0043595F /* AACEncoderFromPCM_OLD.h */,
-				6A1A1B091F2ED67A0043595F /* AACEncoderFromPCM_OLD.m */,
-				AE3A2C151F07F69800C24BAA /* AirTunesPlay.h */,
-				AE3A2C161F07F69800C24BAA /* AirTunesPlay.m */,
-				AE3A2C2A1F07F74500C24BAA /* GJAudioManager.h */,
-				AE3A2C2B1F07F74500C24BAA /* GJAudioManager.m */,
-				AE70A4DE1ECB4DFE0009E49A /* AudioPraseStream.h */,
-				AE70A4DF1ECB4DFE0009E49A /* AudioPraseStream.m */,
-				AE70A4E01ECB4DFE0009E49A /* AudioUnitCapture.h */,
-				AE70A4E11ECB4DFE0009E49A /* AudioUnitCapture.m */,
-				AE3634131F08120600E3C0AD /* decoder_alac_apple.m */,
-				AE70A4E21ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h */,
-				AE70A4E31ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m */,
-				AE70A4E41ECB4DFE0009E49A /* GJAudioQueuePlayer.h */,
-				AE70A4E51ECB4DFE0009E49A /* GJAudioQueuePlayer.m */,
-				AE70A4E61ECB4DFE0009E49A /* GJAudioQueueRecoder.h */,
-				AE70A4E71ECB4DFE0009E49A /* GJAudioQueueRecoder.m */,
-				AE70A4E81ECB4DFE0009E49A /* GJAudioQueueRecoderFile.h */,
-				AE70A4E91ECB4DFE0009E49A /* GJAudioQueueRecoderFile.m */,
-				AE70A4EA1ECB4DFE0009E49A /* GJOpenALPlayer.h */,
-				AE70A4EB1ECB4DFE0009E49A /* GJOpenALPlayer.mm */,
-				AE70A4EC1ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h */,
-				AE70A4ED1ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m */,
-			);
-			path = Audio;
-			sourceTree = "<group>";
-		};
-		AE70A4F81ECB4DFE0009E49A /* Video */ = {
-			isa = PBXGroup;
-			children = (
-				6A96CCA21F2195C4000DC4FE /* GJScreenRecorder.h */,
-				6A96CCA31F2195C4000DC4FE /* GJScreenRecorder.m */,
-				AE70A4F91ECB4DFE0009E49A /* GJH264Decoder.h */,
-				AE70A4FA1ECB4DFE0009E49A /* GJH264Decoder.m */,
-				AE70A4FB1ECB4DFE0009E49A /* GJH264Encoder.h */,
-				AE70A4FC1ECB4DFE0009E49A /* GJH264Encoder.m */,
-				AE70A4FF1ECB4DFE0009E49A /* H264Encoder.h */,
-				AE70A5001ECB4DFE0009E49A /* H264Encoder.m */,
-				AE70A5011ECB4DFE0009E49A /* H264StreamToTS.h */,
-				AE70A5021ECB4DFE0009E49A /* H264StreamToTS.m */,
-				AE70A5051ECB4DFE0009E49A /* RtmpSendH264.h */,
-				AE70A5061ECB4DFE0009E49A /* RtmpSendH264.m */,
-			);
-			path = Video;
-			sourceTree = "<group>";
-		};
-		AE70A5071ECB4DFE0009E49A /* PlatformBridge */ = {
-			isa = PBXGroup;
-			children = (
-				AE70A50C1ECB4DFE0009E49A /* GJBridgeContext.c */,
-				AE70A50D1ECB4DFE0009E49A /* GJBridegContext.h */,
-			);
-			name = PlatformBridge;
-			path = ../PlatformBridge;
 			sourceTree = "<group>";
 		};
 		AEEA47721DC3AB770075EE63 /* rtmpdump */ = {
@@ -1249,17 +473,10 @@
 		C54FA89F1D21006000A0D3C3 = {
 			isa = PBXGroup;
 			children = (
+				279AC6932117E8B000F5FD7C /* GJLiveEngine.xcodeproj */,
 				6A34882A1F453803008223AA /* Image */,
 				6A85F9941F00F0B00037A64F /* MixTest.mp3 */,
-				6A8E27BF20C4DAB900777B38 /* AirReceive.xcodeproj */,
-				6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */,
-				6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */,
-				6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */,
-				6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */,
-				0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */,
-				045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */,
 				C561ABE91D51D3DC00113453 /* GJCaptureTool */,
-				AE70A4C51ECB4DFE0009E49A /* GJLiveEngine */,
 				C54FA8A91D21006000A0D3C3 /* Products */,
 				AEFEF2291DB3B9A80004CF39 /* Frameworks */,
 			);
@@ -1269,7 +486,6 @@
 			isa = PBXGroup;
 			children = (
 				C54FA8A81D21006000A0D3C3 /* GJCaptureTool.app */,
-				AE70A4B81ECB4D930009E49A /* GJLiveEngine.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1342,94 +558,7 @@
 		};
 /* End PBXGroup section */
 
-/* Begin PBXHeadersBuildPhase section */
-		AE70A4B51ECB4D930009E49A /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				AE70A5501ECB4DFE0009E49A /* GJBridegContext.h in Headers */,
-				AE70A53B1ECB4DFE0009E49A /* GJLivePush.h in Headers */,
-				6A8E27D620C4EE3F00777B38 /* GJAudioAlignment.h in Headers */,
-				6ABF2B201F0B413600721DB3 /* IOS_AudioProduce.h in Headers */,
-				6A53950D20A9A81700E9E3C9 /* GJDNSCache.h in Headers */,
-				6AD06E8720B53B86004DF75B /* GJQueue.h in Headers */,
-				6AD06E7F20B53B86004DF75B /* GJBufferPool.h in Headers */,
-				AE70A52B1ECB4DFE0009E49A /* GJAudioQueueRecoder.h in Headers */,
-				6A63463D20414074000F14E2 /* GJMessageDispatcher.h in Headers */,
-				AE048BE420F0479E006F1148 /* FFVideoEncoder.h in Headers */,
-				6A045F8420E0E0D10035840F /* GJList.h in Headers */,
-				AE70A5131ECB4DFE0009E49A /* GJLiveDefine+internal.h in Headers */,
-				6AD06E8020B53B86004DF75B /* GJDebug.h in Headers */,
-				6AE37BD71ED5956800B049EB /* GJLivePullContext.h in Headers */,
-				6AD06E8920B53B86004DF75B /* GJRetainBuffer.h in Headers */,
-				6A559C311F3D3A3500698C19 /* GJStreamPull.h in Headers */,
-				6AE37BD91ED5956800B049EB /* GJLivePushContext.h in Headers */,
-				6AD06E8F20B53B86004DF75B /* GMemCheck.h in Headers */,
-				AE70A51C1ECB4DFE0009E49A /* sps_decode.h in Headers */,
-				6A96CCA41F2195C5000DC4FE /* GJScreenRecorder.h in Headers */,
-				6AA453681F146A1A0009FB64 /* GJStreamPush.h in Headers */,
-				6A435CCD1F2883D30046CEA3 /* IOS_Recoder.h in Headers */,
-				AE70A5371ECB4DFE0009E49A /* GJLivePull.h in Headers */,
-				6ABF2B281F0B413600721DB3 /* IOS_VideoProduce.h in Headers */,
-				6A0C84671FA84A00007C7CEA /* Version.h in Headers */,
-				6AF9DDB61FA9763D00F6B4F7 /* SCNViewController.h in Headers */,
-				6A53951120A9AA0E00E9E3C9 /* GJDNSCacheTool.h in Headers */,
-				6A42F16520AED90D00083B01 /* GJLog.h in Headers */,
-				AE70A5271ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.h in Headers */,
-				6AE37BD51ED5956800B049EB /* GJLivePlayer.h in Headers */,
-				6A53951A20AA7BF900E9E3C9 /* AutoLock.h in Headers */,
-				6ABF2B1C1F0B413600721DB3 /* IOS_AACEncode.h in Headers */,
-				6ABF2B241F0B413600721DB3 /* IOS_H264Encode.h in Headers */,
-				AE70A51F1ECB4DFE0009E49A /* AACEncoderFromPCM.h in Headers */,
-				6A9856C51F2B3D2500128480 /* IOS_RAOPPlay.h in Headers */,
-				AE70A53D1ECB4DFE0009E49A /* GJH264Decoder.h in Headers */,
-				6ABF2B1A1F0B413600721DB3 /* IOS_AACDecode.h in Headers */,
-				AE3A2C2C1F07F74500C24BAA /* GJAudioManager.h in Headers */,
-				6A8E27DA20C52FFC00777B38 /* GTime.h in Headers */,
-				6A5E04C520A44AE20030A0B8 /* FFAudioDecoder.h in Headers */,
-				AE70A5141ECB4DFE0009E49A /* GJLiveDefine.h in Headers */,
-				AE70A51A1ECB4DFE0009E49A /* GJUtil.h in Headers */,
-				6A9F6DC820CA7ABD00C210B4 /* UncaughtExceptionHandler.h in Headers */,
-				AE70A53F1ECB4DFE0009E49A /* GJH264Encoder.h in Headers */,
-				AE70A5311ECB4DFE0009E49A /* GJPCMDecodeFromAAC.h in Headers */,
-				6A1A1B0A1F2ED67A0043595F /* AACEncoderFromPCM_OLD.h in Headers */,
-				6ABF2B1E1F0B413600721DB3 /* IOS_AudioDrivePlayer.h in Headers */,
-				6AD06E8220B53B86004DF75B /* GJListQueue.h in Headers */,
-				6ABF2B261F0B413600721DB3 /* IOS_PictureDisplay.h in Headers */,
-				AE3A2C171F07F69800C24BAA /* AirTunesPlay.h in Headers */,
-				6AD06E8D20B53B86004DF75B /* GJSignal.h in Headers */,
-				6AD06E8520B53B86004DF75B /* GJQueue+cplus.h in Headers */,
-				6AB4F4321EF0082200FD4172 /* GJFLVPack.h in Headers */,
-				6AD06E8420B53B86004DF75B /* GJPlatformHeader.h in Headers */,
-				6AD06E8B20B53B86004DF75B /* GJRetainBufferPool.h in Headers */,
-				6ABF2B221F0B413600721DB3 /* IOS_H264Decode.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXHeadersBuildPhase section */
-
 /* Begin PBXNativeTarget section */
-		AE70A4B71ECB4D930009E49A /* GJLiveEngine */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = AE70A4C11ECB4D940009E49A /* Build configuration list for PBXNativeTarget "GJLiveEngine" */;
-			buildPhases = (
-				AE70A4B31ECB4D930009E49A /* Sources */,
-				AE70A4B41ECB4D930009E49A /* Frameworks */,
-				AE70A4B51ECB4D930009E49A /* Headers */,
-				AE70A4B61ECB4D930009E49A /* Resources */,
-				6A0C84211FA6C1EB007C7CEA /* ShellScript */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				6A8E27D220C4EAF300777B38 /* PBXTargetDependency */,
-				6A6B1A3B207C474E00BFC8FA /* PBXTargetDependency */,
-			);
-			name = GJLiveEngine;
-			productName = GJLiveEngine;
-			productReference = AE70A4B81ECB4D930009E49A /* GJLiveEngine.framework */;
-			productType = "com.apple.product-type.framework";
-		};
 		C54FA8A71D21006000A0D3C3 /* GJCaptureTool */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C54FA8BF1D21006100A0D3C3 /* Build configuration list for PBXNativeTarget "GJCaptureTool" */;
@@ -1437,7 +566,6 @@
 				C54FA8A41D21006000A0D3C3 /* Sources */,
 				C54FA8A51D21006000A0D3C3 /* Frameworks */,
 				C54FA8A61D21006000A0D3C3 /* Resources */,
-				04C5C5191E666DC1009DE4A0 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1457,10 +585,6 @@
 				LastUpgradeCheck = 0830;
 				ORGANIZATIONNAME = MinorUncle;
 				TargetAttributes = {
-					AE70A4B71ECB4D930009E49A = {
-						CreatedOnToolsVersion = 8.3.2;
-						ProvisioningStyle = Automatic;
-					};
 					C54FA8A71D21006000A0D3C3 = {
 						CreatedOnToolsVersion = 7.3;
 						DevelopmentTeam = K7MDP8Y272;
@@ -1492,228 +616,28 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 6ABDA0E020C5400800BD8070 /* Products */;
-					ProjectRef = 6A8E27BF20C4DAB900777B38 /* AirReceive.xcodeproj */;
-				},
-				{
-					ProductGroup = 6A8E277A20C4DA5400777B38 /* Products */;
-					ProjectRef = 6A40DFAD1EE8DA4D0047E0F0 /* AudioEngine.xcodeproj */;
-				},
-				{
-					ProductGroup = 6A42F14020AED68C00083B01 /* Products */;
-					ProjectRef = 6A42F13F20AED68C00083B01 /* ffmpegCode.xcodeproj */;
-				},
-				{
-					ProductGroup = 0417FED81E5ECB8C00D5B5D9 /* Products */;
-					ProjectRef = 0417FED71E5ECB8C00D5B5D9 /* GJImage.xcodeproj */;
-				},
-				{
-					ProductGroup = 6A5821F1202AF29D002AFF76 /* Products */;
-					ProjectRef = 6A5821F0202AF29D002AFF76 /* kcpTunDemo.xcodeproj */;
-				},
-				{
-					ProductGroup = 045C61A01E1CE4380047E673 /* Products */;
-					ProjectRef = 045C619F1E1CE4380047E673 /* Mp4v2Code.xcodeproj */;
-				},
-				{
-					ProductGroup = 6A0E86D01E84BE3E002A2A2D /* Products */;
-					ProjectRef = 6A0E86CF1E84BE3E002A2A2D /* RtmpCode.xcodeproj */;
+					ProductGroup = 279AC6942117E8B000F5FD7C /* Products */;
+					ProjectRef = 279AC6932117E8B000F5FD7C /* GJLiveEngine.xcodeproj */;
 				},
 			);
 			projectRoot = "";
 			targets = (
 				C54FA8A71D21006000A0D3C3 /* GJCaptureTool */,
-				AE70A4B71ECB4D930009E49A /* GJLiveEngine */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		0417FEE01E5ECB8D00D5B5D9 /* GJImage.app */ = {
+		279AC6A62117E8B000F5FD7C /* GJLiveEngine.framework */ = {
 			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = GJImage.app;
-			remoteRef = 0417FEDF1E5ECB8D00D5B5D9 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		0417FEE21E5ECB8D00D5B5D9 /* libGJImageFilters.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libGJImageFilters.a;
-			remoteRef = 0417FEE11E5ECB8D00D5B5D9 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		045C61B01E1CE4390047E673 /* libMp4v2Code.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libMp4v2Code.a;
-			remoteRef = 045C61AF1E1CE4390047E673 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		045C61B21E1CE4390047E673 /* Mp4V2_Demo.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = Mp4V2_Demo.app;
-			remoteRef = 045C61B11E1CE4390047E673 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A0E86E01E84BE3F002A2A2D /* RtmpCode.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = RtmpCode.app;
-			remoteRef = 6A0E86DF1E84BE3F002A2A2D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A0E86E21E84BE3F002A2A2D /* librtmp.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = librtmp.a;
-			remoteRef = 6A0E86E11E84BE3F002A2A2D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A0E86E41E84BE3F002A2A2D /* libopenssl.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libopenssl.a;
-			remoteRef = 6A0E86E31E84BE3F002A2A2D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A0E86E61E84BE3F002A2A2D /* libcrypto.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libcrypto.a;
-			remoteRef = 6A0E86E51E84BE3F002A2A2D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A0E86E81E84BE3F002A2A2D /* RtmpServer */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = RtmpServer;
-			remoteRef = 6A0E86E71E84BE3F002A2A2D /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A42F14D20AED68D00083B01 /* ffmpegCode.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = ffmpegCode.app;
-			remoteRef = 6A42F14C20AED68D00083B01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A42F14F20AED68D00083B01 /* libswresample.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libswresample.a;
-			remoteRef = 6A42F14E20AED68D00083B01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A42F15120AED68D00083B01 /* libavformat.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libavformat.a;
-			remoteRef = 6A42F15020AED68D00083B01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A42F15320AED68D00083B01 /* libavcodec.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libavcodec.a;
-			remoteRef = 6A42F15220AED68D00083B01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A42F15520AED68D00083B01 /* libavdevice.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libavdevice.a;
-			remoteRef = 6A42F15420AED68D00083B01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A42F15720AED68D00083B01 /* libavfilter.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libavfilter.a;
-			remoteRef = 6A42F15620AED68D00083B01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A42F15920AED68D00083B01 /* libavresample.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libavresample.a;
-			remoteRef = 6A42F15820AED68D00083B01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A42F15B20AED68D00083B01 /* libavutil.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libavutil.a;
-			remoteRef = 6A42F15A20AED68D00083B01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A42F15D20AED68D00083B01 /* libpostproc.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libpostproc.a;
-			remoteRef = 6A42F15C20AED68D00083B01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A42F15F20AED68D00083B01 /* libswscale.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libswscale.a;
-			remoteRef = 6A42F15E20AED68D00083B01 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A582204202AF29D002AFF76 /* kcpTunDemo.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = kcpTunDemo.app;
-			remoteRef = 6A582203202AF29D002AFF76 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A582206202AF29D002AFF76 /* libkcptun.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libkcptun.a;
-			remoteRef = 6A582205202AF29D002AFF76 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A8E278020C4DA5400777B38 /* libAudioEngine.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libAudioEngine.a;
-			remoteRef = 6A8E277F20C4DA5400777B38 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A8E278220C4DA5400777B38 /* libAudioEngine OS X.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libAudioEngine OS X.a";
-			remoteRef = 6A8E278120C4DA5400777B38 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6A8E278420C4DA5400777B38 /* libAudioEngine tvOS.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "libAudioEngine tvOS.a";
-			remoteRef = 6A8E278320C4DA5400777B38 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		6ABDA0E420C5400800BD8070 /* libAirReceive.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libAirReceive.a;
-			remoteRef = 6ABDA0E320C5400800BD8070 /* PBXContainerItemProxy */;
+			fileType = wrapper.framework;
+			path = GJLiveEngine.framework;
+			remoteRef = 279AC6A52117E8B000F5FD7C /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
-		AE70A4B61ECB4D930009E49A /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		C54FA8A61D21006000A0D3C3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1749,78 +673,7 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		6A0C84211FA6C1EB007C7CEA /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "if [[ $GCC_PREPROCESSOR_DEFINITIONS != *\"DEBUG\"* ]]\nthen\nbuildNumber=`date +%H.%M`\nversionNumber=`date +1.%m.%d`\n\n#svnVStr=`svn info | grep 'Revision:'`\n#svnV=($svnVStr)\n#svnNumber=${svnV[1]}\n\nversionPath=${PROJECT_DIR}\"/GJLiveEngine/CrossPlatform/Version.h\"\necho \"#ifndef Version_h\">$versionPath\necho \"#define Version_h\">>$versionPath\n\nversionStr=\"static char GJLiveEngineVersion[] = \\\"${versionNumber}\\\";\"\necho $versionStr>>$versionPath\n/usr/libexec/PlistBuddy -c \"Set CFBundleShortVersionString ${versionNumber}\" $INFOPLIST_FILE\n\nversionStr=\"static char GJLiveEngineBuild[] = \\\"${buildNumber}\\\";\"\necho $versionStr>>$versionPath\n/usr/libexec/PlistBuddy -c \"Set CFBundleVersion ${buildNumber}\" $INFOPLIST_FILE\n\n#versionStr=\"static char KKLiveEngineSvnVersion[] = \\\"${svnNumber}\\\";\"\n#echo $versionStr>>$versionPath\n#/usr/libexec/PlistBuddy -c \"Set :\\\"SVN version\\\" \\\"${svnNumber}\\\"\" $INFOPLIST_FILE\n\necho \"#endif /* Version_h */\">>$versionPath\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		AE70A4B31ECB4D930009E49A /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				AE70A5191ECB4DFE0009E49A /* GJUtil.c in Sources */,
-				6ABF2B291F0B413600721DB3 /* IOS_VideoProduce.m in Sources */,
-				AE70A51B1ECB4DFE0009E49A /* sps_decode.c in Sources */,
-				6A42F16620AED90D00083B01 /* GJLog.c in Sources */,
-				6A9F6DC920CA7ABD00C210B4 /* UncaughtExceptionHandler.m in Sources */,
-				6ABF2B1B1F0B413600721DB3 /* IOS_AACDecode.m in Sources */,
-				AE8AADFE1FF7BDE100964479 /* GJBridgeContext.c in Sources */,
-				6A63463C20414074000F14E2 /* GJMessageDispatcher.c in Sources */,
-				6ABF2B1F1F0B413600721DB3 /* IOS_AudioDrivePlayer.m in Sources */,
-				6AB4F4311EF0082200FD4172 /* GJFLVPack.c in Sources */,
-				6ABF2B1D1F0B413600721DB3 /* IOS_AACEncode.m in Sources */,
-				274297D22101C99400CB0817 /* GJFFmpegPush.c in Sources */,
-				AE3A2C2D1F07F74500C24BAA /* GJAudioManager.m in Sources */,
-				6A8E27D520C4EE3F00777B38 /* GJAudioAlignment.c in Sources */,
-				6AD06E8A20B53B86004DF75B /* GJRetainBufferPool.c in Sources */,
-				6A8F5E351F340E3C00FA57A4 /* GJAudioQueuePlayer.m in Sources */,
-				AE70A5121ECB4DFE0009E49A /* GJLiveDefine+internal.c in Sources */,
-				6AD06E7E20B53B86004DF75B /* GJBufferPool.c in Sources */,
-				AE70A53E1ECB4DFE0009E49A /* GJH264Decoder.m in Sources */,
-				6A435CA11F2757300046CEA3 /* GJH264Encoder.m in Sources */,
-				AE70A53C1ECB4DFE0009E49A /* GJLivePush.m in Sources */,
-				6AE37BD81ED5956800B049EB /* GJLivePushContext.c in Sources */,
-				6ABF2B231F0B413600721DB3 /* IOS_H264Decode.m in Sources */,
-				6AA649011FC2C99F00AA3CAC /* LIveStartViewController.m in Sources */,
-				AE70A5281ECB4DFE0009E49A /* GJAudioQueueDrivePlayer.m in Sources */,
-				6AD06E8620B53B86004DF75B /* GJQueue.c in Sources */,
-				6ABF2B271F0B413600721DB3 /* IOS_PictureDisplay.m in Sources */,
-				6AE37BD61ED5956800B049EB /* GJLivePullContext.c in Sources */,
-				6A63464320417942000F14E2 /* GJFFmpegPull.c in Sources */,
-				6AD06E8E20B53B86004DF75B /* GMemCheck.c in Sources */,
-				6A1A1B111F2F36F10043595F /* IOS_RAOPPlay.m in Sources */,
-				AE70A5201ECB4DFE0009E49A /* AACEncoderFromPCM.m in Sources */,
-				AE70A52C1ECB4DFE0009E49A /* GJAudioQueueRecoder.m in Sources */,
-				6A70C2FB2043A5C90070E347 /* FFVideoDecoder.m in Sources */,
-				6AD06E8120B53B86004DF75B /* GJListQueue.c in Sources */,
-				6ABF2B211F0B413600721DB3 /* IOS_AudioProduce.m in Sources */,
-				6A5E04C620A44AE20030A0B8 /* FFAudioDecoder.m in Sources */,
-				6AA9B2301ECD970800CBF2E2 /* GJLivePull.m in Sources */,
-				6A045F8320E0E0D10035840F /* GJList.c in Sources */,
-				6ABF2B251F0B413600721DB3 /* IOS_H264Encode.m in Sources */,
-				6A8E27D920C52FFC00777B38 /* GTime.c in Sources */,
-				6A53951B20AA7BF900E9E3C9 /* AutoLock.m in Sources */,
-				6A96CCA51F2195C5000DC4FE /* GJScreenRecorder.m in Sources */,
-				AE3634141F08120600E3C0AD /* decoder_alac_apple.m in Sources */,
-				6AE37BD41ED5956800B049EB /* GJLivePlayer.c in Sources */,
-				AE70A5321ECB4DFE0009E49A /* GJPCMDecodeFromAAC.m in Sources */,
-				6AD06E8C20B53B86004DF75B /* GJSignal.c in Sources */,
-				6AD06E8820B53B86004DF75B /* GJRetainBuffer.c in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		C54FA8A41D21006000A0D3C3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1829,6 +682,7 @@
 				C561AC9B1D51D3DC00113453 /* AppDelegate.m in Sources */,
 				2707293720F24C9E00DA051F /* mztools.c in Sources */,
 				2707293620F24C9E00DA051F /* ioapi.c in Sources */,
+				275299C72118368B00DD0403 /* LIveStartViewController.m in Sources */,
 				6AF9DDB91FA976A100F6B4F7 /* GJSunSystemARScene.m in Sources */,
 				C561ACB51D51D3DC00113453 /* main.m in Sources */,
 				2707293820F24C9E00DA051F /* ZipArchive.m in Sources */,
@@ -1839,19 +693,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		6A6B1A3B207C474E00BFC8FA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = GJImageFilters;
-			targetProxy = 6A6B1A3A207C474E00BFC8FA /* PBXContainerItemProxy */;
-		};
-		6A8E27D220C4EAF300777B38 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = AudioEngine;
-			targetProxy = 6A8E27D120C4EAF300777B38 /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C561ABFA1D51D3DC00113453 /* LaunchScreen.storyboard */ = {
@@ -1873,98 +714,6 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		AE70A4C21ECB4D940009E49A /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY = NO;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
-				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = "";
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				ENABLE_BITCODE = NO;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-					"malloc=GMalloc",
-					"free=GFree",
-					"realloc=GRealloc",
-					"calloc=GCalloc",
-				);
-				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../GJMp4Demo/Mp4v2Code/include\"/**",
-					"\"$(SRCROOT)/../GJImage/GPUImage-master/framework/Source\"/**",
-					"\"$(SRCROOT)/../kcptunCode/xkcptun\"",
-					"\"$(SRCROOT)/ijk_FFmpeg/build/ffmpeg-arm64/output/include\"",
-				);
-				INFOPLIST_FILE = GJLiveEngine/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/GJLiveEngine/lib",
-				);
-				MACH_O_TYPE = staticlib;
-				PRODUCT_BUNDLE_IDENTIFIER = EW.GJLiveEngine;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../GJImage/GJImageFilters\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft/include/arcsoft\" \"$(SRCROOT)/TheAmazingAudioEngine/TheAmazingAudioEngine\" \"$(SRCROOT)/../rtmpAndOpenssl/RtmpCode/rtmpDump/librtmp\" \"$(SRCROOT)/TheAmazingAudioEngine/Modules\" \"$(SRCROOT)/TheAmazingAudioEngine/Modules/Filters\" \"$(SRCROOT)/libairfloat/libairfloat\"";
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Debug;
-		};
-		AE70A4C31ECB4D940009E49A /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_UNDEFINED_BEHAVIOR_SANITIZER_NULLABILITY = NO;
-				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
-				CODE_SIGN_IDENTITY = "iPhone Distribution";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CURRENT_PROJECT_VERSION = 1;
-				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = "";
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				DYLIB_INSTALL_NAME_BASE = "@rpath";
-				ENABLE_BITCODE = NO;
-				HEADER_SEARCH_PATHS = (
-					"\"$(SRCROOT)/../GJMp4Demo/Mp4v2Code/include\"/**",
-					"\"$(SRCROOT)/../GJImage/GPUImage-master/framework/Source\"/**",
-					"\"$(SRCROOT)/../kcptunCode/xkcptun\"",
-					"\"$(SRCROOT)/ijk_FFmpeg/build/ffmpeg-arm64/output/include\"",
-				);
-				INFOPLIST_FILE = GJLiveEngine/Info.plist;
-				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/GJLiveEngine/lib",
-				);
-				MACH_O_TYPE = staticlib;
-				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = EW.GJLiveEngine;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../GJImage/GJImageFilters\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft/include/arcsoft\" \"$(SRCROOT)/TheAmazingAudioEngine/TheAmazingAudioEngine\" \"$(SRCROOT)/../rtmpAndOpenssl/RtmpCode/rtmpDump/librtmp\" \"$(SRCROOT)/TheAmazingAudioEngine/Modules\" \"$(SRCROOT)/TheAmazingAudioEngine/Modules/Filters\" \"$(SRCROOT)/libairfloat/libairfloat\"";
-				VERSIONING_SYSTEM = "apple-generic";
-				VERSION_INFO_PREFIX = "";
-			};
-			name = Release;
-		};
 		C54FA8BD1D21006100A0D3C3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2070,7 +819,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = K7MDP8Y272;
 				ENABLE_BITCODE = NO;
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"/**";
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../Library/Developer/Xcode/DerivedData/GJCaptureTool-ciccfzxydizngfeplsxjdvuoxune/Build/Products/Debug-iphoneos/GJLiveEngine.framework/Headers\"";
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -2088,7 +837,7 @@
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../GJImage/GJImageFilters\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft\"";
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Debug;
 		};
@@ -2100,7 +849,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = K7MDP8Y272;
 				ENABLE_BITCODE = NO;
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/GJCaptureTool/FFmpeg/include\"/**";
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../Library/Developer/Xcode/DerivedData/GJCaptureTool-ciccfzxydizngfeplsxjdvuoxune/Build/Products/Debug-iphoneos/GJLiveEngine.framework/Headers\"";
 				INFOPLIST_FILE = GJCaptureTool/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -2119,22 +868,13 @@
 				PRODUCT_NAME = GJCaptureTool;
 				PROVISIONING_PROFILE = "";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../GJImage/GJImageFilters\" \"$(SRCROOT)/../GJImage/GJImageFilters/ARCSoft\"";
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AE70A4C11ECB4D940009E49A /* Build configuration list for PBXNativeTarget "GJLiveEngine" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				AE70A4C21ECB4D940009E49A /* Debug */,
-				AE70A4C31ECB4D940009E49A /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		C54FA8A31D21006000A0D3C3 /* Build configuration list for PBXProject "GJCaptureTool" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
