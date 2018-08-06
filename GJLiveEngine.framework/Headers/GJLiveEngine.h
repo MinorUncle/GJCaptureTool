@@ -9,10 +9,13 @@
 #import <UIKit/UIKit.h>
 
 //! Project version number for GJLiveEngine.
-FOUNDATION_EXPORT double GJLiveEngineVersionNumber;
+extern char GJLiveEngineVersion[];
+extern char GJLiveEngineBuild[];
+
+//extern double GJLiveEngineVersionNumber;
 
 //! Project version string for GJLiveEngine.
-FOUNDATION_EXPORT const unsigned char GJLiveEngineVersionString[];
+//FOUNDATION_EXPORT const unsigned char GJLiveEngineVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <GJLiveEngine/PublicHeader.h>
 #import <GJLiveEngine/GJLiveDefine.h>
@@ -21,6 +24,8 @@ FOUNDATION_EXPORT const unsigned char GJLiveEngineVersionString[];
 #import <GJLiveEngine/GJLivePull.h>
 #import <GJLiveEngine/GJLog.h>
 #import <GJLiveEngine/GJPlatformHeader.h>
+#import <GJLiveEngine/UncaughtExceptionHandler.h>
+
 
 
 
