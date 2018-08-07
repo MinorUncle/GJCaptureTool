@@ -49,6 +49,23 @@
 		C561ACB51D51D3DC00113453 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = C561AC8C1D51D3DC00113453 /* main.m */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		27BD9BA721193877006300A6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27BD9B9921193876006300A6 /* GJLiveEngine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 279AC67F2117E86600F5FD7C;
+			remoteInfo = GJLiveEngine;
+		};
+		27BD9BA921193877006300A6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 27BD9B9921193876006300A6 /* GJLiveEngine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 27BD9B53211878DF006300A6;
+			remoteInfo = GJLiveEngineConfigure;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		040EBEC81DFFD2660040AED0 /* GJCaptureTool.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GJCaptureTool.entitlements; sourceTree = "<group>"; };
 		041702831E5FC3D100D5B5D9 /* GJLivePushViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GJLivePushViewController.h; sourceTree = "<group>"; };
@@ -87,6 +104,8 @@
 		27529A2F21184C8700DD0403 /* OpenGLView20.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenGLView20.m; sourceTree = "<group>"; };
 		27529A3021184C8700DD0403 /* OpenGLView20.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLView20.h; sourceTree = "<group>"; };
 		27BD99F121185671006300A6 /* GJLiveEngine.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = GJLiveEngine.framework; sourceTree = "<group>"; };
+		27BD9B9921193876006300A6 /* GJLiveEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GJLiveEngine.xcodeproj; path = ../GJLiveEngine/GJLiveEngine.xcodeproj; sourceTree = "<group>"; };
+		27BD9BAB2119769C006300A6 /* StreamAddr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamAddr.h; sourceTree = "<group>"; };
 		6A03892A1FF13004005AC7CE /* Particle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Particle.png; sourceTree = "<group>"; };
 		6A34882B1F453803008223AA /* 0.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 0.png; sourceTree = "<group>"; };
 		6A34882C1F453803008223AA /* 1.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = 1.png; sourceTree = "<group>"; };
@@ -189,6 +208,7 @@
 			children = (
 				27529A2021184C8700DD0403 /* PlayMediaSDK */,
 				27529A2E21184C8700DD0403 /* OpenGLPlayer */,
+				27BD9BAB2119769C006300A6 /* StreamAddr.h */,
 			);
 			path = Discard;
 			sourceTree = "<group>";
@@ -234,6 +254,15 @@
 			path = "Support Files";
 			sourceTree = "<group>";
 		};
+		27BD9B9A21193876006300A6 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				27BD9BA821193877006300A6 /* GJLiveEngine.framework */,
+				27BD9BAA21193877006300A6 /* GJLiveEngineConfigure.kext */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		6A34882A1F453803008223AA /* Image */ = {
 			isa = PBXGroup;
 			children = (
@@ -267,6 +296,7 @@
 		C54FA89F1D21006000A0D3C3 = {
 			isa = PBXGroup;
 			children = (
+				27BD9B9921193876006300A6 /* GJLiveEngine.xcodeproj */,
 				C561ABE91D51D3DC00113453 /* GJCaptureTool */,
 				C54FA8A91D21006000A0D3C3 /* Products */,
 				AEFEF2291DB3B9A80004CF39 /* Frameworks */,
@@ -361,12 +391,35 @@
 			mainGroup = C54FA89F1D21006000A0D3C3;
 			productRefGroup = C54FA8A91D21006000A0D3C3 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 27BD9B9A21193876006300A6 /* Products */;
+					ProjectRef = 27BD9B9921193876006300A6 /* GJLiveEngine.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				C54FA8A71D21006000A0D3C3 /* GJCaptureTool */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		27BD9BA821193877006300A6 /* GJLiveEngine.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = GJLiveEngine.framework;
+			remoteRef = 27BD9BA721193877006300A6 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		27BD9BAA21193877006300A6 /* GJLiveEngineConfigure.kext */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = GJLiveEngineConfigure.kext;
+			remoteRef = 27BD9BA921193877006300A6 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		C54FA8A61D21006000A0D3C3 /* Resources */ = {
