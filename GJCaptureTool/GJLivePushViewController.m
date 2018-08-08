@@ -155,9 +155,10 @@
         _btnViewsArry = [NSMutableArray array];
 
         _pushAddr = url;
-        _videoSize = @{@"360*640":[NSValue valueWithCGSize:CGSizeMake(640, 480)],
-                       @"480*640":[NSValue valueWithCGSize:CGSizeMake(480, 640)],
+        _videoSize = @{
+                       @"360*640":[NSValue valueWithCGSize:CGSizeMake(360, 640)],
                        @"540*960":[NSValue valueWithCGSize:CGSizeMake(540, 960)],
+                       @"480*640":[NSValue valueWithCGSize:CGSizeMake(480, 640)],
                        @"720*1280":[NSValue valueWithCGSize:CGSizeMake(720, 1280)]
                        };
         _stickerPath = @[@"bear",@"bd",@"hkbs",@"lb",@"null"];
@@ -165,7 +166,10 @@
         GJPushConfig config = {0};
         config.mAudioChannel = 1;
         config.mAudioSampleRate = 44100;
-        config.mPushSize = (GSize){480, 640};
+        CGSize pushSize = [_videoSize.allValues.firstObject CGSizeValue];
+        
+        config.mPushSize = (GSize){pushSize.width,pushSize.height};
+        
         config.mVideoBitrate = 8*80*1024;
         if (type == kGJCaptureTypePaint) {
             config.mFps = 30;

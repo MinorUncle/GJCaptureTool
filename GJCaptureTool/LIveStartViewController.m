@@ -9,7 +9,11 @@
 #import "LIveStartViewController.h"
 #import "GJLivePushViewController.h"
 
-//请注释 #import "StreamAddr.h"
+#define PULL_URL @"rtmp://live.hkstv.hk.lxdns.com/live/hks";
+
+//请注释 #import "StreamAddr.h",自行通过以下宏配置推拉流地址。
+//#define PUSH_URL
+//#define PULL_URL
 #import "StreamAddr.h"
 @interface LIveStartViewController ()
 {
