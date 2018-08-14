@@ -13,6 +13,10 @@
 #import <ARKit/ARConfiguration.h>
 #import "ZipArchive/ZipArchive.h"
 
+//#define PUSH_TIP_SHOW 1
+//#define PULL_TIP_SHOW 1
+
+
 @interface GJSliderView:UISlider{
     UILabel * _titleLab;
     UILabel * _valueLab;
@@ -118,7 +122,7 @@
 
 @property (strong, nonatomic) UIView *view;
 
-
+@property(strong, nonatomic) UIView* tipContent;
 
 @property (strong, nonatomic) GJSliderView *inputGain;
 
@@ -156,9 +160,9 @@
 
         _pushAddr = url;
         _videoSize = @{
-                       @"360*640":[NSValue valueWithCGSize:CGSizeMake(360, 640)],
+                       @"360*480":[NSValue valueWithCGSize:CGSizeMake(360, 480)],
                        @"540*960":[NSValue valueWithCGSize:CGSizeMake(540, 960)],
-                       @"480*640":[NSValue valueWithCGSize:CGSizeMake(480, 640)],
+//                       @"480*640":[NSValue valueWithCGSize:CGSizeMake(480, 640)],
                        @"720*1280":[NSValue valueWithCGSize:CGSizeMake(720, 1280)]
                        };
         _stickerPath = @[@"bear",@"bd",@"hkbs",@"lb",@"null"];
@@ -222,53 +226,59 @@
     [_contentView addSubview:_pushStartBtn];
     [_btnViewsArry addObject:_pushStartBtn];
     
+    _tipContent = [[UIView alloc]init];
+    
+#ifdef PUSH_TIP_SHOW
+    [self.view addSubview:_tipContent];
+#endif
+    
     _pushStateLab = [[UILabel alloc]init];
     _pushStateLab.text = @"推流未连接";
     _pushStateLab.textColor = [UIColor redColor];
     _pushStateLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_pushStateLab];
+    [_tipContent addSubview:_pushStateLab];
     [_tipViewsArry addObject:_pushStateLab];
 
     _fpsLab = [[UILabel alloc]init];
     _fpsLab.textColor = [UIColor redColor];
     _fpsLab.font = [UIFont systemFontOfSize:10];
     _fpsLab.text = @"FPS V:0,A:0";
-    [self.view addSubview:_fpsLab];
+    [_tipContent addSubview:_fpsLab];
     [_tipViewsArry addObject:_fpsLab];
 
     _vSendRateLab = [[UILabel alloc]init];
     _vSendRateLab.textColor = [UIColor redColor];
     _vSendRateLab.text = @"V BPS P:0 E:0";
     _vSendRateLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_vSendRateLab];
+    [_tipContent addSubview:_vSendRateLab];
     [_tipViewsArry addObject:_vSendRateLab];
     
     _aSendRateLab = [[UILabel alloc]init];
     _aSendRateLab.textColor = [UIColor redColor];
     _aSendRateLab.text = @"A BPS P:0 E:0";
     _aSendRateLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_aSendRateLab];
+    [_tipContent addSubview:_aSendRateLab];
     [_tipViewsArry addObject:_aSendRateLab];
 
     _delayVLab = [[UILabel alloc]init];
     _delayVLab.textColor = [UIColor redColor];
     _delayVLab.font = [UIFont systemFontOfSize:10];
     _delayVLab.text = @"cache V t:0 ms f:0";
-    [self.view addSubview:_delayVLab];
+    [_tipContent addSubview:_delayVLab];
     [_tipViewsArry addObject:_delayVLab];
 
     _delayALab = [[UILabel alloc]init];
     _delayALab.textColor = [UIColor redColor];
     _delayALab.font = [UIFont systemFontOfSize:10];
     _delayALab.text = @"cache A t:0 ms f:0";
-    [self.view addSubview:_delayALab];
+    [_tipContent addSubview:_delayALab];
     [_tipViewsArry addObject:_delayALab];
 
     _currentV = [[UILabel alloc]init];
     _currentV.textColor = [UIColor redColor];
     _currentV.font = [UIFont systemFontOfSize:10];
     _currentV.text = @"encode V b:0 kB/s f:0";
-    [self.view addSubview:_currentV];
+    [_tipContent addSubview:_currentV];
     [_tipViewsArry addObject:_currentV];
 
     
@@ -534,6 +544,7 @@
     
     
     CGFloat hOffset = CGRectGetMaxY([self findViewController:self.view].navigationController.navigationBar.frame);
+    
     NSInteger leftCount = _tipViewsArry.count;
     
     if (_livePush.captureType == kGJCaptureTypePaint) {
@@ -546,6 +557,10 @@
     }
     
     rect.origin = CGPointMake(0, hOffset);
+    rect.size = CGSizeMake(size.width*0.4, self.view.bounds.size.height - hOffset);
+    _tipContent.frame = rect;
+
+    rect.origin = CGPointMake(0, 0);
     rect.size = CGSizeMake(frame.size.width*0.4, (frame.size.height-hOffset) / leftCount);
     
     for (UIView* view in _tipViewsArry) {
@@ -971,6 +986,7 @@
 @property (assign, nonatomic) CGRect     frame;
 @property (assign, nonatomic) CGRect     beforeFullFrame;
 @property (assign, nonatomic) BOOL       fullEnable;
+@property (strong, nonatomic  ) UIView   * tipContentView;;
 
 @end
 
@@ -1021,12 +1037,18 @@
     
     [self.view addSubview:_pullBtn];
     
+    _tipContentView = [[UIView alloc]init];
+    
+#ifdef PULL_TIP_SHOW
+    [self.view addSubview:_tipContentView];
+#endif
+    
     _pullStateLab = [[UILabel alloc]init];
     _pullStateLab.numberOfLines = 0;
     _pullStateLab.text = @"未连接";
     _pullStateLab.textColor = [UIColor redColor];
     _pullStateLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_pullStateLab];
+    [_tipContentView addSubview:_pullStateLab];
     [_viewArr addObject:_pullStateLab];
     
     _pullRateLab = [[UILabel alloc]init];
@@ -1034,7 +1056,7 @@
     _pullRateLab.text = @"Bitrate:0.0 KB/s";
     _pullRateLab.numberOfLines = 0;
     _pullRateLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_pullRateLab];
+    [_tipContentView addSubview:_pullRateLab];
     [_viewArr addObject:_pullRateLab];
     
     _videoCacheLab = [[UILabel alloc]init];
@@ -1042,7 +1064,7 @@
     _videoCacheLab.text = @"cache V:0.0 ms f:0";
     _videoCacheLab.numberOfLines = 0;
     _videoCacheLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_videoCacheLab];
+    [_tipContentView addSubview:_videoCacheLab];
     [_viewArr addObject:_videoCacheLab];
 
     _audioCacheLab = [[UILabel alloc]init];
@@ -1050,7 +1072,7 @@
     _audioCacheLab.textColor = [UIColor redColor];
     _audioCacheLab.text = @"cache A:0.0 ms f:0";
     _audioCacheLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_audioCacheLab];
+    [_tipContentView addSubview:_audioCacheLab];
     [_viewArr addObject:_audioCacheLab];
 
     _netDelay = [[UILabel alloc]init];
@@ -1058,7 +1080,7 @@
     _netDelay.textColor = [UIColor redColor];
     _netDelay.text = @"NetDelay Measure:未工作";
     _netDelay.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_netDelay];
+    [_tipContentView addSubview:_netDelay];
     [_viewArr addObject:_netDelay];
 
     _testNetShake = [[UILabel alloc]init];
@@ -1066,7 +1088,7 @@
     _testNetShake.textColor = [UIColor redColor];
     _testNetShake.text = @"Max netShake Measure:未工作";
     _testNetShake.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_testNetShake];
+    [_tipContentView addSubview:_testNetShake];
     [_viewArr addObject:_testNetShake];
 
     _shakeRange = [[UILabel alloc]init];
@@ -1074,7 +1096,7 @@
     _shakeRange.textColor = [UIColor redColor];
     _shakeRange.text = @"shake collect duration:0";
     _shakeRange.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_shakeRange];
+    [_tipContentView addSubview:_shakeRange];
     [_viewArr addObject:_shakeRange];
 
     _netShake = [[UILabel alloc]init];
@@ -1082,7 +1104,7 @@
     _netShake.textColor = [UIColor redColor];
     _netShake.text = @"Max netShake:0 ms";
     _netShake.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_netShake];
+    [_tipContentView addSubview:_netShake];
     [_viewArr addObject:_netShake];
 
     _dewaterStatus = [[UILabel alloc]init];
@@ -1090,7 +1112,7 @@
     _dewaterStatus.textColor = [UIColor redColor];
     _dewaterStatus.text = @"dewaterStatus:false times:0";
     _dewaterStatus.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_dewaterStatus];
+    [_tipContentView addSubview:_dewaterStatus];
     [_viewArr addObject:_dewaterStatus];
 
     _playerBufferLab = [[UILabel alloc]init];
@@ -1098,7 +1120,7 @@
     _playerBufferLab.textColor = [UIColor redColor];
     _playerBufferLab.text = @"buffer：0 times:0";
     _playerBufferLab.font = [UIFont systemFontOfSize:10];
-    [self.view addSubview:_playerBufferLab];
+    [_tipContentView addSubview:_playerBufferLab];
     [_viewArr addObject:_playerBufferLab];
 
 }
@@ -1115,8 +1137,11 @@
     
     _pull.previewView.frame = rect;
     
+    rect.origin.y -= _pullBtn.frame.size.height;
+    _tipContentView.frame = rect;
+    
     rect.size.height *= 1.0/_viewArr.count;
-    rect.origin.y -= rect.size.height;
+    rect.origin.y = 0;
 
     for (int i = 0; i<_viewArr.count; i++) {
         UIView* view = _viewArr[i];
