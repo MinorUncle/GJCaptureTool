@@ -22,7 +22,9 @@
 		275299C821183C0C00DD0403 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 046F599D1E2E1C38007901EB /* libstdc++.tbd */; };
 		275299C921183C1100DD0403 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = C573F16F1D4B4146002607B6 /* libz.tbd */; };
 		275299CA21183C9800DD0403 /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */; };
-		27BD99F221185672006300A6 /* GJLiveEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 27BD99F121185671006300A6 /* GJLiveEngine.framework */; };
+		276408AD21245D8600D6171E /* GJLiveEngine.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 276408AC21245D8600D6171E /* GJLiveEngine.framework */; };
+		276408B82124611500D6171E /* SourceEditorExtension.m in Sources */ = {isa = PBXBuildFile; fileRef = 276408B72124611500D6171E /* SourceEditorExtension.m */; };
+		276408BB2124611500D6171E /* SourceEditorCommand.m in Sources */ = {isa = PBXBuildFile; fileRef = 276408BA2124611500D6171E /* SourceEditorCommand.m */; };
 		6A03892B1FF13004005AC7CE /* Particle.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A03892A1FF13004005AC7CE /* Particle.png */; };
 		6A04022020CA5A190098A86C /* GJLivePushViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 041702841E5FC3D100D5B5D9 /* GJLivePushViewController.m */; };
 		6A3488431F453803008223AA /* 0.png in Resources */ = {isa = PBXBuildFile; fileRef = 6A34882B1F453803008223AA /* 0.png */; };
@@ -50,6 +52,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		276408C12124613E00D6171E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C54FA8A01D21006000A0D3C3 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 276408B12124611500D6171E;
+			remoteInfo = GJCaptureToolConfig;
+		};
 		27BD9BA721193877006300A6 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 27BD9B9921193876006300A6 /* GJLiveEngine.xcodeproj */;
@@ -103,7 +112,14 @@
 		27529A2D21184C8700DD0403 /* audio_ffmpeg.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = audio_ffmpeg.cpp; sourceTree = "<group>"; };
 		27529A2F21184C8700DD0403 /* OpenGLView20.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OpenGLView20.m; sourceTree = "<group>"; };
 		27529A3021184C8700DD0403 /* OpenGLView20.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OpenGLView20.h; sourceTree = "<group>"; };
-		27BD99F121185671006300A6 /* GJLiveEngine.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = GJLiveEngine.framework; sourceTree = "<group>"; };
+		276408AC21245D8600D6171E /* GJLiveEngine.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GJLiveEngine.framework; path = GJLiveEngine/GJLiveEngine.framework; sourceTree = "<group>"; };
+		276408B22124611500D6171E /* GJCaptureToolConfig.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = GJCaptureToolConfig.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		276408B62124611500D6171E /* SourceEditorExtension.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SourceEditorExtension.h; sourceTree = "<group>"; };
+		276408B72124611500D6171E /* SourceEditorExtension.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SourceEditorExtension.m; sourceTree = "<group>"; };
+		276408B92124611500D6171E /* SourceEditorCommand.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SourceEditorCommand.h; sourceTree = "<group>"; };
+		276408BA2124611500D6171E /* SourceEditorCommand.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SourceEditorCommand.m; sourceTree = "<group>"; };
+		276408BC2124611500D6171E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		276408BD2124611500D6171E /* GJCaptureToolConfig.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GJCaptureToolConfig.entitlements; sourceTree = "<group>"; };
 		27BD9B9921193876006300A6 /* GJLiveEngine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GJLiveEngine.xcodeproj; path = ../GJLiveEngine/GJLiveEngine.xcodeproj; sourceTree = "<group>"; };
 		27BD9BAB2119769C006300A6 /* StreamAddr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamAddr.h; sourceTree = "<group>"; };
 		6A03892A1FF13004005AC7CE /* Particle.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Particle.png; sourceTree = "<group>"; };
@@ -143,12 +159,19 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		276408AF2124611500D6171E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C54FA8A51D21006000A0D3C3 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				276408AD21245D8600D6171E /* GJLiveEngine.framework in Frameworks */,
 				275299CA21183C9800DD0403 /* Accelerate.framework in Frameworks */,
-				27BD99F221185672006300A6 /* GJLiveEngine.framework in Frameworks */,
 				275299C921183C1100DD0403 /* libz.tbd in Frameworks */,
 				275299C821183C0C00DD0403 /* libstdc++.tbd in Frameworks */,
 			);
@@ -254,6 +277,19 @@
 			path = "Support Files";
 			sourceTree = "<group>";
 		};
+		276408B52124611500D6171E /* GJCaptureToolConfig */ = {
+			isa = PBXGroup;
+			children = (
+				276408B62124611500D6171E /* SourceEditorExtension.h */,
+				276408B72124611500D6171E /* SourceEditorExtension.m */,
+				276408B92124611500D6171E /* SourceEditorCommand.h */,
+				276408BA2124611500D6171E /* SourceEditorCommand.m */,
+				276408BC2124611500D6171E /* Info.plist */,
+				276408BD2124611500D6171E /* GJCaptureToolConfig.entitlements */,
+			);
+			path = GJCaptureToolConfig;
+			sourceTree = "<group>";
+		};
 		27BD9B9A21193876006300A6 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -285,7 +321,7 @@
 		AEFEF2291DB3B9A80004CF39 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				27BD99F121185671006300A6 /* GJLiveEngine.framework */,
+				276408AC21245D8600D6171E /* GJLiveEngine.framework */,
 				6A40DFCD1EE8E1320047E0F0 /* Accelerate.framework */,
 				C573F16F1D4B4146002607B6 /* libz.tbd */,
 				046F599D1E2E1C38007901EB /* libstdc++.tbd */,
@@ -298,6 +334,7 @@
 			children = (
 				27BD9B9921193876006300A6 /* GJLiveEngine.xcodeproj */,
 				C561ABE91D51D3DC00113453 /* GJCaptureTool */,
+				276408B52124611500D6171E /* GJCaptureToolConfig */,
 				C54FA8A91D21006000A0D3C3 /* Products */,
 				AEFEF2291DB3B9A80004CF39 /* Frameworks */,
 			);
@@ -307,6 +344,7 @@
 			isa = PBXGroup;
 			children = (
 				C54FA8A81D21006000A0D3C3 /* GJCaptureTool.app */,
+				276408B22124611500D6171E /* GJCaptureToolConfig.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -336,6 +374,24 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		276408B12124611500D6171E /* GJCaptureToolConfig */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 276408BE2124611500D6171E /* Build configuration list for PBXNativeTarget "GJCaptureToolConfig" */;
+			buildPhases = (
+				276408AE2124611500D6171E /* Sources */,
+				276408AF2124611500D6171E /* Frameworks */,
+				276408B02124611500D6171E /* Resources */,
+				276408C32124615A00D6171E /* ShellScript */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GJCaptureToolConfig;
+			productName = GJCaptureToolConfig;
+			productReference = 276408B22124611500D6171E /* GJCaptureToolConfig.appex */;
+			productType = "com.apple.product-type.xcode-extension";
+		};
 		C54FA8A71D21006000A0D3C3 /* GJCaptureTool */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = C54FA8BF1D21006100A0D3C3 /* Build configuration list for PBXNativeTarget "GJCaptureTool" */;
@@ -347,6 +403,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				276408C22124613E00D6171E /* PBXTargetDependency */,
 			);
 			name = GJCaptureTool;
 			productName = media;
@@ -362,6 +419,11 @@
 				LastUpgradeCheck = 0830;
 				ORGANIZATIONNAME = MinorUncle;
 				TargetAttributes = {
+					276408B12124611500D6171E = {
+						CreatedOnToolsVersion = 9.4.1;
+						DevelopmentTeam = 9VXBV77545;
+						ProvisioningStyle = Automatic;
+					};
 					C54FA8A71D21006000A0D3C3 = {
 						CreatedOnToolsVersion = 7.3;
 						DevelopmentTeam = K7MDP8Y272;
@@ -400,6 +462,7 @@
 			projectRoot = "";
 			targets = (
 				C54FA8A71D21006000A0D3C3 /* GJCaptureTool */,
+				276408B12124611500D6171E /* GJCaptureToolConfig */,
 			);
 		};
 /* End PBXProject section */
@@ -422,6 +485,13 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
+		276408B02124611500D6171E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C54FA8A61D21006000A0D3C3 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -457,7 +527,32 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		276408C32124615A00D6171E /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ ! -d \"./GJLiveEngine/.git\" ]; then\nrm -rf ./GJLiveEngine\ngit clone git@github.com:MinorUncle/GJLiveEngine.git\nelif [ ! -d \"./GJLiveEngine/GJLiveEngine.framework\" ]; then\ncd GJLiveEngine\ngit pull\ngit checkout .\ncd ..\nfi";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		276408AE2124611500D6171E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				276408B82124611500D6171E /* SourceEditorExtension.m in Sources */,
+				276408BB2124611500D6171E /* SourceEditorCommand.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C54FA8A41D21006000A0D3C3 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -476,6 +571,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		276408C22124613E00D6171E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 276408B12124611500D6171E /* GJCaptureToolConfig */;
+			targetProxy = 276408C12124613E00D6171E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		C561ABFA1D51D3DC00113453 /* LaunchScreen.storyboard */ = {
@@ -497,6 +600,70 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		276408BF2124611500D6171E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = GJCaptureToolConfig/GJCaptureToolConfig.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 9VXBV77545;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = GJCaptureToolConfig/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				PRODUCT_BUNDLE_IDENTIFIER = GJ.GJCaptureToolConfig;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		276408C02124611500D6171E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_ENTITLEMENTS = GJCaptureToolConfig/GJCaptureToolConfig.entitlements;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = 9VXBV77545;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				INFOPLIST_FILE = GJCaptureToolConfig/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				PRODUCT_BUNDLE_IDENTIFIER = GJ.GJCaptureToolConfig;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 		C54FA8BD1D21006100A0D3C3 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -605,6 +772,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/GJLiveEngine",
 				);
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "GJCaptureTool/Support Files/Info.plist";
@@ -630,6 +798,7 @@
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/GJLiveEngine",
 				);
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = "GJCaptureTool/Support Files/Info.plist";
@@ -648,6 +817,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		276408BE2124611500D6171E /* Build configuration list for PBXNativeTarget "GJCaptureToolConfig" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				276408BF2124611500D6171E /* Debug */,
+				276408C02124611500D6171E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		C54FA8A31D21006000A0D3C3 /* Build configuration list for PBXProject "GJCaptureTool" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

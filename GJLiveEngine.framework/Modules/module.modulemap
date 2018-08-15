@@ -1,6 +1,0 @@
-framework module GJLiveEngine {
-  umbrella header "GJLiveEngine.h"
-
-  export *
-  module * { export * }
-}

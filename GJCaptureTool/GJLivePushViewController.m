@@ -178,7 +178,7 @@
         if (type == kGJCaptureTypePaint) {
             config.mFps = 30;
         }else{
-            config.mFps = 15;
+            config.mFps = 30;
         }
         config.mAudioBitrate = 64*1000;
         _livePush = [[GJLivePush alloc]init];
